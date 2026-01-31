@@ -1,4 +1,4 @@
-# PAI Violation Client V2
+# Cable-Admin Client V2
 
 A modern React frontend application built with clean architecture principles, featuring a map-centric interface for violation management.
 
