@@ -1,0 +1,99 @@
+{
+  "title": "إدارة مواسم التخييم",
+  "filters": {
+    "filter": "التصفية",
+    "name": "اسم الموسم",
+    "fromDate": "من تاريخ",
+    "toDate": "إلى تاريخ",
+    "includeDeleted": "تضمين المحذوف"
+  },
+  "columns": {
+    "name": "اسم الموسم",
+    "fromDate": "من تاريخ",
+    "toDate": "إلى تاريخ",
+    "status": "الحالة",
+    "isDeleted": "الوضع",
+    "active": "نشط",
+    "deleted": "محذوف",
+    "actions": "الإجراءات"
+  },
+  "actions": {
+    "add": "إضافة موسم",
+    "viewDetails": "عرض التفاصيل",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "openMenu": "فتح قائمة الإجراءات"
+  },
+  "form": {
+    "createCampingSeason": "إنشاء موسم تخييم جديد",
+    "editCampingSeason": "تعديل موسم التخييم",
+    "basicInformation": "المعلومات الأساسية",
+    "seasonDetails": "تفاصيل الموسم",
+    "name": "اسم الموسم",
+    "fromDate": "من تاريخ",
+    "toDate": "إلى تاريخ",
+    "safeDistanceCamps": "المسافة الآمنة بين المخيمات",
+    "role": "الدور",
+    "insuranceValue": "قيمة التأمين",
+    "feeValue": "قيمة الرسوم",
+    "startDate": "تاريخ البدء",
+    "maxAreaSize": "الحد الأقصى لحجم المنطقة",
+    "allowedReservationTimes": "عدد مرات الحجز المسموحة",
+    "selectRole": "اختر الدور",
+    "addDetail": "إضافة تفاصيل الموسم",
+    "detail": "تفصيل",
+    "cancel": "إلغاء",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "close": "إغلاق",
+    "validation": {
+      "nameRequired": "اسم الموسم مطلوب",
+      "fromDateRequired": "تاريخ البداية مطلوب",
+      "toDateRequired": "تاريخ النهاية مطلوب",
+      "safeDistanceRequired": "المسافة الآمنة مطلوبة",
+      "roleRequired": "الدور مطلوب",
+      "insuranceValueRequired": "قيمة التأمين مطلوبة",
+      "feeValueRequired": "قيمة الرسوم مطلوبة",
+      "startDateRequired": "تاريخ البدء مطلوب",
+      "maxAreaSizeRequired": "الحد الأقصى لحجم المنطقة مطلوب",
+      "allowedReservationTimesRequired": "عدد مرات الحجز المسموحة مطلوب",
+      "civilIdRequired": "الرقم المدني مطلوب",
+      "governorateRequired": "المحافظة مطلوبة"
+    }
+  },
+  "deleteDialog": {
+    "title": "حذف موسم التخييم",
+    "message": "هل أنت متأكد من حذف موسم التخييم \"{{name}}\"؟",
+    "cancel": "إلغاء",
+    "confirm": "حذف"
+  },
+  "details": {
+    "title": "تفاصيل موسم التخييم",
+    "placeholder": "سيتم عرض تفاصيل موسم التخييم هنا",
+    "basicInformation": "المعلومات الأساسية",
+    "name": "اسم الموسم",
+    "fromDate": "من تاريخ",
+    "toDate": "إلى تاريخ",
+    "safeDistanceCamps": "المسافة الآمنة بين المخيمات",
+    "status": "الحالة",
+    "isDeleted": "الوضع",
+    "active": "نشط",
+    "deleted": "محذوف",
+    "seasonDetails": "تفاصيل الموسم",
+    "detail": "تفصيل",
+    "role": "الدور",
+    "insuranceValue": "قيمة التأمين",
+    "feeValue": "قيمة الرسوم",
+    "maxAreaSize": "الحد الأقصى لحجم المنطقة",
+    "allowedReservationTimes": "عدد مرات الحجز المسموحة",
+    "startDate": "تاريخ البدء"
+  },
+  "messages": {
+    "createSuccess": "تم إنشاء موسم التخييم بنجاح",
+    "createError": "فشل إنشاء موسم التخييم",
+    "updateSuccess": "تم تحديث موسم التخييم بنجاح",
+    "updateError": "فشل تحديث موسم التخييم",
+    "deleteSuccess": "تم حذف موسم التخييم بنجاح",
+    "deleteError": "فشل حذف موسم التخييم"
+  }
+}

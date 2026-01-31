@@ -1,0 +1,95 @@
+{
+  "title": "Users Management",
+  "filters": {
+    "filter": "Filters",
+    "name": "Name",
+    "userName": "Username",
+    "email": "Email",
+    "civilId": "Civil ID",
+    "role": "Role",
+    "governorate": "Governorate"
+  },
+  "columns": {
+    "name": "Name",
+    "userName": "Username",
+    "email": "Email",
+    "phone": "Phone Number",
+    "civilId": "Civil ID",
+    "role": "Role",
+    "governorate": "Governorate",
+    "isActive": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "actions": "Actions"
+  },
+  "actions": {
+    "addUser": "Add User",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "delete": "Delete",
+    "openMenu": "Open actions menu"
+  },
+  "form": {
+    "createUser": "Create New User",
+    "editUser": "Edit User",
+    "name": "Name",
+    "userName": "Username",
+    "email": "Email",
+    "password": "Password",
+    "phone": "Phone Number",
+    "civilId": "Civil ID",
+    "role": "Role",
+    "governorate": "Governorate",
+    "isLdap": "LDAP User",
+    "isActive": "Active",
+    "selectRole": "Select Role",
+    "selectGovernorate": "Select Governorate",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "validation": {
+      "nameRequired": "Name is required",
+      "userNameRequired": "Username is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email format",
+      "passwordRequired": "Password is required",
+      "phoneRequired": "Phone number is required",
+      "roleRequired": "Role is required"
+    },
+    "roles": {
+      "role1": "Role 1"
+    },
+    "governorates": {
+      "gov1": "Governorate 1"
+    }
+  },
+  "details": {
+    "title": "User Details",
+    "basicInformation": "Basic Information",
+    "name": "Name",
+    "userName": "Username",
+    "email": "Email",
+    "phone": "Phone Number",
+    "civilId": "Civil ID",
+    "role": "Role",
+    "governorate": "Governorate",
+    "isLdap": "LDAP User",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "deleteConfirmTitle": "Delete User",
+  "deleteConfirmMessage": "Are you sure you want to delete user",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "messages": {
+    "createSuccess": "User created successfully",
+    "createError": "Failed to create user",
+    "updateSuccess": "User updated successfully",
+    "updateError": "Failed to update user",
+    "deleteSuccess": "User deleted successfully",
+    "deleteError": "Failed to delete user"
+  }
+}

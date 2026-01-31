@@ -1,0 +1,1 @@
+export const AUTH_STATE_KEY = "KM-CAMPING-ADMIN-AUTH-STATE";

@@ -1,0 +1,10 @@
+{
+	"size": "الحجم",
+	"layout": "الإتجاه",
+	"portrait": "عمودي",
+	"landscape": "أفقي",
+	"address": "العنوان",
+	"description": "الوصف",
+	"exportImage": "حفظ كصورة",
+	"exportPDF": "حفظ PDF"
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" class="notranslate" translate="no">
+	<head>
+		<meta charset="UTF-8" />
+		<title>تطبيق التخييم لبلدية الكويت - KM Camping</title>
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover"
+		/>
+		<meta name="subject" content="تطبيق التخييم لبلدية الكويت" />
+		<meta
+			name="description"
+			content="تطبيق التخييم الرسمي لبلدية الكويت - Kuwait Municipality Camping Application"
+		/>
+		<meta name="keywords" content="Camping, Kuwait Municipality, KM Camping, مخيمات الكويت" />
+		<meta name="author" content="Kuwait Municipality" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="google" content="notranslate" />
+
+		<link
+			rel="apple-touch-icon"
+			sizes="180x180"
+			href="%BASE_URL%images/apple-touch-icon.png"
+		/>
+		<link
+			rel="icon"
+			type="image/x-icon"
+			sizes="32x32"
+			href="%BASE_URL%images/favicon.ico"
+		/>
+		<link
+			rel="icon"
+			type="image/x-icon"
+			sizes="16x16"
+			href="%BASE_URL%images/favicon.ico"
+		/>
+
+		<link rel="mask-icon" href="%BASE_URL%images/safari-pinned-tab.svg" color="#5bbad5" />
+		<link rel="manifest" href="%BASE_URL%manifest.json" />
+
+		<meta name="theme-color" content="#000" />
+		<meta name="msapplication-TileColor" content="#fff" />
+
+		<link rel="preconnect" href="https://fonts.gstatic.com" />
+
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css?family=Poppins:400,500,700&display=swap"
+			media="print"
+			onload="this.media='all'"
+		/>
+
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700&display=swap"
+			media="print"
+			onload="this.media='all'"
+		/>
+		<script src="%BASE_URL%config/config.%VITE_APP_ENVIRONMENT%.js"></script>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script>
+			navigator?.serviceWorker
+				?.register(`${window.env.host.virtualPath}/service-worker.js`)
+				.then(
+					(registration) => {
+						console.info(`SW registration succeeded on scope ${registration.scope}`);
+					},
+					(e) => {
+						console.error(`SW registration failed: ${e.message}`);
+					}
+				);
+		</script>
+		<script type="module" src="/src/main.jsx"></script>
+	</body>
+</html>

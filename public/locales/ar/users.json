@@ -1,0 +1,95 @@
+{
+  "title": "إدارة المستخدمين",
+  "filters": {
+    "filter": "التصفية",
+    "name": "الاسم",
+    "userName": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "civilId": "الرقم المدني",
+    "role": "الدور",
+    "governorate": "المحافظة"
+  },
+  "columns": {
+    "name": "الاسم",
+    "userName": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "civilId": "الرقم المدني",
+    "role": "الدور",
+    "governorate": "المحافظة",
+    "isActive": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "actions": "الإجراءات"
+  },
+  "actions": {
+    "addUser": "إضافة مستخدم",
+    "viewDetails": "عرض التفاصيل",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "openMenu": "فتح قائمة الإجراءات"
+  },
+  "form": {
+    "createUser": "إنشاء مستخدم جديد",
+    "editUser": "تعديل المستخدم",
+    "name": "الاسم",
+    "userName": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "phone": "رقم الهاتف",
+    "civilId": "الرقم المدني",
+    "role": "الدور",
+    "governorate": "المحافظة",
+    "isLdap": "مستخدم LDAP",
+    "isActive": "نشط",
+    "selectRole": "اختر الدور",
+    "selectGovernorate": "اختر المحافظة",
+    "cancel": "إلغاء",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "validation": {
+      "nameRequired": "الاسم مطلوب",
+      "userNameRequired": "اسم المستخدم مطلوب",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "emailInvalid": "صيغة البريد الإلكتروني غير صحيحة",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "roleRequired": "الدور مطلوب"
+    },
+    "roles": {
+      "role1": "دور 1"
+    },
+    "governorates": {
+      "gov1": "محافظة 1"
+    }
+  },
+  "details": {
+    "title": "تفاصيل المستخدم",
+    "basicInformation": "المعلومات الأساسية",
+    "name": "الاسم",
+    "userName": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "civilId": "الرقم المدني",
+    "role": "الدور",
+    "governorate": "المحافظة",
+    "isLdap": "مستخدم LDAP",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "deleteConfirmTitle": "حذف المستخدم",
+  "deleteConfirmMessage": "هل أنت متأكد من حذف المستخدم",
+  "cancel": "إلغاء",
+  "delete": "حذف",
+  "messages": {
+    "createSuccess": "تم إنشاء المستخدم بنجاح",
+    "createError": "فشل إنشاء المستخدم",
+    "updateSuccess": "تم تحديث المستخدم بنجاح",
+    "updateError": "فشل تحديث المستخدم",
+    "deleteSuccess": "تم حذف المستخدم بنجاح",
+    "deleteError": "فشل حذف المستخدم"
+  }
+}

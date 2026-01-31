@@ -1,0 +1,23 @@
+{
+  "reservation": "Reservation",
+  "reservations": "Reservations",
+  "myReservations": "My Reservations",
+
+  "noReservations": "You have no reservations at the moment.",
+  "outsideOfLocation": "Please click within a designated camping area",
+  
+  "confirmation": "Confirmation",
+  "locationDetails": "Location Details",
+  "requesterName": "Requester Name",
+  "civilID": "Civil ID",
+  "email": "Email",
+  "phoneNumber": "Phone Number",
+  "fees": "Fees",
+  "insurance": "Insurance",
+  "confirmReservation": "Confirm Reservation",
+  
+  "requesterNameRequired": "Requester name is required",
+  "requesterNameTooShort": "Requester name must be at least 2 characters",
+  "emailInvalid": "Please enter a valid email address",
+  "phoneNumberInvalid": "Please enter a valid phone number"
+}

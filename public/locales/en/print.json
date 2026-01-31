@@ -1,0 +1,10 @@
+{
+    "size": "Size",
+    "layout": "Layout",
+	"portrait": "Portrait",
+	"landscape": "Landscape",
+	"address": "Address",
+	"description": "Details",
+	"exportImage": "Export as image",
+	"exportPDF": "Export as PDF"
+}

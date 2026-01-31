@@ -1,0 +1,50 @@
+{
+  "title": "Roles Management",
+  "filters": {
+    "filter": "Filters",
+    "name": "Name"
+  },
+  "columns": {
+    "name": "Role Name",
+    "actions": "Actions"
+  },
+  "actions": {
+    "addRole": "Add Role",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "delete": "Delete",
+    "openMenu": "Open actions menu"
+  },
+  "form": {
+    "createRole": "Create New Role",
+    "editRole": "Edit Role",
+    "name": "Role Name",
+    "privileges": "Privileges",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "validation": {
+      "nameRequired": "Role name is required"
+    }
+  },
+  "details": {
+    "title": "Role Details",
+    "basicInformation": "Basic Information",
+    "name": "Role Name",
+    "privileges": "Privileges",
+    "noPrivileges": "No privileges assigned",
+    "placeholder": "Role details will be displayed here"
+  },
+  "deleteConfirmTitle": "Delete Role",
+  "deleteConfirmMessage": "Are you sure you want to delete role",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "messages": {
+    "createSuccess": "Role created successfully",
+    "createError": "Failed to create role",
+    "updateSuccess": "Role updated successfully",
+    "updateError": "Failed to update role",
+    "deleteSuccess": "Role deleted successfully",
+    "deleteError": "Failed to delete role"
+  }
+}

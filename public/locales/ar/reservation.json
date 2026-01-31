@@ -1,0 +1,22 @@
+{
+  "reservation": "الحجز",
+  "reservations": "الحجوزات",
+  "myReservations": "حجوزاتي",
+  "noReservations": "ليس لديك أي حجوزات حتى الآن.",
+  "outsideOfLocation": "يرجى النقر داخل منطقة تخييم محددة",
+  
+  "confirmation": "التأكيد",
+  "locationDetails": "تفاصيل الموقع",
+  "requesterName": "اسم مقدم الطلب",
+  "civilID": "الرقم المدني",
+  "email": "البريد الإلكتروني",
+  "phoneNumber": "رقم الهاتف",
+  "fees": "الرسوم",
+  "insurance": "التأمين",
+  "confirmReservation": "تأكيد الحجز",
+  
+  "requesterNameRequired": "اسم مقدم الطلب مطلوب",
+  "requesterNameTooShort": "يجب أن يكون اسم مقدم الطلب حرفين على الأقل",
+  "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صالح",
+  "phoneNumberInvalid": "يرجى إدخال رقم هاتف صالح"
+}

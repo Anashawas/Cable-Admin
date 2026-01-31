@@ -1,0 +1,50 @@
+{
+  "title": "إدارة الأدوار",
+  "filters": {
+    "filter": "التصفية",
+    "name": "الاسم"
+  },
+  "columns": {
+    "name": "اسم الدور",
+    "actions": "الإجراءات"
+  },
+  "actions": {
+    "addRole": "إضافة دور",
+    "viewDetails": "عرض التفاصيل",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "openMenu": "فتح قائمة الإجراءات"
+  },
+  "form": {
+    "createRole": "إنشاء دور جديد",
+    "editRole": "تعديل الدور",
+    "name": "اسم الدور",
+    "privileges": "الصلاحيات",
+    "cancel": "إلغاء",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "validation": {
+      "nameRequired": "اسم الدور مطلوب"
+    }
+  },
+  "details": {
+    "title": "تفاصيل الدور",
+    "basicInformation": "المعلومات الأساسية",
+    "name": "اسم الدور",
+    "privileges": "الصلاحيات",
+    "noPrivileges": "لا توجد صلاحيات معينة",
+    "placeholder": "سيتم عرض تفاصيل الدور هنا"
+  },
+  "deleteConfirmTitle": "حذف الدور",
+  "deleteConfirmMessage": "هل أنت متأكد من حذف الدور",
+  "cancel": "إلغاء",
+  "delete": "حذف",
+  "messages": {
+    "createSuccess": "تم إنشاء الدور بنجاح",
+    "createError": "فشل إنشاء الدور",
+    "updateSuccess": "تم تحديث الدور بنجاح",
+    "updateError": "فشل تحديث الدور",
+    "deleteSuccess": "تم حذف الدور بنجاح",
+    "deleteError": "فشل حذف الدور"
+  }
+}

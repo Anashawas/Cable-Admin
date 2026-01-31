@@ -1,0 +1,99 @@
+{
+  "title": "Camping Seasons Management",
+  "filters": {
+    "filter": "Filters",
+    "name": "Season Name",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "includeDeleted": "Include Deleted"
+  },
+  "columns": {
+    "name": "Season Name",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "status": "Status",
+    "isDeleted": "State",
+    "active": "Active",
+    "deleted": "Deleted",
+    "actions": "Actions"
+  },
+  "actions": {
+    "add": "Add Season",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "delete": "Delete",
+    "openMenu": "Open actions menu"
+  },
+  "form": {
+    "createCampingSeason": "Create New Camping Season",
+    "editCampingSeason": "Edit Camping Season",
+    "basicInformation": "Basic Information",
+    "seasonDetails": "Season Details",
+    "name": "Season Name",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "safeDistanceCamps": "Safe Distance Between Camps",
+    "role": "Role",
+    "insuranceValue": "Insurance Value",
+    "feeValue": "Fee Value",
+    "startDate": "Start Date",
+    "maxAreaSize": "Maximum Area Size",
+    "allowedReservationTimes": "Allowed Reservation Times",
+    "selectRole": "Select Role",
+    "addDetail": "Add Season Detail",
+    "detail": "Detail",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "close": "Close",
+    "validation": {
+      "nameRequired": "Season name is required",
+      "fromDateRequired": "From date is required",
+      "toDateRequired": "To date is required",
+      "safeDistanceRequired": "Safe distance is required",
+      "roleRequired": "Role is required",
+      "insuranceValueRequired": "Insurance value is required",
+      "feeValueRequired": "Fee value is required",
+      "startDateRequired": "Start date is required",
+      "maxAreaSizeRequired": "Maximum area size is required",
+      "allowedReservationTimesRequired": "Allowed reservation times is required",
+      "civilIdRequired": "Civil ID is required",
+      "governorateRequired": "Governorate is required"
+    }
+  },
+  "deleteDialog": {
+    "title": "Delete Camping Season",
+    "message": "Are you sure you want to delete camping season \"{{name}}\"?",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  },
+  "details": {
+    "title": "Camping Season Details",
+    "placeholder": "Camping season details will be displayed here",
+    "basicInformation": "Basic Information",
+    "name": "Season Name",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "safeDistanceCamps": "Safe Distance Between Camps",
+    "status": "Status",
+    "isDeleted": "State",
+    "active": "Active",
+    "deleted": "Deleted",
+    "seasonDetails": "Season Details",
+    "detail": "Detail",
+    "role": "Role",
+    "insuranceValue": "Insurance Value",
+    "feeValue": "Fee Value",
+    "maxAreaSize": "Maximum Area Size",
+    "allowedReservationTimes": "Allowed Reservation Times",
+    "startDate": "Start Date"
+  },
+  "messages": {
+    "createSuccess": "Camping season created successfully",
+    "createError": "Failed to create camping season",
+    "updateSuccess": "Camping season updated successfully",
+    "updateError": "Failed to update camping season",
+    "deleteSuccess": "Camping season deleted successfully",
+    "deleteError": "Failed to delete camping season"
+  }
+}

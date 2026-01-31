@@ -1,0 +1,10 @@
+{
+	"campingAreas": "Camping Areas",
+	"campingAreasManagement": "Camping Areas Management",
+	"drawCampingAreas": "Draw Camping Areas",
+	"gisMapTool": "GIS Map Tool",
+	"loadingMap": "Loading map...",
+	"mapLoadError": "Failed to load map. Please try again later.",
+	"openInNewTab": "Open in New Tab",
+	"iframeBlockedWarning": "The GIS tool could not be loaded in the embedded view. This may be due to security restrictions. Please use the 'Open in New Tab' button to access the tool directly."
+}

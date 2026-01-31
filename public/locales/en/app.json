@@ -1,0 +1,19 @@
+{
+  "appName": "Cable Admin",
+  "appTitle": "Cable Admin",
+  "internetConnectionRestored": "Your Internet connection is restored",
+  "internetConnectionOffline": "You are currently offline",
+  "notFound": "The page you have requested could not be found. Please go back to the homepage.",
+  "homepage": "Home",
+  "darkMode": "Dark mode",
+  "emptyAppScreens": "No access",
+  "emptyAppScreensTagline": "Contact VIDS system administrator.",
+  "error": "Something went wrong",
+  "checkInternetConnection": "Please check your internet connection and try again",
+  "kmCamping": "Cable-Admin",
+  "welcomeMessage": "Welcome",
+  "lightMode": "Light Mode",
+  "switchToArabic": "العربية",
+  "switchToEnglish": "English",
+  "logout": "Logout"
+}

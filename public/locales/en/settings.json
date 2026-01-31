@@ -1,0 +1,14 @@
+{
+	"settings": "Settings",
+	"appearance": "Appearance",
+	"themeMode": "Theme Mode",
+	"language": "Language",
+	"selectLanguage": "Select Language",
+	"english": "English",
+	"arabic": "Arabic",
+	"layout": "Layout",
+	"expandSidebar": "Expand Sidebar",
+	"showSidebarExpanded": "Show sidebar expanded by default",
+	"darkMode": "Dark Mode",
+	"lightMode": "Light Mode"
+}

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run typecheck:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npx vite build:*)",
+      "Bash(npx npm-check-updates:*)",
+      "Bash(npm audit:*)",
+      "Bash(npx check-outdated:*)",
+      "Bash(npx npm-check:*)",
+      "Bash(npx depcheck:*)",
+      "Bash(git config:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
