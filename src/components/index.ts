@@ -7,5 +7,8 @@ export { default as Card } from './Card';
 export { default as ScreenHeader } from './ScreenHeader';
 export type { ScreenHeaderAction } from './ScreenHeader';
 export { default as AppDataGrid } from './AppDataGrid';
+export { default as GlobalSearch } from './GlobalSearch';
+export { default as BulkActionsBar } from './BulkActionsBar';
+export type { BulkActionsBarProps } from './BulkActionsBar';
 export { default as CollapsibleFilters } from './CollapsibleFilters';
 export type { FilterField, FilterSelectOption, CollapsibleFiltersProps } from './CollapsibleFilters';

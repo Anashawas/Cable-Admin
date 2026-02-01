@@ -8,6 +8,8 @@
   "invalidId": "معرف مستخدم غير صالح",
   "deleteConfirmTitle": "حذف المستخدم",
   "deleteConfirmMessage": "هل أنت متأكد من حذف",
+  "bulkDeleteConfirm": "حذف {{count}} مستخدمين محددين؟",
+  "bulkDeleted": "تم حذف {{count}} مستخدمين",
   "columns": {
     "id": "المعرف",
     "name": "الاسم",

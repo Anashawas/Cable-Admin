@@ -17,13 +17,13 @@ import {
   Chip,
   CircularProgress,
 } from "@mui/material";
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader, ScreenHeaderAction } from "../../../components";
-import { AppDataGrid } from "../../../components";
+import { AppDataGrid, BulkActionsBar } from "../../../components";
 import { getUsersList, deleteUserById } from "../services/user-service";
 import type { UserSummaryDto } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
@@ -42,6 +42,8 @@ export default function UserListScreen() {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserSummaryDto | null>(null);
+  const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const { data = [], isLoading, error, refetch } = useQuery({
     queryKey: ["users", "list"],
@@ -104,6 +106,52 @@ export default function UserListScreen() {
       deleteMutation.mutate(userToDelete.id);
     }
   }, [userToDelete, deleteMutation]);
+
+  const selectedIds = useMemo(() => (rowSelectionModel as number[]).filter((id) => id != null), [rowSelectionModel]);
+
+  const handleBulkExport = useCallback(() => {
+    const rows = filteredData.filter((r) => selectedIds.includes(r.id ?? -1));
+    if (rows.length === 0) return;
+    const headers = ["id", "name", "email", "phone", "role"];
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) =>
+        headers.map((h) => {
+          const v = h === "role" ? r.role?.name : (r as unknown as Record<string, unknown>)[h];
+          return `"${String(v ?? "").replace(/"/g, '""')}"`;
+        }).join(",")
+      ),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `users-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filteredData, selectedIds]);
+
+  const handleBulkDeleteClick = useCallback(() => {
+    if (selectedIds.length > 0) setBulkDeleteDialogOpen(true);
+  }, [selectedIds.length]);
+
+  const handleConfirmBulkDelete = useCallback(async () => {
+    for (const id of selectedIds) {
+      try {
+        await deleteMutation.mutateAsync(id);
+      } catch {
+        // Error already shown by mutation
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+    setBulkDeleteDialogOpen(false);
+    setRowSelectionModel([]);
+    if (selectedIds.length > 0) {
+      openSuccessSnackbar({
+        message: t("userManagement@bulkDeleted", "{{count}} users deleted", { count: selectedIds.length }),
+      });
+    }
+  }, [selectedIds, deleteMutation, queryClient, openSuccessSnackbar, t]);
 
   const columns: GridColDef<UserSummaryDto>[] = useMemo(
     () => [
@@ -261,6 +309,18 @@ export default function UserListScreen() {
             onPaginationModelChange={setPaginationModel}
             total={filteredData.length}
             minHeight="70vh"
+            enableColumnFilter
+            enableToolbar
+            checkboxSelection
+            rowSelectionModel={rowSelectionModel}
+            onRowSelectionModelChange={setRowSelectionModel}
+          />
+          <BulkActionsBar
+            selectedCount={selectedIds.length}
+            onClearSelection={() => setRowSelectionModel([])}
+            onBulkExport={handleBulkExport}
+            onBulkDelete={handleBulkDeleteClick}
+            loading={deleteMutation.isPending}
           />
         </Stack>
       </Box>
@@ -288,6 +348,44 @@ export default function UserListScreen() {
           </Button>
           <Button
             onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              t("delete")
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={bulkDeleteDialogOpen}
+        onClose={() => !deleteMutation.isPending && setBulkDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        sx={{ zIndex: 10002 }}
+      >
+        <DialogTitle>{t("search@bulkDelete", "Delete")}</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {t("userManagement@bulkDeleteConfirm", "Delete {{count}} selected users?", {
+              count: selectedIds.length,
+            })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setBulkDeleteDialogOpen(false)}
+            color="inherit"
+            disabled={deleteMutation.isPending}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            onClick={handleConfirmBulkDelete}
             color="error"
             variant="contained"
             disabled={deleteMutation.isPending}

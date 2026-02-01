@@ -18,6 +18,7 @@ import {
   MoreVert,
   Language,
   Menu as MenuIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import {
   useAuthenticationStore,
@@ -30,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import { LANGUAGE } from "../../../constants/language-constants";
 import { useState } from "react";
 import AppMobileDrawer from "./AppMobileDrawer";
+import { useGlobalSearchStore } from "../../../stores";
 
 const AppHeader = () => {
   const user = useAuthenticationStore((state) => state.user);
@@ -44,6 +46,7 @@ const AppHeader = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const setGlobalSearchOpen = useGlobalSearchStore((s) => s.setOpen);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const open = Boolean(anchorEl);
@@ -109,6 +112,12 @@ const AppHeader = () => {
             </Typography>
           </Box>
           <Box sx={{ flexGrow: 1 }} />
+
+          <Tooltip title={t("search@openShortcut", "Search (Ctrl+K)")} arrow>
+            <IconButton color="inherit" onClick={() => setGlobalSearchOpen(true)} aria-label="Open search">
+              <SearchIcon />
+            </IconButton>
+          </Tooltip>
 
           {isMobile ? (
             <Box display="flex" alignItems="center">

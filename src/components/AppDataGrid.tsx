@@ -1,5 +1,13 @@
 import { memo, useEffect, useRef, ReactNode, JSX } from "react";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+  GridRowSelectionModel,
+  GridToolbar,
+  GridToolbarFilterButton,
+  type GridRowHeightParams,
+} from "@mui/x-data-grid";
 import { GridApiCommunity } from "@mui/x-data-grid/internals";
 import { Box, LinearProgress, Typography, Stack } from "@mui/material";
 import { useTranslation } from "react-i18next";
@@ -13,10 +21,22 @@ interface AppDataGridProps<T = any> {
   onPaginationModelChange?: (model: GridPaginationModel) => void;
   pageSizeOptions?: number[];
   minHeight?: string;
-  children?: ReactNode; // For dialogs or other components that need to be rendered alongside
+  children?: ReactNode;
   getRowId?: (row: T) => string | number;
   onRowClick?: (params: any) => void;
   disablePagination?: boolean;
+  /** Enable column filters and client-side filter mode. */
+  enableColumnFilter?: boolean;
+  /** Show toolbar with filter button. */
+  enableToolbar?: boolean;
+  /** Show checkbox column for multi-select (bulk actions). */
+  checkboxSelection?: boolean;
+  rowSelectionModel?: GridRowSelectionModel;
+  onRowSelectionModelChange?: (model: GridRowSelectionModel) => void;
+  /** Optional class name for rows (e.g. for Premium styling). */
+  getRowClassName?: (params: { row: T }) => string;
+  /** Optional fixed or dynamic row height (px). */
+  getRowHeight?: (params: { row: T }) => number;
 }
 
 const AppDataGrid = <T extends Record<string, any>>({
@@ -31,6 +51,13 @@ const AppDataGrid = <T extends Record<string, any>>({
   getRowId,
   onRowClick,
   disablePagination = false,
+  enableColumnFilter = false,
+  enableToolbar = false,
+  checkboxSelection = false,
+  rowSelectionModel,
+  onRowSelectionModelChange,
+  getRowClassName,
+  getRowHeight,
 }: AppDataGridProps<T>) => {
   const { t } = useTranslation();
   const apiRef = useRef<GridApiCommunity>(
@@ -86,26 +113,43 @@ const AppDataGrid = <T extends Record<string, any>>({
     </Stack>
   );
 
+  const slots = {
+    loadingOverlay: CustomLoadingOverlay,
+    noRowsOverlay: CustomNoRowsOverlay,
+    ...(enableToolbar && {
+      toolbar: () => (
+        <GridToolbar sx={{ gap: 0.5, py: 0.5, px: 1 }}>
+          <GridToolbarFilterButton />
+        </GridToolbar>
+      ),
+    }),
+  };
+
   const baseProps = {
     apiRef,
     rows: data,
     columns,
     loading,
-    disableRowSelectionOnClick: !onRowClick,
-    disableColumnFilter: true,
-    disableColumnMenu: true,
+    disableRowSelectionOnClick: checkboxSelection ? false : !onRowClick,
+    disableColumnFilter: !enableColumnFilter,
+    disableColumnMenu: !enableColumnFilter,
     disableColumnSelector: true,
     disableDensitySelector: true,
-    disableMultipleRowSelection: true,
-    hideFooterSelectedRowCount: true,
+    disableMultipleRowSelection: !checkboxSelection,
+    hideFooterSelectedRowCount: !checkboxSelection,
+    checkboxSelection,
+    rowSelectionModel: checkboxSelection ? rowSelectionModel : undefined,
+    onRowSelectionModelChange: checkboxSelection ? onRowSelectionModelChange : undefined,
+    filterMode: enableColumnFilter ? ("client" as const) : undefined,
     autoHeight: true,
     getRowId,
     onRowClick,
+    getRowClassName: getRowClassName as ((params: { row: Record<string, unknown> }) => string) | undefined,
+    getRowHeight: getRowHeight
+      ? (params: GridRowHeightParams) => getRowHeight({ row: params.model as T })
+      : undefined,
     scrollbarSize: 17,
-    slots: {
-      loadingOverlay: CustomLoadingOverlay,
-      noRowsOverlay: CustomNoRowsOverlay,
-    },
+    slots,
     sx: {
       minHeight,
       '& .MuiLinearProgress-root': {

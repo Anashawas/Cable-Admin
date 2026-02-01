@@ -51,7 +51,10 @@ function flattenUserCars(userCars: UserCarDto[] | undefined): UserCarRow[] {
         carModelId: cm.carModelId ?? 0,
         brand,
         model: cm.carModelName ?? "—",
-        plugName: cm.plugTypes?.name ?? "—",
+        plugName:
+          cm.plugTypes?.serialNumber
+            ? `${cm.plugTypes?.name ?? ""} (${cm.plugTypes.serialNumber})`
+            : (cm.plugTypes?.name ?? "—"),
       });
     }
   }
@@ -282,7 +285,9 @@ export default function UserCarsSection({
               <option value="">—</option>
               {plugTypes.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name ?? p.id}
+                  {p.serialNumber
+                    ? `${p.name ?? ""} (${p.serialNumber})`
+                    : (p.name ?? String(p.id))}
                 </option>
               ))}
             </TextField>

@@ -8,3 +8,4 @@ export { default as useThemeStore } from "./theme-store";
 export { default as useMapFeaturesStore } from "./map-features-store";
 export { default as useLayersListStore } from "./layers-list-store";
 export { default as useBasemapStore } from "./basemap-store";
+export { default as useGlobalSearchStore } from "./global-search-store";

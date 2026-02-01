@@ -4,10 +4,12 @@ import type {
   CarTypeWithModelsDto,
 } from "../types/api";
 
+/** Same shape as GET api/plug-types/GetAllPlugTypes. */
 export interface PlugTypeOption {
   id: number;
   name?: string | null;
   serialNumber?: string | null;
+  plugTypeFamily?: string | null;
 }
 
 /**

@@ -20,9 +20,34 @@
     "chargers": "Chargers",
     "verified": "Verified",
     "status": "Status",
+    "plugs": "Plugs",
+    "speed": "Speed",
+    "verification": "Verification",
     "rating": "Rating",
     "visitors": "Visitors",
+    "payment": "Payment",
+    "detail": "Detail",
     "actions": "Actions"
+  },
+  "detail": {
+    "title": "Station detail",
+    "services": "Services",
+    "images": "Images"
+  },
+  "filters": {
+    "title": "Filters",
+    "active": "Active",
+    "clearAll": "Clear all",
+    "city": "City",
+    "status": "Status",
+    "verified": "Verified",
+    "stationType": "Station type",
+    "plugType": "Plug type",
+    "plugTypeCount": "{{count}} selected",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "resultsCount": "{{count}} stations"
   },
   "actions": {
     "addStation": "Add Station",

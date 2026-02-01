@@ -56,5 +56,13 @@
 	"searchPanel": "لوحة البحث",
 	"simplifiedFloatingPanel": "هذه لوحة عائمة مبسطة لعرض الجوال.",
 	"simplifiedSidePanel": "هذه لوحة جانبية مبسطة لعرض سطح المكتب.",
-	"searchFunctionalityRemoved": "تم إزالة وظيفة البحث كما هو مطلوب."
+	"searchFunctionalityRemoved": "تم إزالة وظيفة البحث كما هو مطلوب.",
+	"openShortcut": "بحث (Ctrl+K)",
+	"globalPlaceholder": "ابحث في المحطات والمستخدمين والشكاوى…",
+	"typeToSearch": "اكتب للبحث في المحطات والمستخدمين والشكاوى.",
+	"noResults": "لا توجد نتائج.",
+	"bulkSelected": "{{count}} محدد",
+	"clearSelection": "إلغاء التحديد",
+	"bulkExport": "تصدير",
+	"bulkDelete": "حذف"
 }

@@ -1,14 +1,9 @@
 import { server } from "../../../lib/@axios";
-import type { ChargingPointDto } from "../types/api";
-
-export interface PlugTypeDto {
-  id: number;
-  name?: string | null;
-}
+import type { ChargingPointDto, PlugTypeDto } from "../types/api";
 
 /**
  * GET api/plug-types/GetAllPlugTypes
- * Returns array of { id, name }.
+ * Returns array of { id, name, serialNumber, plugTypeFamily }.
  */
 const getAllPlugTypes = async (signal?: AbortSignal): Promise<PlugTypeDto[]> => {
   const { data } = await server.get<PlugTypeDto[]>("api/plug-types/GetAllPlugTypes", {

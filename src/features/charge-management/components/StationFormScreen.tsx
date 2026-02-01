@@ -440,7 +440,11 @@ export default function StationFormScreen() {
                       <Autocomplete
                         multiple
                         options={plugTypes}
-                        getOptionLabel={(opt) => opt.name ?? String(opt.id)}
+                        getOptionLabel={(opt) =>
+                          opt.serialNumber
+                            ? `${opt.name ?? ""} (${opt.serialNumber})`
+                            : (opt.name ?? String(opt.id))
+                        }
                         value={plugTypes.filter((p) => field.value.includes(p.id))}
                         onChange={(_, selected) => field.onChange(selected.map((p) => p.id))}
                         loading={isLoadingPlugTypes}

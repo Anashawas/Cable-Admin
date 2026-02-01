@@ -8,6 +8,8 @@
   "invalidId": "Invalid user ID",
   "deleteConfirmTitle": "Delete user",
   "deleteConfirmMessage": "Are you sure you want to delete",
+  "bulkDeleteConfirm": "Delete {{count}} selected users?",
+  "bulkDeleted": "{{count}} users deleted",
   "columns": {
     "id": "ID",
     "name": "Name",

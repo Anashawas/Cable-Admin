@@ -55,5 +55,13 @@
 	"searchPanel": "Search Panel",
 	"simplifiedFloatingPanel": "This is a simplified floating panel for mobile view.",
 	"simplifiedSidePanel": "This is a simplified side panel for desktop view.",
-	"searchFunctionalityRemoved": "Search functionality has been removed as requested."
+	"searchFunctionalityRemoved": "Search functionality has been removed as requested.",
+	"openShortcut": "Search (Ctrl+K)",
+	"globalPlaceholder": "Search stations, users, complaints…",
+	"typeToSearch": "Type to search across Stations, Users, and Complaints.",
+	"noResults": "No results found.",
+	"bulkSelected": "{{count}} selected",
+	"clearSelection": "Clear",
+	"bulkExport": "Export",
+	"bulkDelete": "Delete"
 }

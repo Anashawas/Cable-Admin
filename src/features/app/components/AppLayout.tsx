@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import AppCollapsibleSidebar from "./AppCollapsibleSidebar";
 import AppHeader from "./AppHeader";
+import { GlobalSearch } from "../../../components";
 import { useLayoutStore } from "../../../stores";
 
 interface AppLayoutProps {
@@ -14,6 +15,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
 	return (
 		<Box sx={{ display: "flex", height: "100vh", m: 0, p: 0, overflow: "hidden" }}>
+			<GlobalSearch />
 			{!smallScreen && <AppCollapsibleSidebar />}
 			<Box
 				component="main"
