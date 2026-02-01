@@ -1,0 +1,68 @@
+{
+  "title": "Charge Management",
+  "unnamed": "Unnamed Station",
+  "searchPlaceholder": "Search by name or city",
+  "sort": {
+    "label": "Sort by",
+    "none": "No sorting",
+    "visitorsHighToLow": "Most visitors",
+    "visitorsLowToHigh": "Least visitors",
+    "ratingHighToLow": "Highest rating",
+    "nameAtoZ": "Name (A–Z)"
+  },
+  "columns": {
+    "id": "ID",
+    "stationName": "Station Name",
+    "city": "City",
+    "address": "Address",
+    "phone": "Phone",
+    "type": "Type",
+    "chargers": "Chargers",
+    "verified": "Verified",
+    "status": "Status",
+    "rating": "Rating",
+    "visitors": "Visitors",
+    "actions": "Actions"
+  },
+  "actions": {
+    "addStation": "Add Station",
+    "edit": "Edit",
+    "media": "Media",
+    "viewComplaints": "View Complaints"
+  },
+  "form": {
+    "addTitle": "Add Charging Point",
+    "editTitle": "Edit Charging Point",
+    "saved": "Station saved successfully",
+    "basicInfo": "Basic Info",
+    "location": "Location",
+    "settings": "Settings",
+    "name": "Name",
+    "phone": "Phone",
+    "note": "Note",
+    "city": "City",
+    "address": "Address",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "status": "Status",
+    "chargerPointType": "Charger Point Type",
+    "stationType": "Station Type",
+    "chargerSpeed": "Charger Speed (kW)",
+    "price": "Price",
+    "chargersCount": "Chargers Count",
+    "plugTypes": "Plug Types",
+    "paymentMethods": "Payment Methods",
+    "services": "Services"
+  },
+  "media": {
+    "title": "Media",
+    "mainIcon": "Main Icon",
+    "changeIcon": "Change Icon",
+    "iconUploaded": "Icon uploaded successfully",
+    "photoGallery": "Photo Gallery",
+    "addPhotos": "Add Photos",
+    "photosUploaded": "Photos uploaded successfully",
+    "noPhotos": "No photos yet. Add photos using the button above.",
+    "deleteUnavailable": "Delete unavailable (No ID from server)"
+  }
+}

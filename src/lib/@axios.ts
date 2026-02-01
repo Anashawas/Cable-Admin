@@ -5,14 +5,23 @@ const server = axios.create({
   baseURL: window.env.server.url,
 });
 
+/** Login/authenticate: no token — we send empty when not logged in. Token comes from login response. */
+const isAuthEndpoint = (url: string) => {
+  const path = (url || "").toLowerCase();
+  return path.includes("authenticate") || path.includes("login-by-token");
+};
+
 server.interceptors.request.use(
   (config) => {
     const { user } = useAuthenticationStore.getState();
     config.headers["Access-Control-Allow-Origin"] = "*";
     config.headers["accept-language"] = useLanguageStore.getState().language;
-    const currentUserAccessToken = user?.accessToken;
-    if (currentUserAccessToken && currentUserAccessToken !== "") {
-      config.headers["Authorization"] = "Bearer " + currentUserAccessToken;
+    // No Authorization on login (empty). After login we use the token from the API response.
+    if (!isAuthEndpoint(config.url || "")) {
+      const currentUserAccessToken = user?.accessToken;
+      if (currentUserAccessToken && currentUserAccessToken !== "") {
+        config.headers["Authorization"] = "Bearer " + currentUserAccessToken;
+      }
     }
     return config;
   },

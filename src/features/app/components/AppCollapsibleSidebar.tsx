@@ -19,19 +19,17 @@ import { useState } from "react";
 import { useLayoutStore, useAuthenticationStore } from "../../../stores";
 import {
 	Dashboard as DashboardIcon,
-	EventNote as ReservationsIcon,
-	MonetizationOn as RefundsIcon,
-	People as UsersIcon,
-	Security as RolesIcon,
 	ChevronLeft as ChevronLeftIcon,
 	ChevronRight as ChevronRightIcon,
 	ExpandLess,
 	ExpandMore,
-	Business as BusinessIcon,
-	AdminPanelSettings as AdminIcon,
-	CalendarToday as CampingSeasonsIcon,
-	Tune as ConfigurationsIcon,
-	Map as MapIcon,
+	EvStation as EvStationIcon,
+	People as PeopleIcon,
+	Settings as SettingsIcon,
+	ListAlt as ListAltIcon,
+	LocalHospital as LocalHospitalIcon,
+	NotificationsActive as NotificationsActiveIcon,
+	ReportProblem as ReportProblemIcon,
 } from "@mui/icons-material";
 import { PRIVILEGES, PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -60,9 +58,10 @@ const AppCollapsibleSidebar = () => {
 	const sidebarExpanded = useLayoutStore((state) => state.sidebarExpanded);
 	const toggleSidebar = useLayoutStore((state) => state.toggleSidebar);
 	const user = useAuthenticationStore((state) => state.user);
-	const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({
-		business: false,
-		dataEntry: false,
+	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+		chargeManagement: false,
+		userManagement: false,
+		systemData: false,
 	});
 
 	const isRTL = i18n.language === 'ar';
@@ -78,53 +77,33 @@ const AppCollapsibleSidebar = () => {
 
 	const navigationGroups: NavigationGroup[] = [
 		{
-			id: "business",
-			label: t("businessModule"),
-			icon: <BusinessIcon />,
+			id: "chargeManagement",
+			label: t("chargeManagement"),
+			icon: <EvStationIcon />,
 			items: [
-				{
-					label: t("reservations"),
-					path: "/reservations",
-					icon: <ReservationsIcon />,
-					requiredPrivileges: [PRIVILEGES.VIEW_RESERVATIONS, PRIVILEGES.VIEW_RESERVATIONS_GOVERNORATE],
-				},
-				{
-					label: t("refunds"),
-					path: "/refunds",
-					icon: <RefundsIcon />,
-					requiredPrivileges: [PRIVILEGES.VIEW_REFUNDS, PRIVILEGES.VIEW_REFUNDS_GOVERNORATE],
-				},
+				{ label: t("chargeManagement"), path: "/charge-management", icon: <EvStationIcon /> },
+				{ label: t("stationsRequest"), path: "/stations-request", icon: <ListAltIcon /> },
+				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },
 			],
 		},
 		{
-			id: "dataEntry",
-			label: t("dataEntryModule"),
-			icon: <AdminIcon />,
+			id: "userManagement",
+			label: t("userManagement"),
+			icon: <PeopleIcon />,
 			items: [
-				{
-					label: t("users"),
-					path: "/users",
-					icon: <UsersIcon />,
-					requiredPrivileges: [PRIVILEGES.VIEW_USERS],
-				},
-				{
-					label: t("campingSeasons"),
-					path: "/camping-seasons",
-					icon: <CampingSeasonsIcon />,
-					requiredPrivileges: [PRIVILEGES.VIEW_CAMPING_SEASONS],
-				},
-				{
-					label: t("campingAreas"),
-					path: "/camping-areas",
-					icon: <MapIcon />,
-					requiredPrivileges: [PRIVILEGES.MANAGE_SYSTEM_CONFIGURATIONS],
-				},
-				{
-					label: t("roles"),
-					path: "/roles",
-					icon: <RolesIcon />,
-					requiredPrivileges: [PRIVILEGES.VIEW_ROLES],
-				},
+				{ label: t("userManagement"), path: "/users", icon: <PeopleIcon /> },
+			],
+		},
+		{
+			id: "systemData",
+			label: t("systemData"),
+			icon: <SettingsIcon />,
+			items: [
+				{ label: t("carManagement"), path: "/car-management", icon: <SettingsIcon /> },
+				{ label: t("banners"), path: "/banners", icon: <SettingsIcon /> },
+				{ label: t("appVersions"), path: "/app-versions", icon: <SettingsIcon /> },
+				{ label: t("emergencyServices"), path: "/emergency-services", icon: <LocalHospitalIcon /> },
+				{ label: t("sendNotification"), path: "/send-notification", icon: <NotificationsActiveIcon /> },
 			],
 		},
 	];
@@ -139,8 +118,9 @@ const AppCollapsibleSidebar = () => {
 		toggleSidebar();
 		if (!sidebarExpanded) {
 			setExpandedGroups({
-				business: false,
-				dataEntry: false,
+				chargeManagement: false,
+				userManagement: false,
+				systemData: false,
 			});
 		}
 	};
@@ -232,7 +212,7 @@ const AppCollapsibleSidebar = () => {
 							</Avatar>
 							<Box sx={{ minWidth: 0 }}>
 								<Typography variant="subtitle1" noWrap fontWeight="bold" sx={{ lineHeight: 1.2 }}>
-									{user.username}
+									{user.email}
 								</Typography>
 								<Typography variant="caption" color="text.secondary" noWrap sx={{ lineHeight: 1 }}>
 									{user.name}
@@ -375,7 +355,8 @@ const AppCollapsibleSidebar = () => {
 													selected={location.pathname === item.path}
 													onClick={() => handleNavigate(item.path)}
 													sx={{
-														pl: 4,
+														px: 2,
+														paddingInlineStart: 4,
 														mx: 1,
 														mb: 0.5,
 														borderRadius: 1,

@@ -1,0 +1,16 @@
+{
+  "title": "User Complaints",
+  "deleted": "Complaint deleted",
+  "deleteConfirmTitle": "Delete complaint",
+  "deleteConfirmMessage": "Are you sure you want to delete this complaint?",
+  "columns": {
+    "id": "ID",
+    "user": "User",
+    "station": "Station",
+    "note": "Complaint (Note)",
+    "actions": "Actions"
+  },
+  "actions": {
+    "delete": "Delete"
+  }
+}

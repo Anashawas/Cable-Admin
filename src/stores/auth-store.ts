@@ -1,16 +1,19 @@
-import { AUTH_STATE_KEY } from "../constants/authentication-constants";
+import { JWT_TOKEN_KEY } from "../constants/authentication-constants";
+import type { LoginResponse, UserDetails } from "../features/authentication/types/api";
 import { create } from "zustand";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+/** In-app user shape (from LoginResponse.userDetails + tokens + privileges) */
 export interface User {
 	id: number;
 	name: string;
-	username: string;
-	isActiveDirectory: boolean;
+	email: string;
+	phone?: string | null;
+	isActive: boolean;
+	role: { id: number; name: string };
 	accessToken: string;
 	refreshToken: string;
-	mapServices: any[];
 	privileges: string[];
 	persist: boolean;
 }
@@ -19,8 +22,8 @@ interface AuthState {
 	user: User | null;
 	loaded: boolean;
 	privileges: string[];
-	setLoggedInUser: ({ userDetails, persist }: { userDetails: any; persist: boolean }) => void;
-	updateLoggedInUserDetails: (user: any) => void;
+	setLoggedInUser: (payload: { loginResponse: LoginResponse; persist: boolean }) => void;
+	updateLoggedInUserDetails: (userDetails: UserDetails, tokens?: { accessToken: string; refreshToken: string }) => void;
 	logout: () => void;
 	setTokens: (accessToken: string, refreshToken: string) => void;
 }
@@ -33,40 +36,43 @@ const useAuthenticationStore = create<AuthState>()(
 					user: null,
 					loaded: false,
 					privileges: [],
-					setLoggedInUser: ({ userDetails, persist }) => {
-						const user = {
+					setLoggedInUser: ({ loginResponse, persist: persistFlag }) => {
+						const { userDetails, accessToken, refreshToken, privileges = [] } = loginResponse;
+						const user: User = {
 							id: userDetails.id,
 							name: userDetails.name,
-							username: userDetails.username,
-							isActiveDirectory: userDetails.isActiveDirectory,
-							accessToken: userDetails.accessToken,
-							refreshToken: userDetails.refreshToken,
-							mapServices: userDetails.mapServices,
-							privileges: userDetails.privileges || [],
-							persist: persist,
+							email: userDetails.email,
+							phone: userDetails.phone,
+							isActive: userDetails.isActive,
+							role: userDetails.role,
+							accessToken,
+							refreshToken,
+							privileges,
+							persist: persistFlag,
 						};
 						set((state) => {
 							state.user = user;
 							state.loaded = true;
-							state.privileges = userDetails.privileges || [];
+							state.privileges = privileges;
 						});
 					},
-					updateLoggedInUserDetails: (user) => {
+					updateLoggedInUserDetails: (userDetails, tokens) => {
 						const currentUser = get().user;
+						if (!currentUser) return;
 						set({
 							user: {
-								...currentUser!,
-								id: user.id,
-								name: user.name,
-								username: user.username,
-								isActiveDirectory: user.isActiveDirectory,
-								mapServices: user.mapServices,
-								privileges: user.privileges || [],
-								accessToken: user.accessToken ?? currentUser?.accessToken,
-								refreshToken: user.refreshToken ?? currentUser?.refreshToken,
+								...currentUser,
+								id: userDetails.id,
+								name: userDetails.name,
+								email: userDetails.email,
+								phone: userDetails.phone,
+								isActive: userDetails.isActive,
+								role: userDetails.role,
+								accessToken: tokens?.accessToken ?? currentUser.accessToken,
+								refreshToken: tokens?.refreshToken ?? currentUser.refreshToken,
+								privileges: currentUser.privileges,
 								persist: true,
 							},
-							privileges: user.privileges || [],
 							loaded: true,
 						});
 					},
@@ -85,16 +91,16 @@ const useAuthenticationStore = create<AuthState>()(
 						}),
 				})),
 				{
-					name: AUTH_STATE_KEY,
+					name: JWT_TOKEN_KEY,
 					partialize: (state) => ({
 						user: state.user?.persist ? state.user : null,
-						privileges: state.user?.persist ? state.privileges : []
+						privileges: state.user?.persist ? state.privileges : [],
 					}),
 				}
 			)
 		),
 		{
-			name: "Authentication Store"
+			name: "Authentication Store",
 		}
 	)
 );

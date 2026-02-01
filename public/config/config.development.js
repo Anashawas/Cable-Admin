@@ -20,7 +20,7 @@ window.env = {
     ],
   },
   server: {
-    url: "https://dev.openware.com.kw/KM/Camping-V2/Server/",
+    url: "http://dev.cable-app.com/",
   },
   search: {
     geocoderServiceUrl:

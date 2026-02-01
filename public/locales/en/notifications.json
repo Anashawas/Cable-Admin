@@ -1,0 +1,19 @@
+{
+  "send": {
+    "title": "Send Notification",
+    "formTitle": "Compose notification",
+    "type": "Notification type",
+    "selectType": "Select type",
+    "titleLabel": "Title",
+    "body": "Body",
+    "sendToAll": "Send to all users",
+    "userIds": "User IDs (comma-separated)",
+    "offerDate": "Offer date",
+    "offerTime": "Offer time",
+    "deepLink": "Deep link",
+    "data": "Data (optional JSON)",
+    "submit": "Send notification",
+    "success": "Notification sent successfully!",
+    "offerDateRequired": "Date and time are required for offer notifications."
+  }
+}

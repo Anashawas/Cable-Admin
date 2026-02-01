@@ -1,0 +1,20 @@
+{
+  "title": "Stations Request",
+  "filterByStatus": "Filter by Status",
+  "filterPlaceholder": "e.g. pending, approved, rejected",
+  "approved": "Request approved",
+  "rejected": "Request rejected",
+  "columns": {
+    "requestId": "Request ID",
+    "stationName": "Station Name",
+    "status": "Status",
+    "requestedAt": "Requested At",
+    "actions": "Actions"
+  },
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "edit": "Edit station",
+    "media": "Station media"
+  }
+}

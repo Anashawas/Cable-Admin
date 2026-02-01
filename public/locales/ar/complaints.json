@@ -1,0 +1,16 @@
+{
+  "title": "شكاوى المستخدمين",
+  "deleted": "تم حذف الشكوى",
+  "deleteConfirmTitle": "حذف الشكوى",
+  "deleteConfirmMessage": "هل أنت متأكد من حذف هذه الشكوى؟",
+  "columns": {
+    "id": "المعرف",
+    "user": "المستخدم",
+    "station": "المحطة",
+    "note": "الشكوى (الملاحظة)",
+    "actions": "إجراءات"
+  },
+  "actions": {
+    "delete": "حذف"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "kpi": {
+    "users": "Total Users",
+    "stations": "Stations",
+    "pendingRequests": "Pending Requests",
+    "complaints": "Complaints"
+  },
+  "menuTitle": "Quick access",
+  "latestStations": "Latest stations",
+  "stationName": "Station",
+  "stationCity": "City",
+  "actions": "Actions",
+  "noStations": "No stations yet."
+}

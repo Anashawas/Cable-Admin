@@ -11,7 +11,7 @@ import {
 } from "@mui/icons-material";
 
 interface LoginFormProps {
-	usernameInput: {
+	emailInput: {
 		value: string;
 		ref: React.RefObject<HTMLInputElement | null>;
 		onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -27,7 +27,7 @@ interface LoginFormProps {
 }
 
 const LoginForm = ({
-	usernameInput,
+	emailInput,
 	passwordInput,
 	onSubmit,
 	loginValidationResults,
@@ -59,17 +59,18 @@ const LoginForm = ({
 			</Grid>
 			<Grid>
 				<TextField
-					inputRef={usernameInput.ref}
+					inputRef={emailInput.ref}
 					fullWidth
 					margin="dense"
-					autoComplete="username"
-					label={t('username')}
-					placeholder={t('enterUsername')}
+					type="email"
+					autoComplete="email"
+					label={t('email')}
+					placeholder={t('enterEmail')}
 					InputLabelProps={{ shrink: true }}
-					value={usernameInput.value}
-					onChange={usernameInput.onChange}
-					error={!!loginValidationResults?.find((r) => r.username)}
-					helperText={loginValidationResults?.find((r) => r.username)?.username ? t(loginValidationResults?.find((r) => r.username)?.username || '') : ''}
+					value={emailInput.value}
+					onChange={emailInput.onChange}
+					error={!!loginValidationResults?.find((r) => r.email)}
+					helperText={loginValidationResults?.find((r) => r.email)?.email ? t(loginValidationResults?.find((r) => r.email)?.email || '') : ''}
 				/>
 			</Grid>
 			<Grid>

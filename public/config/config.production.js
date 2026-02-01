@@ -15,7 +15,7 @@ window.env = {
 	],
   },
   server: {
-	url: "https://mokhiam.baladia.gov.kw/Server/", // TO BE ADDED
+	url: "https://cable-app.com/",
   },
   search: {
 	geocoderServiceUrl:

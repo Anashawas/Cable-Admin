@@ -1,6 +1,6 @@
 {
-  "appName": "تطبيق التخييم لبلدية الكويت",
-  "appTitle": "كيبل",
+  "appName": "Cable Management || كيبل ادارة",
+  "appTitle": "Cable Management || كيبل ادارة",
   "internetConnectionRestored": "تمت استعادة اتصالك بالإنترنت",
   "internetConnectionOffline": "تعذر اتصالك بالانترنت",
   "notFound": "تعذر الوصول الى الصفحة المطلوبة. يرجى العودة الى الصفحة الرئيسية.",
@@ -10,7 +10,7 @@
   "emptyAppScreensTagline": "الرجاء التواصل مع مدير النظام",
   "error": "حدث خطأ",
   "checkInternetConnection": "الرجاء التأكد من اتصالك بالانترنت وحاول مرة أخرى",
-  "kmCamping": "كيبل",
+  "kmCamping": "Cable Management || كيبل ادارة",
   "welcomeMessage": "مرحباً",
   "lightMode": "الوضع النهاري",
   "switchToArabic": "العربية",

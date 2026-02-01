@@ -1,1 +1,2 @@
-export const AUTH_STATE_KEY = "KM-CAMPING-ADMIN-AUTH-STATE";
+/** localStorage key for persisted auth (matches Kotlin AppPreferences "jwt_token") */
+export const JWT_TOKEN_KEY = "jwt_token";

@@ -1,0 +1,49 @@
+{
+  "title": "User Management",
+  "editTitle": "Edit User",
+  "search": "Search",
+  "searchPlaceholder": "Name, email, or ID",
+  "deleted": "User deleted",
+  "updated": "User updated",
+  "invalidId": "Invalid user ID",
+  "deleteConfirmTitle": "Delete user",
+  "deleteConfirmMessage": "Are you sure you want to delete",
+  "columns": {
+    "id": "ID",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role",
+    "status": "Status",
+    "actions": "Actions",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "form": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "country": "Country",
+    "city": "City",
+    "role": "Role",
+    "isActive": "Active"
+  },
+  "cars": {
+    "title": "User's Cars",
+    "addCar": "Add Car",
+    "addDialogTitle": "Add Car to User",
+    "brand": "Brand",
+    "model": "Model",
+    "plugType": "Plug Type",
+    "carModel": "Car Model",
+    "actions": "Actions",
+    "remove": "Remove",
+    "noCars": "No cars added yet.",
+    "added": "Car added",
+    "removed": "Car removed"
+  }
+}

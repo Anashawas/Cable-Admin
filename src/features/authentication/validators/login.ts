@@ -1,10 +1,10 @@
 interface LoginData {
-	username: string;
+	email: string;
 	password: string;
 }
 
 export interface ValidationError {
-	username?: string;
+	email?: string;
 	password?: string;
 }
 
@@ -13,16 +13,17 @@ interface ValidationResult {
 	errors: ValidationError[];
 }
 
+/** Client-side checks: Email required, Password required (server does not validate). */
 const validateLogin = (data: LoginData): ValidationResult => {
 	const errors: ValidationError[] = [];
 	const error: ValidationError = {};
 
-	if (!data.username || data.username.trim().length === 0) {
-		error.username = 'usernameRequired';
+	if (!data.email || data.email.trim().length === 0) {
+		error.email = "emailRequired";
 	}
 
 	if (!data.password || data.password.trim().length === 0) {
-		error.password = 'passwordRequired';
+		error.password = "passwordRequired";
 	}
 
 	if (Object.keys(error).length > 0) {
@@ -31,7 +32,7 @@ const validateLogin = (data: LoginData): ValidationResult => {
 
 	return {
 		isValid: errors.length === 0,
-		errors
+		errors,
 	};
 };
 

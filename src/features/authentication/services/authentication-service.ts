@@ -2,32 +2,15 @@ import { server } from "../../../lib/@axios";
 import { ChangePassword, LoginCredentials, LoginResponse } from "../types/api";
 
 const authenticate = async (
-  { username, password }: LoginCredentials,
+  { email, password }: LoginCredentials,
   signal?: AbortSignal
 ): Promise<LoginResponse> => {
-  return server.post(
-    "/api/users/authenticate",
-    {
-      username,
-      password,
-    },
-    { signal: signal }
+  const { data } = await server.post<LoginResponse>(
+    "api/users/authenticate",
+    { email, password },
+    { signal }
   );
-
-  // dummy
-  // return new Promise<LoginResponse>((resolve) => {
-  //   resolve({
-  //     data: {
-  //       id: 1,
-  //       name: "John Doe",
-  //       username: "johndoe",
-  //       isActiveDirectory: false,
-  //       accessToken: "dummy-access-token",
-  //       refreshToken: "dummy-refresh-token",
-  //       privileges: ["user"],
-  //     },
-  //   });
-  // });
+  return data;
 };
 
 const refreshAccess = (token: string, signal?: AbortSignal) => {

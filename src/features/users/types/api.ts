@@ -1,102 +1,82 @@
-export interface Governorate {
-  id: number | null;
-  name: string;
-}
+// --- User Management (Cable-Admin spec: list + edit + delete) ---
 
-export interface Role {
-  id: number | null;
-  name: string;
-}
-
-export interface User {
+/** Role shape from list/detail (id + name). */
+export interface RoleDto {
   id: number;
   name: string;
-  userName: string;
-  civilId: string | null;
-  isLdap: boolean;
-  isActive: boolean;
-  phone: string;
-  email: string | null;
-  governorate: Governorate;
-  role: Role;
 }
 
-export interface PaginationRequest {
-  pageNumber: number;
-  pageSize: number;
-}
-
-export interface GetAllUsersRequest {
-  pagination: PaginationRequest;
-  name: string | null;
-  userName: string | null;
-  civilId: string | null;
-  isActive: boolean | null;
-  roleId: number | null;
-  governorateId: number | null;
-  includeDeleted: boolean;
-}
-
-export interface GetUsersResponse {
-  items: User[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-
-export interface CreateUserRequest {
+/** List item from GET api/users/GetAllUsers. */
+export interface UserSummaryDto {
+  id?: number | null;
   name: string;
-  userName: string;
   email: string;
-  password: string;
-  roleId: number;
-  civilId: string | null;
-  phone: string;
-  isLdap: boolean;
-  governorateId: number | null;
-}
-
-export interface UpdateUserRequest {
-  name: string;
-  userName: string;
-  email: string;
-  phone: string;
-  civilId: string | null;
-  roleId: number;
-  isLdap: boolean;
-  isActive: boolean;
-  governorateId: number | null;
-}
-
-export interface ChangePasswordRequest {
-  password: string;
-}
-
-export interface UserFilters {
-  name?: string | null;
-  userName?: string | null;
-  email?: string | null;
-  civilId?: string | null;
-  roleId?: number | null;
-  governorateId?: number | null;
+  phone?: string | null;
+  role: RoleDto;
+  /** Optional; show Status chip when present. */
   isActive?: boolean | null;
-  isLdap?: boolean | null;
 }
 
-export interface GetAllRolesRequest {
-  name: string | null;
-  includeDeleted: boolean;
-  includePrivileges: boolean;
+/** Nested car structure in UserDetailDto (minimal for display). */
+export interface UserCarDto {
+  carTypeId?: number;
+  carTypeName?: string;
+  carModels?: Array<{
+    carModelId?: number;
+    carModelName?: string;
+    plugTypes?: { id?: number; name?: string; serialNumber?: string };
+  }>;
 }
 
-export interface RoleResponse {
+/** Detail from GET api/users/GetUserById/{id} (edit form). */
+export interface UserDetailDto {
   id: number;
   name: string;
-  isDeleted: boolean;
-  privileges: unknown[] | null;
+  phone: string | null;
+  isActive: boolean;
+  email: string;
+  country: string | null;
+  city: string | null;
+  role: RoleDto;
+  userCars: UserCarDto[];
 }
 
-export interface GetAllRolesResponse extends Array<RoleResponse> {}
+/** Payload for PUT api/users/{id}. No password. */
+export interface UpdateUserRequestSpec {
+  name: string;
+  phone: string;
+  roleId: number;
+  isActive: boolean;
+  email: string;
+  country?: string | null;
+  city?: string | null;
+}
+
+// --- User Car Management (Add/Delete cars for a user) ---
+
+/** Payload for POST api/carmanagement/AddUserCar. */
+export interface AddUserCarRequest {
+  userId: number;
+  carModelId: number;
+  plugTypeId: number;
+}
+
+/** Single model in GetAllCarModels (id = carModelId for AddUserCar). */
+export interface CarModelDto {
+  id: number;
+  name: string;
+}
+
+/** Brand/type with models from GET api/carmanagement/GetAllCarModels. */
+export interface CarTypeWithModelsDto {
+  id: number;
+  name: string;
+  carModels: CarModelDto[];
+}
+
+/** Model entry in UserCarDto (existing user car). carModelId used for Delete. */
+export interface UserCarModelDto {
+  carModelId: number;
+  carModelName: string;
+  plugTypes?: { id: number; name?: string; serialNumber?: string } | null;
+}

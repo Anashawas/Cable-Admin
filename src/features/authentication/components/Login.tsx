@@ -40,24 +40,14 @@ const Login = () => {
     (state) => state.openErrorSnackbar
   );
 
-  const usernameInput = useFormInput("");
+  const emailInput = useFormInput("");
   const passwordInput = useFormInput("");
 
   const loginAction = useMutation({
-    mutationFn: ({
-      username,
-      password,
-    }: {
-      username: string;
-      password: string;
-    }) => {
-      return authenticate({ username, password });
-    },
-    onSuccess: ({ data }) => {
-      setLoggedInUser({
-        userDetails: data,
-        persist: true,
-      });
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      authenticate({ email, password }),
+    onSuccess: (loginResponse) => {
+      setLoggedInUser({ loginResponse, persist: true });
       navigate("/");
     },
     onError: (error: any) => {
@@ -74,7 +64,7 @@ const Login = () => {
       if (loginAction.isPending) return;
 
       const { errors, isValid } = validateLogin({
-        username: usernameInput.value,
+        email: emailInput.value,
         password: passwordInput.value,
       });
 
@@ -82,12 +72,12 @@ const Login = () => {
 
       if (isValid) {
         loginAction.mutate({
-          username: usernameInput.value,
+          email: emailInput.value,
           password: passwordInput.value,
         });
       }
     },
-    [loginAction, usernameInput.value, passwordInput.value]
+    [loginAction, emailInput.value, passwordInput.value]
   );
 
   useEffect(() => {
@@ -165,7 +155,7 @@ const Login = () => {
       >
         <Box sx={{ width: "100%", maxWidth: 500 }}>
           <LoginForm
-            usernameInput={usernameInput}
+            emailInput={emailInput}
             passwordInput={passwordInput}
             onSubmit={onSubmit}
             loginValidationResults={validationResult}

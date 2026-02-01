@@ -1,0 +1,14 @@
+{
+  "kpi": {
+    "users": "إجمالي المستخدمين",
+    "stations": "المحطات",
+    "pendingRequests": "الطلبات المعلقة",
+    "complaints": "الشكاوى"
+  },
+  "menuTitle": "وصول سريع",
+  "latestStations": "أحدث المحطات",
+  "stationName": "المحطة",
+  "stationCity": "المدينة",
+  "actions": "إجراءات",
+  "noStations": "لا توجد محطات بعد."
+}

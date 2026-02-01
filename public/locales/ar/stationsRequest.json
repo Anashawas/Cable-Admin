@@ -1,0 +1,20 @@
+{
+  "title": "طلبات المحطات",
+  "filterByStatus": "تصفية حسب الحالة",
+  "filterPlaceholder": "مثال: pending, approved, rejected",
+  "approved": "تم الموافقة على الطلب",
+  "rejected": "تم رفض الطلب",
+  "columns": {
+    "requestId": "معرف الطلب",
+    "stationName": "اسم المحطة",
+    "status": "الحالة",
+    "requestedAt": "تاريخ الطلب",
+    "actions": "إجراءات"
+  },
+  "actions": {
+    "approve": "موافقة",
+    "reject": "رفض",
+    "edit": "تعديل المحطة",
+    "media": "وسائط المحطة"
+  }
+}

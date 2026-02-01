@@ -1,0 +1,117 @@
+/** Cities for station location. */
+export const CITIES = [
+  "Amman",
+  "Zarqa",
+  "Irbid",
+  "Salt",
+  "Mafraq",
+  "Madaba",
+  "Jerash",
+  "Ajloun",
+  "Karak",
+  "Tafilah",
+  "Maan",
+  "Aqaba",
+];
+
+/** Payment method options. */
+export const PAYMENT_METHODS = ["Visa", "Cash", "CliQ"];
+
+/** Station type options (id + name). */
+export const STATION_TYPES = [
+  { id: 1, name: "Normal" },
+  { id: 2, name: "Premium" },
+  { id: 3, name: "Charging Point" },
+];
+
+/** Charger point type options (id + name). */
+export const CHARGER_POINT_TYPES = [
+  { id: 1, name: "Home" },
+  { id: 2, name: "Station" },
+];
+
+/** Status options (id + name). */
+export const STATUSES = [
+  { id: 1, name: "Available" },
+  { id: 2, name: "Unavailable" },
+];
+
+/** Service options for multi-select. */
+export const SERVICE_OPTIONS = [
+  "Covered Parking",
+  "Open Parking",
+  "Valet Parking",
+  "Long-Term Parking",
+  "Reserved Parking Spots",
+  "Public Restrooms",
+  "Male/Female Restrooms",
+  "Shower Facilities",
+  "Baby Changing Room",
+  "Restaurant",
+  "Cafeteria",
+  "Cafe",
+  "Branded Cafe",
+  "Food Court",
+  "Coffee Machines",
+  "Vending Machines",
+  "Fast Food",
+  "Supermarket",
+  "Convenience Store",
+  "Shopping Mall Nearby",
+  "Pharmacy",
+  "ATM",
+  "Gift Shop",
+  "Car Wash",
+  "Tire Service",
+  "Car Maintenance",
+  "Oil Change",
+  "Auto Parts Store",
+  "Vehicle Inspection",
+  "Air-Conditioned Lounge",
+  "Waiting Lounge",
+  "VIP Lounge",
+  "Entertainment Area",
+  "Children's Play Area",
+  "Gaming Zone",
+  "Reading Area",
+  "Barber Shop",
+  "Beauty Salon",
+  "Spa & Massage",
+  "Laundry Service",
+  "Dry Cleaning",
+  "Gym/Fitness Center",
+  "Medical Clinic",
+  "First Aid",
+  "Dental Clinic",
+  "Wi-Fi",
+  "Phone/Laptop Charging",
+  "Prayer Room (Musalla)",
+  "Mosque Nearby",
+  "Wudu Area",
+  "Hotel",
+  "Rest Cabins",
+  "Sleeping Pods",
+  "Movie Theater",
+  "Kids Entertainment",
+  "Arcade Games",
+  "24/7 Security",
+  "Emergency Services",
+  "Pet Washing Station",
+  "Pet Shop",
+  "Mobile App Booking",
+  "Online Reservation",
+  "Real-Time Availability",
+  "QR Code Check-In",
+  "Digital Payment Only",
+  "Contactless Payment",
+  "Pre-Book Charging Slot",
+  "Queue Management System",
+  "Wheelchair Accessible",
+  "Elevator Access",
+  "Loyalty Program",
+  "Fleet Charging",
+  "Recycling Facilities",
+  "Car Rental",
+  "Currency Exchange",
+  "Other",
+];

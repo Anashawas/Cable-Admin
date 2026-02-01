@@ -13,13 +13,19 @@ import { LANGUAGE } from "../constants/language-constants";
 const Login = lazy(() => import("../features/authentication/components/Login"));
 const App = lazy(() => import("../features/app/components/App"));
 const AppLayout = lazy(() => import("../features/app/components/AppLayout"));
-const Dashboard = lazy(() => import("../features/dashboard/components/Dashboard"));
-const ReservationsScreen = lazy(() => import("../features/reservations/components/ReservationsScreen"));
-const RefundsScreen = lazy(() => import("../features/refunds/components/RefundsScreen"));
-const UsersScreen = lazy(() => import("../features/users/components/UsersScreen"));
-const RolesScreen = lazy(() => import("../features/roles/components/RolesScreen"));
-const CampingSeasonsScreen = lazy(() => import("../features/camping-seasons/components/CampingSeasonsScreen"));
-const CampingAreasScreen = lazy(() => import("../features/camping-areas/components/CampingAreasScreen"));
+const DashboardScreen = lazy(() => import("../features/dashboard/components/DashboardScreen"));
+const UserListScreen = lazy(() => import("../features/users/components/UserListScreen"));
+const EditUserScreen = lazy(() => import("../features/users/components/EditUserScreen"));
+const ChargeManagementScreen = lazy(() => import("../features/charge-management/components/ChargeManagementScreen"));
+const StationFormScreen = lazy(() => import("../features/charge-management/components/StationFormScreen"));
+const StationMediaScreen = lazy(() => import("../features/charge-management/components/StationMediaScreen"));
+const StationsRequestScreen = lazy(() => import("../features/charge-management/components/StationsRequestScreen"));
+const ComplaintsScreen = lazy(() => import("../features/complaints/components/ComplaintsScreen"));
+const BannersScreen = lazy(() => import("../features/system/components/BannersScreen"));
+const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
+const CarDatabaseScreen = lazy(() => import("../features/system/components/CarDatabaseScreen"));
+const SendNotificationScreen = lazy(() => import("../features/notifications/components/SendNotificationScreen"));
+const EmergencyServicesScreen = lazy(() => import("../features/system/components/EmergencyServicesScreen"));
 const NotFound = lazy(() => import("../components/NotFound"));
 
 function AppContainer() {
@@ -51,27 +57,67 @@ function AppContainer() {
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <Dashboard />
+                  <DashboardScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/reservations"
+            path="/charge-management"
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <ReservationsScreen />
+                  <ChargeManagementScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/refunds"
+            path="/charge-management/add"
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <RefundsScreen />
+                  <StationFormScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/charge-management/edit/:id"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <StationFormScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/charge-management/:id/media"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <StationMediaScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stations-request"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <StationsRequestScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/complaints"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ComplaintsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -81,37 +127,67 @@ function AppContainer() {
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <UsersScreen />
+                  <UserListScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/roles"
+            path="/users/:id/edit"
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <RolesScreen />
+                  <EditUserScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/camping-seasons"
+            path="/car-management"
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <CampingSeasonsScreen />
+                  <CarDatabaseScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/camping-areas"
+            path="/banners"
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <CampingAreasScreen />
+                  <BannersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app-versions"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <AppVersionsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/send-notification"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <SendNotificationScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/emergency-services"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <EmergencyServicesScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

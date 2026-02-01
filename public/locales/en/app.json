@@ -1,6 +1,6 @@
 {
-  "appName": "Cable Admin",
-  "appTitle": "Cable Admin",
+  "appName": "Cable Management || كيبل ادارة",
+  "appTitle": "Cable Management || كيبل ادارة",
   "internetConnectionRestored": "Your Internet connection is restored",
   "internetConnectionOffline": "You are currently offline",
   "notFound": "The page you have requested could not be found. Please go back to the homepage.",
@@ -10,7 +10,7 @@
   "emptyAppScreensTagline": "Contact VIDS system administrator.",
   "error": "Something went wrong",
   "checkInternetConnection": "Please check your internet connection and try again",
-  "kmCamping": "Cable-Admin",
+  "kmCamping": "Cable Management || كيبل ادارة",
   "welcomeMessage": "Welcome",
   "lightMode": "Light Mode",
   "switchToArabic": "العربية",
