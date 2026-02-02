@@ -1,9 +1,9 @@
 {
-  "name": "km-camping",
+  "name": "cable-admin",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "KM Camping Application - React Frontend",
+  "description": "Cable Admin Application - React Frontend",
   "scripts": {
     "dev": "vite --mode development",
     "build:dev": "tsc && vite build --mode development",

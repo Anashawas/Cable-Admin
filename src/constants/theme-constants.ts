@@ -1,6 +1,6 @@
 import type { PaletteMode } from "@mui/material";
 
-const THEME_STATE_KEY = "KM_CAMPING_THEME";
+const THEME_STATE_KEY = "CABLE_ADMIN_THEME";
 
 export const THEME_TYPES = {
   LIGHT: "light" as PaletteMode,

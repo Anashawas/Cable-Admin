@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-KM Camping Admin is a React-based administrative application for Kuwait Municipality's camping reservation system. This is a mobile-first web application designed to be used as a WebView on mobile devices, with full bilingual support (Arabic RTL & English LTR).
+Cable Admin is a React-based administrative application for cable management system. This is a mobile-first web application designed to be used as a WebView on mobile devices, with full bilingual support (Arabic RTL & English LTR).
 
 ## Development Commands
 

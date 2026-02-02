@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   const version = env.VITE_APP_VERSION || "v0.0.0";
   const environment = env.VITE_APP_ENVIRONMENT || mode;
 
-  const safeFolderName = `KM-Camping-Admin-${version.replace(
+  const safeFolderName = `Cable-Admin-${version.replace(
     /\s+/g,
     "-"
   )}-${environment}`;

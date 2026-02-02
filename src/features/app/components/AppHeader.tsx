@@ -100,7 +100,7 @@ const AppHeader = () => {
           <Box display="flex" alignItems="center" sx={{ mr: 2 }}>
             {/* <img
               src={`${window.env.host.virtualPath}/images/Cable-Logo.png`}
-              alt="KM Camping Logo"
+              alt="Cable Admin Logo"
               style={{
                 height: "40px",
                 marginRight: "10px",
@@ -108,7 +108,7 @@ const AppHeader = () => {
               }}
             /> */}
             <Typography variant="h6" component="div">
-              {t("appTitle", "KM Camping")}
+              {t("appTitle", "Cable Admin")}
             </Typography>
           </Box>
           <Box sx={{ flexGrow: 1 }} />

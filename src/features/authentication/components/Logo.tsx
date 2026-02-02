@@ -7,7 +7,7 @@ const Logo = () => {
     <Box textAlign="center" p={4}>
       <img
         src={`${window.env.host.virtualPath}/images/Cable-Logo.png`}
-        alt="KM Camping Logo"
+        alt="Cable Admin Logo"
         style={{ height: "80px", marginBottom: "16px" }}
       />
       <Typography variant="h3" fontWeight="bold" color="background.default">
