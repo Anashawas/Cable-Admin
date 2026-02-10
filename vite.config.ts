@@ -36,6 +36,11 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: `./build/${safeFolderName}`,
       chunkSizeWarningLimit: 2600,
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
     },
   };
 });

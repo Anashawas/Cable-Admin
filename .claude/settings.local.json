@@ -11,7 +11,11 @@
       "Bash(npx check-outdated:*)",
       "Bash(npx npm-check:*)",
       "Bash(npx depcheck:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(xargs -I {} bash -c \"echo ''''=== {} ==='''' && ls -la {}\")",
+      "Bash(xargs -I {} bash -c \"echo ''''=== {} ==='''' && head -20 {}\")",
+      "Bash(wc:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

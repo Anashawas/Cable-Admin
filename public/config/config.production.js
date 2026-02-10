@@ -1,6 +1,6 @@
 window.env = {
   host: {
-    virtualPath: "/admin",
+    virtualPath: "/",
   },
 
   server: {
