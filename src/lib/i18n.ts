@@ -50,6 +50,10 @@ i18n
       "platform",
       "notifications",
       "dashboard",
+      "offers",
+      "partners",
+      "loyalty",
+      "serviceProviders",
     ],
   });
 

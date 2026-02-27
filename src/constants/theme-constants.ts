@@ -10,16 +10,16 @@ export const THEME_TYPES = {
 export const THEMES = {
   DARK: {
     palette: {
-      primary: { main: "#352C12", dark: "#0F0B02" },
-      secondary: { main: "#634B0F" },
+      primary: { main: "#64B5F6", dark: "#42A5F5" },
+      secondary: { main: "#FFB74D" },
       background: {
-        paper: "#0F0B02",
-        default: "#000000",
+        paper: "#1E1E1E",
+        default: "#121212",
       },
       divider: "rgba(255, 255, 255, 0.12)",
       text: {
-        primary: "#F7F6F3",
-        secondary: "#D8D2C3",
+        primary: "#FFFFFF",
+        secondary: "#B0BEC5",
       },
       mode: THEME_TYPES.DARK,
     },

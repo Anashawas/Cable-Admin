@@ -1,0 +1,21 @@
+{
+  "partners@subtitle": "إدارة اتفاقيات الشركاء الدائمة. يستخدم الشركاء تطبيق Cable Partner لتأكيد معاملات PTR.",
+  "partners@cablePartnerHint": "يستخدم الشركاء تطبيق Cable Partner للبحث وتأكيد أكواد PTR. هنا تنشئ وتدير اتفاقيات الشركاء (العمولة، النقاط، انتهاء صلاحية الكود).",
+  "partners@add": "إضافة شريك",
+  "partners@edit": "تعديل الشريك",
+  "partners@provider": "مقدم الخدمة",
+  "partners@providerType": "نوع مقدم الخدمة",
+  "partners@type": "النوع",
+  "partners@commission": "العمولة %",
+  "partners@pointsReward": "مكافأة النقاط %",
+  "partners@conversionRate": "سعر التحويل",
+  "partners@codeExpiry": "انتهاء صلاحية الكود (دقائق)",
+  "partners@active": "نشط",
+  "partners@status": "الحالة",
+  "partners@selectProvider": "الرجاء اختيار مقدم الخدمة",
+  "partners@created": "تم إنشاء اتفاقية الشريك بنجاح",
+  "partners@updated": "تم تحديث اتفاقية الشريك بنجاح",
+  "partners@deactivated": "تم إلغاء تفعيل اتفاقية الشريك",
+  "partners@deactivate": "إلغاء التفعيل",
+  "partners@deactivateConfirm": "إلغاء تفعيل اتفاقية الشريك؟ لن يتمكن مقدم الخدمة من تأكيد معاملات PTR جديدة."
+}

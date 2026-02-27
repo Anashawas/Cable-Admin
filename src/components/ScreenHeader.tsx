@@ -12,8 +12,10 @@ export interface ScreenHeaderAction {
   disabled?: boolean;
 }
 
-interface ScreenHeaderProps {
+export interface ScreenHeaderProps {
   title: string;
+  subtitle?: string;
+  icon?: ReactNode;
   actions?: ScreenHeaderAction[];
   showMoreButton?: boolean;
   onMoreClick?: () => void;
@@ -21,6 +23,8 @@ interface ScreenHeaderProps {
 
 const ScreenHeader = ({
   title,
+  subtitle,
+  icon,
   actions = [],
   showMoreButton = true,
   onMoreClick,
@@ -30,16 +34,30 @@ const ScreenHeader = ({
   return (
     <Grid container spacing={1} alignItems="center" sx={{ flexWrap: { xs: "wrap", sm: "nowrap" } }}>
       <Grid size={{ xs: 12, sm: "auto" }} sx={{ mb: { xs: 1, sm: 0 } }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontSize: { xs: "1.5rem", sm: "2.125rem" },
-            textAlign: { xs: "center", sm: "left" }
-          }}
-        >
-          {title}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          {icon && (
+            <Box sx={{ color: "primary.main", display: "flex", alignItems: "center" }}>
+              {icon}
+            </Box>
+          )}
+          <Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                fontSize: { xs: "1.5rem", sm: "2.125rem" },
+                textAlign: { xs: "center", sm: "left" }
+              }}
+            >
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography variant="body2" color="text.secondary">
+                {subtitle}
+              </Typography>
+            )}
+          </Box>
+        </Box>
       </Grid>
       <Grid size={{ xs: 12, sm: "grow" }}>
         <Box sx={{

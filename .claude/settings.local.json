@@ -15,7 +15,10 @@
       "Bash(xargs -I {} bash -c \"echo ''''=== {} ==='''' && ls -la {}\")",
       "Bash(xargs -I {} bash -c \"echo ''''=== {} ==='''' && head -20 {}\")",
       "Bash(wc:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npx tsc:*)",
+      "Bash(echo:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

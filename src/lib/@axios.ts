@@ -51,9 +51,6 @@ server.interceptors.response.use(
 
     const { user, setTokens, logout } = useAuthenticationStore.getState();
     if (shouldThrowError(error)) {
-      if (error.response?.status === 403) {
-        logout();
-      }
       return Promise.reject(error);
     }
 

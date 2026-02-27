@@ -39,6 +39,8 @@ interface AppDataGridProps<T = any> {
   getRowHeight?: (params: { row: T }) => number;
 }
 
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
 const AppDataGrid = <T extends Record<string, any>>({
   data,
   columns,
@@ -46,6 +48,7 @@ const AppDataGrid = <T extends Record<string, any>>({
   total,
   paginationModel,
   onPaginationModelChange,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   minHeight = "75vh",
   children,
   getRowId,
@@ -259,7 +262,7 @@ const AppDataGrid = <T extends Record<string, any>>({
           rowCount: total,
           paginationModel,
           onPaginationModelChange,
-          pageSizeOptions: [],
+          pageSizeOptions,
         }
       : {};
 

@@ -26,6 +26,17 @@ const AppVersionsScreen = lazy(() => import("../features/system/components/AppVe
 const CarDatabaseScreen = lazy(() => import("../features/system/components/CarDatabaseScreen"));
 const SendNotificationScreen = lazy(() => import("../features/notifications/components/SendNotificationScreen"));
 const EmergencyServicesScreen = lazy(() => import("../features/system/components/EmergencyServicesScreen"));
+const ServiceCategoriesScreen = lazy(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
+const ServiceProvidersScreen = lazy(() => import("../features/service-providers/components/ServiceProvidersScreen"));
+const ConversionRatesScreen = lazy(() => import("../features/offers/components/ConversionRatesScreen"));
+const PendingOffersScreen = lazy(() => import("../features/offers/components/PendingOffersScreen"));
+const ActiveOffersScreen = lazy(() => import("../features/offers/components/ActiveOffersScreen"));
+const TransactionsScreen = lazy(() => import("../features/offers/components/TransactionsScreen"));
+const SettlementsScreen = lazy(() => import("../features/offers/components/SettlementsScreen"));
+const PartnersScreen = lazy(() => import("../features/partners/components/PartnersScreen"));
+const LoyaltyManagementScreen = lazy(() => import("../features/loyalty/components/LoyaltyManagementScreen"));
+const RedemptionsScreen = lazy(() => import("../features/loyalty/components/RedemptionsScreen"));
+const PointAdjustmentsScreen = lazy(() => import("../features/loyalty/components/PointAdjustmentsScreen"));
 const NotFound = lazy(() => import("../components/NotFound"));
 
 function AppContainer() {
@@ -188,6 +199,116 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <EmergencyServicesScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/service-categories"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ServiceCategoriesScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/service-providers"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ServiceProvidersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/conversion-rates"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ConversionRatesScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pending-offers"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PendingOffersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/active-offers"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ActiveOffersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <TransactionsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settlements"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <SettlementsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/partners"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PartnersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loyalty-management"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <LoyaltyManagementScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/redemptions"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <RedemptionsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/point-adjustments"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PointAdjustmentsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

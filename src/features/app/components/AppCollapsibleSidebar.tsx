@@ -30,6 +30,19 @@ import {
 	LocalHospital as LocalHospitalIcon,
 	NotificationsActive as NotificationsActiveIcon,
 	ReportProblem as ReportProblemIcon,
+	Store as StoreIcon,
+	Category as CategoryIcon,
+	LocalOffer as LocalOfferIcon,
+	MonetizationOn as MonetizationOnIcon,
+	PendingActions as PendingActionsIcon,
+	AccountBalance as AccountBalanceIcon,
+	Handshake as HandshakeIcon,
+	LocalOffer as ActiveOfferIcon,
+	ReceiptLong as ReceiptLongIcon,
+	CardGiftcard as CardGiftcardIcon,
+	ManageAccounts as ManageAccountsIcon,
+	Redeem as RedeemIcon,
+	AccountBalanceWallet as AccountBalanceWalletIcon,
 } from "@mui/icons-material";
 import { PRIVILEGES, PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -61,6 +74,9 @@ const AppCollapsibleSidebar = () => {
 	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
 		chargeManagement: false,
 		userManagement: false,
+		serviceManagement: false,
+		offersManagement: false,
+		loyaltySystem: false,
 		systemData: false,
 	});
 
@@ -95,6 +111,38 @@ const AppCollapsibleSidebar = () => {
 			],
 		},
 		{
+			id: "serviceManagement",
+			label: t("serviceManagement"),
+			icon: <StoreIcon />,
+			items: [
+				{ label: t("serviceCategories"), path: "/service-categories", icon: <CategoryIcon /> },
+				{ label: t("serviceProviders"), path: "/service-providers", icon: <StoreIcon /> },
+			],
+		},
+		{
+			id: "offersManagement",
+			label: t("offersManagement"),
+			icon: <LocalOfferIcon />,
+			items: [
+				{ label: t("conversionRates"), path: "/conversion-rates", icon: <MonetizationOnIcon /> },
+				{ label: t("pendingOffers"), path: "/pending-offers", icon: <PendingActionsIcon /> },
+				{ label: t("activeOffers"), path: "/active-offers", icon: <ActiveOfferIcon /> },
+				{ label: t("offerTransactions"), path: "/transactions", icon: <ReceiptLongIcon /> },
+				{ label: t("settlements"), path: "/settlements", icon: <AccountBalanceIcon /> },
+				{ label: t("partners"), path: "/partners", icon: <HandshakeIcon /> },
+			],
+		},
+		{
+			id: "loyaltySystem",
+			label: t("loyaltySystem"),
+			icon: <CardGiftcardIcon />,
+			items: [
+				{ label: t("loyaltyManagement"), path: "/loyalty-management", icon: <ManageAccountsIcon /> },
+				{ label: t("redemptions"), path: "/redemptions", icon: <RedeemIcon /> },
+				{ label: t("pointAdjustments"), path: "/point-adjustments", icon: <AccountBalanceWalletIcon /> },
+			],
+		},
+		{
 			id: "systemData",
 			label: t("systemData"),
 			icon: <SettingsIcon />,
@@ -120,6 +168,9 @@ const AppCollapsibleSidebar = () => {
 			setExpandedGroups({
 				chargeManagement: false,
 				userManagement: false,
+				serviceManagement: false,
+				offersManagement: false,
+				loyaltySystem: false,
 				systemData: false,
 			});
 		}
