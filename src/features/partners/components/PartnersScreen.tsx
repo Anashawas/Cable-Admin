@@ -8,17 +8,25 @@ import {
   InputLabel,
   Select,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
   Chip,
-  Alert,
   IconButton,
   Tooltip,
   CircularProgress,
   FormControlLabel,
   Switch,
+  Box,
+  Typography,
+  Divider,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Avatar,
+  Skeleton,
+  Grid,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -26,9 +34,16 @@ import EditIcon from "@mui/icons-material/Edit";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import BlockIcon from "@mui/icons-material/Block";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PaymentIcon from "@mui/icons-material/Payment";
+import CreditScoreIcon from "@mui/icons-material/CreditScore";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import EvStationIcon from "@mui/icons-material/EvStation";
+import StoreIcon from "@mui/icons-material/Store";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import { useQuery } from "@tanstack/react-query";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import {
@@ -36,6 +51,9 @@ import {
   useCreatePartnerAgreement,
   useUpdatePartnerAgreement,
   useDeactivatePartnerAgreement,
+  useProviderBalance,
+  useRecordProviderPayment,
+  useSetCreditLimit,
 } from "../hooks/use-partners";
 import type {
   PartnerAgreementDto,
@@ -59,6 +77,11 @@ export default function PartnersScreen() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PartnerAgreementDto | null>(null);
   const [deactivateId, setDeactivateId] = useState<number | null>(null);
+  const [balanceTarget, setBalanceTarget] = useState<PartnerAgreementDto | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [paymentNote, setPaymentNote] = useState<string>("");
+  const [creditLimitValue, setCreditLimitValue] = useState<string>("");
+  const [creditLimitUnlimited, setCreditLimitUnlimited] = useState<boolean>(false);
   const [formData, setFormData] = useState<CreatePartnerAgreementRequest>({
     providerType: "ChargingPoint",
     providerId: 0,
@@ -75,6 +98,12 @@ export default function PartnersScreen() {
   const createMutation = useCreatePartnerAgreement();
   const updateMutation = useUpdatePartnerAgreement();
   const deactivateMutation = useDeactivatePartnerAgreement();
+  const recordPaymentMutation = useRecordProviderPayment();
+  const setCreditLimitMutation = useSetCreditLimit();
+  const { data: balanceData, isLoading: isLoadingBalance, refetch: refetchBalance } = useProviderBalance(
+    balanceTarget?.providerType ?? null,
+    balanceTarget?.providerId ?? null
+  );
 
   const { data: conversionRates = [] } = useQuery({
     queryKey: ["conversion-rates"],
@@ -179,6 +208,46 @@ export default function PartnersScreen() {
     t,
   ]);
 
+  const handleOpenBalance = useCallback((row: PartnerAgreementDto) => {
+    setBalanceTarget(row);
+    setPaymentAmount("");
+    setPaymentNote("");
+    setCreditLimitValue("");
+    setCreditLimitUnlimited(false);
+  }, []);
+
+  const handleRecordPayment = useCallback(() => {
+    if (!balanceTarget) return;
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      openErrorSnackbar({ message: t("partners@invalidAmount") });
+      return;
+    }
+    recordPaymentMutation.mutate(
+      { providerType: balanceTarget.providerType, providerId: balanceTarget.providerId, amount, note: paymentNote || null },
+      {
+        onSuccess: () => { openSuccessSnackbar({ message: t("partners@paymentRecorded") }); setPaymentAmount(""); setPaymentNote(""); },
+        onError: (e: Error) => openErrorSnackbar({ message: e?.message ?? t("loadingFailed") }),
+      }
+    );
+  }, [balanceTarget, paymentAmount, paymentNote, recordPaymentMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+
+  const handleSetCreditLimit = useCallback(() => {
+    if (!balanceTarget) return;
+    const limit = creditLimitUnlimited ? null : parseFloat(creditLimitValue);
+    if (!creditLimitUnlimited && (isNaN(limit as number) || (limit as number) <= 0)) {
+      openErrorSnackbar({ message: t("partners@invalidCreditLimit") });
+      return;
+    }
+    setCreditLimitMutation.mutate(
+      { providerType: balanceTarget.providerType, providerId: balanceTarget.providerId, creditLimit: limit },
+      {
+        onSuccess: () => { openSuccessSnackbar({ message: t("partners@creditLimitSet") }); setCreditLimitValue(""); },
+        onError: (e: Error) => openErrorSnackbar({ message: e?.message ?? t("loadingFailed") }),
+      }
+    );
+  }, [balanceTarget, creditLimitValue, creditLimitUnlimited, setCreditLimitMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+
   const handleDeactivate = useCallback(
     (row: PartnerAgreementDto) => setDeactivateId(row.id),
     []
@@ -206,58 +275,89 @@ export default function PartnersScreen() {
       ? stations.map((s) => ({ id: s.id, name: s.name ?? `Station ${s.id}` }))
       : serviceProviders.map((s) => ({ id: s.id, name: s.name ?? `Provider ${s.id}` }));
 
+  const totalActive = agreements.filter((a) => a.isActive).length;
+  const totalChargingPoints = agreements.filter((a) => a.providerType === "ChargingPoint").length;
+  const totalServiceProviders = agreements.filter((a) => a.providerType === "ServiceProvider").length;
+
   const columns: GridColDef<PartnerAgreementDto>[] = [
-    { field: "id", headerName: t("id"), width: 70 },
+    { field: "id", headerName: t("id"), width: 60, align: "center", headerAlign: "center" },
     {
       field: "providerName",
       headerName: t("partners@provider"),
       flex: 1,
       minWidth: 180,
-      valueGetter: (_, row) => row.providerName ?? `#${row.providerId}`,
+      renderCell: (params) => {
+        const name = params.row.providerName ?? `#${params.row.providerId}`;
+        return (
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Avatar sx={{ width: 28, height: 28, bgcolor: params.row.providerType === "ChargingPoint" ? "primary.main" : "secondary.main", fontSize: "0.75rem" }}>
+              {params.row.providerType === "ChargingPoint" ? <EvStationIcon sx={{ fontSize: 16 }} /> : <StoreIcon sx={{ fontSize: 16 }} />}
+            </Avatar>
+            <Typography variant="body2" fontWeight={600}>{name}</Typography>
+          </Stack>
+        );
+      },
     },
     {
       field: "providerType",
       headerName: t("partners@type"),
-      width: 140,
+      width: 150,
       renderCell: (params) => (
         <Chip
           size="small"
-          label={
-            params.value === "ChargingPoint"
-              ? t("chargingPoint")
-              : t("serviceProvider")
-          }
+          label={params.value === "ChargingPoint" ? t("chargingPoint") : t("serviceProvider")}
+          color={params.value === "ChargingPoint" ? "primary" : "secondary"}
+          variant="outlined"
+          icon={params.value === "ChargingPoint" ? <EvStationIcon /> : <StoreIcon />}
         />
       ),
     },
     {
       field: "commissionPercentage",
       headerName: t("partners@commission"),
-      width: 100,
-      renderCell: (params) => `${params.value}%`,
+      width: 110,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Chip label={`${params.value}%`} size="small" color="info" variant="filled" sx={{ fontWeight: 700 }} />
+      ),
     },
     {
       field: "pointsRewardPercentage",
       headerName: t("partners@pointsReward"),
-      width: 110,
-      renderCell: (params) => `${params.value}%`,
+      width: 120,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Chip label={`${params.value}%`} size="small" color="warning" variant="filled" sx={{ fontWeight: 700 }} />
+      ),
     },
     {
       field: "codeExpiryMinutes",
       headerName: t("partners@codeExpiry"),
-      width: 100,
-      renderCell: (params) => `${params.value} min`,
+      width: 110,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Box sx={{ textAlign: "center" }}>
+          <Typography variant="body2" fontWeight={700}>{params.value}</Typography>
+          <Typography variant="caption" color="text.secondary">{t("minutes")}</Typography>
+        </Box>
+      ),
     },
     {
       field: "isActive",
       headerName: t("partners@active"),
-      width: 90,
+      width: 100,
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <Chip
           size="small"
           label={params.value ? t("active") : t("inactive")}
           color={params.value ? "success" : "default"}
-          variant="outlined"
+          variant={params.value ? "filled" : "outlined"}
+          sx={{ fontWeight: 600 }}
         />
       ),
     },
@@ -265,30 +365,24 @@ export default function PartnersScreen() {
       field: "actions",
       headerName: t("actions"),
       width: 120,
+      align: "center",
+      headerAlign: "center",
       sortable: false,
       renderCell: (params) => (
-        <Stack direction="row" spacing={0.5}>
+        <Stack direction="row" spacing={0.5} justifyContent="center">
+          <Tooltip title={t("partners@creditBalance")}>
+            <IconButton size="small" color="info" onClick={(e) => { e.stopPropagation(); handleOpenBalance(params.row); }}>
+              <AccountBalanceIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={t("edit")}>
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(params.row);
-              }}
-            >
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEdit(params.row); }}>
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           {params.row.isActive && (
             <Tooltip title={t("partners@deactivate")}>
-              <IconButton
-                size="small"
-                color="error"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeactivate(params.row);
-                }}
-              >
+              <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleDeactivate(params.row); }}>
                 <BlockIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -298,59 +392,168 @@ export default function PartnersScreen() {
     },
   ];
 
-  const headerActions: ScreenHeaderAction[] = [
-    { label: t("partners@add"), icon: <AddIcon />, onClick: handleAdd, variant: "contained" },
-    { label: t("refresh"), icon: <RefreshIcon />, onClick: () => refetch(), variant: "outlined" },
-  ];
-
   return (
     <AppScreenContainer>
-      <ScreenHeader
-        icon={<HandshakeIcon />}
-        title={t("partners")}
-        subtitle={t("partners@subtitle")}
-        actions={headerActions}
-      />
+      {/* ── Gradient Banner ── */}
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          borderRadius: 3,
+          p: { xs: 2.5, md: 3.5 },
+          mb: 3,
+          position: "relative",
+          overflow: "hidden",
+          color: "white",
+        }}
+      >
+        <Box sx={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        <Box sx={{ position: "absolute", bottom: -40, left: -20, width: 150, height: 150, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
 
-      <Alert severity="info" sx={{ mb: 2 }}>
-        {t("partners@cablePartnerHint")}
-      </Alert>
+        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "flex-start" }} spacing={2} sx={{ mb: 3 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box sx={{ width: 52, height: 52, borderRadius: 2.5, bgcolor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <HandshakeIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography variant="h5" fontWeight={800} color="white" lineHeight={1.2}>{t("partners")}</Typography>
+              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)", mt: 0.5 }}>{t("partners@subtitle")}</Typography>
+            </Box>
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => refetch()}
+              size="small"
+              sx={{ color: "rgba(255,255,255,0.85)", borderColor: "rgba(255,255,255,0.3)", "&:hover": { bgcolor: "rgba(255,255,255,0.1)", borderColor: "white" } }}
+            >
+              {t("refresh")}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+              size="small"
+              sx={{ bgcolor: "rgba(255,255,255,0.2)", "&:hover": { bgcolor: "rgba(255,255,255,0.3)" }, fontWeight: 700, boxShadow: "none" }}
+            >
+              {t("partners@add")}
+            </Button>
+          </Stack>
+        </Stack>
 
-      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-        <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel>{t("partners@status")}</InputLabel>
-          <Select
-            value={activeFilter === "" ? "all" : activeFilter}
-            label={t("partners@status")}
-            onChange={(e) =>
-              setActiveFilter(
-                e.target.value === "all" ? "" : (e.target.value as boolean)
-              )
-            }
-          >
-            <MenuItem value="all">{t("all")}</MenuItem>
-            <MenuItem value={true}>{t("active")}</MenuItem>
-            <MenuItem value={false}>{t("inactive")}</MenuItem>
-          </Select>
-        </FormControl>
-      </Stack>
+        {/* KPI Cards */}
+        <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          {[
+            { label: t("total"), value: isLoading ? "—" : agreements.length, icon: <HandshakeIcon /> },
+            { label: t("active"), value: isLoading ? "—" : totalActive, icon: <CheckCircleOutlineIcon /> },
+            { label: t("chargingPoint"), value: isLoading ? "—" : totalChargingPoints, icon: <EvStationIcon /> },
+            { label: t("serviceProvider"), value: isLoading ? "—" : totalServiceProviders, icon: <StoreIcon /> },
+          ].map((card) => (
+            <Box
+              key={card.label}
+              sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1.5, minWidth: 110, flex: "1 1 auto", border: "1px solid rgba(255,255,255,0.15)" }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                <Box sx={{ opacity: 0.75, display: "flex", fontSize: 16 }}>{card.icon}</Box>
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>{card.label}</Typography>
+              </Stack>
+              {isLoading ? (
+                <Skeleton variant="rounded" width={40} height={28} sx={{ bgcolor: "rgba(255,255,255,0.15)" }} />
+              ) : (
+                <Typography variant="h5" fontWeight={800} color="white" lineHeight={1}>{card.value}</Typography>
+              )}
+            </Box>
+          ))}
+        </Stack>
+      </Box>
 
-      <AppDataGrid<PartnerAgreementDto>
-        data={paginatedData}
-        columns={columns}
-        loading={isLoading}
-        getRowId={(row) => row.id}
-        disablePagination={false}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        total={agreements.length}
-      />
+      {/* PTR hint */}
+      <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: "#e3f2fd", borderRadius: 2, borderLeft: "4px solid", borderColor: "primary.main" }}>
+        <Typography variant="body2" color="primary.dark">{t("partners@cablePartnerHint")}</Typography>
+      </Paper>
 
-      {/* Create / Edit Dialog */}
-      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editing ? t("partners@edit") : t("partners@add")}
-        </DialogTitle>
+      {/* ── Filter Bar ── */}
+      <Paper elevation={1} sx={{ borderRadius: 2, mb: 2, overflow: "hidden" }}>
+        <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid", borderColor: "divider", bgcolor: "grey.50" }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <FilterListIcon fontSize="small" color="action" />
+            <Typography variant="body2" fontWeight={700} color="text.secondary">{t("filter")}</Typography>
+          </Stack>
+        </Box>
+        <Box sx={{ px: 2.5, py: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>{t("partners@status")}</InputLabel>
+            <Select
+              value={activeFilter === "" ? "all" : activeFilter}
+              label={t("partners@status")}
+              onChange={(e) => setActiveFilter(e.target.value === "all" ? "" : (e.target.value as boolean))}
+            >
+              <MenuItem value="all">{t("all")}</MenuItem>
+              <MenuItem value={true as unknown as string}>{t("active")}</MenuItem>
+              <MenuItem value={false as unknown as string}>{t("inactive")}</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Paper>
+
+      {/* ── Shimmer / Table ── */}
+      {isLoading ? (
+        <Paper elevation={1} sx={{ borderRadius: 2, overflow: "hidden" }}>
+          {/* Header row */}
+          <Box sx={{ px: 2, py: 1.5, bgcolor: "grey.50", borderBottom: "1px solid", borderColor: "divider", display: "flex", gap: 2 }}>
+            {[60, 200, 140, 90, 100, 90, 80, 100].map((w, i) => (
+              <Skeleton key={i} variant="rounded" width={w} height={18} />
+            ))}
+          </Box>
+          {[...Array(6)].map((_, i) => (
+            <Box key={i} sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", gap: 2 }}>
+              <Skeleton variant="rounded" width={60} height={18} />
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ width: 200 }}>
+                <Skeleton variant="circular" width={28} height={28} />
+                <Skeleton variant="rounded" width={140} height={18} />
+              </Stack>
+              <Skeleton variant="rounded" width={110} height={24} sx={{ borderRadius: 10 }} />
+              <Skeleton variant="rounded" width={70} height={24} sx={{ borderRadius: 10 }} />
+              <Skeleton variant="rounded" width={70} height={24} sx={{ borderRadius: 10 }} />
+              <Skeleton variant="rounded" width={60} height={36} />
+              <Skeleton variant="rounded" width={70} height={24} sx={{ borderRadius: 10 }} />
+              <Stack direction="row" spacing={0.5}>
+                <Skeleton variant="circular" width={28} height={28} />
+                <Skeleton variant="circular" width={28} height={28} />
+                <Skeleton variant="circular" width={28} height={28} />
+              </Stack>
+            </Box>
+          ))}
+        </Paper>
+      ) : (
+        <AppDataGrid<PartnerAgreementDto>
+          data={paginatedData}
+          columns={columns}
+          loading={false}
+          getRowId={(row) => row.id}
+          disablePagination={false}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          total={agreements.length}
+        />
+      )}
+
+      {/* ── Create / Edit Dialog ── */}
+      <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>
+        <Box sx={{ background: editing ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)" : "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)", p: 2.5, color: "white" }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {editing ? <EditIcon /> : <AddIcon />}
+              </Box>
+              <Typography variant="h6" fontWeight={700} color="white">{editing ? t("partners@edit") : t("partners@add")}</Typography>
+            </Stack>
+            <IconButton size="small" onClick={() => setFormOpen(false)} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white" } }}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </Box>
+        <Divider />
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <FormControl fullWidth size="small" disabled={!!editing}>
@@ -479,46 +682,220 @@ export default function PartnersScreen() {
             />
           </Stack>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
           <Button onClick={() => setFormOpen(false)}>{t("cancel")}</Button>
           <Button
             variant="contained"
             onClick={handleFormSubmit}
-            disabled={
-              createMutation.isPending ||
-              updateMutation.isPending ||
-              (formData.providerId <= 0 && !editing)
-            }
+            disabled={createMutation.isPending || updateMutation.isPending || (formData.providerId <= 0 && !editing)}
+            startIcon={createMutation.isPending || updateMutation.isPending ? <CircularProgress size={16} color="inherit" /> : null}
+            sx={{ background: editing ? "linear-gradient(135deg, #e65100, #f57c00)" : "linear-gradient(135deg, #0d47a1, #1565c0)", fontWeight: 700 }}
           >
-            {createMutation.isPending || updateMutation.isPending ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              editing ? t("update") : t("partners@add")
-            )}
+            {editing ? t("update") : t("partners@add")}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Deactivate confirm */}
-      <Dialog open={deactivateId !== null} onClose={() => setDeactivateId(null)}>
-        <DialogTitle>{t("partners@deactivate")}</DialogTitle>
-        <DialogContent>
-          {t("partners@deactivateConfirm")}
+      {/* ── Deactivate confirm ── */}
+      <Dialog open={deactivateId !== null} onClose={() => setDeactivateId(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>
+        <Box sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", p: 2.5, color: "white" }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <BlockIcon />
+              </Box>
+              <Typography variant="h6" fontWeight={700} color="white">{t("partners@deactivate")}</Typography>
+            </Stack>
+            <IconButton size="small" onClick={() => setDeactivateId(null)} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white" } }}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </Box>
+        <DialogContent sx={{ pt: 2 }}>
+          <Typography variant="body2" color="text.secondary">{t("partners@deactivateConfirm")}</Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
           <Button onClick={() => setDeactivateId(null)}>{t("cancel")}</Button>
           <Button
             color="error"
             variant="contained"
             onClick={confirmDeactivate}
             disabled={deactivateMutation.isPending}
+            startIcon={deactivateMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <BlockIcon />}
           >
-            {deactivateMutation.isPending ? (
-              <CircularProgress size={20} />
-            ) : (
-              t("partners@deactivate")
-            )}
+            {t("partners@deactivate")}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Credit & Balance Dialog ── */}
+      <Dialog open={!!balanceTarget} onClose={() => setBalanceTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>
+        <Box sx={{ background: "linear-gradient(135deg, #01579b 0%, #0277bd 100%)", p: 2.5, color: "white" }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <AccountBalanceIcon />
+              </Box>
+              <Box>
+                <Typography variant="h6" fontWeight={700} color="white">{t("partners@creditBalance")}</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)" }}>{balanceTarget?.providerName ?? `#${balanceTarget?.providerId}`}</Typography>
+              </Box>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <IconButton size="small" onClick={() => refetchBalance()} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white" } }}>
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={() => setBalanceTarget(null)} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white" } }}>
+                <CloseIcon />
+              </IconButton>
+            </Stack>
+          </Stack>
+        </Box>
+        <DialogContent sx={{ p: 0 }}>
+          {isLoadingBalance ? (
+            <Stack spacing={1.5} sx={{ p: 3 }}>
+              <Stack direction="row" spacing={1.5}>
+                {[...Array(3)].map((_, i) => <Skeleton key={i} variant="rounded" height={72} sx={{ flex: 1, borderRadius: 2 }} />)}
+              </Stack>
+              <Skeleton variant="rounded" height={24} width={140} />
+              <Skeleton variant="rounded" height={48} />
+              <Skeleton variant="rounded" height={24} width={140} />
+              <Skeleton variant="rounded" height={80} />
+            </Stack>
+          ) : balanceData ? (
+            <Stack spacing={0}>
+              {/* Balance summary cards */}
+              <Box sx={{ p: 2.5 }}>
+                <Grid container spacing={1.5}>
+                  {[
+                    { label: t("partners@creditLimit"), value: balanceData.creditLimit == null ? "∞" : `${balanceData.creditLimit.toFixed(3)} KWD`, color: "primary.main", bg: "#e3f2fd" },
+                    { label: t("partners@currentBalance"), value: `${balanceData.currentBalance.toFixed(3)} KWD`, color: balanceData.currentBalance < 0 ? "error.main" : "success.main", bg: balanceData.currentBalance < 0 ? "#ffebee" : "#e8f5e9" },
+                    { label: t("partners@availableCredit"), value: balanceData.availableCredit == null ? "∞" : `${balanceData.availableCredit.toFixed(3)} KWD`, color: balanceData.availableCredit != null && balanceData.availableCredit < 0 ? "error.main" : "success.main", bg: "#f3e5f5" },
+                  ].map(({ label, value, color, bg }) => (
+                    <Grid size={{ xs: 4 }} key={label}>
+                      <Paper elevation={0} sx={{ p: 1.5, bgcolor: bg, borderRadius: 2, textAlign: "center" }}>
+                        <Typography variant="caption" color="text.secondary" display="block" noWrap>{label}</Typography>
+                        <Typography variant="subtitle1" fontWeight={800} color={color} noWrap>{value}</Typography>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+
+              <Divider />
+
+              {/* Set Credit Limit */}
+              <Box sx={{ p: 2.5 }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                  <CreditScoreIcon fontSize="small" color="primary" />
+                  <Typography variant="subtitle2" fontWeight={700}>{t("partners@setCreditLimit")}</Typography>
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="flex-start">
+                  <TextField
+                    size="small"
+                    label={t("partners@creditLimit")}
+                    type="number"
+                    value={creditLimitValue}
+                    onChange={(e) => setCreditLimitValue(e.target.value)}
+                    disabled={creditLimitUnlimited}
+                    sx={{ flex: 1 }}
+                    inputProps={{ min: 0, step: 0.001 }}
+                    helperText="KWD"
+                  />
+                  <FormControlLabel
+                    control={<Switch checked={creditLimitUnlimited} onChange={(e) => setCreditLimitUnlimited(e.target.checked)} size="small" />}
+                    label={<Typography variant="caption">{t("partners@unlimited")}</Typography>}
+                    sx={{ mt: 0.5, flexShrink: 0 }}
+                  />
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleSetCreditLimit}
+                    disabled={setCreditLimitMutation.isPending || (!creditLimitUnlimited && !creditLimitValue)}
+                    sx={{ mt: 0.5, whiteSpace: "nowrap" }}
+                    startIcon={setCreditLimitMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
+                  >
+                    {t("partners@setLimit")}
+                  </Button>
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Record Payment */}
+              <Box sx={{ p: 2.5 }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                  <PaymentIcon fontSize="small" color="success" />
+                  <Typography variant="subtitle2" fontWeight={700}>{t("partners@recordPayment")}</Typography>
+                </Stack>
+                <Stack spacing={1.5}>
+                  <Stack direction="row" spacing={1}>
+                    <TextField
+                      size="small"
+                      label={t("partners@amount")}
+                      type="number"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      sx={{ flex: 1 }}
+                      inputProps={{ min: 0.001, step: 0.001 }}
+                      helperText="KWD"
+                    />
+                    <Button
+                      variant="contained"
+                      color="success"
+                      size="small"
+                      onClick={handleRecordPayment}
+                      disabled={recordPaymentMutation.isPending || !paymentAmount}
+                      sx={{ mt: 0.5, whiteSpace: "nowrap" }}
+                      startIcon={recordPaymentMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
+                    >
+                      {t("partners@record")}
+                    </Button>
+                  </Stack>
+                  <TextField
+                    size="small"
+                    label={t("partners@paymentNote")}
+                    value={paymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
+                    placeholder={t("partners@paymentNotePlaceholder")}
+                    fullWidth
+                  />
+                </Stack>
+              </Box>
+
+              {/* Recent Payments */}
+              {balanceData.recentPayments.length > 0 && (
+                <>
+                  <Divider />
+                  <Box sx={{ p: 2.5 }}>
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>{t("partners@recentPayments")}</Typography>
+                    <List dense disablePadding>
+                      {balanceData.recentPayments.map((p) => (
+                        <ListItem
+                          key={p.id}
+                          disableGutters
+                          sx={{ py: 0.75, borderBottom: "1px solid", borderColor: "divider", "&:last-child": { border: 0 } }}
+                          secondaryAction={
+                            <Chip label={`+${p.amount.toFixed(3)} KWD`} size="small" color="success" variant="filled" sx={{ fontWeight: 700 }} />
+                          }
+                        >
+                          <ListItemText
+                            primary={p.note ?? "—"}
+                            secondary={`${p.recordedByUserName ?? "Admin"} · ${new Date(p.createdAt).toLocaleDateString()}`}
+                            primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+                            secondaryTypographyProps={{ variant: "caption" }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                </>
+              )}
+            </Stack>
+          ) : null}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={() => setBalanceTarget(null)} variant="outlined">{t("close")}</Button>
         </DialogActions>
       </Dialog>
     </AppScreenContainer>

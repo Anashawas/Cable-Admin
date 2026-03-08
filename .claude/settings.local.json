@@ -18,7 +18,9 @@
       "Bash(tree:*)",
       "Bash(npx tsc:*)",
       "Bash(echo:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(sudo tee -a /etc/sysctl.conf)",
+      "Bash(sudo sysctl -p)"
     ],
     "deny": [],
     "ask": []

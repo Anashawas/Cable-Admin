@@ -13,6 +13,9 @@ import {
   DialogActions,
   Button,
   CircularProgress,
+  Chip,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -20,8 +23,9 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid } from "../../../components";
-import { getAllComplaints, deleteComplaint } from "../services/complaints-service";
+import { getAllComplaints, deleteComplaint, updateComplaintStatus } from "../services/complaints-service";
 import type { UserComplaintDto } from "../types/api";
+import { ComplaintStatus } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 
 function formatUserDisplay(row: UserComplaintDto): string {
@@ -70,6 +74,18 @@ export default function ComplaintsScreen() {
     },
   });
 
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: ComplaintStatus }) =>
+      updateComplaintStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["complaints"] });
+      openSuccessSnackbar({ message: t("complaints@statusUpdated") });
+    },
+    onError: (err: Error) => {
+      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+    },
+  });
+
   const paginatedData = useMemo(() => {
     const start = paginationModel.page * paginationModel.pageSize;
     return data.slice(start, start + paginationModel.pageSize);
@@ -96,6 +112,12 @@ export default function ComplaintsScreen() {
       deleteMutation.mutate(complaintToDelete.id);
     }
   }, [complaintToDelete, deleteMutation]);
+
+  const statusColor = (s: ComplaintStatus): "warning" | "error" | "success" => {
+    if (s === ComplaintStatus.Solved) return "success";
+    if (s === ComplaintStatus.Rejected) return "error";
+    return "warning";
+  };
 
   const columns: GridColDef<UserComplaintDto>[] = useMemo(
     () => [
@@ -146,6 +168,40 @@ export default function ComplaintsScreen() {
         ),
       },
       {
+        field: "status",
+        headerName: t("complaints@columns.status"),
+        width: 160,
+        minWidth: 160,
+        filterable: false,
+        sortable: false,
+        renderCell: ({ row }) => (
+          <Select
+            value={row.status ?? ComplaintStatus.Pending}
+            size="small"
+            variant="outlined"
+            disabled={statusMutation.isPending}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              e.stopPropagation();
+              statusMutation.mutate({ id: row.id, status: e.target.value as ComplaintStatus });
+            }}
+            renderValue={(val) => (
+              <Chip
+                label={t(`complaints@status_${ComplaintStatus[val as ComplaintStatus].toLowerCase()}`)}
+                color={statusColor(val as ComplaintStatus)}
+                size="small"
+                sx={{ fontWeight: 600, pointerEvents: "none" }}
+              />
+            )}
+            sx={{ "& .MuiOutlinedInput-notchedOutline": { border: "none" }, minWidth: 130 }}
+          >
+            <MenuItem value={ComplaintStatus.Pending}>{t("complaints@status_pending")}</MenuItem>
+            <MenuItem value={ComplaintStatus.Rejected}>{t("complaints@status_rejected")}</MenuItem>
+            <MenuItem value={ComplaintStatus.Solved}>{t("complaints@status_solved")}</MenuItem>
+          </Select>
+        ),
+      },
+      {
         field: "actions",
         headerName: t("complaints@columns.actions"),
         width: 80,
@@ -167,7 +223,7 @@ export default function ComplaintsScreen() {
         ),
       },
     ],
-    [t, handleDeleteClick]
+    [t, handleDeleteClick, statusMutation]
   );
 
   const headerActions: ScreenHeaderAction[] = useMemo(

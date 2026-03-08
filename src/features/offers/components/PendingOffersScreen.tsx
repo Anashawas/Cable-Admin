@@ -46,7 +46,7 @@ import {
 import type { OfferDto } from "../types/api";
 
 export default function PendingOffersScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["offers", "common"]);
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -243,7 +243,7 @@ export default function PendingOffersScreen() {
       <ScreenHeader
         icon={<PendingActionsIcon />}
         title={t("pendingOffers")}
-        subtitle={t("pendingOffers@subtitle")}
+        subtitle={t("offers@pendingOffers_subtitle")}
         actions={headerActions}
       />
 

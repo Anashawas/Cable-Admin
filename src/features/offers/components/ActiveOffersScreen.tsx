@@ -71,7 +71,7 @@ const INITIAL_FORM_DATA: ProposeOfferRequest = {
 };
 
 export default function ActiveOffersScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["offers", "common"]);
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -309,7 +309,7 @@ export default function ActiveOffersScreen() {
       <ScreenHeader
         icon={<LocalOfferIcon />}
         title={t("activeOffers")}
-        subtitle={t("activeOffers@subtitle")}
+        subtitle={t("offers@activeOffers_subtitle")}
         actions={headerActions}
       />
 

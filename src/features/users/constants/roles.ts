@@ -7,4 +7,7 @@ import type { RoleDto } from "../types/api";
 export const DEFAULT_ROLES: RoleDto[] = [
   { id: 1, name: "Admin" },
   { id: 2, name: "User" },
+  { id: 3, name: "Provider" },
 ];
+
+export const PROVIDER_ROLE_ID = 3;

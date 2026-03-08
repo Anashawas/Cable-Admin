@@ -3,6 +3,7 @@ import { useMemo, useState, useCallback } from "react";
 import {
   getPendingOffers,
   getActiveOffers,
+  getOffersForProvider,
   getOfferById,
   approveOffer,
   rejectOffer,
@@ -22,6 +23,7 @@ import type {
 // Query keys
 export const OFFERS_QUERY_KEY = ["offers"];
 export const PENDING_OFFERS_QUERY_KEY = ["offers", "pending"];
+export const PROVIDER_OFFERS_QUERY_KEY = ["offers", "provider"];
 export const OFFER_DETAIL_QUERY_KEY = (id: number) => ["offer", id];
 
 export type OfferSortOption = "NONE" | "NEWEST_FIRST" | "EXPIRING_SOON" | "MOST_USED";
@@ -137,6 +139,35 @@ export function useAllOffers(filters?: {
     handleSearchChange,
     handleSortChange,
     handleStatusFilterChange,
+    handleRefresh,
+  };
+}
+
+export function useOffersForProvider(providerId?: number, providerType: ProviderType = "ServiceProvider") {
+  const [search, setSearch] = useState("");
+
+  const query = useQuery({
+    queryKey: [...PROVIDER_OFFERS_QUERY_KEY, providerType, providerId],
+    queryFn: () => getOffersForProvider({ providerType, providerId }),
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+    enabled: providerId != null && providerId > 0,
+  });
+
+  const filteredData = useMemo(() => {
+    return applyFilter(query.data ?? [], search);
+  }, [query.data, search]);
+
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
+  const handleRefresh = useCallback(() => query.refetch(), [query]);
+
+  return {
+    data: filteredData,
+    allData: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    search,
+    handleSearchChange,
     handleRefresh,
   };
 }

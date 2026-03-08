@@ -29,6 +29,8 @@ import {
   Typography,
   Paper,
   Alert,
+  Skeleton,
+  useTheme,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -51,7 +53,6 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import {
@@ -67,7 +68,7 @@ import {
   ServiceProviderSortOption,
 } from "../hooks/use-service-providers";
 import { useServiceCategories } from "../hooks/use-service-categories";
-import { useAllOffers, useUpdateOffer } from "../../offers/hooks/use-offers";
+import { useOffersForProvider, useUpdateOffer } from "../../offers/hooks/use-offers";
 import { useBlockProvider, useUnblockProvider } from "../../loyalty/hooks/use-loyalty";
 import type { ServiceProviderDto, CreateServiceProviderRequest, UpdateServiceProviderRequest } from "../types/api";
 import type { OfferDto, UpdateOfferRequest } from "../../offers/types/api";
@@ -92,6 +93,8 @@ interface FormData {
   service: string;
   whatsAppNumber: string;
   websiteUrl: string;
+  latitude: string;
+  longitude: string;
 }
 
 const initialFormData: FormData = {
@@ -114,10 +117,13 @@ const initialFormData: FormData = {
   service: "",
   whatsAppNumber: "",
   websiteUrl: "",
+  latitude: "",
+  longitude: "",
 };
 
 export default function ServiceProvidersScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("serviceProviders");
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -189,10 +195,9 @@ export default function ServiceProvidersScreen() {
   );
   const { data: ratings = [] } = useServiceProviderRatings(selectedProviderId ?? 0);
 
-  const { data: providerOffers = [], isLoading: isLoadingOffers } = useAllOffers({
-    providerType: "ServiceProvider",
-    providerId: selectedProviderForOffers?.id,
-  });
+  const { data: providerOffers = [], isLoading: isLoadingOffers } = useOffersForProvider(
+    selectedProviderForOffers?.id ?? undefined
+  );
 
   const updateOfferMutation = useUpdateOffer();
   const changeOwnerMutation = useChangeServiceProviderOwner();
@@ -203,6 +208,9 @@ export default function ServiceProvidersScreen() {
     const start = paginationModel.page * paginationModel.pageSize;
     return data.slice(start, start + paginationModel.pageSize);
   }, [data, paginationModel.page, paginationModel.pageSize]);
+
+  const verifiedCount = useMemo(() => data.filter((r) => r.isVerified).length, [data]);
+  const withOffersCount = useMemo(() => data.filter((r) => r.hasOffer).length, [data]);
 
   const handleBlockProviderClick = useCallback((e: React.MouseEvent, row: ServiceProviderDto, unblock = false) => {
     e.stopPropagation();
@@ -262,7 +270,7 @@ export default function ServiceProvidersScreen() {
 
       verifyMutation.mutate(row.id, {
         onSuccess: () => {
-          openSuccessSnackbar({ message: t("serviceProviders@verified") });
+          openSuccessSnackbar({ message: t("serviceProviders@verifiedSuccess") });
         },
         onError: (err: Error) => {
           openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
@@ -301,6 +309,8 @@ export default function ServiceProvidersScreen() {
       service: row.service || "",
       whatsAppNumber: row.whatsAppNumber || "",
       websiteUrl: row.websiteUrl || "",
+      latitude: row.latitude?.toString() || "",
+      longitude: row.longitude?.toString() || "",
     });
     setFormDialogOpen(true);
   }, []);
@@ -432,6 +442,8 @@ export default function ServiceProvidersScreen() {
         service: formData.service.trim() || null,
         whatsAppNumber: formData.whatsAppNumber.trim() || null,
         websiteUrl: formData.websiteUrl.trim() || null,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       };
 
       if (editingProvider) {
@@ -635,97 +647,204 @@ export default function ServiceProvidersScreen() {
     },
   ];
 
-  const headerActions: ScreenHeaderAction[] = [
-    {
-      id: "addProvider",
-      label: t("addProvider"),
-      icon: <AddIcon />,
-      onClick: handleAddClick,
-    },
-    {
-      id: "refresh",
-      label: t("refresh"),
-      icon: <RefreshIcon />,
-      onClick: handleRefresh,
-    },
-  ];
-
   return (
     <AppScreenContainer>
-      <ScreenHeader
-        icon={<StoreIcon />}
-        title={t("serviceProviders")}
-        subtitle={t("serviceProviders@subtitle")}
-        actions={headerActions}
-      />
+      {/* Banner */}
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          borderRadius: 3,
+          p: { xs: 2.5, md: 4 },
+          mb: 3,
+          position: "relative",
+          overflow: "hidden",
+          color: "white",
+        }}
+      >
+        {/* Decorative circles */}
+        <Box sx={{ position: "absolute", top: -50, right: -50, width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        <Box sx={{ position: "absolute", bottom: -60, right: 100, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
 
-      <Box sx={{ mt: 3 }}>
-        <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
-          <TextField
-            size="small"
-            placeholder={t("search")}
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            sx={{ minWidth: 250 }}
-          />
+        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} spacing={3}>
+          {/* Left: icon + title + KPIs */}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ xs: "flex-start", sm: "center" }}>
+            <Box sx={{ width: 64, height: 64, borderRadius: 2, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <StoreIcon sx={{ fontSize: 36, color: "white" }} />
+            </Box>
+            <Box>
+              <Typography variant="h5" fontWeight={700} color="white">{t("serviceProviders")}</Typography>
+              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)", mt: 0.5 }}>{t("serviceProviders@subtitle")}</Typography>
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }} flexWrap="wrap">
+                <Box sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
+                  {isLoading ? (
+                    <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
+                  ) : (
+                    <Typography variant="h5" fontWeight={700} color="white">{data.length}</Typography>
+                  )}
+                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("kpi_total")}</Typography>
+                </Box>
+                <Box sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
+                  {isLoading ? (
+                    <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
+                  ) : (
+                    <Typography variant="h5" fontWeight={700} color="white">{verifiedCount}</Typography>
+                  )}
+                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("kpi_verified")}</Typography>
+                </Box>
+                <Box sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
+                  {isLoading ? (
+                    <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
+                  ) : (
+                    <Typography variant="h5" fontWeight={700} color="white">{withOffersCount}</Typography>
+                  )}
+                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("kpi_withOffers")}</Typography>
+                </Box>
+              </Stack>
+            </Box>
+          </Stack>
 
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>{t("category")}</InputLabel>
-            <Select
-              value={selectedCategoryId ?? ""}
-              label={t("category")}
-              onChange={(e) => setSelectedCategoryId(e.target.value as number || undefined)}
+          {/* Right: action buttons */}
+          <Stack direction="row" spacing={1.5} flexShrink={0}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddClick}
+              sx={{
+                background: "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(10px)",
+                color: "white",
+                border: "1px solid rgba(255,255,255,0.3)",
+                fontWeight: 600,
+                "&:hover": { background: "rgba(255,255,255,0.3)" },
+              }}
             >
-              <MenuItem value="">{t("all")}</MenuItem>
-              {categories.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>{t("verificationStatus")}</InputLabel>
-            <Select
-              value={verifiedFilter}
-              label={t("verificationStatus")}
-              onChange={(e) =>
-                handleVerifiedFilterChange(e.target.value as "all" | "verified" | "unverified")
-              }
-            >
-              <MenuItem value="all">{t("all")}</MenuItem>
-              <MenuItem value="verified">{t("verified")}</MenuItem>
-              <MenuItem value="unverified">{t("unverified")}</MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>{t("sortBy")}</InputLabel>
-            <Select
-              value={sortOption}
-              label={t("sortBy")}
-              onChange={(e) => handleSortChange(e.target.value as ServiceProviderSortOption)}
-            >
-              <MenuItem value="NONE">{t("default")}</MenuItem>
-              <MenuItem value="NAME_A_TO_Z">{t("nameAZ")}</MenuItem>
-              <MenuItem value="RATING_HIGH_TO_LOW">{t("ratingHighLow")}</MenuItem>
-              <MenuItem value="VISITORS_HIGH_TO_LOW">{t("visitorsHighLow")}</MenuItem>
-              <MenuItem value="NEWEST_FIRST">{t("newestFirst")}</MenuItem>
-            </Select>
-          </FormControl>
+              {t("addProvider")}
+            </Button>
+            <Tooltip title={t("refresh")}>
+              <IconButton
+                onClick={handleRefresh}
+                sx={{
+                  background: "rgba(255,255,255,0.15)",
+                  color: "white",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  "&:hover": { background: "rgba(255,255,255,0.25)" },
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </Stack>
-
-        <AppDataGrid
-          data={paginatedData}
-          columns={columns}
-          loading={isLoading}
-          disablePagination={false}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          total={data.length}
-        />
       </Box>
+
+      {/* Shimmer skeleton while loading */}
+      {isLoading && (
+        <>
+          <Paper elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              {[250, 150, 150, 180].map((w, i) => (
+                <Skeleton key={i} variant="rounded" width={w} height={40} />
+              ))}
+            </Stack>
+          </Paper>
+          <Paper elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
+            <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
+              <Stack direction="row" spacing={2}>
+                {[70, 80, 200, 150, 150, 120, 150, 110].map((w, i) => (
+                  <Skeleton key={i} variant="text" width={w} height={24} />
+                ))}
+              </Stack>
+            </Box>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Box key={i} sx={{ px: 2, py: 1.5, borderBottom: i < 7 ? `1px solid ${theme.palette.divider}` : "none" }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Skeleton variant="text" width={40} height={24} />
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <Skeleton variant="text" width={180} height={24} />
+                  <Skeleton variant="text" width={120} height={24} />
+                  <Skeleton variant="text" width={120} height={24} />
+                  <Skeleton variant="text" width={90} height={24} />
+                  <Skeleton variant="rounded" width={130} height={28} />
+                  <Skeleton variant="rounded" width={90} height={28} />
+                </Stack>
+              </Box>
+            ))}
+          </Paper>
+        </>
+      )}
+
+      {/* Filter bar + grid */}
+      {!isLoading && (
+        <>
+          <Paper elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              <TextField
+                size="small"
+                placeholder={t("search")}
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                sx={{ minWidth: 250 }}
+              />
+
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>{t("category")}</InputLabel>
+                <Select
+                  value={selectedCategoryId ?? ""}
+                  label={t("category")}
+                  onChange={(e) => setSelectedCategoryId(e.target.value as number || undefined)}
+                >
+                  <MenuItem value="">{t("all")}</MenuItem>
+                  {categories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>{t("verificationStatus")}</InputLabel>
+                <Select
+                  value={verifiedFilter}
+                  label={t("verificationStatus")}
+                  onChange={(e) =>
+                    handleVerifiedFilterChange(e.target.value as "all" | "verified" | "unverified")
+                  }
+                >
+                  <MenuItem value="all">{t("all")}</MenuItem>
+                  <MenuItem value="verified">{t("verified")}</MenuItem>
+                  <MenuItem value="unverified">{t("unverified")}</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel>{t("sortBy")}</InputLabel>
+                <Select
+                  value={sortOption}
+                  label={t("sortBy")}
+                  onChange={(e) => handleSortChange(e.target.value as ServiceProviderSortOption)}
+                >
+                  <MenuItem value="NONE">{t("default")}</MenuItem>
+                  <MenuItem value="NAME_A_TO_Z">{t("nameAZ")}</MenuItem>
+                  <MenuItem value="RATING_HIGH_TO_LOW">{t("ratingHighLow")}</MenuItem>
+                  <MenuItem value="VISITORS_HIGH_TO_LOW">{t("visitorsHighLow")}</MenuItem>
+                  <MenuItem value="NEWEST_FIRST">{t("newestFirst")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
+          </Paper>
+
+          <AppDataGrid
+            data={paginatedData}
+            columns={columns}
+            loading={false}
+            disablePagination={false}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            total={data.length}
+          />
+        </>
+      )}
 
       {/* Detail Dialog */}
       <Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth="md" fullWidth>
@@ -834,210 +953,196 @@ export default function ServiceProvidersScreen() {
       </Dialog>
 
       {/* Add/Edit Form Dialog */}
-      <Dialog open={formDialogOpen} onClose={() => setFormDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>{editingProvider ? t("editProvider") : t("addProvider")}</DialogTitle>
-        <form onSubmit={handleFormSubmit}>
-          <DialogContent>
-            {editingProvider && (
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 1, mb: 2 }}>
-                <Avatar
-                  src={editingProvider.icon || undefined}
-                  sx={{ width: 64, height: 64 }}
-                >
-                  <StoreIcon sx={{ fontSize: 32 }} />
-                </Avatar>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={uploadIconMutation.isPending ? <CircularProgress size={16} /> : <CloudUploadIcon />}
-                  disabled={uploadIconMutation.isPending}
-                >
-                  {t("serviceProviders@uploadIcon")}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => handleUploadIcon(e, editingProvider.id)}
-                  />
-                </Button>
-              </Stack>
+      <Dialog open={formDialogOpen} onClose={() => setFormDialogOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>
+        {/* Gradient header */}
+        <Box sx={{
+          background: editingProvider
+            ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)"
+            : "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
+          px: 3, py: 2.5,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            {editingProvider ? (
+              <Avatar src={editingProvider.icon || undefined} sx={{ width: 52, height: 52, border: "2px solid rgba(255,255,255,0.4)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+                <StoreIcon sx={{ fontSize: 28 }} />
+              </Avatar>
+            ) : (
+              <Box sx={{ width: 52, height: 52, borderRadius: 2, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <AddIcon sx={{ color: "white", fontSize: 28 }} />
+              </Box>
             )}
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("name")}
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel>{t("category")}</InputLabel>
-                  <Select
-                    value={formData.serviceCategoryId}
-                    label={t("category")}
-                    onChange={(e) => setFormData({ ...formData, serviceCategoryId: e.target.value as number })}
-                  >
-                    {categories.map((cat) => (
-                      <MenuItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("phone")}
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("whatsApp")}
-                  value={formData.whatsAppNumber}
-                  onChange={(e) => setFormData({ ...formData, whatsAppNumber: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("cityName")}
-                  value={formData.cityName}
-                  onChange={(e) => setFormData({ ...formData, cityName: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("countryName")}
-                  value={formData.countryName}
-                  onChange={(e) => setFormData({ ...formData, countryName: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={t("address")}
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("price")}
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  type="number"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("priceDescription")}
-                  value={formData.priceDescription}
-                  onChange={(e) => setFormData({ ...formData, priceDescription: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("fromTime")}
-                  value={formData.fromTime}
-                  onChange={(e) => setFormData({ ...formData, fromTime: e.target.value })}
-                  placeholder="09:00"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("toTime")}
-                  value={formData.toTime}
-                  onChange={(e) => setFormData({ ...formData, toTime: e.target.value })}
-                  placeholder="18:00"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("methodPayment")}
-                  value={formData.methodPayment}
-                  onChange={(e) => setFormData({ ...formData, methodPayment: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("websiteUrl")}
-                  value={formData.websiteUrl}
-                  onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={t("description")}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  multiline
-                  rows={3}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={t("service")}
-                  value={formData.service}
-                  onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                  multiline
-                  rows={2}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.hasOffer}
-                      onChange={(e) => setFormData({ ...formData, hasOffer: e.target.checked })}
-                    />
-                  }
-                  label={t("hasOffer")}
-                />
-              </Grid>
-              {formData.hasOffer && (
-                <Grid item xs={12}>
-                  <TextField
-                    label={t("offerDescription")}
-                    value={formData.offerDescription}
-                    onChange={(e) => setFormData({ ...formData, offerDescription: e.target.value })}
-                    multiline
-                    rows={2}
-                    fullWidth
-                  />
-                </Grid>
+            <Box>
+              <Typography variant="h6" fontWeight={700} color="white">
+                {editingProvider ? t("editProvider") : t("addProvider")}
+              </Typography>
+              {editingProvider && (
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{editingProvider.name}</Typography>
               )}
-            </Grid>
+            </Box>
+          </Stack>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {editingProvider && (
+              <Button
+                component="label"
+                size="small"
+                startIcon={uploadIconMutation.isPending ? <CircularProgress size={14} color="inherit" /> : <CloudUploadIcon fontSize="small" />}
+                disabled={uploadIconMutation.isPending}
+                sx={{ color: "rgba(255,255,255,0.9)", bgcolor: "rgba(255,255,255,0.15)", borderRadius: 2, "&:hover": { bgcolor: "rgba(255,255,255,0.25)" }, fontSize: "0.78rem" }}
+              >
+                {t("uploadIcon")}
+                <input type="file" accept="image/*" hidden onChange={(e) => handleUploadIcon(e, editingProvider.id)} />
+              </Button>
+            )}
+            <IconButton size="small" onClick={() => setFormDialogOpen(false)} sx={{ color: "rgba(255,255,255,0.8)", "&:hover": { bgcolor: "rgba(255,255,255,0.15)" } }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </IconButton>
+          </Stack>
+        </Box>
+
+        <form onSubmit={handleFormSubmit}>
+          <DialogContent sx={{ pt: 3, pb: 1 }}>
+            <Stack spacing={2.5}>
+
+              {/* Section: Basic Info */}
+              <Box>
+                <Typography variant="overline" fontWeight={700} color="text.secondary" sx={{ letterSpacing: 1.2 }}>
+                  {t("name")} & {t("category")}
+                </Typography>
+                <Divider sx={{ mb: 1.5, mt: 0.5 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label={t("name")} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required fullWidth autoFocus size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth required size="small">
+                      <InputLabel>{t("category")}</InputLabel>
+                      <Select value={formData.serviceCategoryId} label={t("category")} onChange={(e) => setFormData({ ...formData, serviceCategoryId: e.target.value as number })}>
+                        {categories.map((cat) => <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Section: Contact */}
+              <Box>
+                <Typography variant="overline" fontWeight={700} color="text.secondary" sx={{ letterSpacing: 1.2 }}>
+                  {t("phone")} & {t("whatsApp")}
+                </Typography>
+                <Divider sx={{ mb: 1.5, mt: 0.5 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label={t("phone")} value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField label={t("whatsApp")} value={formData.whatsAppNumber} onChange={(e) => setFormData({ ...formData, whatsAppNumber: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField label={t("cityName")} value={formData.cityName} onChange={(e) => setFormData({ ...formData, cityName: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField label={t("countryName")} value={formData.countryName} onChange={(e) => setFormData({ ...formData, countryName: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField label={t("websiteUrl")} value={formData.websiteUrl} onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField label={t("address")} value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Section: Location */}
+              <Box>
+                <Typography variant="overline" fontWeight={700} color="text.secondary" sx={{ letterSpacing: 1.2 }}>
+                  {t("latitude")} & {t("longitude")}
+                </Typography>
+                <Divider sx={{ mb: 1.5, mt: 0.5 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField label={t("latitude")} value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: e.target.value })} type="number" inputProps={{ step: "any" }} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField label={t("longitude")} value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: e.target.value })} type="number" inputProps={{ step: "any" }} fullWidth size="small" />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Section: Pricing & Hours */}
+              <Box>
+                <Typography variant="overline" fontWeight={700} color="text.secondary" sx={{ letterSpacing: 1.2 }}>
+                  {t("price")} & {t("fromTime")}
+                </Typography>
+                <Divider sx={{ mb: 1.5, mt: 0.5 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={3}>
+                    <TextField label={t("price")} value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} type="number" fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField label={t("priceDescription")} value={formData.priceDescription} onChange={(e) => setFormData({ ...formData, priceDescription: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField label={t("fromTime")} value={formData.fromTime} onChange={(e) => setFormData({ ...formData, fromTime: e.target.value })} placeholder="09:00" fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField label={t("toTime")} value={formData.toTime} onChange={(e) => setFormData({ ...formData, toTime: e.target.value })} placeholder="18:00" fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField label={t("methodPayment")} value={formData.methodPayment} onChange={(e) => setFormData({ ...formData, methodPayment: e.target.value })} fullWidth size="small" />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Section: Description & Services */}
+              <Box>
+                <Typography variant="overline" fontWeight={700} color="text.secondary" sx={{ letterSpacing: 1.2 }}>
+                  {t("description")} & {t("service")}
+                </Typography>
+                <Divider sx={{ mb: 1.5, mt: 0.5 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField label={t("description")} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} multiline rows={2} fullWidth size="small" />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField label={t("service")} value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })} multiline rows={2} fullWidth size="small" />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Has Offer toggle */}
+              <Paper variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 2, borderColor: formData.hasOffer ? "warning.main" : "divider", bgcolor: formData.hasOffer ? "warning.50" : "transparent" }}>
+                <FormControlLabel
+                  control={<Checkbox checked={formData.hasOffer} onChange={(e) => setFormData({ ...formData, hasOffer: e.target.checked })} color="warning" />}
+                  label={<Typography fontWeight={600} color={formData.hasOffer ? "warning.dark" : "text.secondary"}>{t("hasOffer")}</Typography>}
+                />
+                {formData.hasOffer && (
+                  <TextField label={t("offerDescription")} value={formData.offerDescription} onChange={(e) => setFormData({ ...formData, offerDescription: e.target.value })} multiline rows={2} fullWidth size="small" sx={{ mt: 1.5 }} />
+                )}
+              </Paper>
+
+            </Stack>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setFormDialogOpen(false)}>{t("cancel")}</Button>
+
+          <Divider />
+          <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+            <Button onClick={() => setFormDialogOpen(false)} color="inherit" variant="outlined" sx={{ borderRadius: 2, minWidth: 100 }}>
+              {t("cancel")}
+            </Button>
             <Button
               type="submit"
               variant="contained"
               disabled={createMutation.isPending || updateMutation.isPending}
+              startIcon={(createMutation.isPending || updateMutation.isPending) ? <CircularProgress size={18} color="inherit" /> : editingProvider ? <EditIcon /> : <AddIcon />}
+              sx={{
+                borderRadius: 2, minWidth: 130,
+                background: editingProvider ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)" : "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
+                "&:hover": { background: editingProvider ? "linear-gradient(135deg, #bf360c 0%, #e65100 100%)" : "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)" },
+              }}
             >
-              {createMutation.isPending || updateMutation.isPending ? (
-                <CircularProgress size={20} />
-              ) : editingProvider ? (
-                t("update")
-              ) : (
-                t("create")
-              )}
+              {createMutation.isPending || updateMutation.isPending
+                ? (editingProvider ? t("updating") : t("creating"))
+                : (editingProvider ? t("update") : t("create"))}
             </Button>
           </DialogActions>
         </form>

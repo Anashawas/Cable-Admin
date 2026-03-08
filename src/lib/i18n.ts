@@ -54,6 +54,7 @@ i18n
       "partners",
       "loyalty",
       "serviceProviders",
+      "stationStats",
     ],
   });
 

@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import {
   Box,
   Stack,
@@ -22,10 +23,8 @@ import {
   CardContent,
   IconButton,
   Tooltip,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
+  Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -37,19 +36,52 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import StarsIcon from "@mui/icons-material/Stars";
 import TimerIcon from "@mui/icons-material/Timer";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import StoreIcon from "@mui/icons-material/Store";
+import EvStationIcon from "@mui/icons-material/EvStation";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid } from "../../../components";
 import { useProviderTransactions } from "../hooks/use-transactions";
+import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
+import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 import type { OfferTransactionDto, ProviderType, TransactionStatus } from "../types/api";
 
+interface ProviderOption {
+  id: number;
+  name: string;
+}
+
 export default function TransactionsScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["offers", "common"]);
 
   const [providerType, setProviderType] = useState<ProviderType>("ChargingPoint");
-  const [providerId, setProviderId] = useState<number>(0);
-  const [providerIdInput, setProviderIdInput] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null);
   const [statusFilter, setStatusFilter] = useState<TransactionStatus | undefined>(undefined);
+
+  const providerId = selectedProvider?.id ?? 0;
+
+  // Load providers based on type
+  const { data: chargingPoints = [], isLoading: loadingCP } = useQuery({
+    queryKey: ["charging-points-list"],
+    queryFn: ({ signal }) =>
+      getAllChargingPoints({ name: null, chargerPointTypeId: null, cityName: null }, signal),
+    enabled: providerType === "ChargingPoint",
+  });
+
+  const { data: serviceProviders = [], isLoading: loadingSP } = useQuery({
+    queryKey: ["service-providers-list"],
+    queryFn: () => getAllServiceProviders(),
+    enabled: providerType === "ServiceProvider",
+  });
+
+  const providerOptions: ProviderOption[] = useMemo(() => {
+    if (providerType === "ChargingPoint") {
+      return chargingPoints.map((p) => ({ id: p.id, name: p.name ?? `#${p.id}` }));
+    }
+    return serviceProviders.map((p) => ({ id: p.id, name: p.name }));
+  }, [providerType, chargingPoints, serviceProviders]);
+
+  const isLoadingProviders = providerType === "ChargingPoint" ? loadingCP : loadingSP;
 
   const {
     data,
@@ -82,12 +114,11 @@ export default function TransactionsScreen() {
     setDetailDialogOpen(true);
   }, []);
 
-  const handleSearch = useCallback(() => {
-    const id = parseInt(providerIdInput);
-    if (id > 0) {
-      setProviderId(id);
-    }
-  }, [providerIdInput]);
+  const handleProviderTypeChange = useCallback((type: ProviderType) => {
+    setProviderType(type);
+    setSelectedProvider(null);
+    setStatusFilter(undefined);
+  }, []);
 
   const getStatusColor = (status: TransactionStatus): "warning" | "success" | "error" | "default" => {
     switch (status) {
@@ -211,61 +242,109 @@ export default function TransactionsScreen() {
       <ScreenHeader
         icon={<ReceiptLongIcon />}
         title={t("offerTransactions")}
-        subtitle={t("offerTransactions@subtitle")}
+        subtitle={t("offers@offerTransactions_subtitle")}
         actions={headerActions}
       />
 
       <Box sx={{ mt: 3 }}>
-        {/* Provider Search */}
-        <Paper elevation={0} sx={{ p: 2, mb: 2, bgcolor: "grey.50", borderRadius: 2 }}>
-          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
-            {t("selectProvider")}
-          </Typography>
-          <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>{t("providerType")}</InputLabel>
-              <Select
-                value={providerType}
-                label={t("providerType")}
-                onChange={(e) => setProviderType(e.target.value as ProviderType)}
-              >
-                <MenuItem value="ChargingPoint">{t("chargingPoint")}</MenuItem>
-                <MenuItem value="ServiceProvider">{t("serviceProvider")}</MenuItem>
-              </Select>
-            </FormControl>
+        {/* Provider Selector Panel */}
+        <Paper
+          elevation={0}
+          sx={{ p: 2.5, mb: 3, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "divider" }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+            <ReceiptLongIcon fontSize="small" color="primary" />
+            <Typography variant="subtitle2" fontWeight={700} color="primary.main">
+              {t("selectProvider")}
+            </Typography>
+          </Stack>
 
-            <TextField
+          <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="flex-start">
+            {/* Provider Type Toggle */}
+            <ToggleButtonGroup
+              value={providerType}
+              exclusive
+              onChange={(_, value) => { if (value) handleProviderTypeChange(value as ProviderType); }}
               size="small"
-              label={t("providerId")}
-              type="number"
-              value={providerIdInput}
-              onChange={(e) => setProviderIdInput(e.target.value)}
-              sx={{ width: 150 }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSearch();
+            >
+              <ToggleButton value="ChargingPoint" sx={{ px: 2, gap: 0.5 }}>
+                <EvStationIcon fontSize="small" />
+                {t("chargingPoint")}
+              </ToggleButton>
+              <ToggleButton value="ServiceProvider" sx={{ px: 2, gap: 0.5 }}>
+                <StoreIcon fontSize="small" />
+                {t("serviceProvider")}
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Provider Autocomplete */}
+            <Autocomplete
+              size="small"
+              sx={{ minWidth: 300, flex: 1, maxWidth: 450 }}
+              options={providerOptions}
+              getOptionLabel={(o) => `${o.name} (#${o.id})`}
+              value={selectedProvider}
+              onChange={(_, value) => {
+                setSelectedProvider(value);
+                setStatusFilter(undefined);
               }}
+              loading={isLoadingProviders}
+              isOptionEqualToValue={(a, b) => a.id === b.id}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={providerType === "ChargingPoint" ? t("chargingPoint") : t("serviceProvider")}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {isLoadingProviders ? <CircularProgress color="inherit" size={18} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Avatar sx={{ width: 28, height: 28, fontSize: 12, bgcolor: "primary.light" }}>
+                      {providerType === "ChargingPoint" ? <EvStationIcon sx={{ fontSize: 16 }} /> : <StoreIcon sx={{ fontSize: 16 }} />}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" fontWeight={600}>{option.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">ID: {option.id}</Typography>
+                    </Box>
+                  </Stack>
+                </li>
+              )}
+              noOptionsText={isLoadingProviders ? t("loading") : t("noResultsFound")}
             />
 
-            <Button
-              variant="contained"
-              size="medium"
-              onClick={handleSearch}
-              disabled={!providerIdInput || parseInt(providerIdInput) <= 0}
-            >
-              {t("search")}
-            </Button>
+            {/* Selected Provider Badge */}
+            {selectedProvider && (
+              <Chip
+                icon={providerType === "ChargingPoint" ? <EvStationIcon /> : <StoreIcon />}
+                label={`${selectedProvider.name} · ID ${selectedProvider.id}`}
+                color="primary"
+                variant="outlined"
+                onDelete={() => setSelectedProvider(null)}
+                sx={{ alignSelf: "center" }}
+              />
+            )}
           </Stack>
         </Paper>
 
+        {/* Transactions list */}
         {providerId > 0 && (
           <>
-            <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap">
+            <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap" alignItems="center">
               <TextField
                 size="small"
                 placeholder={t("searchTransactions")}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                sx={{ minWidth: 300 }}
+                sx={{ minWidth: 280 }}
               />
 
               <ToggleButtonGroup
@@ -297,8 +376,8 @@ export default function TransactionsScreen() {
         )}
 
         {!providerId && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            {t("transactions@selectProviderHint")}
+          <Alert severity="info" sx={{ mt: 1 }}>
+            {t("offers@transactions_selectProviderHint")}
           </Alert>
         )}
       </Box>

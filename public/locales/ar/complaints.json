@@ -3,14 +3,22 @@
   "deleted": "تم حذف الشكوى",
   "deleteConfirmTitle": "حذف الشكوى",
   "deleteConfirmMessage": "هل أنت متأكد من حذف هذه الشكوى؟",
+  "statusUpdated": "تم تحديث حالة الشكوى",
+  "changeStatus": "تغيير الحالة",
+  "status": "الحالة",
+  "status_pending": "معلقة",
+  "status_rejected": "مرفوضة",
+  "status_solved": "محلولة",
   "columns": {
     "id": "المعرف",
     "user": "المستخدم",
     "station": "المحطة",
     "note": "الشكوى (الملاحظة)",
+    "status": "الحالة",
     "actions": "إجراءات"
   },
   "actions": {
-    "delete": "حذف"
+    "delete": "حذف",
+    "changeStatus": "تغيير الحالة"
   }
 }

@@ -13,10 +13,14 @@ import {
   Stack,
   IconButton,
   Tooltip,
+  Divider,
 } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EvStationIcon from "@mui/icons-material/EvStation";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import UploadIcon from "@mui/icons-material/Upload";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getStationById } from "../services/station-form-service";
 import {
@@ -136,162 +140,187 @@ export default function StationMediaScreen() {
 
   return (
     <AppScreenContainer>
-      <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 900, mx: "auto" }}>
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate("/charge-management")}
-            size="small"
-          >
-            {t("back")}
-          </Button>
-          <Typography variant="h5" fontWeight="bold">
-            {t("chargeManagement@media.title")}: {stationName}
-          </Typography>
-        </Stack>
+      <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 960, mx: "auto" }}>
 
-        {/* Section 1: Main Icon */}
-        <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-          <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-            {t("chargeManagement@media.mainIcon")}
-          </Typography>
-          <Stack direction="row" alignItems="center" spacing={3}>
-            <Avatar
-              src={station?.iConUrl ?? undefined}
-              alt={stationName}
-              sx={{ width: 120, height: 120 }}
-              variant="rounded"
-            />
-            <Box>
-              <input
-                ref={iconInputRef}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleIconFileChange}
-              />
+        {/* ── Gradient Banner ── */}
+        <Box
+          sx={{
+            background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+            borderRadius: 3,
+            p: { xs: 2.5, md: 3.5 },
+            mb: 3,
+            position: "relative",
+            overflow: "hidden",
+            color: "white",
+          }}
+        >
+          <Box sx={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
+            <Stack direction="row" spacing={2} alignItems="center">
               <Button
-                variant="contained"
-                onClick={handleChangeIconClick}
-                disabled={uploadIconMutation.isPending}
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate("/charge-management")}
+                sx={{ color: "rgba(255,255,255,0.85)", borderColor: "rgba(255,255,255,0.3)", "&:hover": { bgcolor: "rgba(255,255,255,0.1)", borderColor: "white" }, flexShrink: 0 }}
+                variant="outlined"
+                size="small"
               >
-                {uploadIconMutation.isPending ? (
-                  <CircularProgress size={24} />
-                ) : (
-                  t("chargeManagement@media.changeIcon")
-                )}
+                {t("back")}
               </Button>
-            </Box>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Box sx={{ width: 48, height: 48, borderRadius: 2, bgcolor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <EvStationIcon sx={{ fontSize: 26 }} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" fontWeight={700} color="white">{t("chargeManagement@media.title")}</Typography>
+                  <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)" }}>{stationName}</Typography>
+                </Box>
+              </Stack>
+            </Stack>
+            <Stack direction="row" spacing={1.5}>
+              <Box sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, textAlign: "center", minWidth: 80 }}>
+                <Typography variant="h6" fontWeight={700} color="white">{photos.length}</Typography>
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("chargeManagement@media.photoGallery")}</Typography>
+              </Box>
+            </Stack>
           </Stack>
+        </Box>
+
+        {/* ── Station Icon Section ── */}
+        <Paper elevation={1} sx={{ borderRadius: 3, overflow: "hidden", mb: 3 }}>
+          <Box sx={{ px: 3, py: 2, borderBottom: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", gap: 1 }}>
+            <EvStationIcon fontSize="small" color="primary" />
+            <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@media.mainIcon")}</Typography>
+          </Box>
+          <Box sx={{ p: 3 }}>
+            <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ sm: "center" }} spacing={3}>
+              <Box sx={{ p: 1.5, borderRadius: 3, border: "2px dashed", borderColor: uploadIconMutation.isPending ? "primary.main" : "divider", bgcolor: "grey.50", flexShrink: 0, transition: "border-color 0.2s" }}>
+                <Avatar
+                  src={station?.iConUrl ?? undefined}
+                  alt={stationName}
+                  sx={{ width: 100, height: 100, borderRadius: 2 }}
+                  variant="rounded"
+                />
+              </Box>
+              <Box>
+                <Typography variant="body1" fontWeight={600} gutterBottom>{stationName}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {t("chargeManagement@media.iconHint")}
+                </Typography>
+                <input ref={iconInputRef} type="file" accept="image/*" hidden onChange={handleIconFileChange} />
+                <Button
+                  variant="contained"
+                  startIcon={uploadIconMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <UploadIcon />}
+                  onClick={handleChangeIconClick}
+                  disabled={uploadIconMutation.isPending}
+                  sx={{
+                    background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
+                    "&:hover": { background: "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)" },
+                    fontWeight: 600,
+                  }}
+                >
+                  {uploadIconMutation.isPending ? t("uploading") : t("chargeManagement@media.changeIcon")}
+                </Button>
+              </Box>
+            </Stack>
+          </Box>
         </Paper>
 
-        {/* Section 2: Photo Gallery */}
-        <Paper variant="outlined" sx={{ p: 3 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2} sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight="600">
-              {t("chargeManagement@media.photoGallery")}
-            </Typography>
+        {/* ── Photo Gallery Section ── */}
+        <Paper elevation={1} sx={{ borderRadius: 3, overflow: "hidden" }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 3, py: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <PhotoLibraryIcon fontSize="small" color="primary" />
+              <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@media.photoGallery")}</Typography>
+              {photos.length > 0 && (
+                <Box sx={{ bgcolor: "primary.main", color: "white", borderRadius: 10, px: 1, py: 0.1, fontSize: "0.72rem", fontWeight: 700 }}>
+                  {photos.length}
+                </Box>
+              )}
+            </Stack>
             <Box>
-              <input
-                ref={photosInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={handlePhotosFileChange}
-              />
+              <input ref={photosInputRef} type="file" accept="image/*" multiple hidden onChange={handlePhotosFileChange} />
               <Button
-                variant="outlined"
-                startIcon={<AddPhotoAlternateIcon />}
+                variant="contained"
+                startIcon={uploadPhotosMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <AddPhotoAlternateIcon />}
                 onClick={handleAddPhotosClick}
                 disabled={uploadPhotosMutation.isPending}
+                sx={{
+                  background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
+                  "&:hover": { background: "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)" },
+                  fontWeight: 600,
+                }}
               >
-                {uploadPhotosMutation.isPending ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  t("chargeManagement@media.addPhotos")
-                )}
+                {uploadPhotosMutation.isPending ? t("uploading") : t("chargeManagement@media.addPhotos")}
               </Button>
             </Box>
           </Stack>
 
-          {isLoadingPhotos ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress />
-            </Box>
-          ) : photos.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-              {t("chargeManagement@media.noPhotos")}
-            </Typography>
-          ) : (
-            <Grid container spacing={2}>
-              {photos.map((photo, index) => {
-                const url = getPhotoUrl(photo);
-                return (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={photo.id ?? index}>
-                    <Box
-                      sx={{
-                        position: "relative",
-                        borderRadius: 1,
-                        overflow: "hidden",
-                        bgcolor: "action.hover",
-                        aspectRatio: "1",
-                      }}
-                    >
-                      {url ? (
+          <Box sx={{ p: 3 }}>
+            {isLoadingPhotos ? (
+              <Box display="flex" justifyContent="center" py={6}>
+                <CircularProgress />
+              </Box>
+            ) : photos.length === 0 ? (
+              <Stack alignItems="center" spacing={1.5} sx={{ py: 6 }}>
+                <PhotoLibraryIcon sx={{ fontSize: 48, color: "action.disabled" }} />
+                <Typography variant="body2" color="text.secondary">{t("chargeManagement@media.noPhotos")}</Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddPhotoAlternateIcon />}
+                  onClick={handleAddPhotosClick}
+                  size="small"
+                >
+                  {t("chargeManagement@media.addPhotos")}
+                </Button>
+              </Stack>
+            ) : (
+              <Grid container spacing={2}>
+                {photos.map((photo, index) => {
+                  const url = getPhotoUrl(photo);
+                  return (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={photo.id ?? index}>
+                      <Box
+                        sx={{
+                          position: "relative",
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          bgcolor: "action.hover",
+                          aspectRatio: "1",
+                          border: "1px solid",
+                          borderColor: "divider",
+                          "&:hover .overlay": { opacity: 1 },
+                        }}
+                      >
+                        {url ? (
+                          <Box component="img" src={url} alt="" sx={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <Box sx={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Typography variant="caption" color="text.secondary">{t("NA")}</Typography>
+                          </Box>
+                        )}
                         <Box
-                          component="img"
-                          src={url}
-                          alt=""
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <Box
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
+                          className="overlay"
+                          sx={{ position: "absolute", inset: 0, bgcolor: "rgba(0,0,0,0.35)", opacity: 0, transition: "opacity 0.2s", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", p: 1 }}
                         >
-                          <Typography variant="caption" color="text.secondary">
-                            {t("NA")}
-                          </Typography>
+                          <Tooltip title={t("chargeManagement@media.deleteUnavailable")}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled
+                                sx={{ bgcolor: "rgba(255,255,255,0.85)", "&.Mui-disabled": { bgcolor: "rgba(255,255,255,0.6)", color: "text.disabled" } }}
+                              >
+                                <DeleteOutlineIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
                         </Box>
-                      )}
-                      <Tooltip title={t("chargeManagement@media.deleteUnavailable")}>
-                        <span>
-                          <IconButton
-                            size="small"
-                            disabled
-                            sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              bgcolor: "background.paper",
-                              "&:hover": { bgcolor: "action.hover" },
-                              "&.Mui-disabled": {
-                                bgcolor: "background.paper",
-                                color: "text.disabled",
-                              },
-                            }}
-                            aria-label={t("chargeManagement@media.deleteUnavailable")}
-                          >
-                            <DeleteOutlineIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </Box>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          )}
+                      </Box>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            )}
+          </Box>
         </Paper>
       </Box>
     </AppScreenContainer>

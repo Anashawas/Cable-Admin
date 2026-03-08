@@ -15,11 +15,13 @@ const App = lazy(() => import("../features/app/components/App"));
 const AppLayout = lazy(() => import("../features/app/components/AppLayout"));
 const DashboardScreen = lazy(() => import("../features/dashboard/components/DashboardScreen"));
 const UserListScreen = lazy(() => import("../features/users/components/UserListScreen"));
+const UserAnalyticsScreen = lazy(() => import("../features/users/components/UserAnalyticsScreen"));
 const EditUserScreen = lazy(() => import("../features/users/components/EditUserScreen"));
 const ChargeManagementScreen = lazy(() => import("../features/charge-management/components/ChargeManagementScreen"));
 const StationFormScreen = lazy(() => import("../features/charge-management/components/StationFormScreen"));
 const StationMediaScreen = lazy(() => import("../features/charge-management/components/StationMediaScreen"));
 const StationsRequestScreen = lazy(() => import("../features/charge-management/components/StationsRequestScreen"));
+const StationStatisticsScreen = lazy(() => import("../features/charge-management/components/StationStatisticsScreen"));
 const ComplaintsScreen = lazy(() => import("../features/complaints/components/ComplaintsScreen"));
 const BannersScreen = lazy(() => import("../features/system/components/BannersScreen"));
 const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
@@ -124,6 +126,16 @@ function AppContainer() {
             }
           />
           <Route
+            path="/station-statistics"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <StationStatisticsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/complaints"
             element={
               <ProtectedRoute isAllowed={!!user}>
@@ -139,6 +151,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <UserListScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user-analytics"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <UserAnalyticsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

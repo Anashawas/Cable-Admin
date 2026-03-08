@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { alpha } from "@mui/material/styles";
 import {
   Box,
   Stack,
@@ -17,7 +18,16 @@ import {
   InputLabel,
   Paper,
   Button,
+  Skeleton,
+  useTheme,
+  Avatar,
+  Card,
+  CardContent,
+  CardActions,
   Divider,
+  ToggleButtonGroup,
+  ToggleButton,
+  Pagination,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
@@ -33,10 +43,13 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
+import EvStationIcon from "@mui/icons-material/EvStation";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import PhoneIcon from "@mui/icons-material/Phone";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
 import { useChargeManagement, type SortOption } from "../hooks/use-charge-management";
 import { getAllPlugTypes } from "../services/station-form-service";
@@ -54,6 +67,10 @@ const SORT_OPTIONS: { value: SortOption; labelKey: string }[] = [
 export default function ChargeManagementScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const [viewMode, setViewMode] = useState<"card" | "table">("card");
+  const [cardPage, setCardPage] = useState(1);
+  const CARD_PAGE_SIZE = 12;
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 25,
@@ -127,6 +144,12 @@ export default function ChargeManagementScreen() {
     const start = paginationModel.page * paginationModel.pageSize;
     return filteredData.slice(start, start + paginationModel.pageSize);
   }, [filteredData, paginationModel.page, paginationModel.pageSize]);
+
+  const cardPagedData = useMemo(() => {
+    const start = (cardPage - 1) * CARD_PAGE_SIZE;
+    return filteredData.slice(start, start + CARD_PAGE_SIZE);
+  }, [filteredData, cardPage]);
+  const cardTotalPages = Math.ceil(filteredData.length / CARD_PAGE_SIZE);
 
   const hasActiveFilters =
     cityFilter ||
@@ -489,30 +512,10 @@ export default function ChargeManagementScreen() {
     [t, handleEdit, handleMedia, handleOpenDetail]
   );
 
-  const headerActions: ScreenHeaderAction[] = useMemo(
-    () => [
-      {
-        id: "add",
-        icon: <AddIcon />,
-        label: t("chargeManagement@actions.addStation"),
-        onClick: handleAddStation,
-        color: "primary",
-      },
-      {
-        id: "refresh",
-        icon: <RefreshIcon />,
-        label: t("refresh"),
-        onClick: handleRefresh,
-      },
-      {
-        id: "complaints",
-        icon: <ReportProblemIcon />,
-        label: t("chargeManagement@actions.viewComplaints"),
-        onClick: handleViewComplaints,
-      },
-    ],
-    [t, handleAddStation, handleRefresh, handleViewComplaints]
-  );
+
+  const totalStations = data.length;
+  const activeStations = useMemo(() => data.filter(r => r.statusSummary?.id === 1 || r.statusSummary?.name?.toLowerCase() === "active").length, [data]);
+  const verifiedStations = useMemo(() => data.filter(r => r.isVerified).length, [data]);
 
   if (error) {
     return (
@@ -526,247 +529,400 @@ export default function ChargeManagementScreen() {
 
   return (
     <AppScreenContainer>
-      <Box
-        sx={{
-          width: "100%",
-          minWidth: 0,
-          overflow: "hidden",
-          boxSizing: "border-box",
-          p: { xs: 1, sm: 2 },
-        }}
-      >
+      <Box sx={{ width: "100%", minWidth: 0, overflow: "hidden", boxSizing: "border-box", p: { xs: 1, sm: 2 } }}>
         <Stack spacing={2.5} sx={{ width: "100%", minWidth: 0 }}>
-          <ScreenHeader
-            title={t("chargeManagement@title")}
-            actions={headerActions}
-          />
 
-          <Paper
-            variant="outlined"
+          {/* ── Page Banner ─────────────────────────────────────────────────── */}
+          <Box
             sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: "background.paper",
-              borderColor: "divider",
+              background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+              borderRadius: 3,
+              p: { xs: 2, md: 3 },
+              position: "relative",
+              overflow: "hidden",
+              color: "#fff",
             }}
           >
-            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
-              <FilterListIcon color="action" fontSize="small" />
-              <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
-                {t("chargeManagement@filters.title")}
-              </Typography>
-              {hasActiveFilters && (
-                <Chip
-                  size="small"
-                  label={t("chargeManagement@filters.active")}
-                  color="primary"
-                  variant="outlined"
-                  sx={{ ml: 0.5 }}
-                />
-              )}
-              {hasActiveFilters && (
+            <Box sx={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.05)", top: -100, right: -60, pointerEvents: "none" }} />
+            <Box sx={{ position: "absolute", width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)", bottom: -60, left: 80, pointerEvents: "none" }} />
+
+            <Stack direction={{ xs: "column", md: "row" }} alignItems={{ md: "center" }} justifyContent="space-between" spacing={2}>
+              {/* Left: title + kpis */}
+              <Box sx={{ flex: 1 }}>
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+                  <Box sx={{ width: 56, height: 56, borderRadius: 2, bgcolor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <EvStationIcon sx={{ fontSize: 32 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h5" fontWeight={700} color="white">
+                      {t("chargeManagement@title")}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
+                      {t("chargeManagement@subtitle")}
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Stack direction="row" spacing={2} flexWrap="wrap">
+                  {[
+                    { label: t("chargeManagement@kpi.total"), value: totalStations },
+                    { label: t("chargeManagement@kpi.active"), value: activeStations },
+                    { label: t("chargeManagement@kpi.verified"), value: verifiedStations },
+                  ].map(kpi => (
+                    <Box key={kpi.label} sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
+                      {isLoading ? (
+                        <Skeleton variant="rounded" width={48} height={32} sx={{ bgcolor: "rgba(255,255,255,0.2)", mb: 0.5 }} />
+                      ) : (
+                        <Typography variant="h5" fontWeight={700} color="white">{kpi.value}</Typography>
+                      )}
+                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{kpi.label}</Typography>
+                    </Box>
+                  ))}
+                  {!isLoading && hasActiveFilters && (
+                    <Box sx={{ background: "rgba(255,255,0,0.15)", borderRadius: 2, px: 2, py: 1, minWidth: 90, border: "1px solid rgba(255,255,0,0.3)" }}>
+                      <Typography variant="h5" fontWeight={700} color="white">{filteredData.length}</Typography>
+                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("chargeManagement@filters.filtered")}</Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </Box>
+
+              {/* Right: action buttons */}
+              <Stack direction="row" spacing={1} flexShrink={0}>
                 <Button
-                  size="small"
-                  startIcon={<ClearIcon />}
-                  onClick={handleClearFilters}
-                  sx={{ ml: "auto" }}
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddStation}
+                  sx={{ bgcolor: "rgba(255,255,255,0.2)", "&:hover": { bgcolor: "rgba(255,255,255,0.3)" }, color: "#fff", boxShadow: "none", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.3)" }}
                 >
-                  {t("chargeManagement@filters.clearAll")}
+                  {t("chargeManagement@actions.addStation")}
                 </Button>
-              )}
+                <Tooltip title={t("refresh")}>
+                  <IconButton onClick={handleRefresh} sx={{ color: "rgba(255,255,255,0.8)", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={t("chargeManagement@actions.viewComplaints")}>
+                  <IconButton onClick={handleViewComplaints} sx={{ color: "rgba(255,255,255,0.8)", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
+                    <ReportProblemIcon />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
             </Stack>
-            <Divider sx={{ mb: 2 }} />
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ sm: "center" }}
-              flexWrap="wrap"
-              useFlexGap
-            >
+          </Box>
+
+          {/* ── Shimmer skeleton while first load ───────────────────────────── */}
+          {isLoading && (
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+              <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                {[220, 155, 140, 130, 120, 140, 190].map((w, i) => (
+                  <Skeleton key={i} variant="rounded" width={w} height={40} sx={{ borderRadius: 1 }} />
+                ))}
+              </Stack>
+              <Skeleton variant="text" width={120} height={20} sx={{ mt: 1.5 }} />
+            </Paper>
+          )}
+
+          {isLoading && (
+            <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
+              {/* header row */}
+              <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", gap: 2 }}>
+                {[80, 180, 120, 70, 90, 100, 140, 110, 80].map((w, i) => (
+                  <Skeleton key={i} variant="text" width={w} height={20} />
+                ))}
+              </Box>
+              {/* shimmer rows */}
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Box key={i} sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", gap: 2 }}>
+                  <Skeleton variant="rounded" width={40} height={40} sx={{ flexShrink: 0 }} />
+                  <Skeleton variant="text" width={160} height={20} />
+                  <Skeleton variant="rounded" width={80} height={22} sx={{ borderRadius: 3 }} />
+                  <Skeleton variant="text" width={60} height={20} />
+                  <Skeleton variant="text" width={100} height={20} />
+                  <Skeleton variant="text" width={90} height={20} />
+                  <Box sx={{ display: "flex", gap: 0.5 }}>
+                    {[1,2,3,4,5].map(s => <Skeleton key={s} variant="circular" width={14} height={14} />)}
+                  </Box>
+                  <Skeleton variant="text" width={60} height={20} />
+                  <Box sx={{ display: "flex", gap: 0.5, ml: "auto" }}>
+                    <Skeleton variant="circular" width={28} height={28} />
+                    <Skeleton variant="circular" width={28} height={28} />
+                  </Box>
+                </Box>
+              ))}
+            </Paper>
+          )}
+
+          {/* ── Filter Bar + Grid (hidden while skeleton is shown) ─────────── */}
+          {!isLoading && <>
+          <Paper
+            elevation={0}
+            sx={{ p: 2, borderRadius: 2, bgcolor: "background.paper", border: "1px solid", borderColor: "divider", boxShadow: `0 1px 4px ${alpha(theme.palette.primary.main, 0.08)}` }}
+          >
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }} flexWrap="wrap" useFlexGap>
               <TextField
                 size="small"
                 placeholder={t("chargeManagement@searchPlaceholder")}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ minWidth: 220 }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }}
+                sx={{ minWidth: 220, flex: 1 }}
               />
-              <FormControl size="small" sx={{ minWidth: 180 }}>
-                <InputLabel id="charge-management-sort-label">
-                  {t("chargeManagement@sort.label")}
-                </InputLabel>
-                <Select
-                  labelId="charge-management-sort-label"
-                  value={sortOption}
-                  label={t("chargeManagement@sort.label")}
-                  onChange={(e) => handleSortChange(e.target.value as SortOption)}
-                >
-                  {SORT_OPTIONS.map((opt) => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      {t(opt.labelKey)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel id="charge-management-city-label">
-                  {t("chargeManagement@filters.city")}
-                </InputLabel>
-                <Select
-                  labelId="charge-management-city-label"
-                  value={cityFilter}
-                  label={t("chargeManagement@filters.city")}
-                  onChange={(e) => {
-                    setCityFilter(e.target.value);
-                    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-                  }}
-                >
-                  <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
-                  {uniqueCities.map((c) => (
-                    <MenuItem key={c} value={c}>
-                      {c}
-                    </MenuItem>
-                  ))}
+              <FormControl size="small" sx={{ minWidth: 155 }}>
+                <InputLabel>{t("chargeManagement@sort.label")}</InputLabel>
+                <Select value={sortOption} label={t("chargeManagement@sort.label")} onChange={(e) => handleSortChange(e.target.value as SortOption)}>
+                  {SORT_OPTIONS.map(opt => <MenuItem key={opt.value} value={opt.value}>{t(opt.labelKey)}</MenuItem>)}
                 </Select>
               </FormControl>
               <FormControl size="small" sx={{ minWidth: 140 }}>
-                <InputLabel id="charge-management-status-label">
-                  {t("chargeManagement@filters.status")}
-                </InputLabel>
-                <Select
-                  labelId="charge-management-status-label"
-                  value={statusFilter}
-                  label={t("chargeManagement@filters.status")}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-                  }}
-                >
+                <InputLabel>{t("chargeManagement@filters.city")}</InputLabel>
+                <Select value={cityFilter} label={t("chargeManagement@filters.city")} onChange={(e) => { setCityFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
                   <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
-                  {uniqueStatuses.map((s) => (
-                    <MenuItem key={s} value={s}>
-                      {s}
-                    </MenuItem>
-                  ))}
+                  {uniqueCities.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                 </Select>
               </FormControl>
               <FormControl size="small" sx={{ minWidth: 130 }}>
-                <InputLabel id="charge-management-verified-label">
-                  {t("chargeManagement@filters.verified")}
-                </InputLabel>
-                <Select
-                  labelId="charge-management-verified-label"
-                  value={verifiedFilter}
-                  label={t("chargeManagement@filters.verified")}
-                  onChange={(e) => {
-                    setVerifiedFilter(e.target.value);
-                    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-                  }}
-                >
+                <InputLabel>{t("chargeManagement@filters.status")}</InputLabel>
+                <Select value={statusFilter} label={t("chargeManagement@filters.status")} onChange={(e) => { setStatusFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
+                  <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
+                  {uniqueStatuses.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel>{t("chargeManagement@filters.verified")}</InputLabel>
+                <Select value={verifiedFilter} label={t("chargeManagement@filters.verified")} onChange={(e) => { setVerifiedFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
                   <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
                   <MenuItem value="yes">{t("chargeManagement@filters.yes")}</MenuItem>
                   <MenuItem value="no">{t("chargeManagement@filters.no")}</MenuItem>
                 </Select>
               </FormControl>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel id="charge-management-station-type-label">
-                  {t("chargeManagement@filters.stationType")}
-                </InputLabel>
-                <Select
-                  labelId="charge-management-station-type-label"
-                  value={stationTypeFilter}
-                  label={t("chargeManagement@filters.stationType")}
-                  onChange={(e) => {
-                    setStationTypeFilter(e.target.value);
-                    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-                  }}
-                >
+              <FormControl size="small" sx={{ minWidth: 140 }}>
+                <InputLabel>{t("chargeManagement@filters.stationType")}</InputLabel>
+                <Select value={stationTypeFilter} label={t("chargeManagement@filters.stationType")} onChange={(e) => { setStationTypeFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
                   <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
-                  {uniqueStationTypes.map((st) => (
-                    <MenuItem key={st} value={st}>
-                      {st}
-                    </MenuItem>
-                  ))}
+                  {uniqueStationTypes.map(st => <MenuItem key={st} value={st}>{st}</MenuItem>)}
                 </Select>
               </FormControl>
-              <FormControl size="small" sx={{ minWidth: 220 }}>
-                <InputLabel id="charge-management-plug-type-label">
-                  {t("chargeManagement@filters.plugType")}
-                </InputLabel>
+              <FormControl size="small" sx={{ minWidth: 190 }}>
+                <InputLabel>{t("chargeManagement@filters.plugType")}</InputLabel>
                 <Select
-                  labelId="charge-management-plug-type-label"
                   multiple
                   value={plugTypeFilter}
                   label={t("chargeManagement@filters.plugType")}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setPlugTypeFilter(typeof v === "string" ? [] : v);
-                    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-                  }}
-                  renderValue={(selected) =>
-                    selected.length === 0
-                      ? t("chargeManagement@filters.all")
-                      : selected.length === 1
-                        ? (() => {
-                            const p = plugTypes.find((x) => x.id === selected[0]);
-                            return p?.serialNumber
-                              ? `${p.name ?? ""} (${p.serialNumber})`
-                              : (p?.name ?? String(selected[0]));
-                          })()
-                        : t("chargeManagement@filters.plugTypeCount", "{{count}} selected", {
-                            count: selected.length,
-                          })
-                  }
+                  onChange={(e) => { const v = e.target.value; setPlugTypeFilter(typeof v === "string" ? [] : v); setPaginationModel(p => ({ ...p, page: 0 })); }}
+                  renderValue={(sel) => sel.length === 0 ? t("chargeManagement@filters.all") : sel.length === 1 ? (() => { const p = plugTypes.find(x => x.id === sel[0]); return p?.serialNumber ? `${p.name ?? ""} (${p.serialNumber})` : (p?.name ?? String(sel[0])); })() : t("chargeManagement@filters.plugTypeCount", "{{count}} selected", { count: sel.length })}
                 >
-                  {plugTypes.map((p) => (
-                    <MenuItem key={p.id} value={p.id}>
-                      {p.serialNumber
-                        ? `${p.name ?? ""} (${p.serialNumber})`
-                        : (p.name ?? String(p.id))}
-                    </MenuItem>
-                  ))}
+                  {plugTypes.map(p => <MenuItem key={p.id} value={p.id}>{p.serialNumber ? `${p.name ?? ""} (${p.serialNumber})` : (p.name ?? String(p.id))}</MenuItem>)}
                 </Select>
               </FormControl>
+              {hasActiveFilters && (
+                <Button size="small" startIcon={<ClearIcon />} onClick={handleClearFilters} color="error" variant="outlined" sx={{ flexShrink: 0 }}>
+                  {t("chargeManagement@filters.clearAll")}
+                </Button>
+              )}
             </Stack>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: "block" }}>
-              {t("chargeManagement@filters.resultsCount", "{{count}} stations", {
-                count: filteredData.length,
-              })}
-            </Typography>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                {t("chargeManagement@filters.resultsCount", "{{count}} stations", { count: filteredData.length })}
+              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                {hasActiveFilters && (
+                  <Chip size="small" label={t("chargeManagement@filters.active")} color="primary" variant="filled" sx={{ height: 20, fontSize: "0.7rem" }} />
+                )}
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  size="small"
+                  onChange={(_, v) => v && setViewMode(v)}
+                  sx={{ "& .MuiToggleButton-root": { px: 1, py: 0.4, border: "1px solid", borderColor: "divider" } }}
+                >
+                  <ToggleButton value="card"><ViewModuleIcon fontSize="small" /></ToggleButton>
+                  <ToggleButton value="table"><ViewListIcon fontSize="small" /></ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+            </Stack>
           </Paper>
 
-          <Box sx={{ "& .premium-row": { bgcolor: "rgba(255, 215, 0, 0.15)" }, "& .MuiDataGrid-cell": { py: 1.5 } }}>
-            <AppDataGrid<ChargingPointDto>
-              data={paginatedData}
-              columns={columns}
-              loading={isLoading}
-              getRowId={(row) => row.id}
-              onRowClick={handleRowClick}
-              disablePagination={false}
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              total={filteredData.length}
-              minHeight="70vh"
-              enableColumnFilter
-              enableToolbar
-              checkboxSelection
-              rowSelectionModel={rowSelectionModel}
-              onRowSelectionModelChange={setRowSelectionModel}
-              getRowClassName={getRowClassName}
-              getRowHeight={() => 76}
-            />
-          </Box>
-          <StationRowDetailDialog
-            open={detailOpen}
-            onClose={handleCloseDetail}
-            station={detailStation}
-          />
+          {/* ── Card View ───────────────────────────────────────────────────── */}
+          {viewMode === "card" && (
+            <>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr", xl: "repeat(4, 1fr)" }, gap: 2.5 }}>
+                {cardPagedData.map((row) => {
+                  const isActive = row.statusSummary?.id === 1 || row.statusSummary?.name?.toLowerCase() === "active";
+                  const rate = row.avgChargingPointRate != null ? Number(row.avgChargingPointRate) : null;
+                  const stars = rate != null ? Math.round(rate) : 0;
+                  const plugs = [...new Set((row.plugTypeSummary ?? []).map((p) => (p.serialNumber ?? p.name ?? "").trim()).filter(Boolean))];
+                  return (
+                    <Card
+                      key={row.id}
+                      elevation={0}
+                      onClick={() => navigate(`/charge-management/edit/${row.id}`)}
+                      sx={{
+                        borderRadius: 3,
+                        border: "1.5px solid",
+                        borderColor: "divider",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        "&:hover": { borderColor: "primary.main", boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.15)}`, transform: "translateY(-2px)" },
+                        overflow: "visible",
+                        position: "relative",
+                      }}
+                    >
+                      {/* Card header with station image */}
+                      <Box sx={{ position: "relative", height: 140, bgcolor: "grey.100", borderRadius: "12px 12px 0 0", overflow: "hidden" }}>
+                        {row.iConUrl ? (
+                          <Box component="img" src={row.iConUrl} alt={row.name ?? ""} sx={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        ) : (
+                          <Box sx={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)" }}>
+                            <EvStationIcon sx={{ fontSize: 52, color: "primary.light", opacity: 0.5 }} />
+                          </Box>
+                        )}
+                        {/* Status + verified badges */}
+                        <Box sx={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 0.5 }}>
+                          <Chip label={row.statusSummary?.name ?? "—"} color={isActive ? "success" : "default"} size="small" sx={{ fontWeight: 700, fontSize: "0.68rem", height: 22 }} />
+                        </Box>
+                        {row.isVerified && (
+                          <Box sx={{ position: "absolute", top: 8, right: 8 }}>
+                            <Tooltip title={t("chargeManagement@columns.verified")}>
+                              <VerifiedIcon sx={{ color: "white", fontSize: 22, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                            </Tooltip>
+                          </Box>
+                        )}
+                        {/* Speed badge */}
+                        {row.chargerSpeed != null && (
+                          <Box sx={{ position: "absolute", bottom: 8, right: 8, bgcolor: "rgba(0,0,0,0.65)", borderRadius: 1.5, px: 1, py: 0.3, display: "flex", alignItems: "center", gap: 0.3 }}>
+                            <BoltIcon sx={{ fontSize: 14, color: "warning.light" }} />
+                            <Typography variant="caption" sx={{ color: "white", fontWeight: 700, fontSize: "0.7rem" }}>{row.chargerSpeed} kW</Typography>
+                          </Box>
+                        )}
+                      </Box>
+
+                      <CardContent sx={{ pb: 1, pt: 1.5, px: 2 }}>
+                        {/* Name */}
+                        <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ mb: 0.5 }}>
+                          {row.name || t("chargeManagement@unnamed")}
+                        </Typography>
+
+                        {/* City + Address */}
+                        {(row.cityName || row.address) && (
+                          <Stack direction="row" alignItems="flex-start" spacing={0.5} sx={{ mb: 0.75 }}>
+                            <LocationOnIcon sx={{ fontSize: 14, color: "text.disabled", mt: 0.2, flexShrink: 0 }} />
+                            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                              {[row.cityName, row.address].filter(Boolean).join(" · ")}
+                            </Typography>
+                          </Stack>
+                        )}
+
+                        {/* Phone */}
+                        {row.phone && (
+                          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.75 }}>
+                            <PhoneIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+                            <Typography variant="caption" color="text.secondary">{row.phone}</Typography>
+                          </Stack>
+                        )}
+
+                        {/* Rating */}
+                        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
+                          {[1,2,3,4,5].map((i) =>
+                            i <= stars
+                              ? <StarIcon key={i} sx={{ fontSize: 14, color: "warning.main" }} />
+                              : <StarBorderIcon key={i} sx={{ fontSize: 14, color: "action.disabled" }} />
+                          )}
+                          {row.rateCount != null && row.rateCount > 0 && (
+                            <Typography variant="caption" color="text.secondary">({row.rateCount})</Typography>
+                          )}
+                        </Stack>
+
+                        {/* Stats row */}
+                        <Stack direction="row" spacing={2}>
+                          <Stack direction="row" alignItems="center" spacing={0.4}>
+                            <VisibilityIcon sx={{ fontSize: 14, color: "text.disabled" }} />
+                            <Typography variant="caption" color="text.secondary" fontWeight={600}>{row.visitorsCount ?? 0}</Typography>
+                          </Stack>
+                          {row.chargersCount != null && (
+                            <Stack direction="row" alignItems="center" spacing={0.4}>
+                              <BoltIcon sx={{ fontSize: 14, color: "warning.main" }} />
+                              <Typography variant="caption" color="text.secondary" fontWeight={600}>{row.chargersCount}</Typography>
+                            </Stack>
+                          )}
+                          {row.methodPayment && /cliq/i.test(row.methodPayment) && (
+                            <Chip label="CliQ" size="small" sx={{ height: 18, fontSize: "0.65rem", px: 0 }} />
+                          )}
+                          {row.methodPayment && /visa/i.test(row.methodPayment) && (
+                            <CreditCardIcon sx={{ fontSize: 16, color: "primary.main" }} />
+                          )}
+                        </Stack>
+
+                        {/* Plug chips */}
+                        {plugs.length > 0 && (
+                          <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mt: 1 }}>
+                            {plugs.slice(0, 3).map((l) => (
+                              <Chip key={l} label={l} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem", maxWidth: 80 }} />
+                            ))}
+                            {plugs.length > 3 && <Chip label={`+${plugs.length - 3}`} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem" }} />}
+                          </Stack>
+                        )}
+                      </CardContent>
+
+                      <Divider />
+                      <CardActions sx={{ px: 2, py: 1, justifyContent: "space-between" }} onClick={(e) => e.stopPropagation()}>
+                        <Typography variant="caption" color="text.disabled">ID: {row.id}</Typography>
+                        <Stack direction="row" spacing={0.5}>
+                          <Tooltip title={t("chargeManagement@actions.edit")}>
+                            <IconButton size="small" onClick={(e) => handleEdit(e, row.id)} sx={{ color: "primary.main" }}>
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t("chargeManagement@actions.media")}>
+                            <IconButton size="small" onClick={(e) => handleMedia(e, row.id)} sx={{ color: "secondary.main" }}>
+                              <PhotoLibraryIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t("chargeManagement@detail.title")}>
+                            <IconButton size="small" onClick={(e) => handleOpenDetail(e, row)}>
+                              <ExpandMoreIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </CardActions>
+                    </Card>
+                  );
+                })}
+              </Box>
+              {cardTotalPages > 1 && (
+                <Box sx={{ display: "flex", justifyContent: "center", pt: 1 }}>
+                  <Pagination count={cardTotalPages} page={cardPage} onChange={(_, p) => setCardPage(p)} color="primary" shape="rounded" />
+                </Box>
+              )}
+            </>
+          )}
+
+          {/* ── Table View ───────────────────────────────────────────────────── */}
+          {viewMode === "table" && (
+            <Box sx={{ "& .premium-row": { bgcolor: alpha("#FFD700", 0.08) }, "& .MuiDataGrid-cell": { py: 1.5 } }}>
+              <AppDataGrid<ChargingPointDto>
+                data={paginatedData}
+                columns={columns}
+                loading={false}
+                getRowId={(row) => row.id}
+                onRowClick={handleRowClick}
+                disablePagination={false}
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                total={filteredData.length}
+                minHeight="60vh"
+                enableColumnFilter
+                enableToolbar
+                checkboxSelection
+                rowSelectionModel={rowSelectionModel}
+                onRowSelectionModelChange={setRowSelectionModel}
+                getRowClassName={getRowClassName}
+                getRowHeight={() => 76}
+              />
+            </Box>
+          )}
+          </>}
+
+          <StationRowDetailDialog open={detailOpen} onClose={handleCloseDetail} station={detailStation} />
           <BulkActionsBar
             selectedCount={(rowSelectionModel as number[]).length}
             onClearSelection={() => setRowSelectionModel([])}

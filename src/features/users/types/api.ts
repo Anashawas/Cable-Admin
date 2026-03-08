@@ -6,6 +6,15 @@ export interface RoleDto {
   name: string;
 }
 
+/** Flat car entry returned inside GET api/users/GetAllUsers (new API shape). */
+export interface UserCarSummaryDto {
+  id?: number;
+  carTypeName?: string | null;
+  carModelName?: string | null;
+  plugTypeName?: string | null;
+  createdAt?: string | null;
+}
+
 /** List item from GET api/users/GetAllUsers. */
 export interface UserSummaryDto {
   id?: number | null;
@@ -15,6 +24,10 @@ export interface UserSummaryDto {
   role: RoleDto;
   /** Optional; show Status chip when present. */
   isActive?: boolean | null;
+  /** ISO string from the server (e.g. "2025-01-15T10:23:00Z"). Used for date-range stats. */
+  createdAt?: string | null;
+  /** User's registered vehicles — available directly in list since 2026-03-04 API update. */
+  userCars?: UserCarSummaryDto[];
 }
 
 /** Nested car structure in UserDetailDto (minimal for display). */

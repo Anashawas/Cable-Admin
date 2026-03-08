@@ -23,8 +23,13 @@
   },
   "actions": {
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "makeProvider": "Change Role to Provider"
   },
+  "makeProviderTitle": "Change Role to Provider",
+  "makeProviderConfirm": "Are you sure you want to change {{name}}'s role to Provider?",
+  "makeProviderAction": "Make Provider",
+  "roleChangedToProvider": "User role changed to Provider",
   "form": {
     "name": "Name",
     "email": "Email",
@@ -47,5 +52,27 @@
     "noCars": "No cars added yet.",
     "added": "Car added",
     "removed": "Car removed"
-  }
+  },
+  "manageUsers": "Manage Users",
+  "userAnalytics": "User Analytics",
+  "userAnalytics_subtitle": "Charts and statistics about registered users",
+  "allBrands": "All Brands",
+  "allModels": "All Models",
+  "allPlugTypes": "All Plug Types",
+  "filterByCar": "Filter by Car",
+  "clearFilters": "Clear Filters",
+  "insights_title": "User Insights",
+  "insights_totalUsers": "Total Users",
+  "insights_activeUsers": "Active Users",
+  "insights_inactiveUsers": "Inactive Users",
+  "insights_registrationTrend": "Registration Trend",
+  "insights_registrationDate": "Registration Date Range",
+  "insights_dateFrom": "From",
+  "insights_dateTo": "To",
+  "insights_usersInRange": "{{count}} users",
+  "insights_clearDates": "Clear date filter",
+  "insights_noDateData": "Registration date is not available from the server yet. This filter will apply once the API includes it.",
+  "insights_tableFiltered": "Table is filtered to this period",
+  "insights_carTypeStats": "Car Type Distribution",
+  "insights_noCarData": "No car data found for any user"
 }

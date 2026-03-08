@@ -56,6 +56,14 @@ export const getActiveOffers = async (params?: {
   return response.data;
 };
 
+export const getOffersForProvider = async (params?: {
+  providerType?: ProviderType;
+  providerId?: number;
+}): Promise<OfferDto[]> => {
+  const response = await server.get("/api/offers/GetOffersForProvider", { params });
+  return response.data;
+};
+
 export const getOfferById = async (id: number): Promise<OfferDto> => {
   const response = await server.get(`/api/offers/GetOfferById/${id}`);
   return response.data;

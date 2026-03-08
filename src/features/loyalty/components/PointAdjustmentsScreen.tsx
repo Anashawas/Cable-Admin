@@ -10,22 +10,23 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   InputAdornment,
   Paper,
   Avatar,
   Divider,
   Tabs,
   Tab,
+  ToggleButtonGroup,
+  ToggleButton,
+  Chip,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
+import PersonIcon from "@mui/icons-material/Person";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
@@ -55,6 +56,12 @@ export default function PointAdjustmentsScreen() {
   const [blockUntil, setBlockUntil] = useState<string>("");
   const [unblockUserId, setUnblockUserId] = useState<string>("");
 
+  const isAdd = adjustmentType === "add";
+  const accentColor = isAdd ? "success" : "error";
+  const accentBorder = isAdd ? "#2e7d32" : "#c62828";
+  const previewPts = pointsAmount ? parseInt(pointsAmount, 10) : null;
+  const hasValidPreview = previewPts !== null && !isNaN(previewPts) && previewPts > 0;
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -65,19 +72,19 @@ export default function PointAdjustmentsScreen() {
       const points = parseInt(pointsAmount, 10);
       if (isNaN(points) || points <= 0) { openErrorSnackbar({ message: t("loyalty@invalidPoints") }); return; }
       if (!note || !note.trim()) { openErrorSnackbar({ message: t("loyalty@noteRequired") }); return; }
-      const finalPoints = adjustmentType === "add" ? points : -points;
+      const finalPoints = isAdd ? points : -points;
       adjustMutation.mutate(
         { userId: userIdNum, points: finalPoints, note: note.trim() },
         {
           onSuccess: () => {
-            openSuccessSnackbar({ message: t(adjustmentType === "add" ? "loyalty@pointsAddedSuccess" : "loyalty@pointsDeductedSuccess") });
+            openSuccessSnackbar({ message: t(isAdd ? "loyalty@pointsAddedSuccess" : "loyalty@pointsDeductedSuccess") });
             setUserId(""); setPointsAmount(""); setNote("");
           },
           onError: (err: Error) => { openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }); },
         }
       );
     },
-    [userId, pointsAmount, note, adjustmentType, adjustMutation, openSuccessSnackbar, openErrorSnackbar, t]
+    [userId, pointsAmount, note, isAdd, adjustMutation, openSuccessSnackbar, openErrorSnackbar, t]
   );
 
   const handleBlockUser = useCallback(
@@ -118,43 +125,200 @@ export default function PointAdjustmentsScreen() {
         subtitle={t("loyalty@pointAdjustmentsSubtitle")}
       />
 
-      <Box sx={{ mt: 3, maxWidth: 600 }}>
+      <Box sx={{ mt: 3, maxWidth: 640 }}>
         <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
           {t("loyalty@pointAdjustmentsInfo")}
         </Alert>
 
-        {/* Adjust Points Card */}
-        <Card elevation={6} sx={{ borderRadius: 3, mb: 4 }}>
+        {/* ── Adjust Points Card ── */}
+        <Card
+          elevation={4}
+          sx={{
+            borderRadius: 3,
+            mb: 4,
+            borderLeft: `4px solid ${accentBorder}`,
+            transition: "border-color 0.25s ease",
+          }}
+        >
           <CardContent sx={{ p: 0 }}>
-            <Paper elevation={0} sx={{ p: 3, bgcolor: "primary.50", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            {/* Card header */}
+            <Paper
+              elevation={0}
+              sx={{
+                px: 3,
+                py: 2.5,
+                bgcolor: isAdd ? "success.50" : "error.50",
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+                transition: "background-color 0.25s ease",
+              }}
+            >
               <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
-                  <AccountBalanceWalletIcon />
+                <Avatar
+                  sx={{
+                    bgcolor: `${accentColor}.main`,
+                    width: 46,
+                    height: 46,
+                    transition: "background-color 0.25s ease",
+                  }}
+                >
+                  {isAdd ? <AddCircleIcon /> : <RemoveCircleIcon />}
                 </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight={600} color="primary.dark">{t("adjustUserPoints")}</Typography>
-                  <Typography variant="body2" color="text.secondary">{t("loyalty@pointAdjustmentsSubtitle")}</Typography>
+                <Box flex={1}>
+                  <Typography variant="h6" fontWeight={700} color={`${accentColor}.dark`}>
+                    {t("loyalty@adjustUserPoints")}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("loyalty@pointAdjustmentsSubtitle")}
+                  </Typography>
                 </Box>
+                {/* Live preview chip */}
+                {hasValidPreview && (
+                  <Chip
+                    label={`${isAdd ? "+" : "−"}${previewPts} pts`}
+                    color={accentColor}
+                    variant="filled"
+                    sx={{ fontWeight: 700, fontSize: "0.9rem", px: 0.5 }}
+                  />
+                )}
               </Stack>
             </Paper>
+
             <Divider />
+
             <Box sx={{ p: 3 }}>
               <form onSubmit={handleSubmit}>
                 <Stack spacing={3}>
-                  <TextField label={t("userId")} value={userId} onChange={(e) => setUserId(e.target.value)} required fullWidth type="number" placeholder={t("loyalty@enterUserId")} helperText={t("loyalty@userIdHelp")} />
-                  <FormControl fullWidth required>
-                    <InputLabel>{t("adjustmentType")}</InputLabel>
-                    <Select value={adjustmentType} label={t("adjustmentType")} onChange={(e) => setAdjustmentType(e.target.value as AdjustmentType)}>
-                      <MenuItem value="add"><Stack direction="row" spacing={1} alignItems="center"><AddCircleIcon color="success" fontSize="small" /><span>{t("addPoints")}</span></Stack></MenuItem>
-                      <MenuItem value="deduct"><Stack direction="row" spacing={1} alignItems="center"><RemoveCircleIcon color="error" fontSize="small" /><span>{t("deductPoints")}</span></Stack></MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField label={t("pointsAmount")} value={pointsAmount} onChange={(e) => setPointsAmount(e.target.value)} required fullWidth type="number" placeholder="100" InputProps={{ endAdornment: <InputAdornment position="end">pts</InputAdornment> }} helperText={t("loyalty@pointsAmountHelp")} />
-                  <TextField label={t("note")} value={note} onChange={(e) => setNote(e.target.value)} required fullWidth multiline rows={3} placeholder={t("loyalty@notePlaceholder")} helperText={t("loyalty@noteHelp")} />
-                  <Button type="submit" variant="contained" size="large" fullWidth disabled={adjustMutation.isPending}
-                    startIcon={adjustMutation.isPending ? <CircularProgress size={20} /> : adjustmentType === "add" ? <AddCircleIcon /> : <RemoveCircleIcon />}
-                    color={adjustmentType === "add" ? "success" : "error"} sx={{ py: 1.5, borderRadius: 2, fontWeight: 600, fontSize: "1rem" }}>
-                    {adjustMutation.isPending ? t("processing") : adjustmentType === "add" ? t("addPoints") : t("deductPoints")}
+
+                  {/* Adjustment Type Toggle */}
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                      sx={{ mb: 1, display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}
+                    >
+                      {t("loyalty@adjustmentType")}
+                    </Typography>
+                    <ToggleButtonGroup
+                      value={adjustmentType}
+                      exclusive
+                      onChange={(_, v) => { if (v) setAdjustmentType(v); }}
+                      fullWidth
+                      size="medium"
+                    >
+                      <ToggleButton
+                        value="add"
+                        sx={{
+                          py: 1.2,
+                          fontWeight: 600,
+                          gap: 1,
+                          color: "success.main",
+                          borderColor: "success.main",
+                          "&.Mui-selected": {
+                            bgcolor: "success.main",
+                            color: "#fff",
+                            "&:hover": { bgcolor: "success.dark" },
+                          },
+                        }}
+                      >
+                        <AddCircleIcon fontSize="small" />
+                        {t("loyalty@addPoints")}
+                      </ToggleButton>
+                      <ToggleButton
+                        value="deduct"
+                        sx={{
+                          py: 1.2,
+                          fontWeight: 600,
+                          gap: 1,
+                          color: "error.main",
+                          borderColor: "error.main",
+                          "&.Mui-selected": {
+                            bgcolor: "error.main",
+                            color: "#fff",
+                            "&:hover": { bgcolor: "error.dark" },
+                          },
+                        }}
+                      >
+                        <RemoveCircleIcon fontSize="small" />
+                        {t("loyalty@deductPoints")}
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </Box>
+
+                  {/* User ID */}
+                  <TextField
+                    label={t("loyalty@userId")}
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    required
+                    fullWidth
+                    type="number"
+                    placeholder={t("loyalty@enterUserId")}
+                    helperText={t("loyalty@userIdHelp")}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <PersonIcon fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  {/* Points Amount */}
+                  <TextField
+                    label={t("loyalty@pointsAmount")}
+                    value={pointsAmount}
+                    onChange={(e) => setPointsAmount(e.target.value)}
+                    required
+                    fullWidth
+                    type="number"
+                    placeholder="100"
+                    color={accentColor}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">pts</InputAdornment>,
+                    }}
+                    helperText={t("loyalty@pointsAmountHelp")}
+                  />
+
+                  {/* Note */}
+                  <TextField
+                    label={t("note")}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    required
+                    fullWidth
+                    multiline
+                    rows={3}
+                    placeholder={t("loyalty@notePlaceholder")}
+                    helperText={t("loyalty@noteHelp")}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1.5 }}>
+                          <EditNoteIcon fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  {/* Submit */}
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    disabled={adjustMutation.isPending}
+                    startIcon={
+                      adjustMutation.isPending
+                        ? <CircularProgress size={20} color="inherit" />
+                        : isAdd ? <AddCircleIcon /> : <RemoveCircleIcon />
+                    }
+                    color={accentColor}
+                    sx={{ py: 1.5, borderRadius: 2, fontWeight: 700, fontSize: "1rem", transition: "all 0.25s" }}
+                  >
+                    {adjustMutation.isPending
+                      ? t("loyalty@processing")
+                      : isAdd ? t("loyalty@addPoints") : t("loyalty@deductPoints")}
                   </Button>
                 </Stack>
               </form>
@@ -162,46 +326,126 @@ export default function PointAdjustmentsScreen() {
           </CardContent>
         </Card>
 
-        {/* Block / Unblock User Card */}
-        <Card elevation={6} sx={{ borderRadius: 3 }}>
+        {/* ── Block / Unblock User Card ── */}
+        <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 0 }}>
-            <Paper elevation={0} sx={{ p: 3, bgcolor: "error.50", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            <Paper
+              elevation={0}
+              sx={{ px: 3, py: 2.5, bgcolor: "error.50", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+            >
               <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar sx={{ bgcolor: "error.main", width: 48, height: 48 }}><BlockIcon /></Avatar>
+                <Avatar sx={{ bgcolor: "error.main", width: 46, height: 46 }}>
+                  <BlockIcon />
+                </Avatar>
                 <Box>
-                  <Typography variant="h6" fontWeight={600} color="error.dark">{t("loyalty@blockUnblockUser")}</Typography>
-                  <Typography variant="body2" color="text.secondary">{t("loyalty@blockUnblockUserSubtitle")}</Typography>
+                  <Typography variant="h6" fontWeight={700} color="error.dark">
+                    {t("loyalty@blockUnblockUser")}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("loyalty@blockUnblockUserSubtitle")}
+                  </Typography>
                 </Box>
               </Stack>
             </Paper>
-            <Tabs value={blockTab} onChange={(_, v) => setBlockTab(v)} sx={{ px: 2, borderBottom: 1, borderColor: "divider" }}>
+
+            <Tabs
+              value={blockTab}
+              onChange={(_, v) => setBlockTab(v)}
+              sx={{ px: 2, borderBottom: 1, borderColor: "divider" }}
+            >
               <Tab label={t("loyalty@blockUser")} icon={<BlockIcon fontSize="small" />} iconPosition="start" />
               <Tab label={t("loyalty@unblockUser")} icon={<LockOpenIcon fontSize="small" />} iconPosition="start" />
             </Tabs>
+
             <Box sx={{ p: 3 }}>
               {blockTab === 0 ? (
                 <form onSubmit={handleBlockUser}>
                   <Stack spacing={3}>
-                    <Alert severity="warning" sx={{ borderRadius: 2 }}>{t("loyalty@blockUserInfo")}</Alert>
-                    <TextField label={t("userId")} value={blockUserId} onChange={(e) => setBlockUserId(e.target.value)} required fullWidth type="number" placeholder={t("loyalty@enterUserId")} />
-                    <TextField label={t("loyalty@blockReason")} value={blockReason} onChange={(e) => setBlockReason(e.target.value)} required fullWidth multiline rows={2} placeholder={t("loyalty@blockReasonPlaceholder")} />
-                    <TextField label={t("loyalty@blockUntil")} value={blockUntil} onChange={(e) => setBlockUntil(e.target.value)} fullWidth type="datetime-local" helperText={t("loyalty@blockUntilHelp")} InputLabelProps={{ shrink: true }} />
-                    <Button type="submit" variant="contained" color="error" size="large" fullWidth disabled={blockUserMutation.isPending}
-                      startIcon={blockUserMutation.isPending ? <CircularProgress size={20} /> : <BlockIcon />}
-                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 600 }}>
-                      {blockUserMutation.isPending ? t("processing") : t("loyalty@blockUser")}
+                    <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                      {t("loyalty@blockUserInfo")}
+                    </Alert>
+                    <TextField
+                      label={t("loyalty@userId")}
+                      value={blockUserId}
+                      onChange={(e) => setBlockUserId(e.target.value)}
+                      required
+                      fullWidth
+                      type="number"
+                      placeholder={t("loyalty@enterUserId")}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <PersonIcon fontSize="small" color="action" />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    <TextField
+                      label={t("loyalty@blockReason")}
+                      value={blockReason}
+                      onChange={(e) => setBlockReason(e.target.value)}
+                      required
+                      fullWidth
+                      multiline
+                      rows={2}
+                      placeholder={t("loyalty@blockReasonPlaceholder")}
+                    />
+                    <TextField
+                      label={t("loyalty@blockUntil")}
+                      value={blockUntil}
+                      onChange={(e) => setBlockUntil(e.target.value)}
+                      fullWidth
+                      type="datetime-local"
+                      helperText={t("loyalty@blockUntilHelp")}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="error"
+                      size="large"
+                      fullWidth
+                      disabled={blockUserMutation.isPending}
+                      startIcon={blockUserMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <BlockIcon />}
+                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 700 }}
+                    >
+                      {blockUserMutation.isPending ? t("loyalty@processing") : t("loyalty@blockUser")}
                     </Button>
                   </Stack>
                 </form>
               ) : (
                 <form onSubmit={handleUnblockUser}>
                   <Stack spacing={3}>
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>{t("loyalty@unblockUserInfo")}</Alert>
-                    <TextField label={t("userId")} value={unblockUserId} onChange={(e) => setUnblockUserId(e.target.value)} required fullWidth type="number" placeholder={t("loyalty@enterUserId")} />
-                    <Button type="submit" variant="contained" color="success" size="large" fullWidth disabled={unblockUserMutation.isPending}
-                      startIcon={unblockUserMutation.isPending ? <CircularProgress size={20} /> : <LockOpenIcon />}
-                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 600 }}>
-                      {unblockUserMutation.isPending ? t("processing") : t("loyalty@unblockUser")}
+                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      {t("loyalty@unblockUserInfo")}
+                    </Alert>
+                    <TextField
+                      label={t("loyalty@userId")}
+                      value={unblockUserId}
+                      onChange={(e) => setUnblockUserId(e.target.value)}
+                      required
+                      fullWidth
+                      type="number"
+                      placeholder={t("loyalty@enterUserId")}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <PersonIcon fontSize="small" color="action" />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="success"
+                      size="large"
+                      fullWidth
+                      disabled={unblockUserMutation.isPending}
+                      startIcon={unblockUserMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <LockOpenIcon />}
+                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 700 }}
+                    >
+                      {unblockUserMutation.isPending ? t("loyalty@processing") : t("loyalty@unblockUser")}
                     </Button>
                   </Stack>
                 </form>

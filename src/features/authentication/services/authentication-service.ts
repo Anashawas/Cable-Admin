@@ -36,9 +36,14 @@ const loginByAuthorizationToken = (signal: AbortSignal) => {
   return server.post("api/users/login-by-token", null, { signal: signal });
 };
 
+const logoutUser = async (signal?: AbortSignal): Promise<void> => {
+  await server.post("api/users/logout", null, { signal });
+};
+
 export {
   authenticate,
   refreshAccess,
   changePassword,
   loginByAuthorizationToken,
+  logoutUser,
 };

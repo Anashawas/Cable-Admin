@@ -1,5 +1,11 @@
 {
   "title": "إدارة الشحن",
+  "subtitle": "إدارة محطات الشحن ووسائطها",
+  "kpi": {
+    "total": "إجمالي المحطات",
+    "active": "نشطة",
+    "verified": "موثقة"
+  },
   "unnamed": "محطة بدون اسم",
   "searchPlaceholder": "البحث بالاسم أو المدينة",
   "sort": {
@@ -47,7 +53,8 @@
     "all": "الكل",
     "yes": "نعم",
     "no": "لا",
-    "resultsCount": "{{count}} محطة"
+    "resultsCount": "{{count}} محطة",
+    "filtered": "مفلترة"
   },
   "actions": {
     "addStation": "إضافة محطة",
@@ -88,6 +95,7 @@
     "addPhotos": "إضافة صور",
     "photosUploaded": "تم رفع الصور بنجاح",
     "noPhotos": "لا توجد صور بعد. أضف صوراً باستخدام الزر أعلاه.",
-    "deleteUnavailable": "الحذف غير متاح (لا يوجد معرف من الخادم)"
+    "deleteUnavailable": "الحذف غير متاح (لا يوجد معرف من الخادم)",
+    "iconHint": "PNG أو JPG أو SVG — يُنصح بحجم 256×256 بكسل"
   }
 }

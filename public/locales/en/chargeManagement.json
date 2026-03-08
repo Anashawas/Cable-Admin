@@ -1,5 +1,11 @@
 {
   "title": "Charge Management",
+  "subtitle": "Manage charging stations and their media",
+  "kpi": {
+    "total": "Total Stations",
+    "active": "Active",
+    "verified": "Verified"
+  },
   "unnamed": "Unnamed Station",
   "searchPlaceholder": "Search by name or city",
   "sort": {
@@ -47,7 +53,8 @@
     "all": "All",
     "yes": "Yes",
     "no": "No",
-    "resultsCount": "{{count}} stations"
+    "resultsCount": "{{count}} stations",
+    "filtered": "Filtered"
   },
   "actions": {
     "addStation": "Add Station",
@@ -88,6 +95,7 @@
     "addPhotos": "Add Photos",
     "photosUploaded": "Photos uploaded successfully",
     "noPhotos": "No photos yet. Add photos using the button above.",
-    "deleteUnavailable": "Delete unavailable (No ID from server)"
+    "deleteUnavailable": "Delete unavailable (No ID from server)",
+    "iconHint": "PNG, JPG or SVG — recommended 256×256px"
   }
 }

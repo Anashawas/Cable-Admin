@@ -32,6 +32,7 @@ import { LANGUAGE } from "../../../constants/language-constants";
 import { useState } from "react";
 import AppMobileDrawer from "./AppMobileDrawer";
 import { useGlobalSearchStore } from "../../../stores";
+import { logoutUser } from "../../authentication/services/authentication-service";
 
 const AppHeader = () => {
   const user = useAuthenticationStore((state) => state.user);
@@ -51,7 +52,8 @@ const AppHeader = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const open = Boolean(anchorEl);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await logoutUser(); } catch { /* best-effort — logout locally regardless */ }
     logout();
     navigate("/login");
   };

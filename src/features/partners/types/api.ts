@@ -40,3 +40,35 @@ export interface UpdatePartnerAgreementRequest {
   isActive?: boolean;
   note?: string | null;
 }
+
+// ============================================
+// Credit Limit & Balance DTOs — 2026-02-28
+// ============================================
+
+export interface RecordProviderPaymentRequest {
+  providerType: PartnerProviderType;
+  providerId: number;
+  amount: number;
+  note?: string | null;
+}
+
+export interface SetCreditLimitRequest {
+  providerType: PartnerProviderType;
+  providerId: number;
+  creditLimit: number | null; // null = unlimited
+}
+
+export interface ProviderPaymentRecordDto {
+  id: number;
+  amount: number;
+  note: string | null;
+  recordedByUserName: string | null;
+  createdAt: string;
+}
+
+export interface ProviderBalanceDto {
+  creditLimit: number | null;        // null = unlimited
+  currentBalance: number;            // positive = credit, negative = debt
+  availableCredit: number | null;    // creditLimit + currentBalance, null if no limit
+  recentPayments: ProviderPaymentRecordDto[];
+}

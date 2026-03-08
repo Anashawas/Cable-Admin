@@ -31,6 +31,7 @@
     "@hookform/resolvers": "^3.10.0",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
+    "@mui/x-charts": "^8.27.0",
     "@mui/x-data-grid": "^7.29.9",
     "@mui/x-date-pickers": "^7.29.4",
     "@mui/x-tree-view": "^8.11.1",
