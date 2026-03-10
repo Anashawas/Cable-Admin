@@ -60,7 +60,14 @@
     "addStation": "إضافة محطة",
     "edit": "تعديل",
     "media": "وسائط",
-    "viewComplaints": "عرض الشكاوى"
+    "viewComplaints": "عرض الشكاوى",
+    "changeOwner": "تغيير المالك"
+  },
+  "ownerChanged": "تم تغيير مالك المحطة بنجاح",
+  "changeOwner": {
+    "title": "تغيير مالك المحطة",
+    "searchPlaceholder": "بحث بالاسم أو البريد أو المعرف",
+    "noProviders": "لا يوجد مزودون"
   },
   "form": {
     "addTitle": "إضافة نقطة شحن",

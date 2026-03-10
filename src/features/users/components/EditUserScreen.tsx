@@ -17,11 +17,12 @@ import {
   MenuItem,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader } from "../../../components";
 import { getUserById, updateUserProfile } from "../services/user-service";
 import { editUserFormSchema, type EditUserFormValues } from "../validators/edit-user-schema";
-import { DEFAULT_ROLES } from "../constants/roles";
+import { DEFAULT_ROLES, PROVIDER_ROLE_ID } from "../constants/roles";
 import type { UserDetailDto, RoleDto } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 import UserCarsSection from "./UserCarsSection";
@@ -74,6 +75,26 @@ export default function EditUserScreen() {
   });
 
   const roleOptions = useMemo(() => buildRoleOptions(user), [user]);
+
+  const makeProviderMutation = useMutation({
+    mutationFn: () =>
+      updateUserProfile(userId, {
+        name: user!.name,
+        email: user!.email,
+        phone: user!.phone ?? "",
+        isActive: user!.isActive,
+        roleId: PROVIDER_ROLE_ID,
+        country: user!.country ?? null,
+        city: user!.city ?? null,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users", "detail", userId] });
+      openSuccessSnackbar({ message: t("userManagement@roleChangedToProvider") });
+    },
+    onError: (err: Error) => {
+      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+    },
+  });
 
   const {
     control,
@@ -310,7 +331,7 @@ export default function EditUserScreen() {
               </Grid>
             </Grid>
 
-            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+            <Stack direction="row" spacing={2} sx={{ mt: 3 }} flexWrap="wrap">
               <Button
                 type="submit"
                 variant="contained"
@@ -325,6 +346,18 @@ export default function EditUserScreen() {
               <Button type="button" onClick={handleBack} color="inherit">
                 {t("cancel")}
               </Button>
+              {user && user.role?.id !== PROVIDER_ROLE_ID && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  color="primary"
+                  startIcon={makeProviderMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <BusinessCenterIcon />}
+                  disabled={makeProviderMutation.isPending}
+                  onClick={() => makeProviderMutation.mutate()}
+                >
+                  {t("userManagement@makeProviderAction")}
+                </Button>
+              )}
             </Stack>
           </Box>
 

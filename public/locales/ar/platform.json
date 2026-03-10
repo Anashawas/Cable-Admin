@@ -29,6 +29,8 @@
     "noBrands": "لا توجد علامات بعد.",
     "modelsFor": "الموديلات — {{name}}",
     "selectBrand": "اختر علامة",
+    "selectBrandHint": "انقر على علامة من اللوحة اليسرى لعرض موديلاتها",
+    "modelsCount": "الموديلات",
     "addModel": "إضافة موديل",
     "editModel": "تعديل الموديل",
     "modelName": "اسم الموديل",

@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { alpha } from "@mui/material/styles";
 import {
   Box,
@@ -28,6 +28,15 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
+  CircularProgress,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
@@ -45,6 +54,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import ClearIcon from "@mui/icons-material/Clear";
 import EvStationIcon from "@mui/icons-material/EvStation";
+import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -52,7 +62,10 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
 import { useChargeManagement, type SortOption } from "../hooks/use-charge-management";
-import { getAllPlugTypes } from "../services/station-form-service";
+import { getAllPlugTypes, changeStationOwner } from "../services/station-form-service";
+import { getUsersList } from "../../users/services/user-service";
+import { useSnackbarStore } from "../../../stores";
+import { PROVIDER_ROLE_ID } from "../../users/constants/roles";
 import type { ChargingPointDto } from "../types/api";
 import StationRowDetailDialog from "./StationRowDetailDialog";
 
@@ -68,6 +81,9 @@ export default function ChargeManagementScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
+  const queryClient = useQueryClient();
+  const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
+  const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
   const [cardPage, setCardPage] = useState(1);
   const CARD_PAGE_SIZE = 12;
@@ -78,6 +94,8 @@ export default function ChargeManagementScreen() {
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
   const [detailStation, setDetailStation] = useState<ChargingPointDto | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [changeOwnerStation, setChangeOwnerStation] = useState<ChargingPointDto | null>(null);
+  const [ownerSearch, setOwnerSearch] = useState("");
   const [cityFilter, setCityFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [verifiedFilter, setVerifiedFilter] = useState<string>("");
@@ -87,6 +105,42 @@ export default function ChargeManagementScreen() {
   const { data: plugTypes = [] } = useQuery({
     queryKey: ["charge-management", "plug-types"],
     queryFn: ({ signal }) => getAllPlugTypes(signal),
+  });
+
+  const { data: allUsers = [], isLoading: loadingProviders } = useQuery({
+    queryKey: ["users", "list"],
+    queryFn: ({ signal }) => getUsersList(signal),
+    enabled: changeOwnerStation != null,
+    staleTime: 60 * 1000,
+  });
+
+  const providers = useMemo(
+    () => allUsers.filter((u) => u.role?.id === PROVIDER_ROLE_ID),
+    [allUsers]
+  );
+
+  const filteredProviders = useMemo(() => {
+    const q = ownerSearch.trim().toLowerCase();
+    if (!q) return providers;
+    return providers.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        String(u.id ?? "").includes(q)
+    );
+  }, [providers, ownerSearch]);
+
+  const changeOwnerMutation = useMutation({
+    mutationFn: ({ stationId, newOwnerId }: { stationId: number; newOwnerId: number }) =>
+      changeStationOwner(stationId, newOwnerId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["charge-management"] });
+      openSuccessSnackbar({ message: t("chargeManagement@ownerChanged") });
+      setChangeOwnerStation(null);
+      setOwnerSearch("");
+    },
+    onError: (err: Error) =>
+      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
 
   const {
@@ -215,6 +269,12 @@ export default function ChargeManagementScreen() {
     e.stopPropagation();
     setDetailStation(row);
     setDetailOpen(true);
+  }, []);
+
+  const handleOpenChangeOwner = useCallback((e: React.MouseEvent, row: ChargingPointDto) => {
+    e.stopPropagation();
+    setOwnerSearch("");
+    setChangeOwnerStation(row);
   }, []);
   const handleCloseDetail = useCallback(() => {
     setDetailOpen(false);
@@ -480,36 +540,43 @@ export default function ChargeManagementScreen() {
       {
         field: "actions",
         headerName: t("chargeManagement@columns.actions"),
-        width: 110,
-        minWidth: 110,
+        width: 140,
+        minWidth: 140,
         filterable: false,
         sortable: false,
         disableColumnMenu: true,
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} onClick={(e) => e.stopPropagation()}>
             <Tooltip title={t("chargeManagement@actions.edit")}>
-              <IconButton
-                size="small"
-                onClick={(e) => handleEdit(e, row.id)}
-                aria-label={t("chargeManagement@actions.edit")}
-              >
+              <IconButton size="small" onClick={(e) => handleEdit(e, row.id)}>
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
             <Tooltip title={t("chargeManagement@actions.media")}>
+              <IconButton size="small" onClick={(e) => handleMedia(e, row.id)}>
+                <PhotoLibraryIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("chargeManagement@actions.changeOwner")}>
               <IconButton
                 size="small"
-                onClick={(e) => handleMedia(e, row.id)}
-                aria-label={t("chargeManagement@actions.media")}
+                onClick={(e) => handleOpenChangeOwner(e, row)}
+                sx={{
+                  bgcolor: "primary.main",
+                  color: "#fff",
+                  "&:hover": { bgcolor: "primary.dark" },
+                  width: 28,
+                  height: 28,
+                }}
               >
-                <PhotoLibraryIcon fontSize="small" />
+                <PersonSearchIcon sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
           </Stack>
         ),
       },
     ],
-    [t, handleEdit, handleMedia, handleOpenDetail]
+    [t, handleEdit, handleMedia, handleOpenDetail, handleOpenChangeOwner]
   );
 
 
@@ -877,6 +944,11 @@ export default function ChargeManagementScreen() {
                               <PhotoLibraryIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title={t("chargeManagement@actions.changeOwner")}>
+                            <IconButton size="small" color="primary" onClick={(e) => handleOpenChangeOwner(e, row)}>
+                              <PersonSearchIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                           <Tooltip title={t("chargeManagement@detail.title")}>
                             <IconButton size="small" onClick={(e) => handleOpenDetail(e, row)}>
                               <ExpandMoreIcon fontSize="small" />
@@ -923,6 +995,90 @@ export default function ChargeManagementScreen() {
           </>}
 
           <StationRowDetailDialog open={detailOpen} onClose={handleCloseDetail} station={detailStation} />
+
+          {/* ── Change Owner Dialog ── */}
+          <Dialog
+            open={changeOwnerStation != null}
+            onClose={() => { if (!changeOwnerMutation.isPending) { setChangeOwnerStation(null); setOwnerSearch(""); } }}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", color: "#fff", pb: 1.5 }}>
+              <Stack spacing={0.5}>
+                <Typography variant="subtitle1" fontWeight={700} color="#fff">
+                  {t("chargeManagement@changeOwner.title")}
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.8, color: "#fff" }}>
+                  {changeOwnerStation?.name}
+                </Typography>
+              </Stack>
+            </DialogTitle>
+            <DialogContent sx={{ px: 2, pt: 2, pb: 0 }}>
+              <TextField
+                size="small"
+                fullWidth
+                placeholder={t("chargeManagement@changeOwner.searchPlaceholder")}
+                value={ownerSearch}
+                onChange={(e) => setOwnerSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" color="action" /></InputAdornment>,
+                  endAdornment: ownerSearch ? (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setOwnerSearch("")}><ClearIcon fontSize="small" /></IconButton>
+                    </InputAdornment>
+                  ) : null,
+                }}
+                sx={{ mb: 1 }}
+              />
+              {loadingProviders ? (
+                <Box display="flex" justifyContent="center" py={4}>
+                  <CircularProgress size={28} />
+                </Box>
+              ) : filteredProviders.length === 0 ? (
+                <Box py={4} textAlign="center">
+                  <Typography color="text.secondary" variant="body2">
+                    {ownerSearch ? t("noResults") : t("chargeManagement@changeOwner.noProviders")}
+                  </Typography>
+                </Box>
+              ) : (
+                <List dense disablePadding sx={{ maxHeight: 320, overflowY: "auto" }}>
+                  {filteredProviders.map((provider) => (
+                    <ListItemButton
+                      key={provider.id}
+                      disabled={changeOwnerMutation.isPending}
+                      onClick={() =>
+                        changeOwnerStation &&
+                        changeOwnerMutation.mutate({
+                          stationId: changeOwnerStation.id,
+                          newOwnerId: provider.id!,
+                        })
+                      }
+                      sx={{ borderRadius: 1.5, mb: 0.5 }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ width: 36, height: 36, bgcolor: "primary.main", fontSize: 13, fontWeight: 700 }}>
+                          {provider.name.slice(0, 2).toUpperCase()}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={<Typography variant="body2" fontWeight={600}>{provider.name}</Typography>}
+                        secondary={<Typography variant="caption" color="text.secondary">{provider.email} · ID {provider.id}</Typography>}
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => { setChangeOwnerStation(null); setOwnerSearch(""); }}
+                color="inherit"
+                disabled={changeOwnerMutation.isPending}
+              >
+                {t("cancel")}
+              </Button>
+            </DialogActions>
+          </Dialog>
           <BulkActionsBar
             selectedCount={(rowSelectionModel as number[]).length}
             onClearSelection={() => setRowSelectionModel([])}

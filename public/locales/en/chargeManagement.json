@@ -60,7 +60,14 @@
     "addStation": "Add Station",
     "edit": "Edit",
     "media": "Media",
-    "viewComplaints": "View Complaints"
+    "viewComplaints": "View Complaints",
+    "changeOwner": "Change Owner"
+  },
+  "ownerChanged": "Station owner changed successfully",
+  "changeOwner": {
+    "title": "Change Station Owner",
+    "searchPlaceholder": "Search by name, email or ID",
+    "noProviders": "No providers found"
   },
   "form": {
     "addTitle": "Add Charging Point",

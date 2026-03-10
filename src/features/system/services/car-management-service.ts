@@ -74,17 +74,21 @@ const getAllCarModels = async (
 
 /**
  * GET api/carmanagement/GetAllCarModels?carTypeId={typeId}
- * Returns flat CarModelDto[] for that type.
+ * Returns CarModelWithTypeDto[] — same shape as the unfiltered endpoint.
+ * We extract the carModels array from the first (matching) entry.
  */
 const getCarModelsByType = async (
   carTypeId: number,
   signal?: AbortSignal
 ): Promise<CarModelDto[]> => {
-  const { data } = await server.get<CarModelDto[]>(
+  const { data } = await server.get<CarModelWithTypeDto[]>(
     "api/carmanagement/GetAllCarModels",
     { params: { carTypeId }, signal }
   );
-  return Array.isArray(data) ? data : [];
+  if (!Array.isArray(data)) return [];
+  // API returns all types; find the one matching carTypeId and return its models
+  const match = data.find((entry) => entry.id === carTypeId);
+  return match?.carModels ?? [];
 };
 
 /**
