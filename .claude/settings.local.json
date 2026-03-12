@@ -20,7 +20,8 @@
       "Bash(echo:*)",
       "Bash(python3:*)",
       "Bash(sudo tee -a /etc/sysctl.conf)",
-      "Bash(sudo sysctl -p)"
+      "Bash(sudo sysctl -p)",
+      "Bash(find /home/ihr/Cable-Admin/src -type d -name *provider* -o -type d -name *service*)"
     ],
     "deny": [],
     "ask": []

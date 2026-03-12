@@ -11,7 +11,6 @@ import {
   IconButton,
   Tooltip,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -21,6 +20,10 @@ import {
   MenuItem,
   InputAdornment,
   Divider,
+  Avatar,
+  Tab,
+  Tabs,
+  Badge,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
@@ -33,14 +36,30 @@ import ClearIcon from "@mui/icons-material/Clear";
 import GroupIcon from "@mui/icons-material/Group";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import PersonIcon from "@mui/icons-material/Person";
+import StoreIcon from "@mui/icons-material/Store";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
 import { getUsersList, deleteUserById, updateUserProfile, getUserById } from "../services/user-service";
 import type { UserSummaryDto } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 import { useCarTypeStats } from "../hooks/use-user-stats";
 import { PROVIDER_ROLE_ID } from "../constants/roles";
+
+const isAdmin    = (u: { role?: { id?: number } }) => u.role?.id === 2;
+const isUser     = (u: { role?: { id?: number } }) => u.role?.id === 3;
+const isProvider = (u: { role?: { id?: number } }) => u.role?.id === 4;
+
+type RoleTab = "all" | "users" | "admins" | "providers";
+
+const ROLE_TAB_CONFIG: Record<RoleTab, { label: string; roleName: string | null; icon: React.ReactNode; gradient: string }> = {
+  all:       { label: "All",       roleName: null,       icon: <GroupIcon />,              gradient: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)" },
+  users:     { label: "Users",     roleName: "user",     icon: <PersonIcon />,             gradient: "linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)" },
+  admins:    { label: "Admins",    roleName: "admin",    icon: <AdminPanelSettingsIcon />, gradient: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%)" },
+  providers: { label: "Providers", roleName: "provider", icon: <StoreIcon />,             gradient: "linear-gradient(135deg, #bf360c 0%, #e65100 100%)" },
+};
 
 export default function UserListScreen() {
   const { t } = useTranslation();
@@ -49,6 +68,7 @@ export default function UserListScreen() {
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
+  const [activeTab, setActiveTab] = useState<RoleTab>("all");
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
@@ -70,6 +90,13 @@ export default function UserListScreen() {
   const carStats = useCarTypeStats(data);
   const brandOptions = useMemo(() => carStats.map((s) => s.name), [carStats]);
 
+  const roleCounts = useMemo(() => ({
+    all:       data.length,
+    users:     data.filter(isUser).length,
+    admins:    data.filter(isAdmin).length,
+    providers: data.filter(isProvider).length,
+  }), [data]);
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteUserById(id),
     onSuccess: () => {
@@ -78,9 +105,7 @@ export default function UserListScreen() {
       setDeleteDialogOpen(false);
       setUserToDelete(null);
     },
-    onError: (err: Error) => {
-      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
-    },
+    onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
 
   const changeRoleMutation = useMutation({
@@ -97,57 +122,43 @@ export default function UserListScreen() {
       });
     },
     onSuccess: (_, user) => {
-      // Update the cached list directly — do NOT refetch since GetAllUsers
-      // returns stale role data from the server and would overwrite our update
       queryClient.setQueryData<UserSummaryDto[]>(["users", "list"], (old) =>
         old?.map((u) =>
           u.id === user.id ? { ...u, role: { id: PROVIDER_ROLE_ID, name: "Provider" } } : u
         ) ?? []
       );
-      // Also invalidate the detail cache so the drawer shows fresh data
       queryClient.invalidateQueries({ queryKey: ["users", "detail", user.id] });
       openSuccessSnackbar({ message: t("userManagement@roleChangedToProvider") });
       setChangeRoleDialogOpen(false);
       setUserToChangeRole(null);
     },
-    onError: (err: Error) => {
-      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
-    },
+    onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
 
   const filteredData = useMemo(() => {
     let result = data;
-
+    if (activeTab === "users")     result = result.filter(isUser);
+    else if (activeTab === "admins")    result = result.filter(isAdmin);
+    else if (activeTab === "providers") result = result.filter(isProvider);
     const q = search.trim().toLowerCase();
-    if (q) {
-      result = result.filter(
-        (row) =>
-          String(row.id ?? "").toLowerCase().includes(q) ||
-          (row.name ?? "").toLowerCase().includes(q) ||
-          (row.email ?? "").toLowerCase().includes(q)
-      );
-    }
-
+    if (q) result = result.filter((row) =>
+      String(row.id ?? "").includes(q) ||
+      (row.name ?? "").toLowerCase().includes(q) ||
+      (row.email ?? "").toLowerCase().includes(q) ||
+      (row.phone ?? "").includes(q)
+    );
     if (dateFrom || dateTo) {
       const from = dateFrom ? dateFrom.getTime() : 0;
-      const to = dateTo
-        ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59, 999).getTime()
-        : Infinity;
+      const to = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59, 999).getTime() : Infinity;
       result = result.filter((row) => {
         if (!row.createdAt) return false;
         const ms = new Date(row.createdAt).getTime();
         return ms >= from && ms <= to;
       });
     }
-
-    if (selectedBrand) {
-      result = result.filter((row) =>
-        row.userCars?.some((c) => c.carTypeName?.trim() === selectedBrand)
-      );
-    }
-
+    if (selectedBrand) result = result.filter((row) => row.userCars?.some((c) => c.carTypeName?.trim() === selectedBrand));
     return result;
-  }, [data, search, dateFrom, dateTo, selectedBrand]);
+  }, [data, activeTab, search, dateFrom, dateTo, selectedBrand]);
 
   const paginatedData = useMemo(() => {
     const start = paginationModel.page * paginationModel.pageSize;
@@ -157,48 +168,38 @@ export default function UserListScreen() {
   const hasActiveFilters = search || dateFrom || dateTo || selectedBrand;
 
   const clearFilters = useCallback(() => {
-    setSearch("");
-    setDateFrom(null);
-    setDateTo(null);
-    setSelectedBrand("");
+    setSearch(""); setDateFrom(null); setDateTo(null); setSelectedBrand("");
+    setPaginationModel((p) => ({ ...p, page: 0 }));
   }, []);
 
-  const handleEdit = useCallback(
-    (e: React.MouseEvent, row: UserSummaryDto) => {
-      e.stopPropagation();
-      const id = row.id ?? 0;
-      if (id > 0) navigate(`/users/${id}/edit`);
-    },
-    [navigate]
-  );
+  const handleTabChange = useCallback((_: React.SyntheticEvent, val: RoleTab) => {
+    setActiveTab(val);
+    setPaginationModel((p) => ({ ...p, page: 0 }));
+    setRowSelectionModel([]);
+  }, []);
+
+  const handleEdit = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
+    e.stopPropagation();
+    const id = row.id ?? 0;
+    if (id > 0) navigate(`/users/${id}/edit`);
+  }, [navigate]);
 
   const handleDeleteClick = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
-    e.stopPropagation();
-    setUserToDelete(row);
-    setDeleteDialogOpen(true);
+    e.stopPropagation(); setUserToDelete(row); setDeleteDialogOpen(true);
   }, []);
 
   const handleChangeRoleClick = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
-    e.stopPropagation();
-    setUserToChangeRole(row);
-    setChangeRoleDialogOpen(true);
+    e.stopPropagation(); setUserToChangeRole(row); setChangeRoleDialogOpen(true);
   }, []);
 
-  const handleRowClick = useCallback((row: UserSummaryDto) => {
-    setDrawerUser(row);
-  }, []);
+  const handleRowClick = useCallback((row: UserSummaryDto) => { setDrawerUser(row); }, []);
 
   const handleCloseDeleteDialog = useCallback(() => {
-    if (!deleteMutation.isPending) {
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
+    if (!deleteMutation.isPending) { setDeleteDialogOpen(false); setUserToDelete(null); }
   }, [deleteMutation.isPending]);
 
   const handleConfirmDelete = useCallback(() => {
-    if (userToDelete?.id != null) {
-      deleteMutation.mutate(userToDelete.id);
-    }
+    if (userToDelete?.id != null) deleteMutation.mutate(userToDelete.id);
   }, [userToDelete, deleteMutation]);
 
   const selectedIds = useMemo(() => (rowSelectionModel as number[]).filter((id) => id != null), [rowSelectionModel]);
@@ -219,9 +220,7 @@ export default function UserListScreen() {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `users-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
+    a.href = url; a.download = `users-export-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
   }, [filteredData, selectedIds]);
 
@@ -231,82 +230,88 @@ export default function UserListScreen() {
 
   const handleConfirmBulkDelete = useCallback(async () => {
     for (const id of selectedIds) {
-      try {
-        await deleteMutation.mutateAsync(id);
-      } catch { /* error shown by mutation */ }
+      try { await deleteMutation.mutateAsync(id); } catch { /* shown by mutation */ }
     }
     queryClient.invalidateQueries({ queryKey: ["users", "list"] });
-    setBulkDeleteDialogOpen(false);
-    setRowSelectionModel([]);
-    if (selectedIds.length > 0) {
-      openSuccessSnackbar({ message: t("userManagement@bulkDeleted", { count: selectedIds.length }) });
-    }
+    setBulkDeleteDialogOpen(false); setRowSelectionModel([]);
+    if (selectedIds.length > 0) openSuccessSnackbar({ message: t("userManagement@bulkDeleted", { count: selectedIds.length }) });
   }, [selectedIds, deleteMutation, queryClient, openSuccessSnackbar, t]);
+
+  const roleChip = useCallback((roleName: string) => {
+    const n = roleName.toLowerCase();
+    const cfg =
+      n === "admin"    ? { color: "secondary" as const, icon: <AdminPanelSettingsIcon sx={{ fontSize: "13px !important" }} /> } :
+      n === "provider" ? { color: "warning"   as const, icon: <StoreIcon sx={{ fontSize: "13px !important" }} /> } :
+                         { color: "success"   as const, icon: <PersonIcon sx={{ fontSize: "13px !important" }} /> };
+    return <Chip label={roleName} size="small" color={cfg.color} icon={cfg.icon} variant="filled" sx={{ fontWeight: 600 }} />;
+  }, []);
 
   const columns: GridColDef<UserSummaryDto>[] = useMemo(
     () => [
-      { field: "id", headerName: t("userManagement@columns.id"), width: 80, minWidth: 70, filterable: false },
-      { field: "name", headerName: t("userManagement@columns.name"), minWidth: 160, flex: 0.6, filterable: false, sortable: false },
-      { field: "email", headerName: t("userManagement@columns.email"), minWidth: 200, flex: 0.8, filterable: false, sortable: false },
-      { field: "phone", headerName: t("userManagement@columns.phone"), minWidth: 130, flex: 0.4, filterable: false, sortable: false },
-      { field: "role", headerName: t("userManagement@columns.role"), minWidth: 120, width: 120, valueGetter: (_, row) => row.role?.name ?? "—", filterable: false, sortable: false },
+      { field: "id", headerName: t("userManagement@columns.id"), width: 72, align: "center", headerAlign: "center", filterable: false },
       {
-        field: "isActive",
-        headerName: t("userManagement@columns.status"),
-        minWidth: 100,
-        width: 100,
-        filterable: false,
-        sortable: false,
+        field: "name", headerName: t("userManagement@columns.name"), minWidth: 200, flex: 0.7, filterable: false, sortable: false,
+        renderCell: ({ row }) => (
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", py: 0.5 }}>
+            <Avatar
+              sx={{
+                width: 34, height: 34, fontSize: 14, fontWeight: 700,
+                bgcolor: isAdmin(row) ? "secondary.main" : isProvider(row) ? "warning.main" : "success.main",
+              }}
+            >
+              {(row.name ?? "?").charAt(0).toUpperCase()}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={600} noWrap>{row.name}</Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>{row.email}</Typography>
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        field: "phone", headerName: t("userManagement@columns.phone"), minWidth: 130, flex: 0.4, filterable: false, sortable: false,
+        renderCell: ({ row }) => <Typography variant="body2" color={row.phone ? "text.primary" : "text.disabled"}>{row.phone ?? "—"}</Typography>,
+      },
+      {
+        field: "role", headerName: t("userManagement@columns.role"), width: 130, valueGetter: (_, row) => row.role?.name ?? "—", filterable: false, sortable: false,
+        renderCell: ({ row }) => row.role ? roleChip(row.role.name) : <Typography variant="body2" color="text.disabled">—</Typography>,
+      },
+      {
+        field: "isActive", headerName: t("userManagement@columns.status"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
         renderCell: ({ row }) => {
           const active = row.isActive !== false;
-          return (
-            <Chip
-              size="small"
-              label={active ? t("userManagement@columns.active") : t("userManagement@columns.inactive")}
-              color={active ? "success" : "error"}
-              variant="filled"
-            />
-          );
+          return <Chip size="small" label={active ? t("userManagement@columns.active") : t("userManagement@columns.inactive")} color={active ? "success" : "error"} variant="outlined" sx={{ fontWeight: 600 }} />;
         },
       },
       {
-        field: "actions",
-        headerName: t("userManagement@columns.actions"),
-        width: 150,
-        minWidth: 150,
-        filterable: false,
-        sortable: false,
-        disableColumnMenu: true,
+        field: "createdAt", headerName: t("userManagement@columns.createdAt") ?? "Joined", width: 110, align: "center", headerAlign: "center", filterable: false,
+        renderCell: ({ row }) => row.createdAt
+          ? <Typography variant="caption" color="text.secondary">{new Date(row.createdAt).toLocaleDateString()}</Typography>
+          : <Typography variant="caption" color="text.disabled">—</Typography>,
+      },
+      {
+        field: "actions", headerName: t("userManagement@columns.actions"), width: 120, align: "center", headerAlign: "center", filterable: false, sortable: false, disableColumnMenu: true,
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} onClick={(e) => e.stopPropagation()}>
             <Tooltip title={t("userManagement@actions.edit")}>
-              <IconButton size="small" onClick={(e) => handleEdit(e, row)}>
-                <EditIcon fontSize="small" />
-              </IconButton>
+              <IconButton size="small" onClick={(e) => handleEdit(e, row)}><EditIcon fontSize="small" /></IconButton>
             </Tooltip>
-            {row.role?.id !== PROVIDER_ROLE_ID && (
+            {!isProvider(row) && (
               <Tooltip title={t("userManagement@actions.makeProvider")}>
-                <IconButton size="small" color="primary" onClick={(e) => handleChangeRoleClick(e, row)}>
-                  <BusinessCenterIcon fontSize="small" />
-                </IconButton>
+                <IconButton size="small" color="warning" onClick={(e) => handleChangeRoleClick(e, row)}><BusinessCenterIcon fontSize="small" /></IconButton>
               </Tooltip>
             )}
             <Tooltip title={t("userManagement@actions.delete")}>
-              <IconButton size="small" color="error" onClick={(e) => handleDeleteClick(e, row)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <IconButton size="small" color="error" onClick={(e) => handleDeleteClick(e, row)}><DeleteIcon fontSize="small" /></IconButton>
             </Tooltip>
           </Stack>
         ),
       },
     ],
-    [t, handleEdit, handleDeleteClick, handleChangeRoleClick]
+    [t, roleChip, handleEdit, handleDeleteClick, handleChangeRoleClick]
   );
 
-  const headerActions: ScreenHeaderAction[] = useMemo(
-    () => [{ id: "refresh", icon: <RefreshIcon />, label: t("refresh"), onClick: () => refetch() }],
-    [t, refetch]
-  );
+  const tabConfig = ROLE_TAB_CONFIG[activeTab];
 
   if (error) {
     return (
@@ -321,42 +326,108 @@ export default function UserListScreen() {
       <Box sx={{ width: "100%", minWidth: 0, overflow: "hidden", boxSizing: "border-box", p: { xs: 1, sm: 2 } }}>
         <Stack spacing={2.5} sx={{ width: "100%", minWidth: 0 }}>
 
-          <ScreenHeader title={t("userManagement@title")} actions={headerActions} />
+          {/* ── Gradient Page Header ── */}
+          <Box
+            sx={{
+              background: tabConfig.gradient,
+              borderRadius: 3, p: 3, color: "white",
+              position: "relative", overflow: "hidden",
+              transition: "background 0.4s ease",
+            }}
+          >
+            <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
+            <Box sx={{ position: "absolute", bottom: -20, right: 80, width: 90, height: 90, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.05)" }} />
 
-          {/* ── Manage Users section ── */}
-          <Paper elevation={2} sx={{ borderRadius: 2, overflow: "hidden" }}>
-            {/* Section header */}
-            <Stack
-              direction="row"
-              alignItems="center"
-              spacing={1}
-              sx={{ px: 2.5, py: 1.5, bgcolor: "grey.800" }}
-            >
-              <GroupIcon sx={{ color: "#fff", fontSize: 20 }} />
-              <Typography variant="subtitle1" fontWeight={700} color="#fff">
-                {t("userManagement@manageUsers")}
-              </Typography>
-              {hasActiveFilters && (
-                <Chip
-                  label={`${filteredData.length} / ${data.length}`}
-                  size="small"
-                  color="warning"
-                  sx={{ fontWeight: 700, ml: 0.5 }}
-                />
-              )}
+            <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} spacing={2}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 54, height: 54 }}>
+                  {tabConfig.icon}
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight={800}>{t("userManagement@title")}</Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.3 }}>
+                    {t("userManagement@subtitle") ?? "Manage platform users by role"}
+                  </Typography>
+                </Box>
+              </Stack>
+              <Tooltip title={t("refresh")}>
+                <IconButton
+                  onClick={() => refetch()}
+                  sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "#fff", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
             </Stack>
 
-            <Box sx={{ p: 2 }}>
+            {/* Clickable KPI cards */}
+            <Stack direction="row" spacing={1.5} sx={{ mt: 3 }} flexWrap="wrap">
+              {(Object.keys(ROLE_TAB_CONFIG) as RoleTab[]).map((key) => {
+                const cfg = ROLE_TAB_CONFIG[key];
+                const count = roleCounts[key];
+                const isSelected = activeTab === key;
+                return (
+                  <Paper
+                    key={key} elevation={0}
+                    onClick={() => { setActiveTab(key); setPaginationModel((p) => ({ ...p, page: 0 })); setRowSelectionModel([]); }}
+                    sx={{
+                      px: 2, py: 1.5, borderRadius: 2.5, cursor: "pointer", minWidth: 110,
+                      bgcolor: isSelected ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)",
+                      border: "1px solid",
+                      borderColor: isSelected ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)",
+                      transition: "all 0.2s",
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                      backdropFilter: "blur(4px)",
+                    }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ color: "#fff", display: "flex" }}>{cfg.icon}</Box>
+                      <Box>
+                        <Typography variant="h6" fontWeight={800} color="#fff" lineHeight={1}>{count}</Typography>
+                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{cfg.label}</Typography>
+                      </Box>
+                    </Stack>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          </Box>
+
+          {/* ── Main Table Card ── */}
+          <Paper elevation={2} sx={{ borderRadius: 3, overflow: "hidden" }}>
+
+            {/* Role Tabs */}
+            <Box sx={{ borderBottom: "1px solid", borderColor: "divider", px: 1 }}>
+              <Tabs value={activeTab} onChange={handleTabChange} sx={{ "& .MuiTab-root": { fontWeight: 600, minHeight: 52 } }}>
+                {(Object.keys(ROLE_TAB_CONFIG) as RoleTab[]).map((key) => {
+                  const cfg = ROLE_TAB_CONFIG[key];
+                  const badgeColor = key === "admins" ? "secondary" : key === "providers" ? "warning" : key === "users" ? "success" : "primary";
+                  return (
+                    <Tab
+                      key={key} value={key}
+                      label={
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Badge badgeContent={roleCounts[key]} color={badgeColor as "secondary" | "warning" | "success" | "primary"} max={999}>
+                            <Box sx={{ display: "flex" }}>{cfg.icon}</Box>
+                          </Badge>
+                          <span>{cfg.label}</span>
+                        </Stack>
+                      }
+                    />
+                  );
+                })}
+              </Tabs>
+            </Box>
+
+            <Box sx={{ p: 2.5 }}>
               {/* Filter bar */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} flexWrap="wrap" alignItems={{ sm: "center" }} sx={{ mb: 2 }}>
-                {/* Search */}
                 <TextField
                   size="small"
-                  label={t("userManagement@search")}
                   placeholder={t("userManagement@searchPlaceholder")}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                  sx={{ minWidth: 220 }}
+                  sx={{ minWidth: 240 }}
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" color="action" /></InputAdornment>,
                     endAdornment: search ? (
@@ -366,58 +437,45 @@ export default function UserListScreen() {
                     ) : undefined,
                   }}
                 />
-
-                {/* Date filters */}
                 <DatePicker
                   label={t("userManagement@insights_dateFrom")}
                   value={dateFrom}
                   onChange={(d) => { setDateFrom(d); setPaginationModel((p) => ({ ...p, page: 0 })); }}
                   maxDate={dateTo ?? undefined}
-                  slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                  slotProps={{ textField: { size: "small", sx: { minWidth: 155 } } }}
                 />
                 <DatePicker
                   label={t("userManagement@insights_dateTo")}
                   value={dateTo}
                   onChange={(d) => { setDateTo(d); setPaginationModel((p) => ({ ...p, page: 0 })); }}
                   minDate={dateFrom ?? undefined}
-                  slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                  slotProps={{ textField: { size: "small", sx: { minWidth: 155 } } }}
                 />
-
-                {/* Car brand filter */}
                 {brandOptions.length > 0 && (
                   <TextField
-                    select
-                    size="small"
+                    select size="small"
                     label={t("userManagement@insights_carTypeStats")}
                     value={selectedBrand}
                     onChange={(e) => { setSelectedBrand(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                    sx={{ minWidth: 180 }}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start"><DirectionsCarIcon fontSize="small" color="action" /></InputAdornment>,
-                    }}
+                    sx={{ minWidth: 175 }}
+                    InputProps={{ startAdornment: <InputAdornment position="start"><DirectionsCarIcon fontSize="small" color="action" /></InputAdornment> }}
                   >
                     <MenuItem value="">{t("userManagement@allBrands")}</MenuItem>
                     <Divider />
-                    {brandOptions.map((brand) => (
-                      <MenuItem key={brand} value={brand}>{brand}</MenuItem>
-                    ))}
+                    {brandOptions.map((brand) => <MenuItem key={brand} value={brand}>{brand}</MenuItem>)}
                   </TextField>
                 )}
-
-                {/* Clear all filters */}
                 {hasActiveFilters && (
                   <Tooltip title={t("userManagement@clearFilters")}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      color="inherit"
-                      startIcon={<FilterListIcon />}
-                      onClick={clearFilters}
-                      sx={{ borderColor: "divider", color: "text.secondary", whiteSpace: "nowrap" }}
-                    >
+                    <Button variant="outlined" size="small" color="inherit" startIcon={<FilterListIcon />} onClick={clearFilters}
+                      sx={{ borderColor: "divider", color: "text.secondary", whiteSpace: "nowrap" }}>
                       {t("userManagement@clearFilters")}
                     </Button>
                   </Tooltip>
+                )}
+                <Box sx={{ flex: 1 }} />
+                {hasActiveFilters && (
+                  <Chip label={`${filteredData.length} / ${roleCounts[activeTab]}`} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700 }} />
                 )}
               </Stack>
 
@@ -437,7 +495,10 @@ export default function UserListScreen() {
                 rowSelectionModel={rowSelectionModel}
                 onRowSelectionModelChange={setRowSelectionModel}
                 onRowClick={({ row }) => handleRowClick(row)}
-                sx={{ "& .MuiDataGrid-row": { cursor: "pointer" } }}
+                sx={{
+                  "& .MuiDataGrid-row": { cursor: "pointer" },
+                  "& .MuiDataGrid-columnHeaders": { bgcolor: "grey.50" },
+                }}
               />
             </Box>
           </Paper>
@@ -459,66 +520,79 @@ export default function UserListScreen() {
         onDelete={(u) => { setUserToDelete(u); setDeleteDialogOpen(true); }}
       />
 
-      {/* Single delete */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth sx={{ zIndex: 10002 }}>
-        <DialogTitle>{t("userManagement@deleteConfirmTitle")}</DialogTitle>
-        <DialogContent>
-          <Typography>{t("userManagement@deleteConfirmMessage")} {userToDelete?.name ?? ""}?</Typography>
+      {/* ── Single Delete Dialog ── */}
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 10002 }}>
+        <Box sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
+              <WarningAmberIcon sx={{ color: "#fff" }} />
+            </Avatar>
+            <Typography variant="h6" fontWeight={700} color="#fff">{t("userManagement@deleteConfirmTitle")}</Typography>
+          </Stack>
+        </Box>
+        <DialogContent sx={{ pt: 2.5 }}>
+          <Typography color="text.secondary">
+            {t("userManagement@deleteConfirmMessage")}{" "}
+            <Typography component="span" fontWeight={700} color="text.primary">{userToDelete?.name ?? ""}</Typography>?
+          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="inherit" disabled={deleteMutation.isPending}>{t("cancel")}</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={deleteMutation.isPending}>
-            {deleteMutation.isPending ? <CircularProgress size={20} color="inherit" /> : t("delete")}
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button onClick={handleCloseDeleteDialog} disabled={deleteMutation.isPending}>{t("cancel")}</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" size="large" disabled={deleteMutation.isPending}
+            startIcon={deleteMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}>
+            {t("delete")}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Change Role to Provider */}
+      {/* ── Change Role to Provider Dialog ── */}
       <Dialog
         open={changeRoleDialogOpen}
         onClose={() => { if (!changeRoleMutation.isPending) { setChangeRoleDialogOpen(false); setUserToChangeRole(null); } }}
-        maxWidth="sm"
-        fullWidth
-        sx={{ zIndex: 10002 }}
+        maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 10002 }}
       >
-        <DialogTitle sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", color: "#fff" }}>
-          {t("userManagement@makeProviderTitle")}
-        </DialogTitle>
+        <Box sx={{ background: "linear-gradient(135deg, #bf360c 0%, #e65100 100%)", px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
+              <BusinessCenterIcon sx={{ color: "#fff" }} />
+            </Avatar>
+            <Typography variant="h6" fontWeight={700} color="#fff">{t("userManagement@makeProviderTitle")}</Typography>
+          </Stack>
+        </Box>
         <DialogContent sx={{ pt: 2.5 }}>
-          <Typography>
+          <Typography color="text.secondary">
             {t("userManagement@makeProviderConfirm", { name: userToChangeRole?.name ?? "" })}
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => { setChangeRoleDialogOpen(false); setUserToChangeRole(null); }}
-            color="inherit"
-            disabled={changeRoleMutation.isPending}
-          >
-            {t("cancel")}
-          </Button>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button onClick={() => { setChangeRoleDialogOpen(false); setUserToChangeRole(null); }} disabled={changeRoleMutation.isPending}>{t("cancel")}</Button>
           <Button
             onClick={() => { if (userToChangeRole) changeRoleMutation.mutate(userToChangeRole); }}
-            color="primary"
-            variant="contained"
-            disabled={changeRoleMutation.isPending}
-            startIcon={changeRoleMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <BusinessCenterIcon />}
-          >
+            color="warning" variant="contained" size="large" disabled={changeRoleMutation.isPending}
+            startIcon={changeRoleMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <BusinessCenterIcon />}>
             {t("userManagement@makeProviderAction")}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Bulk delete */}
-      <Dialog open={bulkDeleteDialogOpen} onClose={() => !deleteMutation.isPending && setBulkDeleteDialogOpen(false)} maxWidth="sm" fullWidth sx={{ zIndex: 10002 }}>
-        <DialogTitle>{t("delete")}</DialogTitle>
-        <DialogContent>
-          <Typography>{t("userManagement@bulkDeleteConfirm", { count: selectedIds.length })}</Typography>
+      {/* ── Bulk Delete Dialog ── */}
+      <Dialog open={bulkDeleteDialogOpen} onClose={() => !deleteMutation.isPending && setBulkDeleteDialogOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 10002 }}>
+        <Box sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
+              <WarningAmberIcon sx={{ color: "#fff" }} />
+            </Avatar>
+            <Typography variant="h6" fontWeight={700} color="#fff">{t("delete")}</Typography>
+          </Stack>
+        </Box>
+        <DialogContent sx={{ pt: 2.5 }}>
+          <Typography color="text.secondary">{t("userManagement@bulkDeleteConfirm", { count: selectedIds.length })}</Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBulkDeleteDialogOpen(false)} color="inherit" disabled={deleteMutation.isPending}>{t("cancel")}</Button>
-          <Button onClick={handleConfirmBulkDelete} color="error" variant="contained" disabled={deleteMutation.isPending}>
-            {deleteMutation.isPending ? <CircularProgress size={20} color="inherit" /> : t("delete")}
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button onClick={() => setBulkDeleteDialogOpen(false)} disabled={deleteMutation.isPending}>{t("cancel")}</Button>
+          <Button onClick={handleConfirmBulkDelete} color="error" variant="contained" size="large" disabled={deleteMutation.isPending}
+            startIcon={deleteMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}>
+            {t("delete")}
           </Button>
         </DialogActions>
       </Dialog>

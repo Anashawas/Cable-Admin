@@ -45,6 +45,7 @@ import {
 	AccountBalanceWallet as AccountBalanceWalletIcon,
 	QueryStats as QueryStatsIcon,
 	Insights as InsightsIcon,
+	Block as BlockIcon,
 } from "@mui/icons-material";
 import { PRIVILEGES, PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -121,8 +122,7 @@ const AppCollapsibleSidebar = () => {
 			items: [
 				{ label: t("serviceCategories"), path: "/service-categories", icon: <CategoryIcon /> },
 				{ label: t("serviceProviders"), path: "/service-providers", icon: <StoreIcon /> },
-				{ label: t("pendingOffers"), path: "/pending-offers", icon: <PendingActionsIcon /> },
-				{ label: t("activeOffers"), path: "/active-offers", icon: <ActiveOfferIcon /> },
+				{ label: t("offersManagement"), path: "/offers", icon: <LocalOfferIcon /> },
 				{ label: t("offerTransactions"), path: "/transactions", icon: <ReceiptLongIcon /> },
 				{ label: t("settlements"), path: "/settlements", icon: <AccountBalanceIcon /> },
 			],
@@ -196,7 +196,12 @@ const AppCollapsibleSidebar = () => {
 	};
 
 	const isPathInGroup = (groupItems: NavigationItem[]) => {
-		return groupItems.some(item => location.pathname === item.path);
+		return groupItems.some(
+			item =>
+				location.pathname === item.path ||
+				(item.path === "/offers" &&
+					(location.pathname === "/pending-offers" || location.pathname === "/active-offers"))
+		);
 	};
 
 	const hasPrivilege = (requiredPrivileges?: PrivilegeCode[]) => {

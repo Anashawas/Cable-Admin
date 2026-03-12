@@ -33,12 +33,14 @@ const ServiceProvidersScreen = lazy(() => import("../features/service-providers/
 const ConversionRatesScreen = lazy(() => import("../features/offers/components/ConversionRatesScreen"));
 const PendingOffersScreen = lazy(() => import("../features/offers/components/PendingOffersScreen"));
 const ActiveOffersScreen = lazy(() => import("../features/offers/components/ActiveOffersScreen"));
+const OffersScreen = lazy(() => import("../features/offers/components/OffersScreen"));
 const TransactionsScreen = lazy(() => import("../features/offers/components/TransactionsScreen"));
 const SettlementsScreen = lazy(() => import("../features/offers/components/SettlementsScreen"));
 const PartnersScreen = lazy(() => import("../features/partners/components/PartnersScreen"));
 const LoyaltyManagementScreen = lazy(() => import("../features/loyalty/components/LoyaltyManagementScreen"));
 const RedemptionsScreen = lazy(() => import("../features/loyalty/components/RedemptionsScreen"));
 const PointAdjustmentsScreen = lazy(() => import("../features/loyalty/components/PointAdjustmentsScreen"));
+const BlockUsersScreen = lazy(() => import("../features/loyalty/components/BlockUsersScreen"));
 const NotFound = lazy(() => import("../components/NotFound"));
 
 function AppContainer() {
@@ -256,11 +258,21 @@ function AppContainer() {
             }
           />
           <Route
+            path="/offers"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <OffersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/pending-offers"
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <PendingOffersScreen />
+                  <OffersScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -270,7 +282,7 @@ function AppContainer() {
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
-                  <ActiveOffersScreen />
+                  <OffersScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -331,6 +343,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <PointAdjustmentsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/block-users"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <BlockUsersScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

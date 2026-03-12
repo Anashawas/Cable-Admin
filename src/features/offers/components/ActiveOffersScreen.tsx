@@ -28,6 +28,10 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
+  List,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -41,6 +45,10 @@ import StoreIcon from "@mui/icons-material/Store";
 import TimerIcon from "@mui/icons-material/Timer";
 import PeopleIcon from "@mui/icons-material/People";
 import StarsIcon from "@mui/icons-material/Stars";
+import SearchIcon from "@mui/icons-material/Search";
+import EvStationIcon from "@mui/icons-material/EvStation";
+import BusinessIcon from "@mui/icons-material/Business";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid } from "../../../components";
@@ -51,6 +59,9 @@ import {
   useCreateOffer,
 } from "../hooks/use-offers";
 import type { OfferDto, ProposeOfferRequest, ProviderType } from "../types/api";
+import { useQuery } from "@tanstack/react-query";
+import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
+import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 
 const INITIAL_FORM_DATA: ProposeOfferRequest = {
   title: "",
@@ -61,10 +72,10 @@ const INITIAL_FORM_DATA: ProposeOfferRequest = {
   providerId: 0,
   pointsCost: 0,
   monetaryValue: 0,
-  currencyCode: "KWD",
+  currencyCode: "JOD",
   maxUsesPerUser: null,
   maxTotalUses: null,
-  offerCodeExpiryMinutes: 30,
+  offerCodeExpirySeconds: 60,
   imageUrl: "",
   validFrom: "",
   validTo: "",
@@ -97,6 +108,47 @@ export default function ActiveOffersScreen() {
   const [selectedOffer, setSelectedOffer] = useState<OfferDto | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<ProposeOfferRequest>(INITIAL_FORM_DATA);
+  const [selectedProvider, setSelectedProvider] = useState<{ id: number; name: string; city?: string | null } | null>(null);
+  const [providerSearch, setProviderSearch] = useState("");
+
+  const { data: serviceProviders = [], isLoading: isLoadingServiceProviders } = useQuery({
+    queryKey: ["service-providers-for-offer"],
+    queryFn: () => getAllServiceProviders(),
+    enabled: createDialogOpen && formData.providerType === "ServiceProvider",
+  });
+
+  const { data: chargingPoints = [], isLoading: isLoadingChargingPoints } = useQuery({
+    queryKey: ["charging-points-for-offer"],
+    queryFn: () => getAllChargingPoints(),
+    enabled: createDialogOpen && formData.providerType === "ChargingPoint",
+  });
+
+  const isLoadingProviders = isLoadingServiceProviders || isLoadingChargingPoints;
+
+  const filteredProviders = useMemo(() => {
+    const search = providerSearch.toLowerCase();
+    if (formData.providerType === "ServiceProvider") {
+      return serviceProviders
+        .filter(
+          (p) =>
+            !search ||
+            p.name.toLowerCase().includes(search) ||
+            String(p.id).includes(search) ||
+            (p.cityName ?? "").toLowerCase().includes(search)
+        )
+        .map((p) => ({ id: p.id, name: p.name, city: p.cityName }));
+    } else {
+      return chargingPoints
+        .filter(
+          (p) =>
+            !search ||
+            (p.name ?? "").toLowerCase().includes(search) ||
+            String(p.id).includes(search) ||
+            (p.cityName ?? "").toLowerCase().includes(search)
+        )
+        .map((p) => ({ id: p.id, name: p.name ?? `Station #${p.id}`, city: p.cityName }));
+    }
+  }, [formData.providerType, serviceProviders, chargingPoints, providerSearch]);
 
   const paginatedData = useMemo(() => {
     const start = paginationModel.page * paginationModel.pageSize;
@@ -126,6 +178,8 @@ export default function ActiveOffersScreen() {
 
   const handleOpenCreateDialog = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
+    setSelectedProvider(null);
+    setProviderSearch("");
     setCreateDialogOpen(true);
   }, []);
 
@@ -152,11 +206,11 @@ export default function ActiveOffersScreen() {
       openErrorSnackbar({ message: t("offers@monetaryValueRequired") });
       return;
     }
-    if (formData.offerCodeExpiryMinutes < 30) {
-      openErrorSnackbar({ message: t("offers@minExpiryMinutes") });
+    if (formData.offerCodeExpirySeconds < 60) {
+      openErrorSnackbar({ message: t("offers@minExpirySeconds") });
       return;
     }
-    if (!formData.validFrom || !formData.validTo) {
+    if (!formData.validFrom) {
       openErrorSnackbar({ message: t("offers@validDatesRequired") });
       return;
     }
@@ -166,6 +220,8 @@ export default function ActiveOffersScreen() {
         openSuccessSnackbar({ message: t("offers@created") });
         setCreateDialogOpen(false);
         setFormData(INITIAL_FORM_DATA);
+        setSelectedProvider(null);
+        setProviderSearch("");
       },
       onError: (err: Error) => {
         openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
@@ -473,9 +529,9 @@ export default function ActiveOffersScreen() {
                       </Typography>
                     </Stack>
                     <Typography variant="h5" fontWeight={700} color="warning.dark">
-                      {selectedOffer.offerCodeExpiryMinutes}
+                      {selectedOffer.offerCodeExpirySeconds}
                       <Typography component="span" variant="caption" sx={{ ml: 0.5 }}>
-                        {t("minutes")}
+                        {t("offers@seconds")}
                       </Typography>
                     </Typography>
                   </Paper>
@@ -516,7 +572,7 @@ export default function ActiveOffersScreen() {
                     {t("codeExpiry")}
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {selectedOffer.offerCodeExpiryMinutes} {t("minutes")}
+                    {selectedOffer.offerCodeExpirySeconds} {t("offers@seconds")}
                   </Typography>
                 </Grid>
                 <Grid item xs={6} sm={4}>
@@ -594,9 +650,9 @@ export default function ActiveOffersScreen() {
         onClose={handleCloseCreateDialog}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ sx: { borderRadius: 3, display: "flex", flexDirection: "column", maxHeight: "90vh" } }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
+        <DialogTitle sx={{ pb: 1, flexShrink: 0 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "primary.main" }}>
               <AddIcon />
@@ -611,8 +667,8 @@ export default function ActiveOffersScreen() {
             </Box>
           </Stack>
         </DialogTitle>
-        <Divider />
-        <DialogContent sx={{ py: 3 }}>
+        <Divider sx={{ flexShrink: 0 }} />
+        <DialogContent sx={{ py: 3, overflowY: "auto", flex: 1 }}>
           <Stack spacing={3}>
             {/* Basic Info */}
             <Typography variant="subtitle2" fontWeight={600} color="primary.main">
@@ -664,31 +720,151 @@ export default function ActiveOffersScreen() {
             <Typography variant="subtitle2" fontWeight={600} color="primary.main">
               {t("offers@providerInfo")}
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>{t("providerType")}</InputLabel>
-                  <Select
-                    value={formData.providerType}
-                    label={t("providerType")}
-                    onChange={(e) => updateField("providerType", e.target.value as ProviderType)}
-                  >
-                    <MenuItem value="ChargingPoint">{t("chargingPoint")}</MenuItem>
-                    <MenuItem value="ServiceProvider">{t("serviceProvider")}</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t("providerId")}
-                  type="number"
-                  value={formData.providerId || ""}
-                  onChange={(e) => updateField("providerId", parseInt(e.target.value) || 0)}
-                  required
-                  fullWidth
-                />
-              </Grid>
-            </Grid>
+
+            {/* Provider Type Toggle */}
+            <ToggleButtonGroup
+              value={formData.providerType}
+              exclusive
+              onChange={(_, value) => {
+                if (value) {
+                  updateField("providerType", value as ProviderType);
+                  setSelectedProvider(null);
+                  setProviderSearch("");
+                  updateField("providerId", 0);
+                }
+              }}
+              size="small"
+            >
+              <ToggleButton value="ServiceProvider" sx={{ px: 3, gap: 1 }}>
+                <BusinessIcon fontSize="small" />
+                {t("offers@serviceProvider")}
+              </ToggleButton>
+              <ToggleButton value="ChargingPoint" sx={{ px: 3, gap: 1 }}>
+                <EvStationIcon fontSize="small" />
+                {t("offers@chargingPoint")}
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Selected Provider Preview */}
+            {selectedProvider && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  bgcolor: "success.50",
+                  border: "1px solid",
+                  borderColor: "success.300",
+                  borderRadius: 2,
+                }}
+              >
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Avatar sx={{ bgcolor: "success.main" }}>
+                    {formData.providerType === "ChargingPoint" ? (
+                      <EvStationIcon />
+                    ) : (
+                      <BusinessIcon />
+                    )}
+                  </Avatar>
+                  <Box flex={1}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      {t("offers@selectedProvider")}
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {selectedProvider.name}
+                    </Typography>
+                    {selectedProvider.city && (
+                      <Typography variant="body2" color="text.secondary">
+                        {selectedProvider.city}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Stack alignItems="flex-end" spacing={0.5}>
+                    <Chip label={`ID: ${selectedProvider.id}`} size="small" color="success" />
+                    <CheckCircleIcon sx={{ color: "success.main", fontSize: 20 }} />
+                  </Stack>
+                </Stack>
+              </Paper>
+            )}
+
+            {/* Provider Search */}
+            <TextField
+              placeholder={t("offers@searchProviders")}
+              value={providerSearch}
+              onChange={(e) => setProviderSearch(e.target.value)}
+              size="small"
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {/* Provider List */}
+            <Paper variant="outlined" sx={{ maxHeight: 220, overflowY: "auto", borderRadius: 2 }}>
+              {isLoadingProviders ? (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", p: 3 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : filteredProviders.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("offers@noProvidersFound")}
+                  </Typography>
+                </Box>
+              ) : (
+                <List dense disablePadding>
+                  {filteredProviders.map((provider) => (
+                    <ListItemButton
+                      key={provider.id}
+                      onClick={() => {
+                        setSelectedProvider(provider);
+                        updateField("providerId", provider.id);
+                      }}
+                      selected={selectedProvider?.id === provider.id}
+                      sx={{
+                        borderLeft: selectedProvider?.id === provider.id ? "3px solid" : "3px solid transparent",
+                        borderColor: "primary.main",
+                        "&.Mui-selected": { bgcolor: "primary.50" },
+                        "&.Mui-selected:hover": { bgcolor: "primary.100" },
+                      }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            width: 34,
+                            height: 34,
+                            fontSize: 14,
+                            bgcolor:
+                              selectedProvider?.id === provider.id ? "primary.main" : "grey.300",
+                            color:
+                              selectedProvider?.id === provider.id ? "white" : "text.secondary",
+                          }}
+                        >
+                          {provider.name.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" fontWeight={selectedProvider?.id === provider.id ? 700 : 400}>
+                            {provider.name}
+                          </Typography>
+                        }
+                        secondary={provider.city ?? `ID: ${provider.id}`}
+                      />
+                      <Chip
+                        label={`#${provider.id}`}
+                        size="small"
+                        variant={selectedProvider?.id === provider.id ? "filled" : "outlined"}
+                        color={selectedProvider?.id === provider.id ? "primary" : "default"}
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              )}
+            </Paper>
 
             <Divider />
 
@@ -774,14 +950,14 @@ export default function ActiveOffersScreen() {
                 <TextField
                   label={t("codeExpiry")}
                   type="number"
-                  value={formData.offerCodeExpiryMinutes}
+                  value={formData.offerCodeExpirySeconds}
                   onChange={(e) =>
-                    updateField("offerCodeExpiryMinutes", parseInt(e.target.value) || 30)
+                    updateField("offerCodeExpirySeconds", parseInt(e.target.value) || 60)
                   }
                   InputProps={{
-                    endAdornment: <InputAdornment position="end">{t("minutes")}</InputAdornment>,
+                    endAdornment: <InputAdornment position="end">{t("offers@seconds")}</InputAdornment>,
                   }}
-                  helperText={t("offers@minExpiry30")}
+                  helperText={t("offers@minExpiry60")}
                   required
                   fullWidth
                 />
@@ -810,10 +986,10 @@ export default function ActiveOffersScreen() {
                 <TextField
                   label={t("offers@validTo")}
                   type="datetime-local"
-                  value={formData.validTo}
-                  onChange={(e) => updateField("validTo", e.target.value)}
+                  value={formData.validTo ?? ""}
+                  onChange={(e) => updateField("validTo", e.target.value || null)}
                   InputLabelProps={{ shrink: true }}
-                  required
+                  helperText={t("offers@leaveEmptyNoExpiry")}
                   fullWidth
                 />
               </Grid>
@@ -829,8 +1005,8 @@ export default function ActiveOffersScreen() {
             />
           </Stack>
         </DialogContent>
-        <Divider />
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Divider sx={{ flexShrink: 0 }} />
+        <DialogActions sx={{ px: 3, py: 2, gap: 1, flexShrink: 0 }}>
           <Button
             onClick={handleCloseCreateDialog}
             disabled={createMutation.isPending}

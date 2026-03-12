@@ -57,10 +57,10 @@ export interface OfferDto {
   maxUsesPerUser: number | null;
   maxTotalUses: number | null;
   currentTotalUses: number;
-  offerCodeExpiryMinutes: number;
+  offerCodeExpirySeconds: number;
   imageUrl: string | null;
   validFrom: string;
-  validTo: string;
+  validTo: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -77,10 +77,10 @@ export interface ProposeOfferRequest {
   currencyCode: string;
   maxUsesPerUser?: number | null;
   maxTotalUses?: number | null;
-  offerCodeExpiryMinutes: number;
+  offerCodeExpirySeconds: number;
   imageUrl?: string | null;
   validFrom: string;
-  validTo: string;
+  validTo?: string | null;
 }
 
 export interface UpdateOfferRequest {
@@ -95,10 +95,10 @@ export interface UpdateOfferRequest {
   currencyCode: string;
   maxUsesPerUser?: number | null;
   maxTotalUses?: number | null;
-  offerCodeExpiryMinutes: number;
+  offerCodeExpirySeconds: number;
   imageUrl?: string | null;
   validFrom: string;
-  validTo: string;
+  validTo?: string | null;
   isActive: boolean;
 }
 

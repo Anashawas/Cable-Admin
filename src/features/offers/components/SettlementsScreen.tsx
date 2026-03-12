@@ -51,6 +51,13 @@ import {
 } from "../hooks/use-settlements";
 import type { ProviderSettlementDto, SettlementStatus } from "../types/api";
 
+const STATUS_CFG: Record<number, { label_key: string; color: "warning" | "info" | "success" | "error" }> = {
+  1: { label_key: "pending", color: "warning" },
+  2: { label_key: "invoiced", color: "info" },
+  3: { label_key: "paid", color: "success" },
+  4: { label_key: "disputed", color: "error" },
+};
+
 export default function SettlementsScreen() {
   const { t, i18n } = useTranslation(["offers", "common"]);
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
@@ -63,13 +70,24 @@ export default function SettlementsScreen() {
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(currentMonth);
   const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined);
 
-  const { data, isLoading, search, handleSearchChange, handleRefresh } = useSettlements({
+  // Fetch without status — we filter client-side so we can show per-status counts
+  const { data: rawData, isLoading, search, handleSearchChange, handleRefresh } = useSettlements({
     year: selectedYear,
     month: selectedMonth,
-    status: statusFilter,
   });
 
-  const { data: summary } = useSettlementSummary(selectedYear, selectedMonth);
+  const data = useMemo(() => {
+    if (!statusFilter) return rawData;
+    return rawData.filter((s) => s.settlementStatus === statusFilter);
+  }, [rawData, statusFilter]);
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    rawData.forEach((s) => { counts[s.settlementStatus] = (counts[s.settlementStatus] ?? 0) + 1; });
+    return counts;
+  }, [rawData]);
+
+  const { data: summary, isLoading: summaryLoading } = useSettlementSummary(selectedYear, selectedMonth);
   const updateStatusMutation = useUpdateSettlementStatus();
   const generateSettlementMutation = useGenerateSettlement();
 
@@ -84,13 +102,25 @@ export default function SettlementsScreen() {
   const [generateYear, setGenerateYear] = useState(currentYear);
   const [generateMonth, setGenerateMonth] = useState(currentMonth);
 
-  // Localized month names via Intl
   const monthNames = useMemo(
     () =>
       Array.from({ length: 12 }, (_, i) =>
         new Date(2000, i, 1).toLocaleString(i18n.language === "ar" ? "ar-KW" : "en-US", { month: "long" })
       ),
     [i18n.language]
+  );
+
+  const monthAbbr = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) =>
+        new Date(2000, i, 1).toLocaleString(i18n.language === "ar" ? "ar-KW" : "en-US", { month: "short" })
+      ),
+    [i18n.language]
+  );
+
+  const periodLabel = useMemo(
+    () => (selectedMonth ? `${monthNames[selectedMonth - 1]} ${selectedYear}` : String(selectedYear)),
+    [selectedMonth, selectedYear, monthNames]
   );
 
   const paginatedData = useMemo(() => {
@@ -157,24 +187,32 @@ export default function SettlementsScreen() {
   }, [generateYear, generateMonth, generateSettlementMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
   const getStatusChip = (status: SettlementStatus) => {
-    const map = {
-      1: { label: t("pending"), color: "warning" as const },
-      2: { label: t("invoiced"), color: "info" as const },
-      3: { label: t("paid"), color: "success" as const },
-      4: { label: t("disputed"), color: "error" as const },
-    };
-    const cfg = map[status];
-    return <Chip label={cfg.label} color={cfg.color} size="small" variant="filled" sx={{ fontWeight: 600 }} />;
+    const cfg = STATUS_CFG[status];
+    return (
+      <Chip
+        label={t(`offers@${cfg.label_key}`)}
+        color={cfg.color}
+        size="small"
+        variant="filled"
+        sx={{ fontWeight: 600 }}
+      />
+    );
   };
 
   const formatDate = (val: string | null) =>
-    val ? new Date(val).toLocaleDateString(i18n.language === "ar" ? "ar-KW" : "en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
+    val
+      ? new Date(val).toLocaleDateString(i18n.language === "ar" ? "ar-KW" : "en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "—";
 
   const columns: GridColDef<ProviderSettlementDto>[] = [
     { field: "id", headerName: t("id"), width: 60, align: "center", headerAlign: "center" },
     {
       field: "providerOwnerName",
-      headerName: t("provider"),
+      headerName: t("offers@provider"),
       flex: 1,
       minWidth: 160,
       renderCell: (params) => (
@@ -188,11 +226,11 @@ export default function SettlementsScreen() {
     },
     {
       field: "providerType",
-      headerName: t("type"),
+      headerName: t("offers@type"),
       width: 140,
       renderCell: (params) => (
         <Chip
-          label={params.value === "ChargingPoint" ? t("chargingPoint") : t("serviceProvider")}
+          label={params.value === "ChargingPoint" ? t("offers@chargingPoint") : t("offers@serviceProvider")}
           size="small"
           variant="outlined"
           color={params.value === "ChargingPoint" ? "primary" : "secondary"}
@@ -201,29 +239,30 @@ export default function SettlementsScreen() {
     },
     {
       field: "period",
-      headerName: t("period"),
+      headerName: t("offers@period"),
       width: 110,
-      valueGetter: (_value: unknown, row: ProviderSettlementDto) => `${row.periodYear}-${String(row.periodMonth).padStart(2, "0")}`,
+      valueGetter: (_value: unknown, row: ProviderSettlementDto) =>
+        `${row.periodYear}-${String(row.periodMonth).padStart(2, "0")}`,
       renderCell: (params) => (
         <Chip label={params.value} size="small" sx={{ fontWeight: 600, bgcolor: "grey.100" }} />
       ),
     },
     {
       field: "totalTransactions",
-      headerName: t("transactions"),
+      headerName: t("offers@transactions"),
       width: 110,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
         <Box sx={{ textAlign: "center" }}>
           <Typography variant="body2" fontWeight={700}>{params.value}</Typography>
-          <Typography variant="caption" color="text.secondary">{t("transactions")}</Typography>
+          <Typography variant="caption" color="text.secondary">{t("offers@transactions")}</Typography>
         </Box>
       ),
     },
     {
       field: "totalTransactionAmount",
-      headerName: t("totalAmount"),
+      headerName: t("offers@totalAmount"),
       width: 140,
       align: "right",
       headerAlign: "right",
@@ -238,7 +277,7 @@ export default function SettlementsScreen() {
     },
     {
       field: "totalCommissionAmount",
-      headerName: t("commission"),
+      headerName: t("offers@commission"),
       width: 130,
       align: "right",
       headerAlign: "right",
@@ -253,7 +292,7 @@ export default function SettlementsScreen() {
     },
     {
       field: "paidAmount",
-      headerName: t("paidAmount"),
+      headerName: t("offers@paidAmount"),
       width: 120,
       align: "right",
       headerAlign: "right",
@@ -271,7 +310,7 @@ export default function SettlementsScreen() {
     },
     {
       field: "totalPointsAwarded",
-      headerName: t("pointsAwarded"),
+      headerName: t("offers@pointsAwarded"),
       width: 110,
       align: "center",
       headerAlign: "center",
@@ -299,13 +338,13 @@ export default function SettlementsScreen() {
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={0.5} justifyContent="center">
-          <Tooltip title={t("viewDetails")}>
+          <Tooltip title={t("offers@viewDetails")}>
             <IconButton size="small" onClick={(e) => handleViewDetails(e, params.row)}>
               <VisibilityIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           {params.row.settlementStatus !== 3 && (
-            <Tooltip title={t("updateStatus")}>
+            <Tooltip title={t("offers@updateStatus")}>
               <IconButton size="small" color="primary" onClick={(e) => handleUpdateStatusClick(e, params.row)}>
                 <CheckCircleIcon fontSize="small" />
               </IconButton>
@@ -316,13 +355,15 @@ export default function SettlementsScreen() {
     },
   ];
 
-  const kpiCards = summary ? [
-    { label: t("totalSettlements"), value: summary.totalSettlements, sub: null, icon: <ReceiptLongIcon /> },
-    { label: t("pending"), value: summary.pendingCount, sub: `${summary.invoicedCount} ${t("invoiced")}`, icon: <PendingActionsIcon /> },
-    { label: t("paid"), value: summary.paidCount, sub: summary.disputedCount > 0 ? `${summary.disputedCount} ${t("disputed")}` : null, icon: <PaymentsIcon /> },
-    { label: t("totalAmount"), value: `${(summary.totalTransactionAmount ?? 0).toFixed(3)}`, sub: "KWD", icon: <AttachMoneyIcon /> },
-    { label: t("totalCommission"), value: `${(summary.totalCommissionAmount ?? 0).toFixed(3)}`, sub: "KWD", icon: <AccountBalanceIcon /> },
-  ] : [];
+  const kpiCards = summary
+    ? [
+        { label: t("offers@totalSettlements"), value: summary.totalSettlements, sub: null, icon: <ReceiptLongIcon /> },
+        { label: t("offers@pending"), value: summary.pendingCount, sub: `${summary.invoicedCount} ${t("offers@invoiced")}`, icon: <PendingActionsIcon /> },
+        { label: t("offers@paid"), value: summary.paidCount, sub: summary.disputedCount > 0 ? `${summary.disputedCount} ${t("offers@disputed")}` : null, icon: <PaymentsIcon /> },
+        { label: t("offers@totalAmount"), value: `${(summary.totalTransactionAmount ?? 0).toFixed(3)}`, sub: "KWD", icon: <AttachMoneyIcon /> },
+        { label: t("offers@totalCommission"), value: `${(summary.totalCommissionAmount ?? 0).toFixed(3)}`, sub: "KWD", icon: <AccountBalanceIcon /> },
+      ]
+    : [];
 
   return (
     <AppScreenContainer>
@@ -347,7 +388,7 @@ export default function SettlementsScreen() {
               <AccountBalanceIcon sx={{ fontSize: 28 }} />
             </Box>
             <Box>
-              <Typography variant="h5" fontWeight={800} color="white" lineHeight={1.2}>{t("settlements")}</Typography>
+              <Typography variant="h5" fontWeight={800} color="white" lineHeight={1.2}>{t("offers@settlements")}</Typography>
               <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)", mt: 0.5 }}>{t("offers@settlements_subtitle")}</Typography>
             </Box>
           </Stack>
@@ -373,40 +414,49 @@ export default function SettlementsScreen() {
           </Stack>
         </Stack>
 
-        {/* KPI Cards */}
+        {/* KPI Cards — skeleton when loading */}
         <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-          {kpiCards.map((card) => (
-            <Box
-              key={card.label}
-              sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1.5, minWidth: 110, flex: "1 1 auto", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.15)" }}
-            >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                <Box sx={{ opacity: 0.75, display: "flex", fontSize: 16 }}>{card.icon}</Box>
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>{card.label}</Typography>
-              </Stack>
-              <Typography variant="h5" fontWeight={800} color="white" lineHeight={1}>{card.value}</Typography>
-              {card.sub && <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)" }}>{card.sub}</Typography>}
-            </Box>
-          ))}
+          {summaryLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <Box
+                  key={i}
+                  sx={{ background: "rgba(255,255,255,0.08)", borderRadius: 2, px: 2, py: 1.5, minWidth: 120, flex: "1 1 auto", border: "1px solid rgba(255,255,255,0.1)" }}
+                >
+                  <Box sx={{ width: 70, height: 11, borderRadius: 1, bgcolor: "rgba(255,255,255,0.15)", mb: 1 }} />
+                  <Box sx={{ width: 44, height: 22, borderRadius: 1, bgcolor: "rgba(255,255,255,0.2)" }} />
+                </Box>
+              ))
+            : kpiCards.map((card) => (
+                <Box
+                  key={card.label}
+                  sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1.5, minWidth: 120, flex: "1 1 auto", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.15)" }}
+                >
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                    <Box sx={{ opacity: 0.75, display: "flex", fontSize: 16 }}>{card.icon}</Box>
+                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>{card.label}</Typography>
+                  </Stack>
+                  <Typography variant="h5" fontWeight={800} color="white" lineHeight={1}>{card.value}</Typography>
+                  {card.sub && <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)" }}>{card.sub}</Typography>}
+                </Box>
+              ))}
         </Stack>
       </Box>
 
-      {/* ── Filter Bar ── */}
+      {/* ── Filter Panel ── */}
       <Paper elevation={1} sx={{ borderRadius: 2, mb: 2, overflow: "hidden" }}>
+        {/* Row 1: label + search */}
         <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid", borderColor: "divider", bgcolor: "grey.50" }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <FilterListIcon fontSize="small" color="action" />
-            <Typography variant="body2" fontWeight={700} color="text.secondary">{t("filter", { ns: "common" })}</Typography>
-          </Stack>
-        </Box>
-        <Box sx={{ px: 2.5, py: 2 }}>
-          <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
+              <FilterListIcon fontSize="small" color="action" />
+              <Typography variant="body2" fontWeight={700} color="text.secondary">{t("filter", { ns: "common" })}</Typography>
+            </Stack>
             <TextField
               size="small"
               placeholder={t("search")}
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              sx={{ minWidth: 220 }}
+              sx={{ width: 240 }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -415,75 +465,167 @@ export default function SettlementsScreen() {
                 ),
               }}
             />
+          </Stack>
+        </Box>
 
-            <FormControl size="small" sx={{ minWidth: 110 }}>
-              <InputLabel>{t("year")}</InputLabel>
-              <Select
-                value={selectedYear}
-                label={t("year")}
-                onChange={(e) => setSelectedYear(e.target.value as number)}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <CalendarMonthIcon fontSize="small" color="action" />
-                  </InputAdornment>
-                }
-              >
+        {/* Row 2: Year + Month chips */}
+        <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
+              <CalendarMonthIcon fontSize="small" color="action" />
+              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {t("offers@year")}
+              </Typography>
+              <Stack direction="row" spacing={0.5}>
                 {[currentYear, currentYear - 1, currentYear - 2].map((year) => (
-                  <MenuItem key={year} value={year}>{year}</MenuItem>
+                  <Chip
+                    key={year}
+                    label={year}
+                    size="small"
+                    onClick={() => setSelectedYear(year)}
+                    color={selectedYear === year ? "primary" : "default"}
+                    variant={selectedYear === year ? "filled" : "outlined"}
+                    sx={{ fontWeight: 700 }}
+                  />
                 ))}
-              </Select>
-            </FormControl>
+              </Stack>
+            </Stack>
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>{t("month")}</InputLabel>
-              <Select
-                value={selectedMonth ?? ""}
-                label={t("month")}
-                onChange={(e) => setSelectedMonth((e.target.value as number) || undefined)}
-              >
-                <MenuItem value="">{t("all")}</MenuItem>
-                {monthNames.map((name, i) => (
-                  <MenuItem key={i + 1} value={i + 1}>{name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Divider orientation="vertical" flexItem sx={{ height: 24, alignSelf: "center" }} />
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>{t("status")}</InputLabel>
-              <Select
-                value={statusFilter ?? ""}
-                label={t("status")}
-                onChange={(e) => setStatusFilter((e.target.value as number) || undefined)}
-              >
-                <MenuItem value="">{t("all")}</MenuItem>
-                {[
-                  { value: 1, label: t("pending"), color: "warning.main" },
-                  { value: 2, label: t("invoiced"), color: "info.main" },
-                  { value: 3, label: t("paid"), color: "success.main" },
-                  { value: 4, label: t("disputed"), color: "error.main" },
-                ].map(({ value, label, color }) => (
-                  <MenuItem key={value} value={value}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
-                      <span>{label}</span>
-                    </Stack>
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5, flexShrink: 0 }}>
+              {t("offers@month")}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+              <Chip
+                label={t("all")}
+                size="small"
+                onClick={() => setSelectedMonth(undefined)}
+                color={selectedMonth === undefined ? "primary" : "default"}
+                variant={selectedMonth === undefined ? "filled" : "outlined"}
+                sx={{ fontWeight: 700 }}
+              />
+              {monthAbbr.map((name, i) => (
+                <Chip
+                  key={i + 1}
+                  label={name}
+                  size="small"
+                  onClick={() => setSelectedMonth(i + 1)}
+                  color={selectedMonth === i + 1 ? "primary" : "default"}
+                  variant={selectedMonth === i + 1 ? "filled" : "outlined"}
+                  sx={{ fontWeight: 600 }}
+                />
+              ))}
+            </Box>
+          </Stack>
+        </Box>
+
+        {/* Row 3: Status filter chips with counts */}
+        <Box sx={{ px: 2.5, py: 1.5 }}>
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5, flexShrink: 0 }}>
+              {t("status")}:
+            </Typography>
+            <Chip
+              label={`${t("all")} (${rawData.length})`}
+              size="small"
+              onClick={() => setStatusFilter(undefined)}
+              color={statusFilter === undefined ? "primary" : "default"}
+              variant={statusFilter === undefined ? "filled" : "outlined"}
+              sx={{ fontWeight: 700 }}
+            />
+            {([1, 2, 3, 4] as SettlementStatus[]).map((s) => {
+              const cfg = STATUS_CFG[s];
+              const count = statusCounts[s] ?? 0;
+              return (
+                <Chip
+                  key={s}
+                  label={`${t(`offers@${cfg.label_key}`)} (${count})`}
+                  size="small"
+                  onClick={() => setStatusFilter(statusFilter === s ? undefined : s)}
+                  color={statusFilter === s ? cfg.color : "default"}
+                  variant={statusFilter === s ? "filled" : "outlined"}
+                  sx={{ fontWeight: 600 }}
+                />
+              );
+            })}
           </Stack>
         </Box>
       </Paper>
 
-      <AppDataGrid
-        data={paginatedData}
-        columns={columns}
-        loading={isLoading}
-        disablePagination={false}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        total={data.length}
-      />
+      {/* ── Data Grid Card ── */}
+      <Paper elevation={1} sx={{ borderRadius: 2, overflow: "hidden" }}>
+        {/* Toolbar */}
+        <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid", borderColor: "divider", bgcolor: "grey.50" }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
+              <ReceiptLongIcon fontSize="small" color="action" />
+              <Typography variant="body2" fontWeight={700}>{t("offers@settlements")}</Typography>
+              {!isLoading && (
+                <Chip
+                  label={data.length}
+                  size="small"
+                  sx={{ height: 20, "& .MuiChip-label": { px: 1, fontSize: "0.7rem", fontWeight: 700 } }}
+                />
+              )}
+            </Stack>
+            <Chip
+              icon={<CalendarMonthIcon sx={{ fontSize: "14px !important" }} />}
+              label={periodLabel}
+              size="small"
+              sx={{ bgcolor: "primary.50", color: "primary.dark", fontWeight: 600, border: "1px solid", borderColor: "primary.200" }}
+            />
+          </Stack>
+        </Box>
+
+        {/* Empty state */}
+        {!isLoading && data.length === 0 ? (
+          <Box sx={{ py: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "2px dashed",
+                borderColor: "primary.200",
+              }}
+            >
+              <AccountBalanceIcon sx={{ fontSize: 38, color: "primary.300" }} />
+            </Box>
+            <Box sx={{ textAlign: "center" }}>
+              <Typography variant="h6" fontWeight={700} color="text.secondary" gutterBottom>
+                {t("offers@settlements_emptyTitle")}
+              </Typography>
+              <Typography variant="body2" color="text.disabled" sx={{ maxWidth: 380, mx: "auto" }}>
+                {t("offers@settlements_emptyHint")}
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={() => setGenerateDialogOpen(true)}
+              color="primary"
+              sx={{ mt: 1 }}
+            >
+              {t("offers@settlements_generate")}
+            </Button>
+          </Box>
+        ) : (
+          <AppDataGrid
+            data={paginatedData}
+            columns={columns}
+            loading={isLoading}
+            disablePagination={false}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            total={data.length}
+          />
+        )}
+      </Paper>
 
       {/* ── Detail Dialog ── */}
       <Dialog
@@ -491,10 +633,9 @@ export default function SettlementsScreen() {
         onClose={() => setDetailDialogOpen(false)}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
+        PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" } }}
       >
-        {/* Gradient Header */}
-        <Box sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", p: 3, color: "white", position: "relative", overflow: "hidden" }}>
+        <Box sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           <Box sx={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={2} alignItems="center">
@@ -502,7 +643,7 @@ export default function SettlementsScreen() {
                 <ReceiptLongIcon sx={{ fontSize: 26 }} />
               </Box>
               <Box>
-                <Typography variant="h6" fontWeight={700} color="white">{t("settlementDetails")}</Typography>
+                <Typography variant="h6" fontWeight={700} color="white">{t("offers@settlementDetails")}</Typography>
                 {selectedSettlement && (
                   <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)" }}>
                     {selectedSettlement.providerOwnerName} · {selectedSettlement.periodYear}-{String(selectedSettlement.periodMonth).padStart(2, "0")}
@@ -517,10 +658,10 @@ export default function SettlementsScreen() {
           {selectedSettlement && (
             <Stack direction="row" spacing={1.5} sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
               {[
-                { label: t("totalTransactions"), value: selectedSettlement.totalTransactions },
-                { label: t("totalAmount"), value: `${(selectedSettlement.totalTransactionAmount ?? 0).toFixed(3)} KWD` },
-                { label: t("commission"), value: `${(selectedSettlement.totalCommissionAmount ?? 0).toFixed(3)} KWD` },
-                ...(selectedSettlement.paidAmount != null ? [{ label: t("paidAmount"), value: `${selectedSettlement.paidAmount.toFixed(3)} KWD` }] : []),
+                { label: t("offers@totalTransactions"), value: selectedSettlement.totalTransactions },
+                { label: t("offers@totalAmount"), value: `${(selectedSettlement.totalTransactionAmount ?? 0).toFixed(3)} KWD` },
+                { label: t("offers@commission"), value: `${(selectedSettlement.totalCommissionAmount ?? 0).toFixed(3)} KWD` },
+                ...(selectedSettlement.paidAmount != null ? [{ label: t("offers@paidAmount"), value: `${selectedSettlement.paidAmount.toFixed(3)} KWD` }] : []),
               ].map(({ label, value }) => (
                 <Box key={label} sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 1.5, px: 1.5, py: 1, border: "1px solid rgba(255,255,255,0.15)" }}>
                   <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.7)", display: "block" }}>{label}</Typography>
@@ -531,10 +672,9 @@ export default function SettlementsScreen() {
           )}
         </Box>
 
-        <DialogContent sx={{ p: 3 }}>
+        <DialogContent sx={{ p: 3, overflowY: "auto", flex: 1 }}>
           {selectedSettlement && (
             <Stack spacing={2.5}>
-              {/* Provider info row */}
               <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
                   <Stack direction="row" spacing={1.5} alignItems="center" flex={1}>
@@ -542,10 +682,10 @@ export default function SettlementsScreen() {
                       <StoreIcon />
                     </Avatar>
                     <Box>
-                      <Typography variant="overline" color="text.secondary" lineHeight={1}>{t("provider")}</Typography>
+                      <Typography variant="overline" color="text.secondary" lineHeight={1}>{t("offers@provider")}</Typography>
                       <Typography variant="subtitle1" fontWeight={700}>{selectedSettlement.providerOwnerName}</Typography>
                       <Chip
-                        label={selectedSettlement.providerType === "ChargingPoint" ? t("chargingPoint") : t("serviceProvider")}
+                        label={selectedSettlement.providerType === "ChargingPoint" ? t("offers@chargingPoint") : t("offers@serviceProvider")}
                         size="small"
                         variant="outlined"
                         color={selectedSettlement.providerType === "ChargingPoint" ? "primary" : "secondary"}
@@ -560,15 +700,14 @@ export default function SettlementsScreen() {
                 </Stack>
               </Paper>
 
-              {/* Financial stats */}
               <Grid container spacing={1.5}>
                 {[
-                  { label: t("totalTransactions"), value: selectedSettlement.totalTransactions, icon: <ReceiptLongIcon />, bg: "#e3f2fd", color: "primary.dark" },
-                  { label: t("totalAmount"), value: `${(selectedSettlement.totalTransactionAmount ?? 0).toFixed(3)} KWD`, icon: <AttachMoneyIcon />, bg: "#e8f5e9", color: "success.dark" },
-                  { label: t("commission"), value: `${(selectedSettlement.totalCommissionAmount ?? 0).toFixed(3)} KWD`, icon: <PaymentsIcon />, bg: "#f3e5f5", color: "secondary.dark" },
-                  { label: t("paidAmount"), value: selectedSettlement.paidAmount != null ? `${selectedSettlement.paidAmount.toFixed(3)} KWD` : "—", icon: <AccountBalanceIcon />, bg: "#fff8e1", color: "warning.dark" },
-                  { label: t("pointsAwarded"), value: selectedSettlement.totalPointsAwarded, icon: <StarsIcon />, bg: "#fff3e0", color: "orange" },
-                  { label: t("totalPointsDeducted"), value: selectedSettlement.totalPointsDeducted, icon: <StarsIcon />, bg: "#fce4ec", color: "error.dark" },
+                  { label: t("offers@totalTransactions"), value: selectedSettlement.totalTransactions, icon: <ReceiptLongIcon />, bg: "#e3f2fd", color: "primary.dark" },
+                  { label: t("offers@totalAmount"), value: `${(selectedSettlement.totalTransactionAmount ?? 0).toFixed(3)} KWD`, icon: <AttachMoneyIcon />, bg: "#e8f5e9", color: "success.dark" },
+                  { label: t("offers@commission"), value: `${(selectedSettlement.totalCommissionAmount ?? 0).toFixed(3)} KWD`, icon: <PaymentsIcon />, bg: "#f3e5f5", color: "secondary.dark" },
+                  { label: t("offers@paidAmount"), value: selectedSettlement.paidAmount != null ? `${selectedSettlement.paidAmount.toFixed(3)} KWD` : "—", icon: <AccountBalanceIcon />, bg: "#fff8e1", color: "warning.dark" },
+                  { label: t("offers@pointsAwarded"), value: selectedSettlement.totalPointsAwarded, icon: <StarsIcon />, bg: "#fff3e0", color: "orange" },
+                  { label: t("offers@totalPointsDeducted"), value: selectedSettlement.totalPointsDeducted, icon: <StarsIcon />, bg: "#fce4ec", color: "error.dark" },
                 ].map(({ label, value, icon, bg, color }) => (
                   <Grid size={{ xs: 6, sm: 4 }} key={label}>
                     <Paper elevation={0} sx={{ p: 1.5, bgcolor: bg, borderRadius: 2, height: "100%" }}>
@@ -582,16 +721,15 @@ export default function SettlementsScreen() {
                 ))}
               </Grid>
 
-              {/* Timeline dates */}
               <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
                 <Typography variant="overline" color="text.secondary" fontWeight={700} display="block" sx={{ mb: 1.5 }}>
-                  {t("settlements_timeline")}
+                  {t("offers@settlements_timeline")}
                 </Typography>
                 <Grid container spacing={1.5}>
                   {[
-                    { label: t("createdAt"), value: formatDate(selectedSettlement.createdAt) },
-                    { label: t("invoicedAt"), value: formatDate(selectedSettlement.invoicedAt) },
-                    { label: t("paidAt"), value: formatDate(selectedSettlement.paidAt) },
+                    { label: t("offers@createdAt"), value: formatDate(selectedSettlement.createdAt) },
+                    { label: t("offers@invoicedAt"), value: formatDate(selectedSettlement.invoicedAt) },
+                    { label: t("offers@paidAt"), value: formatDate(selectedSettlement.paidAt) },
                   ].map(({ label, value }) => (
                     <Grid size={{ xs: 12, sm: 4 }} key={label}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -606,18 +744,17 @@ export default function SettlementsScreen() {
                 </Grid>
               </Paper>
 
-              {/* Admin Note */}
               {selectedSettlement.adminNote && (
                 <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, borderLeft: "4px solid", borderColor: "warning.main" }}>
-                  <Typography variant="overline" color="warning.dark" fontWeight={700} display="block" sx={{ mb: 0.5 }}>{t("adminNote")}</Typography>
+                  <Typography variant="overline" color="warning.dark" fontWeight={700} display="block" sx={{ mb: 0.5 }}>{t("offers@adminNote")}</Typography>
                   <Typography variant="body2">{selectedSettlement.adminNote}</Typography>
                 </Paper>
               )}
             </Stack>
           )}
         </DialogContent>
-        <Divider />
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Divider sx={{ flexShrink: 0 }} />
+        <DialogActions sx={{ px: 3, py: 2, gap: 1, flexShrink: 0 }}>
           {selectedSettlement && selectedSettlement.settlementStatus !== 3 && (
             <Button
               variant="contained"
@@ -625,7 +762,7 @@ export default function SettlementsScreen() {
               onClick={(e) => { setDetailDialogOpen(false); handleUpdateStatusClick(e, selectedSettlement); }}
               sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)", fontWeight: 700 }}
             >
-              {t("updateStatus")}
+              {t("offers@updateStatus")}
             </Button>
           )}
           <Button onClick={() => setDetailDialogOpen(false)} size="large" variant="outlined">
@@ -648,7 +785,7 @@ export default function SettlementsScreen() {
               <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <EditIcon />
               </Box>
-              <Typography variant="h6" fontWeight={700} color="white">{t("updateSettlementStatus")}</Typography>
+              <Typography variant="h6" fontWeight={700} color="white">{t("offers@updateSettlementStatus")}</Typography>
             </Stack>
             <IconButton size="small" onClick={() => setStatusDialogOpen(false)} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white" } }}>
               <CloseIcon />
@@ -659,21 +796,21 @@ export default function SettlementsScreen() {
         <DialogContent>
           <Stack spacing={2.5} sx={{ mt: 2 }}>
             <FormControl fullWidth>
-              <InputLabel>{t("newStatus")}</InputLabel>
+              <InputLabel>{t("offers@newStatus")}</InputLabel>
               <Select
                 value={newStatus}
-                label={t("newStatus")}
+                label={t("offers@newStatus")}
                 onChange={(e) => setNewStatus(e.target.value as SettlementStatus)}
               >
-                <MenuItem value={2}>{t("invoiced")}</MenuItem>
-                <MenuItem value={3}>{t("paid")}</MenuItem>
-                <MenuItem value={4}>{t("disputed")}</MenuItem>
+                <MenuItem value={2}>{t("offers@invoiced")}</MenuItem>
+                <MenuItem value={3}>{t("offers@paid")}</MenuItem>
+                <MenuItem value={4}>{t("offers@disputed")}</MenuItem>
               </Select>
             </FormControl>
 
             {newStatus === 3 && (
               <TextField
-                label={t("paidAmount")}
+                label={t("offers@paidAmount")}
                 type="number"
                 value={paidAmount}
                 onChange={(e) => setPaidAmount(e.target.value)}
@@ -683,7 +820,7 @@ export default function SettlementsScreen() {
             )}
 
             <TextField
-              label={t("note")}
+              label={t("offers@note")}
               value={adminNote}
               onChange={(e) => setAdminNote(e.target.value)}
               multiline
@@ -738,10 +875,10 @@ export default function SettlementsScreen() {
         <DialogContent>
           <Stack spacing={2.5} sx={{ mt: 2 }}>
             <FormControl fullWidth>
-              <InputLabel>{t("year")}</InputLabel>
+              <InputLabel>{t("offers@year")}</InputLabel>
               <Select
                 value={generateYear}
-                label={t("year")}
+                label={t("offers@year")}
                 onChange={(e) => setGenerateYear(Number(e.target.value))}
               >
                 {[currentYear, currentYear - 1, currentYear - 2].map((y) => (
@@ -751,10 +888,10 @@ export default function SettlementsScreen() {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>{t("month")}</InputLabel>
+              <InputLabel>{t("offers@month")}</InputLabel>
               <Select
                 value={generateMonth}
-                label={t("month")}
+                label={t("offers@month")}
                 onChange={(e) => setGenerateMonth(Number(e.target.value))}
               >
                 {monthNames.map((name, i) => (
@@ -763,8 +900,8 @@ export default function SettlementsScreen() {
               </Select>
             </FormControl>
 
-            <Paper elevation={0} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
-              <Typography variant="body2" color="info.dark">
+            <Paper elevation={0} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
+              <Typography variant="body2" color="success.dark">
                 {t("offers@settlements_generateHint")}
               </Typography>
             </Paper>
