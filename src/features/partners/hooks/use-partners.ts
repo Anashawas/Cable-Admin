@@ -5,15 +5,15 @@ import {
   updatePartnerAgreement,
   deactivatePartnerAgreement,
   getProviderBalance,
-  recordProviderPayment,
   setCreditLimit,
 } from "../services/partners-service";
+import { addWalletDeposit } from "../../offers/services/offers-service";
 import type {
   CreatePartnerAgreementRequest,
   UpdatePartnerAgreementRequest,
-  RecordProviderPaymentRequest,
   SetCreditLimitRequest,
 } from "../types/api";
+import type { AddWalletDepositRequest } from "../../offers/types/api";
 
 export const PARTNERS_QUERY_KEY = ["partners", "agreements"];
 
@@ -74,14 +74,17 @@ export function useProviderBalance(providerType: string | null, providerId: numb
   });
 }
 
-export function useRecordProviderPayment() {
+export function usePartnerWalletDeposit() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: RecordProviderPaymentRequest) => recordProviderPayment(body),
+    mutationFn: (body: AddWalletDepositRequest) => addWalletDeposit(body),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
         queryKey: PROVIDER_BALANCE_QUERY_KEY(vars.providerType, vars.providerId),
       });
+      queryClient.invalidateQueries({ queryKey: ["wallet-balance", vars.providerType, vars.providerId] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-history", vars.providerType, vars.providerId] });
+      queryClient.invalidateQueries({ queryKey: ["settlements"] });
     },
   });
 }
@@ -94,6 +97,7 @@ export function useSetCreditLimit() {
       queryClient.invalidateQueries({
         queryKey: PROVIDER_BALANCE_QUERY_KEY(vars.providerType, vars.providerId),
       });
+      queryClient.invalidateQueries({ queryKey: ["wallet-balance", vars.providerType, vars.providerId] });
     },
   });
 }

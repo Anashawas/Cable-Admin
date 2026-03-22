@@ -24,6 +24,13 @@ import {
   Tab,
   Tabs,
   Badge,
+  Grid,
+  Select,
+  FormControl,
+  InputLabel,
+  FormControlLabel,
+  Checkbox,
+  DialogTitle,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
@@ -40,13 +47,22 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PersonIcon from "@mui/icons-material/Person";
 import StoreIcon from "@mui/icons-material/Store";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import AddIcon from "@mui/icons-material/Add";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import LockIcon from "@mui/icons-material/Lock";
+import PublicIcon from "@mui/icons-material/Public";
+import LocationCityIcon from "@mui/icons-material/LocationCity";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
-import { getUsersList, deleteUserById, updateUserProfile, getUserById } from "../services/user-service";
-import type { UserSummaryDto } from "../types/api";
+import { getUsersList, deleteUserById, updateUserProfile, getUserById, createUser } from "../services/user-service";
+import type { UserSummaryDto, CreateUserRequest } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 import { useCarTypeStats } from "../hooks/use-user-stats";
-import { PROVIDER_ROLE_ID } from "../constants/roles";
+import { PROVIDER_ROLE_ID, DEFAULT_ROLES } from "../constants/roles";
 
 const isAdmin    = (u: { role?: { id?: number } }) => u.role?.id === 2;
 const isUser     = (u: { role?: { id?: number } }) => u.role?.id === 3;
@@ -81,6 +97,16 @@ export default function UserListScreen() {
   const [userToChangeRole, setUserToChangeRole] = useState<UserSummaryDto | null>(null);
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [newUserForm, setNewUserForm] = useState<CreateUserRequest>({
+    name: "",
+    email: "",
+    password: "",
+    roleId: 3,
+    country: "",
+    city: "",
+  });
 
   const { data = [], isLoading, error, refetch } = useQuery({
     queryKey: ["users", "list"],
@@ -134,6 +160,41 @@ export default function UserListScreen() {
     },
     onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
+
+  const createUserMutation = useMutation({
+    mutationFn: (data: CreateUserRequest) => createUser(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+      openSuccessSnackbar({ message: t("userManagement@userCreated") });
+      setAddUserDialogOpen(false);
+      setNewUserForm({ name: "", email: "", password: "", roleId: 3, country: "", city: "" });
+      setShowPassword(false);
+    },
+    onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+  });
+
+  const handleCreateUserSubmit = useCallback(() => {
+    if (!newUserForm.name?.trim()) {
+      openErrorSnackbar({ message: t("userManagement@nameRequired") });
+      return;
+    }
+    if (!newUserForm.email?.trim()) {
+      openErrorSnackbar({ message: t("userManagement@emailRequired") });
+      return;
+    }
+    if (!newUserForm.password || newUserForm.password.length < 6) {
+      openErrorSnackbar({ message: t("userManagement@passwordMinLength") });
+      return;
+    }
+    createUserMutation.mutate({
+      ...newUserForm,
+      name: newUserForm.name?.trim() || null,
+      email: newUserForm.email?.trim() || null,
+      password: newUserForm.password?.trim() || null,
+      country: newUserForm.country?.trim() || null,
+      city: newUserForm.city?.trim() || null,
+    });
+  }, [newUserForm, createUserMutation, openErrorSnackbar, t]);
 
   const filteredData = useMemo(() => {
     let result = data;
@@ -350,14 +411,31 @@ export default function UserListScreen() {
                   </Typography>
                 </Box>
               </Stack>
-              <Tooltip title={t("refresh")}>
-                <IconButton
-                  onClick={() => refetch()}
-                  sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "#fff", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}
+              <Stack direction="row" spacing={1.5}>
+                <Button
+                  variant="contained"
+                  startIcon={<PersonAddIcon />}
+                  onClick={() => setAddUserDialogOpen(true)}
+                  sx={{
+                    background: "rgba(255,255,255,0.2)",
+                    backdropFilter: "blur(10px)",
+                    color: "white",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    fontWeight: 600,
+                    "&:hover": { background: "rgba(255,255,255,0.3)" },
+                  }}
                 >
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
+                  {t("userManagement@addUser")}
+                </Button>
+                <Tooltip title={t("refresh")}>
+                  <IconButton
+                    onClick={() => refetch()}
+                    sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "#fff", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
             </Stack>
 
             {/* Clickable KPI cards */}
@@ -593,6 +671,143 @@ export default function UserListScreen() {
           <Button onClick={handleConfirmBulkDelete} color="error" variant="contained" size="large" disabled={deleteMutation.isPending}
             startIcon={deleteMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}>
             {t("delete")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ══ Add User Dialog ══ */}
+      <Dialog
+        open={addUserDialogOpen}
+        onClose={() => { if (!createUserMutation.isPending) setAddUserDialogOpen(false); }}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
+      >
+        <Box sx={{
+          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          px: 3, py: 2.5,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box sx={{ width: 48, height: 48, borderRadius: 2, background: "rgba(255,255,255,0.18)", border: "1.5px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <PersonAddIcon sx={{ color: "white", fontSize: 26 }} />
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight={700} color="white">{t("userManagement@addUser")}</Typography>
+              <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("userManagement@addUserSubtitle")}</Typography>
+            </Box>
+          </Stack>
+        </Box>
+
+        <DialogContent sx={{ pt: 3, pb: 1 }}>
+          <Stack spacing={2.5}>
+            {/* Name */}
+            <TextField
+              label={`${t("userManagement@form.name")} *`}
+              value={newUserForm.name}
+              onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+              fullWidth
+              autoFocus
+              InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+
+            {/* Email */}
+            <TextField
+              label={`${t("userManagement@form.email")} *`}
+              type="email"
+              value={newUserForm.email}
+              onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+              fullWidth
+              InputProps={{ startAdornment: <InputAdornment position="start"><EmailIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+
+            {/* Password */}
+            <TextField
+              label={`${t("userManagement@form.password")} *`}
+              type={showPassword ? "text" : "password"}
+              value={newUserForm.password}
+              onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+              fullWidth
+              helperText={t("userManagement@form.passwordHint")}
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><LockIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment>,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
+                      {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+
+            {/* Role */}
+            <FormControl fullWidth>
+              <InputLabel>{t("userManagement@form.role")} *</InputLabel>
+              <Select
+                value={newUserForm.roleId}
+                label={`${t("userManagement@form.role")} *`}
+                onChange={(e) => setNewUserForm({ ...newUserForm, roleId: e.target.value as number })}
+                sx={{ borderRadius: 2 }}
+              >
+                {DEFAULT_ROLES.map((role) => (
+                  <MenuItem key={role.id} value={role.id}>{role.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Country + City */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label={t("userManagement@form.country")}
+                  value={newUserForm.country ?? ""}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, country: e.target.value })}
+                  fullWidth
+                  InputProps={{ startAdornment: <InputAdornment position="start"><PublicIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label={t("userManagement@form.city")}
+                  value={newUserForm.city ?? ""}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, city: e.target.value })}
+                  fullWidth
+                  InputProps={{ startAdornment: <InputAdornment position="start"><LocationCityIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                />
+              </Grid>
+            </Grid>
+          </Stack>
+        </DialogContent>
+
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button
+            onClick={() => setAddUserDialogOpen(false)}
+            disabled={createUserMutation.isPending}
+            color="inherit"
+            variant="outlined"
+            sx={{ borderRadius: 2, minWidth: 100 }}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            onClick={handleCreateUserSubmit}
+            variant="contained"
+            disabled={createUserMutation.isPending}
+            startIcon={createUserMutation.isPending ? <CircularProgress size={18} color="inherit" /> : <PersonAddIcon />}
+            sx={{
+              borderRadius: 2, minWidth: 160,
+              background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+              "&:hover": { background: "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)" },
+            }}
+          >
+            {createUserMutation.isPending ? t("creating") : t("userManagement@createUser")}
           </Button>
         </DialogActions>
       </Dialog>

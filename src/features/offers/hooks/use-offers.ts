@@ -10,6 +10,7 @@ import {
   updateOffer,
   deactivateOffer,
   createOffer,
+  uploadOfferImage,
 } from "../services/offers-service";
 import type {
   OfferDto,
@@ -229,6 +230,19 @@ export function useCreateOffer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PENDING_OFFERS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: OFFERS_QUERY_KEY });
+    },
+  });
+}
+
+export function useUploadOfferImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) =>
+      uploadOfferImage(id, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: OFFERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: PENDING_OFFERS_QUERY_KEY });
     },
   });
 }

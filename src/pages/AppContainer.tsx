@@ -30,12 +30,14 @@ const SendNotificationScreen = lazy(() => import("../features/notifications/comp
 const EmergencyServicesScreen = lazy(() => import("../features/system/components/EmergencyServicesScreen"));
 const ServiceCategoriesScreen = lazy(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
 const ServiceProvidersScreen = lazy(() => import("../features/service-providers/components/ServiceProvidersScreen"));
+const AddServiceProviderScreen = lazy(() => import("../features/service-providers/components/AddServiceProviderScreen"));
 const ConversionRatesScreen = lazy(() => import("../features/offers/components/ConversionRatesScreen"));
 const PendingOffersScreen = lazy(() => import("../features/offers/components/PendingOffersScreen"));
 const ActiveOffersScreen = lazy(() => import("../features/offers/components/ActiveOffersScreen"));
 const OffersScreen = lazy(() => import("../features/offers/components/OffersScreen"));
 const TransactionsScreen = lazy(() => import("../features/offers/components/TransactionsScreen"));
 const SettlementsScreen = lazy(() => import("../features/offers/components/SettlementsScreen"));
+const ProviderSettlementsScreen = lazy(() => import("../features/offers/components/ProviderSettlementsScreen"));
 const PartnersScreen = lazy(() => import("../features/partners/components/PartnersScreen"));
 const LoyaltyManagementScreen = lazy(() => import("../features/loyalty/components/LoyaltyManagementScreen"));
 const RedemptionsScreen = lazy(() => import("../features/loyalty/components/RedemptionsScreen"));
@@ -248,6 +250,16 @@ function AppContainer() {
             }
           />
           <Route
+            path="/service-providers/add"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <AddServiceProviderScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/conversion-rates"
             element={
               <ProtectedRoute isAllowed={!!user}>
@@ -303,6 +315,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <SettlementsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/provider-settlements"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ProviderSettlementsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

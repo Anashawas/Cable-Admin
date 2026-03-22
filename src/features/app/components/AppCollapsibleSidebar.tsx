@@ -144,6 +144,7 @@ const AppCollapsibleSidebar = () => {
 				{ label: t("loyaltyManagement"), path: "/loyalty-management", icon: <ManageAccountsIcon /> },
 				{ label: t("redemptions"), path: "/redemptions", icon: <RedeemIcon /> },
 				{ label: t("pointAdjustments"), path: "/point-adjustments", icon: <AccountBalanceWalletIcon /> },
+				{ label: t("blockUsers"), path: "/block-users", icon: <BlockIcon /> },
 			],
 		},
 		{

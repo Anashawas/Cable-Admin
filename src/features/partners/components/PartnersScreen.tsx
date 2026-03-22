@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -27,6 +28,7 @@ import {
   Avatar,
   Skeleton,
   Grid,
+  InputAdornment,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -34,7 +36,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import BlockIcon from "@mui/icons-material/Block";
 import HandshakeIcon from "@mui/icons-material/Handshake";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PaymentIcon from "@mui/icons-material/Payment";
 import CreditScoreIcon from "@mui/icons-material/CreditScore";
 import CloseIcon from "@mui/icons-material/Close";
@@ -42,6 +44,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import StoreIcon from "@mui/icons-material/Store";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import HistoryIcon from "@mui/icons-material/History";
 import { useQuery } from "@tanstack/react-query";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid } from "../../../components";
@@ -52,7 +55,7 @@ import {
   useUpdatePartnerAgreement,
   useDeactivatePartnerAgreement,
   useProviderBalance,
-  useRecordProviderPayment,
+  usePartnerWalletDeposit,
   useSetCreditLimit,
 } from "../hooks/use-partners";
 import type {
@@ -60,12 +63,14 @@ import type {
   PartnerProviderType,
   CreatePartnerAgreementRequest,
 } from "../types/api";
+import type { WalletTransactionType } from "../../offers/types/api";
 import { getAllConversionRates } from "../../offers/services/offers-service";
 import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 
 export default function PartnersScreen() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -78,8 +83,9 @@ export default function PartnersScreen() {
   const [editing, setEditing] = useState<PartnerAgreementDto | null>(null);
   const [deactivateId, setDeactivateId] = useState<number | null>(null);
   const [balanceTarget, setBalanceTarget] = useState<PartnerAgreementDto | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<string>("");
-  const [paymentNote, setPaymentNote] = useState<string>("");
+  const [walletAmount, setWalletAmount] = useState<string>("");
+  const [walletNote, setWalletNote] = useState<string>("");
+  const [walletType, setWalletType] = useState<WalletTransactionType>(1);
   const [creditLimitValue, setCreditLimitValue] = useState<string>("");
   const [creditLimitUnlimited, setCreditLimitUnlimited] = useState<boolean>(false);
   const [formData, setFormData] = useState<CreatePartnerAgreementRequest>({
@@ -87,7 +93,8 @@ export default function PartnersScreen() {
     providerId: 0,
     commissionPercentage: 10,
     pointsRewardPercentage: 5,
-    codeExpiryMinutes: 30,
+    codeExpirySeconds: 60,
+    minimumTransactionAmount: null,
     isActive: true,
     note: "",
   });
@@ -98,7 +105,7 @@ export default function PartnersScreen() {
   const createMutation = useCreatePartnerAgreement();
   const updateMutation = useUpdatePartnerAgreement();
   const deactivateMutation = useDeactivatePartnerAgreement();
-  const recordPaymentMutation = useRecordProviderPayment();
+  const walletDepositMutation = usePartnerWalletDeposit();
   const setCreditLimitMutation = useSetCreditLimit();
   const { data: balanceData, isLoading: isLoadingBalance, refetch: refetchBalance } = useProviderBalance(
     balanceTarget?.providerType ?? null,
@@ -138,7 +145,8 @@ export default function PartnersScreen() {
       commissionPercentage: 10,
       pointsRewardPercentage: 5,
       pointsConversionRateId: conversionRates[0]?.id ?? null,
-      codeExpiryMinutes: 30,
+      codeExpirySeconds: 60,
+      minimumTransactionAmount: null,
       isActive: true,
       note: "",
     });
@@ -153,7 +161,8 @@ export default function PartnersScreen() {
       commissionPercentage: row.commissionPercentage,
       pointsRewardPercentage: row.pointsRewardPercentage,
       pointsConversionRateId: row.pointsConversionRateId ?? null,
-      codeExpiryMinutes: row.codeExpiryMinutes,
+      codeExpirySeconds: row.codeExpirySeconds,
+      minimumTransactionAmount: row.minimumTransactionAmount ?? null,
       isActive: row.isActive,
       note: row.note ?? "",
     });
@@ -173,7 +182,8 @@ export default function PartnersScreen() {
             commissionPercentage: formData.commissionPercentage,
             pointsRewardPercentage: formData.pointsRewardPercentage,
             pointsConversionRateId: formData.pointsConversionRateId,
-            codeExpiryMinutes: formData.codeExpiryMinutes,
+            codeExpirySeconds: formData.codeExpirySeconds,
+            minimumTransactionAmount: formData.minimumTransactionAmount || null,
             isActive: formData.isActive,
             note: formData.note || null,
           },
@@ -210,27 +220,28 @@ export default function PartnersScreen() {
 
   const handleOpenBalance = useCallback((row: PartnerAgreementDto) => {
     setBalanceTarget(row);
-    setPaymentAmount("");
-    setPaymentNote("");
+    setWalletAmount("");
+    setWalletNote("");
+    setWalletType(1);
     setCreditLimitValue("");
     setCreditLimitUnlimited(false);
   }, []);
 
-  const handleRecordPayment = useCallback(() => {
+  const handleWalletDeposit = useCallback(() => {
     if (!balanceTarget) return;
-    const amount = parseFloat(paymentAmount);
+    const amount = parseFloat(walletAmount);
     if (isNaN(amount) || amount <= 0) {
       openErrorSnackbar({ message: t("partners@invalidAmount") });
       return;
     }
-    recordPaymentMutation.mutate(
-      { providerType: balanceTarget.providerType, providerId: balanceTarget.providerId, amount, note: paymentNote || null },
+    walletDepositMutation.mutate(
+      { providerType: balanceTarget.providerType, providerId: balanceTarget.providerId, amount, transactionType: walletType, note: walletNote || undefined },
       {
-        onSuccess: () => { openSuccessSnackbar({ message: t("partners@paymentRecorded") }); setPaymentAmount(""); setPaymentNote(""); },
+        onSuccess: () => { openSuccessSnackbar({ message: t("partners@walletDepositSuccess") }); setWalletAmount(""); setWalletNote(""); },
         onError: (e: Error) => openErrorSnackbar({ message: e?.message ?? t("loadingFailed") }),
       }
     );
-  }, [balanceTarget, paymentAmount, paymentNote, recordPaymentMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+  }, [balanceTarget, walletAmount, walletType, walletNote, walletDepositMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
   const handleSetCreditLimit = useCallback(() => {
     if (!balanceTarget) return;
@@ -333,7 +344,7 @@ export default function PartnersScreen() {
       ),
     },
     {
-      field: "codeExpiryMinutes",
+      field: "codeExpirySeconds",
       headerName: t("partners@codeExpiry"),
       width: 110,
       align: "center",
@@ -341,8 +352,22 @@ export default function PartnersScreen() {
       renderCell: (params) => (
         <Box sx={{ textAlign: "center" }}>
           <Typography variant="body2" fontWeight={700}>{params.value}</Typography>
-          <Typography variant="caption" color="text.secondary">{t("minutes")}</Typography>
+          <Typography variant="caption" color="text.secondary">{t("seconds")}</Typography>
         </Box>
+      ),
+    },
+    {
+      field: "minimumTransactionAmount",
+      headerName: t("partners@minimumAmount"),
+      width: 120,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        params.value ? (
+          <Typography variant="body2" fontWeight={700}>{params.value.toFixed(3)} <Typography component="span" variant="caption" color="text.secondary">JOD</Typography></Typography>
+        ) : (
+          <Typography variant="caption" color="text.disabled">—</Typography>
+        )
       ),
     },
     {
@@ -364,15 +389,20 @@ export default function PartnersScreen() {
     {
       field: "actions",
       headerName: t("actions"),
-      width: 120,
+      width: 160,
       align: "center",
       headerAlign: "center",
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={0.5} justifyContent="center">
+          <Tooltip title={t("partners@settlementHistory")}>
+            <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); navigate(`/provider-settlements?providerType=${params.row.providerType}&providerId=${params.row.providerId}&name=${encodeURIComponent(params.row.providerName ?? params.row.providerId)}`); }}>
+              <HistoryIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={t("partners@creditBalance")}>
             <IconButton size="small" color="info" onClick={(e) => { e.stopPropagation(); handleOpenBalance(params.row); }}>
-              <AccountBalanceIcon fontSize="small" />
+              <AccountBalanceWalletIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title={t("edit")}>
@@ -645,14 +675,29 @@ export default function PartnersScreen() {
               size="small"
               label={t("partners@codeExpiry")}
               type="number"
-              value={formData.codeExpiryMinutes}
+              value={formData.codeExpirySeconds}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  codeExpiryMinutes: parseInt(e.target.value, 10) || 30,
+                  codeExpirySeconds: parseInt(e.target.value, 10) || 60,
                 })
               }
-              helperText={t("minutes")}
+              helperText={t("seconds")}
+            />
+            <TextField
+              size="small"
+              label={t("partners@minimumAmount")}
+              type="number"
+              value={formData.minimumTransactionAmount ?? ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  minimumTransactionAmount: e.target.value ? parseFloat(e.target.value) : null,
+                })
+              }
+              helperText={t("partners@minimumAmountHint")}
+              InputProps={{ endAdornment: <InputAdornment position="end">JOD</InputAdornment> }}
+              inputProps={{ min: 0, step: 0.001 }}
             />
             {editing && (
               <FormControlLabel
@@ -734,7 +779,7 @@ export default function PartnersScreen() {
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <AccountBalanceIcon />
+                <AccountBalanceWalletIcon />
               </Box>
               <Box>
                 <Typography variant="h6" fontWeight={700} color="white">{t("partners@creditBalance")}</Typography>
@@ -768,9 +813,9 @@ export default function PartnersScreen() {
               <Box sx={{ p: 2.5 }}>
                 <Grid container spacing={1.5}>
                   {[
-                    { label: t("partners@creditLimit"), value: balanceData.creditLimit == null ? "∞" : `${balanceData.creditLimit.toFixed(3)} KWD`, color: "primary.main", bg: "#e3f2fd" },
-                    { label: t("partners@currentBalance"), value: `${balanceData.currentBalance.toFixed(3)} KWD`, color: balanceData.currentBalance < 0 ? "error.main" : "success.main", bg: balanceData.currentBalance < 0 ? "#ffebee" : "#e8f5e9" },
-                    { label: t("partners@availableCredit"), value: balanceData.availableCredit == null ? "∞" : `${balanceData.availableCredit.toFixed(3)} KWD`, color: balanceData.availableCredit != null && balanceData.availableCredit < 0 ? "error.main" : "success.main", bg: "#f3e5f5" },
+                    { label: t("partners@walletBalance"), value: `${balanceData.walletBalance.toFixed(3)} JOD`, color: balanceData.walletBalance < 0 ? "error.main" : "success.main", bg: balanceData.walletBalance < 0 ? "#ffebee" : "#e8f5e9" },
+                    { label: t("partners@creditLimit"), value: balanceData.walletCreditLimit == null ? `∞ (${t("partners@unlimited")})` : `${balanceData.walletCreditLimit.toFixed(3)} JOD`, color: "primary.main", bg: "#e3f2fd" },
+                    { label: t("partners@availableCredit"), value: balanceData.availableCredit == null ? "∞" : `${balanceData.availableCredit.toFixed(3)} JOD`, color: balanceData.availableCredit != null && balanceData.availableCredit <= 0 ? "error.main" : "success.main", bg: "#f3e5f5" },
                   ].map(({ label, value, color, bg }) => (
                     <Grid size={{ xs: 4 }} key={label}>
                       <Paper elevation={0} sx={{ p: 1.5, bgcolor: bg, borderRadius: 2, textAlign: "center" }}>
@@ -800,7 +845,7 @@ export default function PartnersScreen() {
                     disabled={creditLimitUnlimited}
                     sx={{ flex: 1 }}
                     inputProps={{ min: 0, step: 0.001 }}
-                    helperText="KWD"
+                    helperText="JOD"
                   />
                   <FormControlLabel
                     control={<Switch checked={creditLimitUnlimited} onChange={(e) => setCreditLimitUnlimited(e.target.checked)} size="small" />}
@@ -822,71 +867,106 @@ export default function PartnersScreen() {
 
               <Divider />
 
-              {/* Record Payment */}
+              {/* Add Wallet Deposit */}
               <Box sx={{ p: 2.5 }}>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
                   <PaymentIcon fontSize="small" color="success" />
-                  <Typography variant="subtitle2" fontWeight={700}>{t("partners@recordPayment")}</Typography>
+                  <Typography variant="subtitle2" fontWeight={700}>{t("partners@addWalletDeposit")}</Typography>
                 </Stack>
                 <Stack spacing={1.5}>
+                  {/* Type selector */}
+                  <Stack direction="row" spacing={1}>
+                    {([
+                      { value: 1 as WalletTransactionType, label: t("partners@deposit"), color: "success" as const },
+                      { value: 3 as WalletTransactionType, label: t("partners@refund"), color: "warning" as const },
+                      { value: 4 as WalletTransactionType, label: t("partners@adjustment"), color: "error" as const },
+                    ]).map((opt) => (
+                      <Button
+                        key={opt.value}
+                        size="small"
+                        variant={walletType === opt.value ? "contained" : "outlined"}
+                        color={opt.color}
+                        onClick={() => setWalletType(opt.value)}
+                        sx={{ flex: 1, fontWeight: 700, borderRadius: 1.5, textTransform: "none" }}
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </Stack>
                   <Stack direction="row" spacing={1}>
                     <TextField
                       size="small"
                       label={t("partners@amount")}
                       type="number"
-                      value={paymentAmount}
-                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      value={walletAmount}
+                      onChange={(e) => setWalletAmount(e.target.value)}
                       sx={{ flex: 1 }}
                       inputProps={{ min: 0.001, step: 0.001 }}
-                      helperText="KWD"
+                      helperText="JOD"
                     />
                     <Button
                       variant="contained"
-                      color="success"
                       size="small"
-                      onClick={handleRecordPayment}
-                      disabled={recordPaymentMutation.isPending || !paymentAmount}
+                      onClick={handleWalletDeposit}
+                      disabled={walletDepositMutation.isPending || !walletAmount || parseFloat(walletAmount) <= 0}
                       sx={{ mt: 0.5, whiteSpace: "nowrap" }}
-                      startIcon={recordPaymentMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
+                      startIcon={walletDepositMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
                     >
-                      {t("partners@record")}
+                      {t("partners@addDeposit")}
                     </Button>
                   </Stack>
                   <TextField
                     size="small"
-                    label={t("partners@paymentNote")}
-                    value={paymentNote}
-                    onChange={(e) => setPaymentNote(e.target.value)}
-                    placeholder={t("partners@paymentNotePlaceholder")}
+                    label={t("partners@walletNote")}
+                    value={walletNote}
+                    onChange={(e) => setWalletNote(e.target.value)}
+                    placeholder={t("partners@walletNotePlaceholder")}
                     fullWidth
                   />
                 </Stack>
               </Box>
 
-              {/* Recent Payments */}
-              {balanceData.recentPayments.length > 0 && (
+              {/* Wallet Transactions */}
+              {balanceData.walletTransactions && balanceData.walletTransactions.length > 0 && (
                 <>
                   <Divider />
                   <Box sx={{ p: 2.5 }}>
-                    <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>{t("partners@recentPayments")}</Typography>
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>{t("partners@walletTransactions")}</Typography>
                     <List dense disablePadding>
-                      {balanceData.recentPayments.map((p) => (
-                        <ListItem
-                          key={p.id}
-                          disableGutters
-                          sx={{ py: 0.75, borderBottom: "1px solid", borderColor: "divider", "&:last-child": { border: 0 } }}
-                          secondaryAction={
-                            <Chip label={`+${p.amount.toFixed(3)} KWD`} size="small" color="success" variant="filled" sx={{ fontWeight: 700 }} />
-                          }
-                        >
-                          <ListItemText
-                            primary={p.note ?? "—"}
-                            secondary={`${p.recordedByUserName ?? "Admin"} · ${new Date(p.createdAt).toLocaleDateString()}`}
-                            primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
-                            secondaryTypographyProps={{ variant: "caption" }}
-                          />
-                        </ListItem>
-                      ))}
+                      {balanceData.walletTransactions.map((tx) => {
+                        const isDeduction = tx.transactionType === 2 || tx.transactionType === 5;
+                        const typeLabels: Record<number, string> = {
+                          1: t("partners@deposit"),
+                          2: t("partners@settlementDeduction"),
+                          3: t("partners@refund"),
+                          4: t("partners@adjustment"),
+                          5: t("partners@commissionDeduction"),
+                          6: t("partners@commissionRefund"),
+                        };
+                        return (
+                          <ListItem
+                            key={tx.id}
+                            disableGutters
+                            sx={{ py: 0.75, borderBottom: "1px solid", borderColor: "divider", "&:last-child": { border: 0 } }}
+                            secondaryAction={
+                              <Chip
+                                label={`${isDeduction ? "−" : "+"}${tx.amount.toFixed(3)} JOD`}
+                                size="small"
+                                color={isDeduction ? "error" : "success"}
+                                variant="filled"
+                                sx={{ fontWeight: 700 }}
+                              />
+                            }
+                          >
+                            <ListItemText
+                              primary={typeLabels[tx.transactionType] ?? t("partners@unknown")}
+                              secondary={`${tx.createdByUserName ?? "System"} · ${new Date(tx.createdAt).toLocaleDateString()}${tx.note ? ` · ${tx.note}` : ""}`}
+                              primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+                              secondaryTypographyProps={{ variant: "caption" }}
+                            />
+                          </ListItem>
+                        );
+                      })}
                     </List>
                   </Box>
                 </>

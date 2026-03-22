@@ -150,7 +150,7 @@ export default function TransactionsScreen() {
       expired: all.filter((t) => t.status === 4).length,
       totalPts: all.reduce((s, t) => s + (t.pointsDeducted ?? 0), 0),
       totalAmount: all.reduce((s, t) => s + (t.monetaryValue ?? 0), 0),
-      currency: all[0]?.currencyCode ?? "KWD",
+      currency: all[0]?.currencyCode ?? "JOD",
     };
   }, [data]);
 

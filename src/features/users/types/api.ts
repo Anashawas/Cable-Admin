@@ -54,6 +54,16 @@ export interface UserDetailDto {
   userCars: UserCarDto[];
 }
 
+/** Payload for POST api/users/AddUser. Phone is managed via verify-phone endpoints. */
+export interface CreateUserRequest {
+  name: string | null;
+  email: string | null;
+  password: string | null;
+  roleId: number;
+  country?: string | null;
+  city?: string | null;
+}
+
 /** Payload for PUT api/users/{id}. No password. */
 export interface UpdateUserRequestSpec {
   name: string;

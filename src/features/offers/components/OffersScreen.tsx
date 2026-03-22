@@ -52,6 +52,8 @@ import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import PersonIcon from "@mui/icons-material/Person";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
@@ -62,6 +64,7 @@ import {
   useRejectOffer,
   useDeactivateOffer,
   useCreateOffer,
+  useUploadOfferImage,
 } from "../hooks/use-offers";
 import type { OfferDto, ProposeOfferRequest, ProviderType } from "../types/api";
 import { useQuery } from "@tanstack/react-query";
@@ -81,7 +84,7 @@ const INITIAL_FORM_DATA: ProposeOfferRequest = {
   currencyCode: "JOD",
   maxUsesPerUser: null,
   maxTotalUses: null,
-  offerCodeExpirySeconds: 60,
+  offerCodeExpirySeconds: null,
   imageUrl: "",
   validFrom: "",
   validTo: "",
@@ -179,6 +182,7 @@ export default function OffersScreen() {
   const createMutation = useCreateOffer();
   const approveMutation = useApproveOffer();
   const rejectMutation = useRejectOffer();
+  const uploadImageMutation = useUploadOfferImage();
 
   // ── KPIs ─────────────────────────────────────────────────────────────────
   const totalActive = useMemo(() => activeData.filter((o) => o.isActive).length, [activeData]);
@@ -216,6 +220,8 @@ export default function OffersScreen() {
     city?: string | null;
   } | null>(null);
   const [providerSearch, setProviderSearch] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // ── Pending offer dialogs state ──────────────────────────────────────────
   const [pendingDetailOpen, setPendingDetailOpen] = useState(false);
@@ -273,8 +279,21 @@ export default function OffersScreen() {
   }, []);
 
   const handleCloseCreate = useCallback(() => {
-    if (!createMutation.isPending) setCreateDialogOpen(false);
-  }, [createMutation.isPending]);
+    if (!createMutation.isPending && !uploadImageMutation.isPending) {
+      setCreateDialogOpen(false);
+      setImageFile(null);
+      setImagePreview(null);
+    }
+  }, [createMutation.isPending, uploadImageMutation.isPending]);
+
+  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const url = URL.createObjectURL(file);
+    setImagePreview(url);
+    e.target.value = "";
+  }, []);
 
   const handleCreateSubmit = useCallback(() => {
     if (!formData.title.trim()) {
@@ -293,7 +312,7 @@ export default function OffersScreen() {
       openErrorSnackbar({ message: t("offers@monetaryValueRequired") });
       return;
     }
-    if (formData.offerCodeExpirySeconds < 60) {
+    if (formData.offerCodeExpirySeconds != null && formData.offerCodeExpirySeconds < 60) {
       openErrorSnackbar({ message: t("offers@minExpirySeconds") });
       return;
     }
@@ -302,19 +321,50 @@ export default function OffersScreen() {
       return;
     }
     createMutation.mutate(formData, {
-      onSuccess: () => {
-        openSuccessSnackbar({ message: t("offers@created") });
-        setCreateDialogOpen(false);
-        setFormData(INITIAL_FORM_DATA);
-        setSelectedProvider(null);
-        setProviderSearch("");
-        setActiveTab(1); // switch to pending after create since it goes to review
+      onSuccess: (offerId) => {
+        if (imageFile && offerId) {
+          uploadImageMutation.mutate(
+            { id: offerId, file: imageFile },
+            {
+              onSuccess: () => {
+                openSuccessSnackbar({ message: t("offers@created") });
+                setCreateDialogOpen(false);
+                setFormData(INITIAL_FORM_DATA);
+                setSelectedProvider(null);
+                setProviderSearch("");
+                setImageFile(null);
+                setImagePreview(null);
+                setActiveTab(1);
+              },
+              onError: () => {
+                openSuccessSnackbar({ message: t("offers@created") });
+                openErrorSnackbar({ message: t("offers@imageUploadFailed") });
+                setCreateDialogOpen(false);
+                setFormData(INITIAL_FORM_DATA);
+                setSelectedProvider(null);
+                setProviderSearch("");
+                setImageFile(null);
+                setImagePreview(null);
+                setActiveTab(1);
+              },
+            }
+          );
+        } else {
+          openSuccessSnackbar({ message: t("offers@created") });
+          setCreateDialogOpen(false);
+          setFormData(INITIAL_FORM_DATA);
+          setSelectedProvider(null);
+          setProviderSearch("");
+          setImageFile(null);
+          setImagePreview(null);
+          setActiveTab(1);
+        }
       },
       onError: (err: Error) => {
         openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
       },
     });
-  }, [formData, createMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+  }, [formData, imageFile, createMutation, uploadImageMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
   const handleDeactivate = useCallback(
     (e: React.MouseEvent, row: OfferDto) => {
@@ -429,7 +479,7 @@ export default function OffersScreen() {
       field: "validTo",
       headerName: t("offers@validTo"),
       width: 120,
-      valueFormatter: (v) => new Date(v).toLocaleDateString(),
+      valueFormatter: (v) => v ? new Date(v).toLocaleDateString() : "—",
     },
     {
       field: "actions",
@@ -845,7 +895,7 @@ export default function OffersScreen() {
                 {[
                   { icon: <StarsIcon />, value: `${selectedActiveOffer.pointsCost} pts`, label: t("pointsCost"), color: "primary" },
                   { icon: <AttachMoneyIcon />, value: `${selectedActiveOffer.monetaryValue} ${selectedActiveOffer.currencyCode}`, label: t("monetaryValue"), color: "success" },
-                  { icon: <TimerIcon />, value: `${selectedActiveOffer.offerCodeExpirySeconds} ${t("offers@seconds")}`, label: t("offers@codeExpiry"), color: "warning" },
+                  { icon: <TimerIcon />, value: selectedActiveOffer.offerCodeExpirySeconds != null ? `${selectedActiveOffer.offerCodeExpirySeconds} ${t("offers@seconds")}` : t("offers@unlimited"), label: t("offers@codeExpiry"), color: "warning" },
                   { icon: <PeopleIcon />, value: selectedActiveOffer.currentTotalUses, label: t("offers@totalUses"), color: "info" },
                 ].map(({ icon, value, label, color }) => (
                   <Grid item xs={6} sm={3} key={label}>
@@ -868,7 +918,7 @@ export default function OffersScreen() {
                     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                       <Chip label={new Date(selectedActiveOffer.validFrom).toLocaleDateString()} size="small" variant="outlined" color="primary" />
                       <Typography variant="body2" color="text.secondary">→</Typography>
-                      <Chip label={new Date(selectedActiveOffer.validTo).toLocaleDateString()} size="small" variant="outlined" color="primary" />
+                      <Chip label={selectedActiveOffer.validTo ? new Date(selectedActiveOffer.validTo).toLocaleDateString() : t("offers@unlimited")} size="small" variant="outlined" color="primary" />
                     </Stack>
                   </Box>
                   {selectedActiveOffer.maxUsesPerUser !== null && (
@@ -879,6 +929,35 @@ export default function OffersScreen() {
                   )}
                 </Stack>
               </Paper>
+
+              {/* Offer Image */}
+              {selectedActiveOffer.imageUrl && (
+                <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" gutterBottom>{t("offers@offerImage")}</Typography>
+                  <Box
+                    sx={{
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      maxHeight: 220,
+                      display: "flex",
+                      justifyContent: "center",
+                      bgcolor: "white",
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={selectedActiveOffer.imageUrl}
+                      alt={selectedActiveOffer.title}
+                      sx={{
+                        maxWidth: "100%",
+                        maxHeight: 220,
+                        objectFit: "contain",
+                        borderRadius: 1.5,
+                      }}
+                    />
+                  </Box>
+                </Paper>
+              )}
 
               {selectedActiveOffer.description && (
                 <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
@@ -993,7 +1072,7 @@ export default function OffersScreen() {
                 {[
                   { icon: <StarsIcon />, value: `${selectedPendingOffer.pointsCost}`, suffix: "pts", label: t("pointsCost"), color: "primary" },
                   { icon: <AttachMoneyIcon />, value: `${selectedPendingOffer.monetaryValue}`, suffix: selectedPendingOffer.currencyCode, label: t("monetaryValue"), color: "success" },
-                  { icon: <TimerIcon />, value: `${selectedPendingOffer.offerCodeExpirySeconds}`, suffix: t("offers@seconds"), label: t("offers@codeExpiry"), color: "warning" },
+                  { icon: <TimerIcon />, value: selectedPendingOffer.offerCodeExpirySeconds != null ? `${selectedPendingOffer.offerCodeExpirySeconds}` : "∞", suffix: selectedPendingOffer.offerCodeExpirySeconds != null ? t("offers@seconds") : "", label: t("offers@codeExpiry"), color: "warning" },
                   { icon: <PeopleIcon />, value: selectedPendingOffer.maxUsesPerUser ?? "∞", suffix: "", label: t("offers@maxUsesPerUser"), color: "error" },
                 ].map(({ icon, value, suffix, label, color }) => (
                   <Grid item xs={6} sm={3} key={label}>
@@ -1019,7 +1098,7 @@ export default function OffersScreen() {
                     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                       <Chip label={new Date(selectedPendingOffer.validFrom).toLocaleDateString()} size="small" variant="outlined" color="warning" />
                       <Typography variant="body2" color="text.secondary">→</Typography>
-                      <Chip label={new Date(selectedPendingOffer.validTo).toLocaleDateString()} size="small" variant="outlined" color="warning" />
+                      <Chip label={selectedPendingOffer.validTo ? new Date(selectedPendingOffer.validTo).toLocaleDateString() : t("offers@unlimited")} size="small" variant="outlined" color="warning" />
                     </Stack>
                   </Box>
                   {selectedPendingOffer.maxTotalUses && (
@@ -1030,6 +1109,35 @@ export default function OffersScreen() {
                   )}
                 </Stack>
               </Paper>
+
+              {/* Offer Image */}
+              {selectedPendingOffer.imageUrl && (
+                <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" gutterBottom>{t("offers@offerImage")}</Typography>
+                  <Box
+                    sx={{
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      maxHeight: 220,
+                      display: "flex",
+                      justifyContent: "center",
+                      bgcolor: "white",
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={selectedPendingOffer.imageUrl}
+                      alt={selectedPendingOffer.title}
+                      sx={{
+                        maxWidth: "100%",
+                        maxHeight: 220,
+                        objectFit: "contain",
+                        borderRadius: 1.5,
+                      }}
+                    />
+                  </Box>
+                </Paper>
+              )}
 
               {selectedPendingOffer.description && (
                 <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
@@ -1355,11 +1463,11 @@ export default function OffersScreen() {
                   <TextField
                     label={t("offers@codeExpiry")}
                     type="number"
-                    value={formData.offerCodeExpirySeconds}
-                    onChange={(e) => updateField("offerCodeExpirySeconds", parseInt(e.target.value) || 60)}
+                    value={formData.offerCodeExpirySeconds ?? ""}
+                    onChange={(e) => updateField("offerCodeExpirySeconds", e.target.value ? parseInt(e.target.value) : null)}
                     InputProps={{ endAdornment: <InputAdornment position="end">{t("offers@seconds")}</InputAdornment> }}
-                    helperText={t("offers@minExpiry60")}
-                    required fullWidth
+                    helperText={t("offers@leaveEmptyNoExpiry")}
+                    fullWidth
                   />
                 </Grid>
               </Grid>
@@ -1397,28 +1505,96 @@ export default function OffersScreen() {
               </Grid>
             </Box>
 
-            {/* Image URL */}
-            <TextField
-              label={t("offers@imageUrl")}
-              value={formData.imageUrl ?? ""}
-              onChange={(e) => updateField("imageUrl", e.target.value || null)}
-              fullWidth
-              helperText={t("offers@imageUrlHelp")}
-            />
+            {/* Offer Image Upload */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 2 }}>
+                {t("offers@offerImage")}
+              </Typography>
+              <Stack direction="row" spacing={2.5} alignItems="flex-start">
+                {/* Preview */}
+                <Box
+                  sx={{
+                    width: 110,
+                    height: 110,
+                    borderRadius: 2.5,
+                    overflow: "hidden",
+                    border: "2px dashed",
+                    borderColor: imagePreview ? "info.main" : "grey.300",
+                    bgcolor: imagePreview ? "transparent" : "grey.50",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    transition: "all 0.25s ease",
+                  }}
+                >
+                  {imagePreview ? (
+                    <Box
+                      component="img"
+                      src={imagePreview}
+                      alt="offer preview"
+                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <AddPhotoAlternateIcon sx={{ fontSize: 36, color: "text.disabled" }} />
+                  )}
+                </Box>
+                {/* Upload area */}
+                <Stack spacing={1.5} flex={1}>
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<CloudUploadIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      borderStyle: "dashed",
+                      borderWidth: 2,
+                      py: 1.5,
+                      color: "info.main",
+                      borderColor: "info.200",
+                      bgcolor: "rgba(2, 136, 209, 0.04)",
+                      "&:hover": {
+                        borderStyle: "dashed",
+                        borderWidth: 2,
+                        bgcolor: "rgba(2, 136, 209, 0.08)",
+                        borderColor: "info.main",
+                      },
+                    }}
+                  >
+                    {imageFile ? imageFile.name : t("offers@selectImage")}
+                    <input type="file" accept="image/*" hidden onChange={handleImageFileChange} />
+                  </Button>
+                  <Typography variant="caption" color="text.disabled">
+                    {t("offers@imageUploadHint")}
+                  </Typography>
+                  {imagePreview && (
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      sx={{ alignSelf: "flex-start", borderRadius: 2, fontSize: "0.75rem" }}
+                    >
+                      {t("offers@removeImage")}
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
+            </Box>
           </Stack>
         </DialogContent>
 
         <Divider sx={{ flexShrink: 0 }} />
         <DialogActions sx={{ px: 3, py: 2, gap: 1, flexShrink: 0 }}>
-          <Button onClick={handleCloseCreate} disabled={createMutation.isPending} size="large">{t("cancel")}</Button>
+          <Button onClick={handleCloseCreate} disabled={createMutation.isPending || uploadImageMutation.isPending} size="large">{t("cancel")}</Button>
           <Button
             onClick={handleCreateSubmit}
             variant="contained"
             size="large"
-            disabled={createMutation.isPending}
-            startIcon={createMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+            disabled={createMutation.isPending || uploadImageMutation.isPending}
+            startIcon={(createMutation.isPending || uploadImageMutation.isPending) ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
           >
-            {createMutation.isPending ? t("creating") : t("offers@createOffer")}
+            {uploadImageMutation.isPending ? t("offers@uploadingImage") : createMutation.isPending ? t("creating") : t("offers@createOffer")}
           </Button>
         </DialogActions>
       </Dialog>

@@ -17,20 +17,16 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Chip,
-  Tabs,
-  Tab,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PersonIcon from "@mui/icons-material/Person";
 import EditNoteIcon from "@mui/icons-material/EditNote";
-import BlockIcon from "@mui/icons-material/Block";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
-import { useAdjustPoints, useBlockUser, useUnblockUser } from "../hooks/use-loyalty";
+import { useAdjustPoints } from "../hooks/use-loyalty";
 
 type AdjustmentType = "add" | "deduct";
 
@@ -40,8 +36,6 @@ export default function PointAdjustmentsScreen() {
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
   const adjustMutation = useAdjustPoints();
-  const blockUserMutation = useBlockUser();
-  const unblockUserMutation = useUnblockUser();
 
   // ── Adjust Points state ──────────────────────────────────────────────────
   const [userId, setUserId] = useState<string>("");
@@ -49,54 +43,11 @@ export default function PointAdjustmentsScreen() {
   const [pointsAmount, setPointsAmount] = useState<string>("");
   const [note, setNote] = useState<string>("");
 
-  // ── Block / Unblock state ────────────────────────────────────────────────
-  const [blockTab, setBlockTab] = useState<0 | 1>(0);
-  const [blockUserId, setBlockUserId] = useState<string>("");
-  const [blockReason, setBlockReason] = useState<string>("");
-  const [blockUntil, setBlockUntil] = useState<string>("");
-  const [unblockUserId, setUnblockUserId] = useState<string>("");
-
   const isAdd = adjustmentType === "add";
   const accentColor = isAdd ? "success" : "error";
   const accentBorder = isAdd ? "#2e7d32" : "#c62828";
   const previewPts = pointsAmount ? parseInt(pointsAmount, 10) : null;
   const hasValidPreview = previewPts !== null && !isNaN(previewPts) && previewPts > 0;
-
-  const handleBlockUser = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const id = parseInt(blockUserId, 10);
-      if (isNaN(id) || id <= 0) { openErrorSnackbar({ message: t("loyalty@invalidUserId") }); return; }
-      if (!blockReason.trim()) { openErrorSnackbar({ message: t("loyalty@blockReasonRequired") }); return; }
-      blockUserMutation.mutate(
-        { userId: id, reason: blockReason.trim(), blockUntil: blockUntil ? new Date(blockUntil).toISOString() : null },
-        {
-          onSuccess: () => {
-            openSuccessSnackbar({ message: t("loyalty@userBlocked") });
-            setBlockUserId(""); setBlockReason(""); setBlockUntil("");
-          },
-          onError: (err: Error) => { openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }); },
-        }
-      );
-    },
-    [blockUserId, blockReason, blockUntil, blockUserMutation, openSuccessSnackbar, openErrorSnackbar, t]
-  );
-
-  const handleUnblockUser = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const id = parseInt(unblockUserId, 10);
-      if (isNaN(id) || id <= 0) { openErrorSnackbar({ message: t("loyalty@invalidUserId") }); return; }
-      unblockUserMutation.mutate(id, {
-        onSuccess: () => {
-          openSuccessSnackbar({ message: t("loyalty@userUnblocked") });
-          setUnblockUserId("");
-        },
-        onError: (err: Error) => { openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }); },
-      });
-    },
-    [unblockUserId, unblockUserMutation, openSuccessSnackbar, openErrorSnackbar, t]
-  );
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -141,7 +92,6 @@ export default function PointAdjustmentsScreen() {
           elevation={4}
           sx={{
             borderRadius: 3,
-            mb: 4,
             borderLeft: `4px solid ${accentBorder}`,
             transition: "border-color 0.25s ease",
           }}
@@ -331,135 +281,6 @@ export default function PointAdjustmentsScreen() {
             </Box>
           </CardContent>
         </Card>
-
-        {/* ── Block / Unblock Users Card ── */}
-        <Card
-          elevation={4}
-          sx={{
-            borderRadius: 3,
-            borderLeft: `4px solid ${blockTab === 0 ? "#c62828" : "#2e7d32"}`,
-            transition: "border-color 0.25s ease",
-          }}
-        >
-          <CardContent sx={{ p: 0 }}>
-            {/* Card header */}
-            <Paper
-              elevation={0}
-              sx={{
-                px: 3, py: 2.5,
-                background: blockTab === 0
-                  ? "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)"
-                  : "linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)",
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                transition: "background 0.3s ease",
-              }}
-            >
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 46, height: 46 }}>
-                  {blockTab === 0 ? <BlockIcon /> : <LockOpenIcon />}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight={700} color="#fff">
-                    {blockTab === 0 ? t("loyalty@blockUser") : t("loyalty@unblockUser")}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)" }}>
-                    {blockTab === 0 ? t("loyalty@blockUserInfo") : t("loyalty@unblockUserInfo")}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Paper>
-
-            <Tabs
-              value={blockTab}
-              onChange={(_, v) => setBlockTab(v)}
-              sx={{ px: 2, borderBottom: 1, borderColor: "divider" }}
-            >
-              <Tab
-                label={t("loyalty@blockUser")}
-                icon={<BlockIcon fontSize="small" />}
-                iconPosition="start"
-                sx={{ color: "error.main", "&.Mui-selected": { color: "error.main" } }}
-              />
-              <Tab
-                label={t("loyalty@unblockUser")}
-                icon={<LockOpenIcon fontSize="small" />}
-                iconPosition="start"
-                sx={{ color: "success.main", "&.Mui-selected": { color: "success.main" } }}
-              />
-            </Tabs>
-
-            <Divider />
-
-            <Box sx={{ p: 3 }}>
-              {blockTab === 0 ? (
-                <form onSubmit={handleBlockUser}>
-                  <Stack spacing={3}>
-                    <Alert severity="warning" sx={{ borderRadius: 2 }}>
-                      {t("loyalty@blockUserInfo")}
-                    </Alert>
-                    <TextField
-                      label={t("loyalty@userId")}
-                      value={blockUserId}
-                      onChange={(e) => setBlockUserId(e.target.value)}
-                      required fullWidth type="number"
-                      placeholder={t("loyalty@enterUserId")}
-                      InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon fontSize="small" color="action" /></InputAdornment> }}
-                    />
-                    <TextField
-                      label={t("loyalty@blockReason")}
-                      value={blockReason}
-                      onChange={(e) => setBlockReason(e.target.value)}
-                      required fullWidth multiline rows={3}
-                      placeholder={t("loyalty@blockReasonPlaceholder")}
-                    />
-                    <TextField
-                      label={t("loyalty@blockUntil")}
-                      value={blockUntil}
-                      onChange={(e) => setBlockUntil(e.target.value)}
-                      fullWidth type="datetime-local"
-                      helperText={t("loyalty@blockUntilHelp")}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    <Button
-                      type="submit" variant="contained" color="error" size="large" fullWidth
-                      disabled={blockUserMutation.isPending}
-                      startIcon={blockUserMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <BlockIcon />}
-                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 700 }}
-                    >
-                      {blockUserMutation.isPending ? t("loyalty@processing") : t("loyalty@blockUser")}
-                    </Button>
-                  </Stack>
-                </form>
-              ) : (
-                <form onSubmit={handleUnblockUser}>
-                  <Stack spacing={3}>
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
-                      {t("loyalty@unblockUserInfo")}
-                    </Alert>
-                    <TextField
-                      label={t("loyalty@userId")}
-                      value={unblockUserId}
-                      onChange={(e) => setUnblockUserId(e.target.value)}
-                      required fullWidth type="number"
-                      placeholder={t("loyalty@enterUserId")}
-                      InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon fontSize="small" color="action" /></InputAdornment> }}
-                    />
-                    <Button
-                      type="submit" variant="contained" color="success" size="large" fullWidth
-                      disabled={unblockUserMutation.isPending}
-                      startIcon={unblockUserMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <LockOpenIcon />}
-                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 700 }}
-                    >
-                      {unblockUserMutation.isPending ? t("loyalty@processing") : t("loyalty@unblockUser")}
-                    </Button>
-                  </Stack>
-                </form>
-              )}
-            </Box>
-          </CardContent>
-        </Card>
-
       </Box>
     </AppScreenContainer>
   );

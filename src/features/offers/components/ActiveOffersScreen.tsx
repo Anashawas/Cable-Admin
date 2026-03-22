@@ -49,6 +49,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import BusinessIcon from "@mui/icons-material/Business";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid } from "../../../components";
@@ -57,6 +59,7 @@ import {
   useAllOffers,
   useDeactivateOffer,
   useCreateOffer,
+  useUploadOfferImage,
 } from "../hooks/use-offers";
 import type { OfferDto, ProposeOfferRequest, ProviderType } from "../types/api";
 import { useQuery } from "@tanstack/react-query";
@@ -98,6 +101,7 @@ export default function ActiveOffersScreen() {
 
   const deactivateMutation = useDeactivateOffer();
   const createMutation = useCreateOffer();
+  const uploadImageMutation = useUploadOfferImage();
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -110,6 +114,8 @@ export default function ActiveOffersScreen() {
   const [formData, setFormData] = useState<ProposeOfferRequest>(INITIAL_FORM_DATA);
   const [selectedProvider, setSelectedProvider] = useState<{ id: number; name: string; city?: string | null } | null>(null);
   const [providerSearch, setProviderSearch] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const { data: serviceProviders = [], isLoading: isLoadingServiceProviders } = useQuery({
     queryKey: ["service-providers-for-offer"],
@@ -184,10 +190,21 @@ export default function ActiveOffersScreen() {
   }, []);
 
   const handleCloseCreateDialog = useCallback(() => {
-    if (!createMutation.isPending) {
+    if (!createMutation.isPending && !uploadImageMutation.isPending) {
       setCreateDialogOpen(false);
+      setImageFile(null);
+      setImagePreview(null);
     }
-  }, [createMutation.isPending]);
+  }, [createMutation.isPending, uploadImageMutation.isPending]);
+
+  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const url = URL.createObjectURL(file);
+    setImagePreview(url);
+    e.target.value = "";
+  }, []);
 
   const handleCreateSubmit = useCallback(() => {
     if (!formData.title.trim()) {
@@ -216,18 +233,47 @@ export default function ActiveOffersScreen() {
     }
 
     createMutation.mutate(formData, {
-      onSuccess: () => {
-        openSuccessSnackbar({ message: t("offers@created") });
-        setCreateDialogOpen(false);
-        setFormData(INITIAL_FORM_DATA);
-        setSelectedProvider(null);
-        setProviderSearch("");
+      onSuccess: (offerId) => {
+        if (imageFile && offerId) {
+          uploadImageMutation.mutate(
+            { id: offerId, file: imageFile },
+            {
+              onSuccess: () => {
+                openSuccessSnackbar({ message: t("offers@created") });
+                setCreateDialogOpen(false);
+                setFormData(INITIAL_FORM_DATA);
+                setSelectedProvider(null);
+                setProviderSearch("");
+                setImageFile(null);
+                setImagePreview(null);
+              },
+              onError: () => {
+                openSuccessSnackbar({ message: t("offers@created") });
+                openErrorSnackbar({ message: t("offers@imageUploadFailed") });
+                setCreateDialogOpen(false);
+                setFormData(INITIAL_FORM_DATA);
+                setSelectedProvider(null);
+                setProviderSearch("");
+                setImageFile(null);
+                setImagePreview(null);
+              },
+            }
+          );
+        } else {
+          openSuccessSnackbar({ message: t("offers@created") });
+          setCreateDialogOpen(false);
+          setFormData(INITIAL_FORM_DATA);
+          setSelectedProvider(null);
+          setProviderSearch("");
+          setImageFile(null);
+          setImagePreview(null);
+        }
       },
       onError: (err: Error) => {
         openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
       },
     });
-  }, [formData, createMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+  }, [formData, imageFile, createMutation, uploadImageMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
   const updateField = <K extends keyof ProposeOfferRequest>(
     field: K,
@@ -995,21 +1041,89 @@ export default function ActiveOffersScreen() {
               </Grid>
             </Grid>
 
-            {/* Image URL */}
-            <TextField
-              label={t("offers@imageUrl")}
-              value={formData.imageUrl ?? ""}
-              onChange={(e) => updateField("imageUrl", e.target.value || null)}
-              fullWidth
-              helperText={t("offers@imageUrlHelp")}
-            />
+            {/* Offer Image Upload */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 2 }}>
+                {t("offers@offerImage")}
+              </Typography>
+              <Stack direction="row" spacing={2.5} alignItems="flex-start">
+                {/* Preview */}
+                <Box
+                  sx={{
+                    width: 110,
+                    height: 110,
+                    borderRadius: 2.5,
+                    overflow: "hidden",
+                    border: "2px dashed",
+                    borderColor: imagePreview ? "info.main" : "grey.300",
+                    bgcolor: imagePreview ? "transparent" : "grey.50",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    transition: "all 0.25s ease",
+                  }}
+                >
+                  {imagePreview ? (
+                    <Box
+                      component="img"
+                      src={imagePreview}
+                      alt="offer preview"
+                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <AddPhotoAlternateIcon sx={{ fontSize: 36, color: "text.disabled" }} />
+                  )}
+                </Box>
+                {/* Upload area */}
+                <Stack spacing={1.5} flex={1}>
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<CloudUploadIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      borderStyle: "dashed",
+                      borderWidth: 2,
+                      py: 1.5,
+                      color: "info.main",
+                      borderColor: "info.200",
+                      bgcolor: "rgba(2, 136, 209, 0.04)",
+                      "&:hover": {
+                        borderStyle: "dashed",
+                        borderWidth: 2,
+                        bgcolor: "rgba(2, 136, 209, 0.08)",
+                        borderColor: "info.main",
+                      },
+                    }}
+                  >
+                    {imageFile ? imageFile.name : t("offers@selectImage")}
+                    <input type="file" accept="image/*" hidden onChange={handleImageFileChange} />
+                  </Button>
+                  <Typography variant="caption" color="text.disabled">
+                    {t("offers@imageUploadHint")}
+                  </Typography>
+                  {imagePreview && (
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      sx={{ alignSelf: "flex-start", borderRadius: 2, fontSize: "0.75rem" }}
+                    >
+                      {t("offers@removeImage")}
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
+            </Box>
           </Stack>
         </DialogContent>
         <Divider sx={{ flexShrink: 0 }} />
         <DialogActions sx={{ px: 3, py: 2, gap: 1, flexShrink: 0 }}>
           <Button
             onClick={handleCloseCreateDialog}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || uploadImageMutation.isPending}
             size="large"
           >
             {t("cancel")}
@@ -1018,12 +1132,12 @@ export default function ActiveOffersScreen() {
             onClick={handleCreateSubmit}
             variant="contained"
             size="large"
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || uploadImageMutation.isPending}
             startIcon={
-              createMutation.isPending ? <CircularProgress size={20} /> : <AddIcon />
+              (createMutation.isPending || uploadImageMutation.isPending) ? <CircularProgress size={20} /> : <AddIcon />
             }
           >
-            {createMutation.isPending ? t("creating") : t("offers@createOffer")}
+            {uploadImageMutation.isPending ? t("offers@uploadingImage") : createMutation.isPending ? t("creating") : t("offers@createOffer")}
           </Button>
         </DialogActions>
       </Dialog>

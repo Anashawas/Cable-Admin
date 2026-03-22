@@ -30,6 +30,13 @@
   "makeProviderConfirm": "هل أنت متأكد من تغيير دور {{name}} إلى مزود؟",
   "makeProviderAction": "جعله مزوداً",
   "roleChangedToProvider": "تم تغيير دور المستخدم إلى مزود",
+  "addUser": "إضافة مستخدم",
+  "addUserSubtitle": "إنشاء حساب مستخدم جديد مع الدور والتفاصيل",
+  "createUser": "إنشاء مستخدم",
+  "userCreated": "تم إنشاء المستخدم بنجاح",
+  "nameRequired": "الاسم مطلوب",
+  "emailRequired": "البريد الإلكتروني مطلوب",
+  "passwordMinLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
   "form": {
     "name": "الاسم",
     "email": "البريد الإلكتروني",
@@ -37,7 +44,10 @@
     "country": "الدولة",
     "city": "المدينة",
     "role": "الدور",
-    "isActive": "نشط"
+    "isActive": "نشط",
+    "password": "كلمة المرور",
+    "passwordHint": "6 أحرف على الأقل",
+    "activeAccount": "حساب نشط"
   },
   "cars": {
     "title": "سيارات المستخدم",

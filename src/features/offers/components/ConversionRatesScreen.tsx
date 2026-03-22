@@ -384,7 +384,7 @@ export default function ConversionRatesScreen() {
                 required
                 size="small"
                 sx={{ minWidth: 120 }}
-                placeholder="KWD"
+                placeholder="JOD"
                 inputProps={{ maxLength: 5 }}
               />
             </Stack>

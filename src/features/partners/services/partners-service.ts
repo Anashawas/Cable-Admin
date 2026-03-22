@@ -3,7 +3,6 @@ import type {
   PartnerAgreementDto,
   CreatePartnerAgreementRequest,
   UpdatePartnerAgreementRequest,
-  RecordProviderPaymentRequest,
   SetCreditLimitRequest,
   ProviderBalanceDto,
 } from "../types/api";
@@ -49,12 +48,6 @@ export async function getProviderBalance(
     params: { providerType, providerId },
   });
   return data;
-}
-
-export async function recordProviderPayment(
-  body: RecordProviderPaymentRequest
-): Promise<void> {
-  await server.post(`${BASE}/RecordProviderPayment`, body);
 }
 
 export async function setCreditLimit(body: SetCreditLimitRequest): Promise<void> {

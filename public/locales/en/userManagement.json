@@ -30,6 +30,13 @@
   "makeProviderConfirm": "Are you sure you want to change {{name}}'s role to Provider?",
   "makeProviderAction": "Make Provider",
   "roleChangedToProvider": "User role changed to Provider",
+  "addUser": "Add User",
+  "addUserSubtitle": "Create a new user account with role and details",
+  "createUser": "Create User",
+  "userCreated": "User created successfully",
+  "nameRequired": "Name is required",
+  "emailRequired": "Email is required",
+  "passwordMinLength": "Password must be at least 6 characters",
   "form": {
     "name": "Name",
     "email": "Email",
@@ -37,7 +44,10 @@
     "country": "Country",
     "city": "City",
     "role": "Role",
-    "isActive": "Active"
+    "isActive": "Active",
+    "password": "Password",
+    "passwordHint": "Minimum 6 characters",
+    "activeAccount": "Active Account"
   },
   "cars": {
     "title": "User's Cars",

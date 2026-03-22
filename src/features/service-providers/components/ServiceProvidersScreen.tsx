@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Box,
@@ -65,6 +66,13 @@ import ContactPhoneIcon from "@mui/icons-material/ContactPhone";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import PaymentIcon from "@mui/icons-material/Payment";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CollectionsIcon from "@mui/icons-material/Collections";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import CloseIcon from "@mui/icons-material/Close";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
@@ -78,10 +86,12 @@ import {
   useDeleteServiceProvider,
   useChangeServiceProviderOwner,
   useUploadServiceProviderIcon,
+  useAddServiceProviderAttachments,
+  useDeleteServiceProviderAttachments,
   ServiceProviderSortOption,
 } from "../hooks/use-service-providers";
 import { useServiceCategories } from "../hooks/use-service-categories";
-import { useOffersForProvider, useUpdateOffer } from "../../offers/hooks/use-offers";
+import { useOffersForProvider, useUpdateOffer, useUploadOfferImage } from "../../offers/hooks/use-offers";
 import { useBlockProvider, useUnblockProvider } from "../../loyalty/hooks/use-loyalty";
 import type { ServiceProviderDto, CreateServiceProviderRequest, UpdateServiceProviderRequest } from "../types/api";
 import type { OfferDto, UpdateOfferRequest } from "../../offers/types/api";
@@ -139,6 +149,7 @@ const initialFormData: FormData = {
 
 export default function ServiceProvidersScreen() {
   const { t } = useTranslation("serviceProviders");
+  const navigate = useNavigate();
   const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -163,6 +174,8 @@ export default function ServiceProvidersScreen() {
   const updateMutation = useUpdateServiceProvider();
   const deleteMutation = useDeleteServiceProvider();
   const uploadIconMutation = useUploadServiceProviderIcon();
+  const uploadAttachmentsMutation = useAddServiceProviderAttachments();
+  const deleteAttachmentsMutation = useDeleteServiceProviderAttachments();
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -184,6 +197,9 @@ export default function ServiceProvidersScreen() {
   const [newOwnerId, setNewOwnerId] = useState("");
   const [selectedOwner, setSelectedOwner] = useState<UserSummaryDto | null>(null);
   const [ownerSearch, setOwnerSearch] = useState("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [blockProviderDialogOpen, setBlockProviderDialogOpen] = useState(false);
   const [blockProviderTarget, setBlockProviderTarget] = useState<ServiceProviderDto | null>(null);
   const [blockProviderReason, setBlockProviderReason] = useState("");
@@ -218,6 +234,9 @@ export default function ServiceProvidersScreen() {
   );
 
   const updateOfferMutation = useUpdateOffer();
+  const uploadOfferImageMutation = useUploadOfferImage();
+  const [offerImageFile, setOfferImageFile] = useState<File | null>(null);
+  const [offerImagePreview, setOfferImagePreview] = useState<string | null>(null);
   const changeOwnerMutation = useChangeServiceProviderOwner();
   const blockProviderMutation = useBlockProvider();
   const unblockProviderMutation = useUnblockProvider();
@@ -388,7 +407,17 @@ export default function ServiceProvidersScreen() {
       validTo: offer.validTo ? offer.validTo.split('T')[0] : null,
       isActive: offer.isActive,
     });
+    setOfferImageFile(null);
+    setOfferImagePreview(null);
     setOfferEditDialogOpen(true);
+  }, []);
+
+  const handleOfferImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setOfferImageFile(file);
+    setOfferImagePreview(URL.createObjectURL(file));
+    e.target.value = "";
   }, []);
 
   const handleChangeOwnerClick = useCallback((e: React.MouseEvent, row: ServiceProviderDto) => {
@@ -440,9 +469,34 @@ export default function ServiceProvidersScreen() {
         { id: editingOffer.id, data: offerFormData },
         {
           onSuccess: () => {
-            openSuccessSnackbar({ message: t("offerUpdated") });
-            setOfferEditDialogOpen(false);
-            setEditingOffer(null);
+            if (offerImageFile) {
+              uploadOfferImageMutation.mutate(
+                { id: editingOffer.id, file: offerImageFile },
+                {
+                  onSuccess: () => {
+                    openSuccessSnackbar({ message: t("offerUpdated") });
+                    setOfferEditDialogOpen(false);
+                    setEditingOffer(null);
+                    setOfferImageFile(null);
+                    setOfferImagePreview(null);
+                  },
+                  onError: () => {
+                    openSuccessSnackbar({ message: t("offerUpdated") });
+                    openErrorSnackbar({ message: t("offers@imageUploadFailed") });
+                    setOfferEditDialogOpen(false);
+                    setEditingOffer(null);
+                    setOfferImageFile(null);
+                    setOfferImagePreview(null);
+                  },
+                }
+              );
+            } else {
+              openSuccessSnackbar({ message: t("offerUpdated") });
+              setOfferEditDialogOpen(false);
+              setEditingOffer(null);
+              setOfferImageFile(null);
+              setOfferImagePreview(null);
+            }
           },
           onError: (err: Error) => {
             openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
@@ -450,7 +504,7 @@ export default function ServiceProvidersScreen() {
         }
       );
     },
-    [editingOffer, offerFormData, updateOfferMutation, openSuccessSnackbar, openErrorSnackbar, t]
+    [editingOffer, offerFormData, offerImageFile, updateOfferMutation, uploadOfferImageMutation, openSuccessSnackbar, openErrorSnackbar, t]
   );
 
   const handleFormSubmit = useCallback(
@@ -566,6 +620,47 @@ export default function ServiceProvidersScreen() {
     },
     [uploadIconMutation, openSuccessSnackbar, openErrorSnackbar, t]
   );
+
+  const handleUploadImages = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>, providerId: number) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      uploadAttachmentsMutation.mutate(
+        { id: providerId, files: Array.from(files) },
+        {
+          onSuccess: () => {
+            openSuccessSnackbar({ message: t("serviceProviders@imagesUploaded") });
+          },
+          onError: (err: Error) => {
+            openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+          },
+        }
+      );
+      e.target.value = "";
+    },
+    [uploadAttachmentsMutation, openSuccessSnackbar, openErrorSnackbar, t]
+  );
+
+  const handleDeleteAllImages = useCallback(
+    (providerId: number) => {
+      deleteAttachmentsMutation.mutate(providerId, {
+        onSuccess: () => {
+          openSuccessSnackbar({ message: t("serviceProviders@imagesDeleted") });
+        },
+        onError: (err: Error) => {
+          openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+        },
+      });
+    },
+    [deleteAttachmentsMutation, openSuccessSnackbar, openErrorSnackbar, t]
+  );
+
+  const openLightbox = useCallback((images: string[], index: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  }, []);
 
   const columns: GridColDef<ServiceProviderDto>[] = [
     {
@@ -761,7 +856,7 @@ export default function ServiceProvidersScreen() {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={handleAddClick}
+              onClick={() => navigate("/service-providers/add")}
               sx={{
                 background: "rgba(255,255,255,0.2)",
                 backdropFilter: "blur(10px)",
@@ -963,20 +1058,74 @@ export default function ServiceProvidersScreen() {
                 </Box>
               )}
 
-              {/* Images */}
+              {/* Images Gallery */}
               {providerDetail.images.length > 0 && (
                 <Box>
-                  <strong>{t("images")}:</strong>
-                  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
-                    {providerDetail.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`${providerDetail.name} ${idx + 1}`}
-                        style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 8 }}
-                      />
-                    ))}
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                    <CollectionsIcon sx={{ fontSize: 20, color: "info.main" }} />
+                    <Typography variant="subtitle2" fontWeight={700} color="info.main">
+                      {t("serviceProviders@imagesGallery")} ({providerDetail.images.length})
+                    </Typography>
                   </Stack>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                      gap: 1.5,
+                    }}
+                  >
+                    {providerDetail.images.map((img, idx) => (
+                      <Box
+                        key={idx}
+                        onClick={() => openLightbox(providerDetail.images, idx)}
+                        sx={{
+                          position: "relative",
+                          paddingTop: "100%",
+                          borderRadius: 2.5,
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          border: "2px solid",
+                          borderColor: "divider",
+                          transition: "all 0.25s ease",
+                          "&:hover": {
+                            borderColor: "info.main",
+                            transform: "scale(1.04)",
+                            boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+                            "& .img-overlay": { opacity: 1 },
+                          },
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={img}
+                          alt={`${providerDetail.name} ${idx + 1}`}
+                          sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <Box
+                          className="img-overlay"
+                          sx={{
+                            position: "absolute",
+                            inset: 0,
+                            background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: 0,
+                            transition: "opacity 0.25s ease",
+                          }}
+                        >
+                          <ZoomInIcon sx={{ color: "white", fontSize: 30, filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.4))" }} />
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
                 </Box>
               )}
 
@@ -1398,6 +1547,160 @@ export default function ServiceProvidersScreen() {
                   </Grid>
                 </Grid>
               </Box>
+
+              {/* ── Section: Images & Gallery ── */}
+              {editingProvider && (
+                <Box>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                    <CollectionsIcon sx={{ fontSize: 18, color: "info.main" }} />
+                    <Typography variant="overline" fontWeight={700} color="info.main" sx={{ letterSpacing: 1.1, lineHeight: 1 }}>
+                      {t("serviceProviders@imagesGallery")}
+                    </Typography>
+                  </Stack>
+                  <Divider sx={{ mb: 2 }} />
+
+                  {/* Current images gallery */}
+                  {editingProvider.images.length > 0 ? (
+                    <Box sx={{ mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+                          gap: 1.5,
+                        }}
+                      >
+                        {editingProvider.images.map((img, idx) => (
+                          <Box
+                            key={idx}
+                            onClick={() => openLightbox(editingProvider.images, idx)}
+                            sx={{
+                              position: "relative",
+                              paddingTop: "100%",
+                              borderRadius: 2,
+                              overflow: "hidden",
+                              cursor: "pointer",
+                              border: "2px solid",
+                              borderColor: "divider",
+                              transition: "all 0.25s ease",
+                              "&:hover": {
+                                borderColor: "info.main",
+                                transform: "scale(1.03)",
+                                boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                                "& .img-overlay": { opacity: 1 },
+                              },
+                            }}
+                          >
+                            <Box
+                              component="img"
+                              src={img}
+                              alt={`${editingProvider.name} ${idx + 1}`}
+                              sx={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                            <Box
+                              className="img-overlay"
+                              sx={{
+                                position: "absolute",
+                                inset: 0,
+                                background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                opacity: 0,
+                                transition: "opacity 0.25s ease",
+                              }}
+                            >
+                              <ZoomInIcon sx={{ color: "white", fontSize: 28, filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }} />
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1.5 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {editingProvider.images.length} {t("serviceProviders@imagesCount")}
+                        </Typography>
+                        <Button
+                          size="small"
+                          color="error"
+                          startIcon={deleteAttachmentsMutation.isPending ? <CircularProgress size={14} /> : <DeleteSweepIcon fontSize="small" />}
+                          disabled={deleteAttachmentsMutation.isPending}
+                          onClick={() => handleDeleteAllImages(editingProvider.id)}
+                          sx={{ borderRadius: 2, fontSize: "0.75rem" }}
+                        >
+                          {t("serviceProviders@deleteAllImages")}
+                        </Button>
+                      </Stack>
+                    </Box>
+                  ) : (
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        py: 3,
+                        textAlign: "center",
+                        borderRadius: 2,
+                        borderStyle: "dashed",
+                        borderColor: "grey.300",
+                        bgcolor: "grey.50",
+                        mb: 2,
+                      }}
+                    >
+                      <CollectionsIcon sx={{ fontSize: 36, color: "text.disabled", mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        {t("serviceProviders@noImages")}
+                      </Typography>
+                    </Paper>
+                  )}
+
+                  {/* Upload button */}
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    fullWidth
+                    startIcon={
+                      uploadAttachmentsMutation.isPending
+                        ? <CircularProgress size={18} color="inherit" />
+                        : <AddPhotoAlternateIcon />
+                    }
+                    disabled={uploadAttachmentsMutation.isPending}
+                    sx={{
+                      borderRadius: 2,
+                      borderStyle: "dashed",
+                      borderWidth: 2,
+                      py: 1.5,
+                      color: "info.main",
+                      borderColor: "info.200",
+                      bgcolor: "rgba(2, 136, 209, 0.04)",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        borderStyle: "dashed",
+                        borderWidth: 2,
+                        bgcolor: "rgba(2, 136, 209, 0.08)",
+                        borderColor: "info.main",
+                      },
+                    }}
+                  >
+                    {uploadAttachmentsMutation.isPending
+                      ? t("serviceProviders@uploadingImages")
+                      : t("serviceProviders@uploadImages")}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      hidden
+                      onChange={(e) => handleUploadImages(e, editingProvider.id)}
+                    />
+                  </Button>
+                  <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: "block", textAlign: "center" }}>
+                    {t("serviceProviders@uploadImagesHint")}
+                  </Typography>
+                </Box>
+              )}
 
             </Stack>
           </DialogContent>
@@ -1842,12 +2145,69 @@ export default function ServiceProvidersScreen() {
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
-                  label={t("imageUrl")}
-                  value={offerFormData.imageUrl}
-                  onChange={(e) => setOfferFormData({ ...offerFormData, imageUrl: e.target.value })}
-                  fullWidth
-                />
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  {/* Preview: show uploaded file or existing imageUrl */}
+                  <Box
+                    sx={{
+                      width: 90,
+                      height: 90,
+                      borderRadius: 2.5,
+                      overflow: "hidden",
+                      border: "2px dashed",
+                      borderColor: (offerImagePreview || offerFormData.imageUrl) ? "info.main" : "grey.300",
+                      bgcolor: (offerImagePreview || offerFormData.imageUrl) ? "transparent" : "grey.50",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      transition: "all 0.25s ease",
+                    }}
+                  >
+                    {(offerImagePreview || offerFormData.imageUrl) ? (
+                      <Box
+                        component="img"
+                        src={offerImagePreview || offerFormData.imageUrl || ""}
+                        alt="offer"
+                        sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <AddPhotoAlternateIcon sx={{ fontSize: 32, color: "text.disabled" }} />
+                    )}
+                  </Box>
+                  <Stack spacing={1} flex={1}>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      startIcon={<CloudUploadIcon fontSize="small" />}
+                      sx={{
+                        borderRadius: 2,
+                        borderStyle: "dashed",
+                        borderWidth: 2,
+                        py: 1,
+                        color: "info.main",
+                        borderColor: "info.200",
+                        bgcolor: "rgba(2, 136, 209, 0.04)",
+                        "&:hover": { borderStyle: "dashed", borderWidth: 2, bgcolor: "rgba(2, 136, 209, 0.08)", borderColor: "info.main" },
+                      }}
+                    >
+                      {offerImageFile ? offerImageFile.name : t("offers@selectImage")}
+                      <input type="file" accept="image/*" hidden onChange={handleOfferImageFileChange} />
+                    </Button>
+                    {offerImagePreview && (
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => { setOfferImageFile(null); setOfferImagePreview(null); }}
+                        sx={{ alignSelf: "flex-start", borderRadius: 2, fontSize: "0.7rem" }}
+                      >
+                        {t("offers@removeImage")}
+                      </Button>
+                    )}
+                  </Stack>
+                </Stack>
               </Grid>
               <Grid item xs={12}>
                 <FormControlLabel
@@ -2097,6 +2457,148 @@ export default function ServiceProvidersScreen() {
             {isUnblockMode ? t("loyalty@unblockProvider") : t("loyalty@blockProvider")}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Image Lightbox Dialog */}
+      <Dialog
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        maxWidth={false}
+        PaperProps={{
+          sx: {
+            bgcolor: "rgba(0,0,0,0.95)",
+            boxShadow: "none",
+            borderRadius: 2,
+            m: 2,
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <Box sx={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", minWidth: 300, minHeight: 300 }}>
+          {/* Close button */}
+          <IconButton
+            onClick={() => setLightboxOpen(false)}
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              zIndex: 10,
+              color: "white",
+              bgcolor: "rgba(255,255,255,0.12)",
+              "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+
+          {/* Counter */}
+          <Chip
+            label={`${lightboxIndex + 1} / ${lightboxImages.length}`}
+            size="small"
+            sx={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              zIndex: 10,
+              bgcolor: "rgba(255,255,255,0.15)",
+              color: "white",
+              fontWeight: 700,
+              backdropFilter: "blur(8px)",
+            }}
+          />
+
+          {/* Previous button */}
+          {lightboxImages.length > 1 && (
+            <IconButton
+              onClick={() => setLightboxIndex((prev) => (prev > 0 ? prev - 1 : lightboxImages.length - 1))}
+              sx={{
+                position: "absolute",
+                left: 8,
+                zIndex: 10,
+                color: "white",
+                bgcolor: "rgba(255,255,255,0.12)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+              }}
+            >
+              <NavigateBeforeIcon fontSize="large" />
+            </IconButton>
+          )}
+
+          {/* Image */}
+          <Box
+            component="img"
+            src={lightboxImages[lightboxIndex]}
+            alt={`Image ${lightboxIndex + 1}`}
+            sx={{
+              maxWidth: "85vw",
+              maxHeight: "80vh",
+              objectFit: "contain",
+              display: "block",
+              borderRadius: 1,
+            }}
+          />
+
+          {/* Next button */}
+          {lightboxImages.length > 1 && (
+            <IconButton
+              onClick={() => setLightboxIndex((prev) => (prev < lightboxImages.length - 1 ? prev + 1 : 0))}
+              sx={{
+                position: "absolute",
+                right: 8,
+                zIndex: 10,
+                color: "white",
+                bgcolor: "rgba(255,255,255,0.12)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+              }}
+            >
+              <NavigateNextIcon fontSize="large" />
+            </IconButton>
+          )}
+        </Box>
+
+        {/* Thumbnails strip */}
+        {lightboxImages.length > 1 && (
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              px: 2,
+              py: 1.5,
+              justifyContent: "center",
+              overflowX: "auto",
+              bgcolor: "rgba(0,0,0,0.6)",
+            }}
+          >
+            {lightboxImages.map((img, idx) => (
+              <Box
+                key={idx}
+                onClick={() => setLightboxIndex(idx)}
+                sx={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 1.5,
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  border: "2px solid",
+                  borderColor: idx === lightboxIndex ? "info.main" : "transparent",
+                  opacity: idx === lightboxIndex ? 1 : 0.5,
+                  transition: "all 0.2s ease",
+                  "&:hover": { opacity: 1, borderColor: "rgba(255,255,255,0.4)" },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={img}
+                  alt={`Thumb ${idx + 1}`}
+                  sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </Box>
+            ))}
+          </Stack>
+        )}
       </Dialog>
     </AppScreenContainer>
   );

@@ -13,7 +13,8 @@ export interface PartnerAgreementDto {
   commissionPercentage: number;
   pointsRewardPercentage: number;
   pointsConversionRateId?: number | null;
-  codeExpiryMinutes: number;
+  codeExpirySeconds: number;
+  minimumTransactionAmount: number | null;
   isActive: boolean;
   note?: string | null;
   createdAt?: string | null;
@@ -25,7 +26,8 @@ export interface CreatePartnerAgreementRequest {
   commissionPercentage: number;
   pointsRewardPercentage: number;
   pointsConversionRateId?: number | null;
-  codeExpiryMinutes: number;
+  codeExpirySeconds: number;
+  minimumTransactionAmount?: number | null;
   isActive?: boolean;
   note?: string | null;
 }
@@ -36,21 +38,15 @@ export interface UpdatePartnerAgreementRequest {
   commissionPercentage?: number;
   pointsRewardPercentage?: number;
   pointsConversionRateId?: number | null;
-  codeExpiryMinutes?: number;
+  codeExpirySeconds?: number;
+  minimumTransactionAmount?: number | null;
   isActive?: boolean;
   note?: string | null;
 }
 
 // ============================================
-// Credit Limit & Balance DTOs — 2026-02-28
+// Credit Limit & Balance DTOs
 // ============================================
-
-export interface RecordProviderPaymentRequest {
-  providerType: PartnerProviderType;
-  providerId: number;
-  amount: number;
-  note?: string | null;
-}
 
 export interface SetCreditLimitRequest {
   providerType: PartnerProviderType;
@@ -58,17 +54,22 @@ export interface SetCreditLimitRequest {
   creditLimit: number | null; // null = unlimited
 }
 
-export interface ProviderPaymentRecordDto {
+export interface ProviderWalletTransactionDto {
   id: number;
+  providerId: number;
+  providerType: PartnerProviderType;
   amount: number;
+  transactionType: number;
+  settlementId: number | null;
   note: string | null;
-  recordedByUserName: string | null;
+  createdByUserId: number;
+  createdByUserName: string;
   createdAt: string;
 }
 
 export interface ProviderBalanceDto {
-  creditLimit: number | null;        // null = unlimited
-  currentBalance: number;            // positive = credit, negative = debt
-  availableCredit: number | null;    // creditLimit + currentBalance, null if no limit
-  recentPayments: ProviderPaymentRecordDto[];
+  walletBalance: number;              // positive = credit, negative = debt
+  walletCreditLimit: number | null;   // max debt allowed, null = unlimited
+  availableCredit: number | null;     // how much more before blocked
+  walletTransactions: ProviderWalletTransactionDto[];
 }
