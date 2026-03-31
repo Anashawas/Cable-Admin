@@ -11,6 +11,9 @@ import {
   deactivateOffer,
   createOffer,
   uploadOfferImage,
+  getOfferAttachments,
+  deleteOfferAttachments,
+  type OfferAttachmentDto,
 } from "../services/offers-service";
 import type {
   OfferDto,
@@ -240,9 +243,33 @@ export function useUploadOfferImage() {
   return useMutation({
     mutationFn: ({ id, file }: { id: number; file: File }) =>
       uploadOfferImage(id, file),
-    onSuccess: () => {
+    onSuccess: (_result, variables) => {
       queryClient.invalidateQueries({ queryKey: OFFERS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: PENDING_OFFERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["offer-attachments", variables.id] });
+    },
+  });
+}
+
+export const OFFER_ATTACHMENTS_KEY = (offerId: number) => ["offer-attachments", offerId];
+
+export function useOfferAttachments(offerId?: number | null) {
+  return useQuery({
+    queryKey: OFFER_ATTACHMENTS_KEY(offerId!),
+    queryFn: () => getOfferAttachments(offerId!),
+    enabled: !!offerId,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useDeleteOfferAttachments() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (offerId: number) => deleteOfferAttachments(offerId),
+    onSuccess: (_result, offerId) => {
+      queryClient.invalidateQueries({ queryKey: OFFER_ATTACHMENTS_KEY(offerId) });
+      queryClient.invalidateQueries({ queryKey: OFFERS_QUERY_KEY });
     },
   });
 }

@@ -25,11 +25,11 @@ import HandshakeIcon from "@mui/icons-material/Handshake";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { getDashboardStats } from "../services/dashboard-service";
 import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 import { getUsersList } from "../../users/services/user-service";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 import { getAllPartnerAgreements } from "../../partners/services/partners-service";
+import { getAllComplaints } from "../../complaints/services/complaints-service";
 import { useAuthenticationStore } from "../../../stores";
 
 // ── Section navigation cards ──────────────────────────────────────────────────
@@ -81,11 +81,6 @@ export default function DashboardScreen() {
   const theme = useTheme();
   const user = useAuthenticationStore((s) => s.user);
 
-  const { data: stats, isLoading: loadingStats } = useQuery({
-    queryKey: ["dashboard", "stats"],
-    queryFn: ({ signal }) => getDashboardStats(signal),
-  });
-
   const { data: stations = [], isLoading: loadingStations } = useQuery({
     queryKey: ["dashboard", "latest-stations"],
     queryFn: ({ signal }) => getAllChargingPoints({ name: null, chargerPointTypeId: null, cityName: null }, signal),
@@ -106,6 +101,12 @@ export default function DashboardScreen() {
   const { data: partners = [], isLoading: loadingPartners } = useQuery({
     queryKey: ["dashboard", "partners"],
     queryFn: () => getAllPartnerAgreements(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: complaints = [], isLoading: loadingComplaints } = useQuery({
+    queryKey: ["dashboard", "complaints"],
+    queryFn: ({ signal }) => getAllComplaints(signal),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -163,11 +164,11 @@ export default function DashboardScreen() {
 
   // ── KPI overview cards ────────────────────────────────────────────────────
   const kpiCards = [
-    { label: t("dashboard@kpi.users"),            value: stats?.totalUsers ?? 0,   Icon: PeopleIcon,        path: "/users",              accent: "#1565c0", loading: loadingStats },
-    { label: t("dashboard@kpi.stations"),          value: stats?.totalStations ?? 0,Icon: EvStationIcon,     path: "/charge-management",  accent: "#2e7d32", loading: loadingStats },
-    { label: t("dashboard@kpi.complaints"),        value: stats?.totalComplaints ?? 0, Icon: ReportProblemIcon, path: "/complaints",      accent: "#b71c1c", loading: loadingStats },
-    { label: t("serviceProviders"),                value: serviceProviders.length,  Icon: StoreIcon,         path: "/service-providers",  accent: "#00695c", loading: false },
-    { label: t("partners"),                        value: partners.length,          Icon: HandshakeIcon,     path: "/partners",           accent: "#01579b", loading: false },
+    { label: t("dashboard@kpi.users"),            value: users.length,             Icon: PeopleIcon,        path: "/users",              accent: "#1565c0", loading: loadingUsers },
+    { label: t("dashboard@kpi.stations"),          value: stations.length,          Icon: EvStationIcon,     path: "/charge-management",  accent: "#2e7d32", loading: loadingStations },
+    { label: t("dashboard@kpi.complaints"),        value: complaints.length,        Icon: ReportProblemIcon, path: "/complaints",         accent: "#b71c1c", loading: loadingComplaints },
+    { label: t("serviceProviders"),                value: serviceProviders.length,  Icon: StoreIcon,         path: "/service-providers",  accent: "#00695c", loading: loadingProviders },
+    { label: t("partners"),                        value: partners.length,          Icon: HandshakeIcon,     path: "/partners",           accent: "#01579b", loading: loadingPartners },
   ];
 
   return (

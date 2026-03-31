@@ -4,6 +4,7 @@
   "add": "Add partner",
   "edit": "Edit partner",
   "provider": "Provider",
+  "owner": "Owner",
   "providerType": "Provider type",
   "type": "Type",
   "commission": "Commission %",

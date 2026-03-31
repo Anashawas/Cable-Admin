@@ -58,7 +58,6 @@ export default function EditUserScreen() {
       updateUserProfile(userId, {
         name: values.name,
         email: values.email,
-        phone: values.phone,
         country: values.country ?? null,
         city: values.city ?? null,
         isActive: values.isActive,
@@ -81,7 +80,6 @@ export default function EditUserScreen() {
       updateUserProfile(userId, {
         name: user!.name,
         email: user!.email,
-        phone: user!.phone ?? "",
         isActive: user!.isActive,
         roleId: PROVIDER_ROLE_ID,
         country: user!.country ?? null,
@@ -252,6 +250,8 @@ export default function EditUserScreen() {
                       {...field}
                       label={t("userManagement@form.phone")}
                       fullWidth
+                      disabled
+                      helperText={t("userManagement@form.phoneReadOnly")}
                     />
                   )}
                 />

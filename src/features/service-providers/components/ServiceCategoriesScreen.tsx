@@ -86,6 +86,7 @@ export default function ServiceCategoriesScreen() {
 
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [uploadTargetId, setUploadTargetId] = useState<number | null>(null);
+  const uploadTargetIdRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeCount = useMemo(() => data.filter((c) => c.isActive).length, [data]);
@@ -175,19 +176,22 @@ export default function ServiceCategoriesScreen() {
 
   const handleIconFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || uploadTargetId == null) return;
-    uploadIconMutation.mutate({ id: uploadTargetId, file }, {
+    const targetId = uploadTargetIdRef.current;
+    if (!file || targetId == null) return;
+    uploadIconMutation.mutate({ id: targetId, file }, {
       onSuccess: () => {
         openSuccessSnackbar({ message: t("serviceCategories_iconUploaded") });
         setUploadTargetId(null);
+        uploadTargetIdRef.current = null;
       },
       onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
     });
     e.target.value = "";
-  }, [uploadTargetId, uploadIconMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+  }, [uploadIconMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
   const handleUploadIconClick = useCallback((e: React.MouseEvent, row: ServiceCategoryDto) => {
     e.stopPropagation();
+    uploadTargetIdRef.current = row.id;
     setUploadTargetId(row.id);
     fileInputRef.current?.click();
   }, []);

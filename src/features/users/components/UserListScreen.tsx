@@ -63,6 +63,7 @@ import type { UserSummaryDto, CreateUserRequest } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 import { useCarTypeStats } from "../hooks/use-user-stats";
 import { PROVIDER_ROLE_ID, DEFAULT_ROLES } from "../constants/roles";
+import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 
 const isAdmin    = (u: { role?: { id?: number } }) => u.role?.id === 2;
 const isUser     = (u: { role?: { id?: number } }) => u.role?.id === 3;
@@ -113,6 +114,20 @@ export default function UserListScreen() {
     queryFn: ({ signal }) => getUsersList(signal),
   });
 
+  const { data: allServiceProviders = [] } = useQuery({
+    queryKey: ["service-providers-all"],
+    queryFn: () => getAllServiceProviders(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const providersByOwner = useMemo(() => {
+    const map = new Map<number, number>();
+    allServiceProviders.forEach((sp) => {
+      map.set(sp.ownerId, (map.get(sp.ownerId) ?? 0) + 1);
+    });
+    return map;
+  }, [allServiceProviders]);
+
   const carStats = useCarTypeStats(data);
   const brandOptions = useMemo(() => carStats.map((s) => s.name), [carStats]);
 
@@ -140,7 +155,6 @@ export default function UserListScreen() {
       return updateUserProfile(user.id!, {
         name: detail.name,
         email: detail.email,
-        phone: detail.phone ?? "",
         isActive: detail.isActive,
         roleId: PROVIDER_ROLE_ID,
         country: detail.country ?? null,
@@ -338,6 +352,24 @@ export default function UserListScreen() {
         renderCell: ({ row }) => row.role ? roleChip(row.role.name) : <Typography variant="body2" color="text.disabled">—</Typography>,
       },
       {
+        field: "providers", headerName: t("userManagement@columns.providers"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
+        renderCell: ({ row }) => {
+          const count = providersByOwner.get(row.id!) ?? 0;
+          return count > 0 ? (
+            <Chip
+              icon={<StoreIcon sx={{ fontSize: "13px !important" }} />}
+              label={count}
+              size="small"
+              color="info"
+              variant="outlined"
+              sx={{ fontWeight: 700 }}
+            />
+          ) : (
+            <Typography variant="body2" color="text.disabled">—</Typography>
+          );
+        },
+      },
+      {
         field: "isActive", headerName: t("userManagement@columns.status"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
         renderCell: ({ row }) => {
           const active = row.isActive !== false;
@@ -369,7 +401,7 @@ export default function UserListScreen() {
         ),
       },
     ],
-    [t, roleChip, handleEdit, handleDeleteClick, handleChangeRoleClick]
+    [t, roleChip, handleEdit, handleDeleteClick, handleChangeRoleClick, providersByOwner]
   );
 
   const tabConfig = ROLE_TAB_CONFIG[activeTab];

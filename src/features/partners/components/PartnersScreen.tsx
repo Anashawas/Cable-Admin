@@ -112,6 +112,21 @@ export default function PartnersScreen() {
     balanceTarget?.providerId ?? null
   );
 
+  // Always load service providers for owner lookup in the table
+  const { data: allServiceProviders = [] } = useQuery({
+    queryKey: ["service-providers-all"],
+    queryFn: () => getAllServiceProviders(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const ownerByProviderId = useMemo(() => {
+    const map = new Map<string, { ownerId: number; ownerName: string }>();
+    allServiceProviders.forEach((sp) => {
+      map.set(`ServiceProvider-${sp.id}`, { ownerId: sp.ownerId, ownerName: sp.ownerName });
+    });
+    return map;
+  }, [allServiceProviders]);
+
   const { data: conversionRates = [] } = useQuery({
     queryKey: ["conversion-rates"],
     queryFn: () => getAllConversionRates(),
@@ -306,6 +321,27 @@ export default function PartnersScreen() {
             </Avatar>
             <Typography variant="body2" fontWeight={600}>{name}</Typography>
           </Stack>
+        );
+      },
+    },
+    {
+      field: "ownerName",
+      headerName: t("partners@owner"),
+      width: 160,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const key = `${params.row.providerType}-${params.row.providerId}`;
+        const owner = ownerByProviderId.get(key);
+        return owner ? (
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Avatar sx={{ width: 24, height: 24, fontSize: 11, fontWeight: 700, bgcolor: "grey.400" }}>
+              {owner.ownerName.charAt(0).toUpperCase()}
+            </Avatar>
+            <Typography variant="body2" noWrap>{owner.ownerName}</Typography>
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.disabled">—</Typography>
         );
       },
     },

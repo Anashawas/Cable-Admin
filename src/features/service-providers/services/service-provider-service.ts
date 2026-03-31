@@ -160,5 +160,5 @@ export const changeServiceProviderOwner = async (
   serviceProviderId: number,
   data: ChangeOwnerRequest
 ): Promise<void> => {
-  await server.patch(`/api/provider/service-providers/change-owner/${serviceProviderId}`, data);
+  await server.put(`/api/service-providers/ChangeOwner/${serviceProviderId}`, data);
 };

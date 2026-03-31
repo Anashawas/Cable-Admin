@@ -94,10 +94,27 @@ export const createOffer = async (data: ProposeOfferRequest): Promise<number> =>
 
 export const uploadOfferImage = async (offerId: number, file: File): Promise<void> => {
   const formData = new FormData();
-  formData.append("file", file);
-  await server.post(`/api/offers/UploadOfferImage/${offerId}`, formData, {
+  formData.append("files", file);
+  await server.post(`/api/offerAttachments/AddOfferAttachment/${offerId}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+};
+
+export interface OfferAttachmentDto {
+  fileName: string;
+  contentType: string;
+  filePath: string;
+  fileExtension: string;
+  fileSize: number;
+}
+
+export const getOfferAttachments = async (offerId: number): Promise<OfferAttachmentDto[]> => {
+  const response = await server.get(`/api/offerAttachments/GetOfferAttachments/${offerId}`);
+  return response.data ?? [];
+};
+
+export const deleteOfferAttachments = async (offerId: number): Promise<void> => {
+  await server.delete(`/api/offerAttachments/DeleteOfferAttachments/${offerId}`);
 };
 
 // ============================================

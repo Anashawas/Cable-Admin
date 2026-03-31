@@ -19,7 +19,8 @@
     "status": "الحالة",
     "actions": "إجراءات",
     "active": "نشط",
-    "inactive": "غير نشط"
+    "inactive": "غير نشط",
+    "providers": "مقدمو الخدمات"
   },
   "actions": {
     "edit": "تعديل",
@@ -47,7 +48,11 @@
     "isActive": "نشط",
     "password": "كلمة المرور",
     "passwordHint": "6 أحرف على الأقل",
-    "activeAccount": "حساب نشط"
+    "activeAccount": "حساب نشط",
+    "phoneReadOnly": "يُدار الهاتف عبر التحقق من الرقم ولا يمكن تغييره من هنا"
+  },
+  "providers": {
+    "title": "مقدمو الخدمات"
   },
   "cars": {
     "title": "سيارات المستخدم",

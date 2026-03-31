@@ -19,7 +19,8 @@
     "status": "Status",
     "actions": "Actions",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "providers": "Providers"
   },
   "actions": {
     "edit": "Edit",
@@ -47,7 +48,11 @@
     "isActive": "Active",
     "password": "Password",
     "passwordHint": "Minimum 6 characters",
-    "activeAccount": "Active Account"
+    "activeAccount": "Active Account",
+    "phoneReadOnly": "Phone is managed via phone verification and cannot be changed here"
+  },
+  "providers": {
+    "title": "Service Providers"
   },
   "cars": {
     "title": "User's Cars",

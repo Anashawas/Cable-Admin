@@ -64,10 +64,9 @@ export interface CreateUserRequest {
   city?: string | null;
 }
 
-/** Payload for PUT api/users/{id}. No password. */
+/** Payload for PUT api/users/{id}. Phone is NOT part of this endpoint. */
 export interface UpdateUserRequestSpec {
   name: string;
-  phone: string;
   roleId: number;
   isActive: boolean;
   email: string;

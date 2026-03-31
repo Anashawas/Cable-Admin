@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -23,8 +24,11 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import StoreIcon from "@mui/icons-material/Store";
+import VerifiedIcon from "@mui/icons-material/Verified";
 import type { UserSummaryDto } from "../types/api";
 import { getUserById } from "../services/user-service";
+import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 
 interface UserDetailDrawerProps {
   user: UserSummaryDto | null;
@@ -51,6 +55,18 @@ export default function UserDetailDrawer({ user, onClose, onEdit, onDelete }: Us
     enabled: user?.id != null && user.id > 0,
     staleTime: 30 * 1000,
   });
+
+  const { data: allProviders = [] } = useQuery({
+    queryKey: ["service-providers-all"],
+    queryFn: () => getAllServiceProviders(),
+    staleTime: 5 * 60 * 1000,
+    enabled: user != null,
+  });
+
+  const userProviders = useMemo(
+    () => allProviders.filter((sp) => sp.ownerId === user?.id),
+    [allProviders, user?.id]
+  );
 
   // Use fresh detail data when available, fall back to list summary
   const name = detail?.name ?? user?.name ?? "?";
@@ -192,6 +208,61 @@ export default function UserDetailDrawer({ user, onClose, onEdit, onDelete }: Us
                     </Typography>
                   </Box>
                 </Stack>
+              )}
+
+              {/* Service Providers owned by this user */}
+              {userProviders.length > 0 && (
+                <>
+                  <Divider />
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <StoreIcon sx={{ fontSize: 18, color: "primary.main" }} />
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {t("userManagement@providers.title")} ({userProviders.length})
+                    </Typography>
+                  </Stack>
+                  <Stack spacing={1}>
+                    {userProviders.map((sp) => (
+                      <Paper
+                        key={sp.id}
+                        elevation={0}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          bgcolor: "primary.50",
+                          border: 1,
+                          borderColor: "primary.100",
+                          transition: "all 0.2s",
+                          "&:hover": { borderColor: "primary.300", bgcolor: "primary.100" },
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                          <Avatar
+                            src={sp.icon || undefined}
+                            sx={{ width: 36, height: 36, bgcolor: "primary.main", fontSize: 14 }}
+                          >
+                            <StoreIcon sx={{ fontSize: 18 }} />
+                          </Avatar>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              <Typography variant="body2" fontWeight={700} noWrap>{sp.name}</Typography>
+                              {sp.isVerified && <VerifiedIcon sx={{ fontSize: 14, color: "success.main" }} />}
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary" noWrap>
+                              {sp.serviceCategoryName} {sp.cityName ? `· ${sp.cityName}` : ""}
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label={`#${sp.id}`}
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            sx={{ fontSize: 10, fontWeight: 700 }}
+                          />
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Stack>
+                </>
               )}
 
               {/* Cars */}

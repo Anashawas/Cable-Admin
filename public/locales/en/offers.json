@@ -85,6 +85,7 @@
   "activeOffers": "Active Offers",
   "activeOffers_subtitle": "View and manage all approved offers",
   "deactivated": "Offer deactivated successfully",
+  "updated": "Offer updated successfully",
   "noActiveOffers": "No offers found",
   "offers": "Offers",
   "deactivate": "Deactivate",

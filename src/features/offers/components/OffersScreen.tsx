@@ -48,6 +48,9 @@ import EvStationIcon from "@mui/icons-material/EvStation";
 import BusinessIcon from "@mui/icons-material/Business";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import EditIcon from "@mui/icons-material/Edit";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import PersonIcon from "@mui/icons-material/Person";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -64,9 +67,12 @@ import {
   useRejectOffer,
   useDeactivateOffer,
   useCreateOffer,
+  useUpdateOffer,
   useUploadOfferImage,
+  useOfferAttachments,
+  useDeleteOfferAttachments,
 } from "../hooks/use-offers";
-import type { OfferDto, ProposeOfferRequest, ProviderType } from "../types/api";
+import type { OfferDto, ProposeOfferRequest, UpdateOfferRequest, ProviderType } from "../types/api";
 import { useQuery } from "@tanstack/react-query";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
@@ -180,6 +186,8 @@ export default function OffersScreen() {
   // ── Mutations ────────────────────────────────────────────────────────────
   const deactivateMutation = useDeactivateOffer();
   const createMutation = useCreateOffer();
+  const updateMutation = useUpdateOffer();
+  const deleteAttachmentsMutation = useDeleteOfferAttachments();
   const approveMutation = useApproveOffer();
   const rejectMutation = useRejectOffer();
   const uploadImageMutation = useUploadOfferImage();
@@ -222,6 +230,17 @@ export default function OffersScreen() {
   const [providerSearch, setProviderSearch] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // ── Edit offer dialog state ──────────────────────────────────────────────
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<OfferDto | null>(null);
+  const [editFormData, setEditFormData] = useState<UpdateOfferRequest | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+
+  const { data: editAttachments, isLoading: editAttachmentsLoading } = useOfferAttachments(
+    editDialogOpen ? editingOffer?.id : null
+  );
 
   // ── Pending offer dialogs state ──────────────────────────────────────────
   const [pendingDetailOpen, setPendingDetailOpen] = useState(false);
@@ -366,6 +385,71 @@ export default function OffersScreen() {
     });
   }, [formData, imageFile, createMutation, uploadImageMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
+  const handleEditClick = useCallback((e: React.MouseEvent, row: OfferDto) => {
+    e.stopPropagation();
+    setEditingOffer(row);
+    setEditFormData({
+      title: row.title,
+      titleAr: row.titleAr ?? "",
+      description: row.description ?? "",
+      descriptionAr: row.descriptionAr ?? "",
+      providerType: row.providerType,
+      providerId: row.providerId,
+      pointsCost: row.pointsCost,
+      monetaryValue: row.monetaryValue,
+      currencyCode: row.currencyCode,
+      maxUsesPerUser: row.maxUsesPerUser,
+      maxTotalUses: row.maxTotalUses,
+      offerCodeExpirySeconds: row.offerCodeExpirySeconds,
+      imageUrl: row.imageUrl ?? "",
+      validFrom: row.validFrom ? row.validFrom.split("T")[0] : "",
+      validTo: row.validTo ? row.validTo.split("T")[0] : "",
+      isActive: row.isActive,
+    });
+    setEditImageFile(null);
+    setEditImagePreview(row.imageUrl || null);
+    setEditDialogOpen(true);
+  }, []);
+
+  const handleEditSubmit = useCallback(() => {
+    if (!editingOffer || !editFormData) return;
+    updateMutation.mutate(
+      { id: editingOffer.id, data: editFormData },
+      {
+        onSuccess: () => {
+          if (editImageFile) {
+            uploadImageMutation.mutate(
+              { id: editingOffer.id, file: editImageFile },
+              {
+                onSuccess: () => {
+                  openSuccessSnackbar({ message: t("offers@updated") });
+                  setEditDialogOpen(false);
+                },
+                onError: () => {
+                  openSuccessSnackbar({ message: t("offers@updated") });
+                  openErrorSnackbar({ message: t("offers@imageUploadFailed") });
+                  setEditDialogOpen(false);
+                },
+              }
+            );
+          } else {
+            openSuccessSnackbar({ message: t("offers@updated") });
+            setEditDialogOpen(false);
+          }
+        },
+        onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+      }
+    );
+  }, [editingOffer, editFormData, editImageFile, updateMutation, uploadImageMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+
+  const handleEditImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditImageFile(file);
+    setEditImagePreview(URL.createObjectURL(file));
+    e.target.value = "";
+  }, []);
+
   const handleDeactivate = useCallback(
     (e: React.MouseEvent, row: OfferDto) => {
       e.stopPropagation();
@@ -484,7 +568,7 @@ export default function OffersScreen() {
     {
       field: "actions",
       headerName: t("actions"),
-      width: 110,
+      width: 150,
       align: "center",
       headerAlign: "center",
       sortable: false,
@@ -500,6 +584,15 @@ export default function OffersScreen() {
               }}
             >
               <VisibilityIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t("edit")}>
+            <IconButton
+              size="small"
+              onClick={(e) => handleEditClick(e, p.row)}
+              sx={{ bgcolor: "primary.main", color: "white", width: 28, height: 28, "&:hover": { bgcolor: "primary.dark" } }}
+            >
+              <EditIcon sx={{ fontSize: 15 }} />
             </IconButton>
           </Tooltip>
           {p.row.isActive && (
@@ -1595,6 +1688,171 @@ export default function OffersScreen() {
             startIcon={(createMutation.isPending || uploadImageMutation.isPending) ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
           >
             {uploadImageMutation.isPending ? t("offers@uploadingImage") : createMutation.isPending ? t("creating") : t("offers@createOffer")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Edit Offer Dialog ── */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", maxHeight: "92vh", display: "flex", flexDirection: "column" } }}
+      >
+        <Box sx={{ background: "linear-gradient(135deg, #e65100 0%, #f57c00 100%)", px: 3, py: 2.5, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48 }}><EditIcon /></Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight={700} color="white">{t("edit")} {t("offers@offers")}</Typography>
+              {editingOffer && <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)" }}>#{editingOffer.id} · {editingOffer.title}</Typography>}
+            </Box>
+          </Stack>
+          <IconButton size="small" onClick={() => setEditDialogOpen(false)} sx={{ color: "rgba(255,255,255,0.8)", "&:hover": { bgcolor: "rgba(255,255,255,0.15)" } }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        <DialogContent sx={{ pt: 3, pb: 1, px: 3, overflowY: "auto", flex: 1 }}>
+          {editFormData && (
+            <Stack spacing={3}>
+              {/* Images Section */}
+              <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2.5, border: "1px solid", borderColor: "divider" }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={700}>{t("offers@offerImage")}</Typography>
+                  <Button component="label" variant="contained" startIcon={<CloudUploadIcon />} size="small" sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}>
+                    {t("offers@selectImage")}
+                    <input type="file" accept="image/*" hidden onChange={handleEditImageChange} />
+                  </Button>
+                </Stack>
+
+                {/* New file to upload */}
+                {editImageFile && (
+                  <Paper elevation={0} sx={{ p: 1.5, mb: 2, bgcolor: "success.50", borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box sx={{ width: 56, height: 56, borderRadius: 1.5, overflow: "hidden", flexShrink: 0, border: "1px solid", borderColor: "success.200" }}>
+                        {editImagePreview && <Box component="img" src={editImagePreview} alt="new" sx={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                      </Box>
+                      <Box flex={1} sx={{ minWidth: 0 }}>
+                        <Typography variant="caption" fontWeight={700} color="success.dark">{t("new")}</Typography>
+                        <Typography variant="caption" color="text.secondary" noWrap display="block">{editImageFile.name}</Typography>
+                      </Box>
+                      <IconButton size="small" color="error" onClick={() => { setEditImageFile(null); setEditImagePreview(null); }}>
+                        <DeleteIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Stack>
+                  </Paper>
+                )}
+
+                {/* Existing attachments */}
+                {editAttachmentsLoading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}><CircularProgress size={24} /></Box>
+                ) : editAttachments && editAttachments.length > 0 ? (
+                  <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+                    {editAttachments.map((att, idx) => (
+                      <Box
+                        key={att.fileName || idx}
+                        sx={{
+                          width: 100, height: 100, borderRadius: 2, overflow: "hidden",
+                          border: "2px solid", borderColor: "divider",
+                          cursor: "pointer",
+                          transition: "border-color 0.15s",
+                          "&:hover": { borderColor: "primary.main" },
+                        }}
+                        onClick={() => window.open(att.filePath, "_blank")}
+                      >
+                        <Box component="img" src={att.filePath} alt={att.fileName} sx={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none"; }} />
+                      </Box>
+                    ))}
+                  </Box>
+                ) : !editImageFile ? (
+                  <Box sx={{ py: 4, textAlign: "center", bgcolor: "grey.50", borderRadius: 2, border: "1px dashed", borderColor: "grey.300" }}>
+                    <AddPhotoAlternateIcon sx={{ fontSize: 36, color: "grey.300", mb: 0.5 }} />
+                    <Typography variant="body2" color="text.disabled">{t("offers@imageUploadHint")}</Typography>
+                  </Box>
+                ) : null}
+              </Paper>
+
+              {/* Basic Info */}
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField label={t("offers@titleEn")} value={editFormData.title} onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })} required fullWidth size="small" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField label={t("offers@titleAr")} value={editFormData.titleAr ?? ""} onChange={(e) => setEditFormData({ ...editFormData, titleAr: e.target.value || null })} fullWidth size="small" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField label={t("offers@descriptionEn")} value={editFormData.description ?? ""} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value || null })} multiline rows={2} fullWidth size="small" />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField label={t("offers@descriptionAr")} value={editFormData.descriptionAr ?? ""} onChange={(e) => setEditFormData({ ...editFormData, descriptionAr: e.target.value || null })} multiline rows={2} fullWidth size="small" />
+                </Grid>
+              </Grid>
+
+              {/* Financial */}
+              <Grid container spacing={2}>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@pointsCost")} type="number" value={editFormData.pointsCost} onChange={(e) => setEditFormData({ ...editFormData, pointsCost: Number(e.target.value) })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><StarsIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@monetaryValue")} type="number" value={editFormData.monetaryValue} onChange={(e) => setEditFormData({ ...editFormData, monetaryValue: Number(e.target.value) })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@codeExpiry")} type="number" value={editFormData.offerCodeExpirySeconds ?? ""} onChange={(e) => setEditFormData({ ...editFormData, offerCodeExpirySeconds: e.target.value ? Number(e.target.value) : null })} fullWidth size="small" helperText={t("offers@minExpiry60")} InputProps={{ startAdornment: <InputAdornment position="start"><TimerIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@currencyCode")} value={editFormData.currencyCode} onChange={(e) => setEditFormData({ ...editFormData, currencyCode: e.target.value })} fullWidth size="small" />
+                </Grid>
+              </Grid>
+
+              {/* Limits & Dates */}
+              <Grid container spacing={2}>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@maxUsesPerUser")} type="number" value={editFormData.maxUsesPerUser ?? ""} onChange={(e) => setEditFormData({ ...editFormData, maxUsesPerUser: e.target.value ? Number(e.target.value) : null })} fullWidth size="small" helperText={t("offers@leaveEmptyUnlimited")} />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@maxTotalUses")} type="number" value={editFormData.maxTotalUses ?? ""} onChange={(e) => setEditFormData({ ...editFormData, maxTotalUses: e.target.value ? Number(e.target.value) : null })} fullWidth size="small" helperText={t("offers@leaveEmptyNoLimit")} />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@validFrom")} type="date" value={editFormData.validFrom} onChange={(e) => setEditFormData({ ...editFormData, validFrom: e.target.value })} fullWidth size="small" InputLabelProps={{ shrink: true }} />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField label={t("offers@validTo")} type="date" value={editFormData.validTo ?? ""} onChange={(e) => setEditFormData({ ...editFormData, validTo: e.target.value || null })} fullWidth size="small" InputLabelProps={{ shrink: true }} helperText={t("offers@leaveEmptyNoExpiry")} />
+                </Grid>
+              </Grid>
+
+              {/* Provider (read-only) */}
+              {editingOffer && (
+                <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ bgcolor: editingOffer.providerType === "ChargingPoint" ? "primary.main" : "secondary.main", width: 36, height: 36 }}>
+                      {editingOffer.providerType === "ChargingPoint" ? <EvStationIcon sx={{ fontSize: 18 }} /> : <BusinessIcon sx={{ fontSize: 18 }} />}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" fontWeight={700}>{editingOffer.providerName}</Typography>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Chip label={editingOffer.providerType === "ChargingPoint" ? t("offers@chargingPoint") : t("offers@serviceProvider")} size="small" sx={{ height: 18, "& .MuiChip-label": { px: 0.75, fontSize: "0.6rem" } }} />
+                        <Typography variant="caption" color="text.disabled">#{editingOffer.providerId}</Typography>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Paper>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+
+        <Divider sx={{ flexShrink: 0 }} />
+        <DialogActions sx={{ px: 3, py: 2, gap: 1, flexShrink: 0 }}>
+          <Button onClick={() => setEditDialogOpen(false)} variant="outlined" color="inherit" sx={{ borderRadius: 2 }}>{t("cancel")}</Button>
+          <Button
+            onClick={handleEditSubmit}
+            variant="contained"
+            disabled={updateMutation.isPending || uploadImageMutation.isPending}
+            startIcon={(updateMutation.isPending || uploadImageMutation.isPending) ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
+            sx={{ borderRadius: 2, minWidth: 140, background: "linear-gradient(135deg, #e65100 0%, #f57c00 100%)", "&:hover": { background: "linear-gradient(135deg, #bf360c 0%, #e65100 100%)" } }}
+          >
+            {updateMutation.isPending ? t("updating") : uploadImageMutation.isPending ? t("offers@uploadingImage") : t("update")}
           </Button>
         </DialogActions>
       </Dialog>
