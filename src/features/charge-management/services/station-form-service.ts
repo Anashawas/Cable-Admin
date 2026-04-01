@@ -58,4 +58,17 @@ const updateStation = async (
   });
 };
 
-export { getAllPlugTypes, getStationById, addStation, updateStation };
+/**
+ * PATCH api/provider/charging-points/change-owner/{id}
+ * Body: { newOwnerId: number }
+ */
+const changeStationOwner = async (
+  stationId: number,
+  newOwnerId: number
+): Promise<void> => {
+  await server.patch(`api/provider/charging-points/change-owner/${stationId}`, {
+    newOwnerId,
+  });
+};
+
+export { getAllPlugTypes, getStationById, addStation, updateStation, changeStationOwner };

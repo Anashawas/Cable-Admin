@@ -5,6 +5,9 @@ import type { RoleDto } from "../types/api";
  * Include current user role when building options in the form.
  */
 export const DEFAULT_ROLES: RoleDto[] = [
-  { id: 1, name: "Admin" },
-  { id: 2, name: "User" },
+  { id: 2, name: "Admin" },
+  { id: 3, name: "User" },
+  { id: 4, name: "Provider" },
 ];
+
+export const PROVIDER_ROLE_ID = 4;

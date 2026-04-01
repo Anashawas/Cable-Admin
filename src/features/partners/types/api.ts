@@ -13,7 +13,8 @@ export interface PartnerAgreementDto {
   commissionPercentage: number;
   pointsRewardPercentage: number;
   pointsConversionRateId?: number | null;
-  codeExpiryMinutes: number;
+  codeExpirySeconds: number;
+  minimumTransactionAmount: number | null;
   isActive: boolean;
   note?: string | null;
   createdAt?: string | null;
@@ -25,7 +26,8 @@ export interface CreatePartnerAgreementRequest {
   commissionPercentage: number;
   pointsRewardPercentage: number;
   pointsConversionRateId?: number | null;
-  codeExpiryMinutes: number;
+  codeExpirySeconds: number;
+  minimumTransactionAmount?: number | null;
   isActive?: boolean;
   note?: string | null;
 }
@@ -36,7 +38,38 @@ export interface UpdatePartnerAgreementRequest {
   commissionPercentage?: number;
   pointsRewardPercentage?: number;
   pointsConversionRateId?: number | null;
-  codeExpiryMinutes?: number;
+  codeExpirySeconds?: number;
+  minimumTransactionAmount?: number | null;
   isActive?: boolean;
   note?: string | null;
+}
+
+// ============================================
+// Credit Limit & Balance DTOs
+// ============================================
+
+export interface SetCreditLimitRequest {
+  providerType: PartnerProviderType;
+  providerId: number;
+  creditLimit: number | null; // null = unlimited
+}
+
+export interface ProviderWalletTransactionDto {
+  id: number;
+  providerId: number;
+  providerType: PartnerProviderType;
+  amount: number;
+  transactionType: number;
+  settlementId: number | null;
+  note: string | null;
+  createdByUserId: number;
+  createdByUserName: string;
+  createdAt: string;
+}
+
+export interface ProviderBalanceDto {
+  walletBalance: number;              // positive = credit, negative = debt
+  walletCreditLimit: number | null;   // max debt allowed, null = unlimited
+  availableCredit: number | null;     // how much more before blocked
+  walletTransactions: ProviderWalletTransactionDto[];
 }

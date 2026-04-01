@@ -3,12 +3,17 @@ import { useMemo, useState, useCallback } from "react";
 import {
   getPendingOffers,
   getActiveOffers,
+  getOffersForProvider,
   getOfferById,
   approveOffer,
   rejectOffer,
   updateOffer,
   deactivateOffer,
   createOffer,
+  uploadOfferImage,
+  getOfferAttachments,
+  deleteOfferAttachments,
+  type OfferAttachmentDto,
 } from "../services/offers-service";
 import type {
   OfferDto,
@@ -22,6 +27,7 @@ import type {
 // Query keys
 export const OFFERS_QUERY_KEY = ["offers"];
 export const PENDING_OFFERS_QUERY_KEY = ["offers", "pending"];
+export const PROVIDER_OFFERS_QUERY_KEY = ["offers", "provider"];
 export const OFFER_DETAIL_QUERY_KEY = (id: number) => ["offer", id];
 
 export type OfferSortOption = "NONE" | "NEWEST_FIRST" | "EXPIRING_SOON" | "MOST_USED";
@@ -141,6 +147,35 @@ export function useAllOffers(filters?: {
   };
 }
 
+export function useOffersForProvider(providerId?: number, providerType: ProviderType = "ServiceProvider") {
+  const [search, setSearch] = useState("");
+
+  const query = useQuery({
+    queryKey: [...PROVIDER_OFFERS_QUERY_KEY, providerType, providerId],
+    queryFn: () => getOffersForProvider({ providerType, providerId }),
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+    enabled: providerId != null && providerId > 0,
+  });
+
+  const filteredData = useMemo(() => {
+    return applyFilter(query.data ?? [], search);
+  }, [query.data, search]);
+
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
+  const handleRefresh = useCallback(() => query.refetch(), [query]);
+
+  return {
+    data: filteredData,
+    allData: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    search,
+    handleSearchChange,
+    handleRefresh,
+  };
+}
+
 export function useOffer(id: number) {
   return useQuery({
     queryKey: OFFER_DETAIL_QUERY_KEY(id),
@@ -197,6 +232,43 @@ export function useCreateOffer() {
     mutationFn: (data: ProposeOfferRequest) => createOffer(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PENDING_OFFERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: OFFERS_QUERY_KEY });
+    },
+  });
+}
+
+export function useUploadOfferImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) =>
+      uploadOfferImage(id, file),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: OFFERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: PENDING_OFFERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["offer-attachments", variables.id] });
+    },
+  });
+}
+
+export const OFFER_ATTACHMENTS_KEY = (offerId: number) => ["offer-attachments", offerId];
+
+export function useOfferAttachments(offerId?: number | null) {
+  return useQuery({
+    queryKey: OFFER_ATTACHMENTS_KEY(offerId!),
+    queryFn: () => getOfferAttachments(offerId!),
+    enabled: !!offerId,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useDeleteOfferAttachments() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (offerId: number) => deleteOfferAttachments(offerId),
+    onSuccess: (_result, offerId) => {
+      queryClient.invalidateQueries({ queryKey: OFFER_ATTACHMENTS_KEY(offerId) });
       queryClient.invalidateQueries({ queryKey: OFFERS_QUERY_KEY });
     },
   });

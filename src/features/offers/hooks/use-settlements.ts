@@ -2,24 +2,25 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, useCallback } from "react";
 import {
   getSettlements,
+  getProviderSettlements,
   getSettlementSummary,
   updateSettlementStatus,
-  generateSettlement,
+  addWalletDeposit,
+  getWalletBalance,
+  getWalletHistory,
 } from "../services/offers-service";
 import type {
   ProviderSettlementDto,
   UpdateSettlementStatusRequest,
-  GenerateSettlementRequest,
+  AddWalletDepositRequest,
   ProviderType,
-  SettlementStatus,
 } from "../types/api";
 
 // Query keys
 export const SETTLEMENTS_QUERY_KEY = ["settlements"];
-export const SETTLEMENT_SUMMARY_QUERY_KEY = (year?: number, month?: number) => [
+export const SETTLEMENT_SUMMARY_QUERY_KEY = (year?: number) => [
   "settlement-summary",
   year,
-  month,
 ];
 
 // ============================================
@@ -31,7 +32,6 @@ export function useSettlements(filters?: {
   providerId?: number;
   status?: number;
   year?: number;
-  month?: number;
 }) {
   const [search, setSearch] = useState("");
 
@@ -47,8 +47,11 @@ export function useSettlements(filters?: {
     if (!search.trim()) return raw;
 
     const q = search.trim().toLowerCase();
-    return raw.filter((settlement) =>
-      (settlement.providerOwnerName ?? "").toLowerCase().includes(q)
+    return raw.filter((s) =>
+      (s.providerName ?? "").toLowerCase().includes(q) ||
+      (s.providerOwnerName ?? "").toLowerCase().includes(q) ||
+      (s.ownerEmail ?? "").toLowerCase().includes(q) ||
+      String(s.providerId).includes(q)
     );
   }, [query.data, search]);
 
@@ -65,10 +68,34 @@ export function useSettlements(filters?: {
   };
 }
 
-export function useSettlementSummary(year?: number, month?: number) {
+export function useSettlementSummary(year?: number) {
   return useQuery({
-    queryKey: SETTLEMENT_SUMMARY_QUERY_KEY(year, month),
-    queryFn: () => getSettlementSummary({ year, month }),
+    queryKey: SETTLEMENT_SUMMARY_QUERY_KEY(year),
+    queryFn: () => getSettlementSummary({ year }),
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+}
+
+export const PROVIDER_SETTLEMENTS_QUERY_KEY = (providerType: ProviderType, providerId: number) => [
+  "provider-settlements",
+  providerType,
+  providerId,
+];
+
+export function useProviderSettlements(params: {
+  providerType: ProviderType;
+  providerId: number;
+  status?: number;
+  year?: number;
+  week?: number;
+  unpaidOnly?: boolean;
+  hasDebt?: boolean;
+}) {
+  return useQuery({
+    queryKey: [...PROVIDER_SETTLEMENTS_QUERY_KEY(params.providerType, params.providerId), params],
+    queryFn: () => getProviderSettlements(params),
+    enabled: !!params.providerType && !!params.providerId,
     staleTime: 2 * 60 * 1000,
     retry: 2,
   });
@@ -87,18 +114,58 @@ export function useUpdateSettlementStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SETTLEMENTS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ["settlement-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
     },
   });
 }
 
-export function useGenerateSettlement() {
+// ============================================
+// Wallet (formerly PreCredit)
+// ============================================
+
+export const WALLET_BALANCE_KEY = (providerType: ProviderType, providerId: number) => [
+  "wallet-balance",
+  providerType,
+  providerId,
+];
+
+export const WALLET_HISTORY_KEY = (providerType: ProviderType, providerId: number) => [
+  "wallet-history",
+  providerType,
+  providerId,
+];
+
+export function useWalletBalance(providerType?: ProviderType, providerId?: number) {
+  return useQuery({
+    queryKey: WALLET_BALANCE_KEY(providerType!, providerId!),
+    queryFn: () => getWalletBalance({ providerType: providerType!, providerId: providerId! }),
+    enabled: !!providerType && !!providerId,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useWalletHistory(providerType?: ProviderType, providerId?: number) {
+  return useQuery({
+    queryKey: WALLET_HISTORY_KEY(providerType!, providerId!),
+    queryFn: () => getWalletHistory({ providerType: providerType!, providerId: providerId! }),
+    enabled: !!providerType && !!providerId,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useAddWalletDeposit() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: GenerateSettlementRequest) => generateSettlement(data),
-    onSuccess: () => {
+    mutationFn: (data: AddWalletDepositRequest) => addWalletDeposit(data),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: WALLET_BALANCE_KEY(variables.providerType, variables.providerId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: WALLET_HISTORY_KEY(variables.providerType, variables.providerId),
+      });
       queryClient.invalidateQueries({ queryKey: SETTLEMENTS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["settlement-summary"] });
     },
   });
 }

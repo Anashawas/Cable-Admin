@@ -19,12 +19,25 @@
     "status": "الحالة",
     "actions": "إجراءات",
     "active": "نشط",
-    "inactive": "غير نشط"
+    "inactive": "غير نشط",
+    "providers": "مقدمو الخدمات"
   },
   "actions": {
     "edit": "تعديل",
-    "delete": "حذف"
+    "delete": "حذف",
+    "makeProvider": "تغيير الدور إلى مزود"
   },
+  "makeProviderTitle": "تغيير الدور إلى مزود",
+  "makeProviderConfirm": "هل أنت متأكد من تغيير دور {{name}} إلى مزود؟",
+  "makeProviderAction": "جعله مزوداً",
+  "roleChangedToProvider": "تم تغيير دور المستخدم إلى مزود",
+  "addUser": "إضافة مستخدم",
+  "addUserSubtitle": "إنشاء حساب مستخدم جديد مع الدور والتفاصيل",
+  "createUser": "إنشاء مستخدم",
+  "userCreated": "تم إنشاء المستخدم بنجاح",
+  "nameRequired": "الاسم مطلوب",
+  "emailRequired": "البريد الإلكتروني مطلوب",
+  "passwordMinLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
   "form": {
     "name": "الاسم",
     "email": "البريد الإلكتروني",
@@ -32,7 +45,14 @@
     "country": "الدولة",
     "city": "المدينة",
     "role": "الدور",
-    "isActive": "نشط"
+    "isActive": "نشط",
+    "password": "كلمة المرور",
+    "passwordHint": "6 أحرف على الأقل",
+    "activeAccount": "حساب نشط",
+    "phoneReadOnly": "يُدار الهاتف عبر التحقق من الرقم ولا يمكن تغييره من هنا"
+  },
+  "providers": {
+    "title": "مقدمو الخدمات"
   },
   "cars": {
     "title": "سيارات المستخدم",
@@ -47,5 +67,27 @@
     "noCars": "لم تتم إضافة سيارات بعد.",
     "added": "تمت إضافة السيارة",
     "removed": "تمت إزالة السيارة"
-  }
+  },
+  "manageUsers": "إدارة المستخدمين",
+  "userAnalytics": "تحليلات المستخدمين",
+  "userAnalytics_subtitle": "رسوم بيانية وإحصاءات حول المستخدمين المسجلين",
+  "allBrands": "جميع الماركات",
+  "allModels": "جميع الموديلات",
+  "allPlugTypes": "جميع أنواع القابس",
+  "filterByCar": "فلتر حسب السيارة",
+  "clearFilters": "مسح الفلاتر",
+  "insights_title": "إحصاءات المستخدمين",
+  "insights_totalUsers": "إجمالي المستخدمين",
+  "insights_activeUsers": "المستخدمون النشطون",
+  "insights_inactiveUsers": "المستخدمون غير النشطين",
+  "insights_registrationTrend": "منحنى التسجيل",
+  "insights_registrationDate": "نطاق تاريخ التسجيل",
+  "insights_dateFrom": "من",
+  "insights_dateTo": "إلى",
+  "insights_usersInRange": "{{count}} مستخدم",
+  "insights_clearDates": "مسح فلتر التاريخ",
+  "insights_noDateData": "تاريخ التسجيل غير متوفر من الخادم بعد. سيعمل هذا الفلتر عند إضافته في الـ API.",
+  "insights_tableFiltered": "الجدول مفلتر لهذه الفترة",
+  "insights_carTypeStats": "توزيع أنواع السيارات",
+  "insights_noCarData": "لا توجد بيانات سيارات لأي مستخدم"
 }

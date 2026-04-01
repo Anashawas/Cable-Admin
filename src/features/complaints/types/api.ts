@@ -1,3 +1,9 @@
+export enum ComplaintStatus {
+  Pending = 0,
+  Rejected = 1,
+  Solved = 2,
+}
+
 /** User who reported the complaint. */
 export interface ComplaintUserDto {
   id: number;
@@ -14,6 +20,7 @@ export interface ComplaintStationDto {
 export interface UserComplaintDto {
   id: number;
   note?: string | null;
+  status: ComplaintStatus;
   userAccount?: ComplaintUserDto | null;
   chargingPoint?: ComplaintStationDto | null;
 }

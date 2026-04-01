@@ -28,6 +28,10 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
+  List,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -41,16 +45,30 @@ import StoreIcon from "@mui/icons-material/Store";
 import TimerIcon from "@mui/icons-material/Timer";
 import PeopleIcon from "@mui/icons-material/People";
 import StarsIcon from "@mui/icons-material/Stars";
+import SearchIcon from "@mui/icons-material/Search";
+import EvStationIcon from "@mui/icons-material/EvStation";
+import BusinessIcon from "@mui/icons-material/Business";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader, ScreenHeaderAction } from "../../../components";
 import { AppDataGrid } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
+import EditIcon from "@mui/icons-material/Edit";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
   useAllOffers,
   useDeactivateOffer,
   useCreateOffer,
+  useUpdateOffer,
+  useUploadOfferImage,
 } from "../hooks/use-offers";
-import type { OfferDto, ProposeOfferRequest, ProviderType } from "../types/api";
+import type { OfferDto, ProposeOfferRequest, UpdateOfferRequest, ProviderType } from "../types/api";
+import { useQuery } from "@tanstack/react-query";
+import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
+import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 
 const INITIAL_FORM_DATA: ProposeOfferRequest = {
   title: "",
@@ -61,17 +79,17 @@ const INITIAL_FORM_DATA: ProposeOfferRequest = {
   providerId: 0,
   pointsCost: 0,
   monetaryValue: 0,
-  currencyCode: "KWD",
+  currencyCode: "JOD",
   maxUsesPerUser: null,
   maxTotalUses: null,
-  offerCodeExpiryMinutes: 30,
+  offerCodeExpirySeconds: 60,
   imageUrl: "",
   validFrom: "",
   validTo: "",
 };
 
 export default function ActiveOffersScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["offers", "common"]);
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -87,6 +105,8 @@ export default function ActiveOffersScreen() {
 
   const deactivateMutation = useDeactivateOffer();
   const createMutation = useCreateOffer();
+  const updateMutation = useUpdateOffer();
+  const uploadImageMutation = useUploadOfferImage();
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -97,6 +117,56 @@ export default function ActiveOffersScreen() {
   const [selectedOffer, setSelectedOffer] = useState<OfferDto | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<ProposeOfferRequest>(INITIAL_FORM_DATA);
+  const [selectedProvider, setSelectedProvider] = useState<{ id: number; name: string; city?: string | null } | null>(null);
+  const [providerSearch, setProviderSearch] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<OfferDto | null>(null);
+  const [editFormData, setEditFormData] = useState<UpdateOfferRequest | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+
+  const { data: serviceProviders = [], isLoading: isLoadingServiceProviders } = useQuery({
+    queryKey: ["service-providers-for-offer"],
+    queryFn: () => getAllServiceProviders(),
+    enabled: createDialogOpen && formData.providerType === "ServiceProvider",
+  });
+
+  const { data: chargingPoints = [], isLoading: isLoadingChargingPoints } = useQuery({
+    queryKey: ["charging-points-for-offer"],
+    queryFn: () => getAllChargingPoints(),
+    enabled: createDialogOpen && formData.providerType === "ChargingPoint",
+  });
+
+  const isLoadingProviders = isLoadingServiceProviders || isLoadingChargingPoints;
+
+  const filteredProviders = useMemo(() => {
+    const search = providerSearch.toLowerCase();
+    if (formData.providerType === "ServiceProvider") {
+      return serviceProviders
+        .filter(
+          (p) =>
+            !search ||
+            p.name.toLowerCase().includes(search) ||
+            String(p.id).includes(search) ||
+            (p.cityName ?? "").toLowerCase().includes(search)
+        )
+        .map((p) => ({ id: p.id, name: p.name, city: p.cityName }));
+    } else {
+      return chargingPoints
+        .filter(
+          (p) =>
+            !search ||
+            (p.name ?? "").toLowerCase().includes(search) ||
+            String(p.id).includes(search) ||
+            (p.cityName ?? "").toLowerCase().includes(search)
+        )
+        .map((p) => ({ id: p.id, name: p.name ?? `Station #${p.id}`, city: p.cityName }));
+    }
+  }, [formData.providerType, serviceProviders, chargingPoints, providerSearch]);
 
   const paginatedData = useMemo(() => {
     const start = paginationModel.page * paginationModel.pageSize;
@@ -107,6 +177,78 @@ export default function ActiveOffersScreen() {
     e.stopPropagation();
     setSelectedOffer(row);
     setDetailDialogOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback((e: React.MouseEvent, row: OfferDto) => {
+    e.stopPropagation();
+    setEditingOffer(row);
+    setEditFormData({
+      title: row.title,
+      titleAr: row.titleAr ?? "",
+      description: row.description ?? "",
+      descriptionAr: row.descriptionAr ?? "",
+      providerType: row.providerType,
+      providerId: row.providerId,
+      pointsCost: row.pointsCost,
+      monetaryValue: row.monetaryValue,
+      currencyCode: row.currencyCode,
+      maxUsesPerUser: row.maxUsesPerUser,
+      maxTotalUses: row.maxTotalUses,
+      offerCodeExpirySeconds: row.offerCodeExpirySeconds,
+      imageUrl: row.imageUrl ?? "",
+      validFrom: row.validFrom ? row.validFrom.split("T")[0] : "",
+      validTo: row.validTo ? row.validTo.split("T")[0] : "",
+      isActive: row.isActive,
+    });
+    setEditImageFile(null);
+    setEditImagePreview(row.imageUrl || null);
+    setEditDialogOpen(true);
+  }, []);
+
+  const handleEditSubmit = useCallback(() => {
+    if (!editingOffer || !editFormData) return;
+    updateMutation.mutate(
+      { id: editingOffer.id, data: editFormData },
+      {
+        onSuccess: () => {
+          // Upload image if a new file was selected
+          if (editImageFile) {
+            uploadImageMutation.mutate(
+              { id: editingOffer.id, file: editImageFile },
+              {
+                onSuccess: () => {
+                  openSuccessSnackbar({ message: t("offers@updated") });
+                  setEditDialogOpen(false);
+                  setEditingOffer(null);
+                },
+                onError: () => {
+                  openSuccessSnackbar({ message: t("offers@updated") });
+                  openErrorSnackbar({ message: t("offers@imageUploadFailed") });
+                  setEditDialogOpen(false);
+                  setEditingOffer(null);
+                },
+              }
+            );
+          } else {
+            openSuccessSnackbar({ message: t("offers@updated") });
+            setEditDialogOpen(false);
+            setEditingOffer(null);
+          }
+        },
+        onError: (err: Error) => {
+          openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+        },
+      }
+    );
+  }, [editingOffer, editFormData, editImageFile, updateMutation, uploadImageMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+
+  const handleEditImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditImageFile(file);
+    const url = URL.createObjectURL(file);
+    setEditImagePreview(url);
+    e.target.value = "";
   }, []);
 
   const handleDeactivate = useCallback(
@@ -126,14 +268,27 @@ export default function ActiveOffersScreen() {
 
   const handleOpenCreateDialog = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
+    setSelectedProvider(null);
+    setProviderSearch("");
     setCreateDialogOpen(true);
   }, []);
 
   const handleCloseCreateDialog = useCallback(() => {
-    if (!createMutation.isPending) {
+    if (!createMutation.isPending && !uploadImageMutation.isPending) {
       setCreateDialogOpen(false);
+      setImageFile(null);
+      setImagePreview(null);
     }
-  }, [createMutation.isPending]);
+  }, [createMutation.isPending, uploadImageMutation.isPending]);
+
+  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const url = URL.createObjectURL(file);
+    setImagePreview(url);
+    e.target.value = "";
+  }, []);
 
   const handleCreateSubmit = useCallback(() => {
     if (!formData.title.trim()) {
@@ -152,26 +307,57 @@ export default function ActiveOffersScreen() {
       openErrorSnackbar({ message: t("offers@monetaryValueRequired") });
       return;
     }
-    if (formData.offerCodeExpiryMinutes < 30) {
-      openErrorSnackbar({ message: t("offers@minExpiryMinutes") });
+    if (formData.offerCodeExpirySeconds < 60) {
+      openErrorSnackbar({ message: t("offers@minExpirySeconds") });
       return;
     }
-    if (!formData.validFrom || !formData.validTo) {
+    if (!formData.validFrom) {
       openErrorSnackbar({ message: t("offers@validDatesRequired") });
       return;
     }
 
     createMutation.mutate(formData, {
-      onSuccess: () => {
-        openSuccessSnackbar({ message: t("offers@created") });
-        setCreateDialogOpen(false);
-        setFormData(INITIAL_FORM_DATA);
+      onSuccess: (offerId) => {
+        if (imageFile && offerId) {
+          uploadImageMutation.mutate(
+            { id: offerId, file: imageFile },
+            {
+              onSuccess: () => {
+                openSuccessSnackbar({ message: t("offers@created") });
+                setCreateDialogOpen(false);
+                setFormData(INITIAL_FORM_DATA);
+                setSelectedProvider(null);
+                setProviderSearch("");
+                setImageFile(null);
+                setImagePreview(null);
+              },
+              onError: () => {
+                openSuccessSnackbar({ message: t("offers@created") });
+                openErrorSnackbar({ message: t("offers@imageUploadFailed") });
+                setCreateDialogOpen(false);
+                setFormData(INITIAL_FORM_DATA);
+                setSelectedProvider(null);
+                setProviderSearch("");
+                setImageFile(null);
+                setImagePreview(null);
+              },
+            }
+          );
+        } else {
+          openSuccessSnackbar({ message: t("offers@created") });
+          setCreateDialogOpen(false);
+          setFormData(INITIAL_FORM_DATA);
+          setSelectedProvider(null);
+          setProviderSearch("");
+          setImageFile(null);
+          setImagePreview(null);
+        }
       },
       onError: (err: Error) => {
         openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
       },
     });
-  }, [formData, createMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+  }, [formData, imageFile, createMutation, uploadImageMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
   const updateField = <K extends keyof ProposeOfferRequest>(
     field: K,
@@ -261,7 +447,7 @@ export default function ActiveOffersScreen() {
     {
       field: "actions",
       headerName: t("actions"),
-      width: 120,
+      width: 150,
       align: "center",
       headerAlign: "center",
       sortable: false,
@@ -270,6 +456,21 @@ export default function ActiveOffersScreen() {
           <Tooltip title={t("viewDetails")}>
             <IconButton size="small" onClick={(e) => handleViewDetails(e, params.row)}>
               <VisibilityIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t("edit")}>
+            <IconButton
+              size="small"
+              onClick={(e) => handleEditClick(e, params.row)}
+              sx={{
+                bgcolor: "primary.main",
+                color: "white",
+                width: 28,
+                height: 28,
+                "&:hover": { bgcolor: "primary.dark" },
+              }}
+            >
+              <EditIcon sx={{ fontSize: 15 }} />
             </IconButton>
           </Tooltip>
           {params.row.isActive && (
@@ -309,7 +510,7 @@ export default function ActiveOffersScreen() {
       <ScreenHeader
         icon={<LocalOfferIcon />}
         title={t("activeOffers")}
-        subtitle={t("activeOffers@subtitle")}
+        subtitle={t("offers@activeOffers_subtitle")}
         actions={headerActions}
       />
 
@@ -430,7 +631,7 @@ export default function ActiveOffersScreen() {
 
               {/* Stats Grid */}
               <Grid container spacing={2}>
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid item xs={6} sm={3}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <StarsIcon sx={{ fontSize: 20, color: "info.main" }} />
@@ -447,7 +648,7 @@ export default function ActiveOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid item xs={6} sm={3}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <AttachMoneyIcon sx={{ fontSize: 20, color: "success.main" }} />
@@ -464,7 +665,7 @@ export default function ActiveOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid item xs={6} sm={3}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <TimerIcon sx={{ fontSize: 20, color: "warning.main" }} />
@@ -473,15 +674,15 @@ export default function ActiveOffersScreen() {
                       </Typography>
                     </Stack>
                     <Typography variant="h5" fontWeight={700} color="warning.dark">
-                      {selectedOffer.offerCodeExpiryMinutes}
+                      {selectedOffer.offerCodeExpirySeconds}
                       <Typography component="span" variant="caption" sx={{ ml: 0.5 }}>
-                        {t("minutes")}
+                        {t("offers@seconds")}
                       </Typography>
                     </Typography>
                   </Paper>
                 </Grid>
 
-                <Grid size={{ xs: 6, sm: 3 }}>
+                <Grid item xs={6} sm={3}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "error.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <PeopleIcon sx={{ fontSize: 20, color: "error.main" }} />
@@ -503,7 +704,7 @@ export default function ActiveOffersScreen() {
 
               {/* Additional Info */}
               <Grid container spacing={2}>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
                     {t("maxUsesPerUser")}
                   </Typography>
@@ -511,15 +712,15 @@ export default function ActiveOffersScreen() {
                     {selectedOffer.maxUsesPerUser ?? t("unlimited")}
                   </Typography>
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
                     {t("codeExpiry")}
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {selectedOffer.offerCodeExpiryMinutes} {t("minutes")}
+                    {selectedOffer.offerCodeExpirySeconds} {t("offers@seconds")}
                   </Typography>
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
                     {t("proposedBy")}
                   </Typography>
@@ -594,9 +795,9 @@ export default function ActiveOffersScreen() {
         onClose={handleCloseCreateDialog}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ sx: { borderRadius: 3, display: "flex", flexDirection: "column", maxHeight: "90vh" } }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
+        <DialogTitle sx={{ pb: 1, flexShrink: 0 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "primary.main" }}>
               <AddIcon />
@@ -611,15 +812,15 @@ export default function ActiveOffersScreen() {
             </Box>
           </Stack>
         </DialogTitle>
-        <Divider />
-        <DialogContent sx={{ py: 3 }}>
+        <Divider sx={{ flexShrink: 0 }} />
+        <DialogContent sx={{ py: 3, overflowY: "auto", flex: 1 }}>
           <Stack spacing={3}>
             {/* Basic Info */}
             <Typography variant="subtitle2" fontWeight={600} color="primary.main">
               {t("offers@basicInfo")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label={t("offers@titleEn")}
                   value={formData.title}
@@ -628,7 +829,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label={t("offers@titleAr")}
                   value={formData.titleAr ?? ""}
@@ -636,7 +837,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label={t("offers@descriptionEn")}
                   value={formData.description ?? ""}
@@ -646,7 +847,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label={t("offers@descriptionAr")}
                   value={formData.descriptionAr ?? ""}
@@ -664,31 +865,151 @@ export default function ActiveOffersScreen() {
             <Typography variant="subtitle2" fontWeight={600} color="primary.main">
               {t("offers@providerInfo")}
             </Typography>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth>
-                  <InputLabel>{t("providerType")}</InputLabel>
-                  <Select
-                    value={formData.providerType}
-                    label={t("providerType")}
-                    onChange={(e) => updateField("providerType", e.target.value as ProviderType)}
-                  >
-                    <MenuItem value="ChargingPoint">{t("chargingPoint")}</MenuItem>
-                    <MenuItem value="ServiceProvider">{t("serviceProvider")}</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label={t("providerId")}
-                  type="number"
-                  value={formData.providerId || ""}
-                  onChange={(e) => updateField("providerId", parseInt(e.target.value) || 0)}
-                  required
-                  fullWidth
-                />
-              </Grid>
-            </Grid>
+
+            {/* Provider Type Toggle */}
+            <ToggleButtonGroup
+              value={formData.providerType}
+              exclusive
+              onChange={(_, value) => {
+                if (value) {
+                  updateField("providerType", value as ProviderType);
+                  setSelectedProvider(null);
+                  setProviderSearch("");
+                  updateField("providerId", 0);
+                }
+              }}
+              size="small"
+            >
+              <ToggleButton value="ServiceProvider" sx={{ px: 3, gap: 1 }}>
+                <BusinessIcon fontSize="small" />
+                {t("offers@serviceProvider")}
+              </ToggleButton>
+              <ToggleButton value="ChargingPoint" sx={{ px: 3, gap: 1 }}>
+                <EvStationIcon fontSize="small" />
+                {t("offers@chargingPoint")}
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Selected Provider Preview */}
+            {selectedProvider && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  bgcolor: "success.50",
+                  border: "1px solid",
+                  borderColor: "success.300",
+                  borderRadius: 2,
+                }}
+              >
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Avatar sx={{ bgcolor: "success.main" }}>
+                    {formData.providerType === "ChargingPoint" ? (
+                      <EvStationIcon />
+                    ) : (
+                      <BusinessIcon />
+                    )}
+                  </Avatar>
+                  <Box flex={1}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      {t("offers@selectedProvider")}
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {selectedProvider.name}
+                    </Typography>
+                    {selectedProvider.city && (
+                      <Typography variant="body2" color="text.secondary">
+                        {selectedProvider.city}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Stack alignItems="flex-end" spacing={0.5}>
+                    <Chip label={`ID: ${selectedProvider.id}`} size="small" color="success" />
+                    <CheckCircleIcon sx={{ color: "success.main", fontSize: 20 }} />
+                  </Stack>
+                </Stack>
+              </Paper>
+            )}
+
+            {/* Provider Search */}
+            <TextField
+              placeholder={t("offers@searchProviders")}
+              value={providerSearch}
+              onChange={(e) => setProviderSearch(e.target.value)}
+              size="small"
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {/* Provider List */}
+            <Paper variant="outlined" sx={{ maxHeight: 220, overflowY: "auto", borderRadius: 2 }}>
+              {isLoadingProviders ? (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", p: 3 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : filteredProviders.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("offers@noProvidersFound")}
+                  </Typography>
+                </Box>
+              ) : (
+                <List dense disablePadding>
+                  {filteredProviders.map((provider) => (
+                    <ListItemButton
+                      key={provider.id}
+                      onClick={() => {
+                        setSelectedProvider(provider);
+                        updateField("providerId", provider.id);
+                      }}
+                      selected={selectedProvider?.id === provider.id}
+                      sx={{
+                        borderLeft: selectedProvider?.id === provider.id ? "3px solid" : "3px solid transparent",
+                        borderColor: "primary.main",
+                        "&.Mui-selected": { bgcolor: "primary.50" },
+                        "&.Mui-selected:hover": { bgcolor: "primary.100" },
+                      }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            width: 34,
+                            height: 34,
+                            fontSize: 14,
+                            bgcolor:
+                              selectedProvider?.id === provider.id ? "primary.main" : "grey.300",
+                            color:
+                              selectedProvider?.id === provider.id ? "white" : "text.secondary",
+                          }}
+                        >
+                          {provider.name.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" fontWeight={selectedProvider?.id === provider.id ? 700 : 400}>
+                            {provider.name}
+                          </Typography>
+                        }
+                        secondary={provider.city ?? `ID: ${provider.id}`}
+                      />
+                      <Chip
+                        label={`#${provider.id}`}
+                        size="small"
+                        variant={selectedProvider?.id === provider.id ? "filled" : "outlined"}
+                        color={selectedProvider?.id === provider.id ? "primary" : "default"}
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              )}
+            </Paper>
 
             <Divider />
 
@@ -697,7 +1018,7 @@ export default function ActiveOffersScreen() {
               {t("offers@financialSettings")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   label={t("pointsCost")}
                   type="number"
@@ -713,7 +1034,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   label={t("monetaryValue")}
                   type="number"
@@ -729,7 +1050,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   label={t("currencyCode")}
                   value={formData.currencyCode}
@@ -746,7 +1067,7 @@ export default function ActiveOffersScreen() {
               {t("offers@transactionLimits")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   label={t("maxUsesPerUser")}
                   type="number"
@@ -758,7 +1079,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   label={t("offers@maxTotalUses")}
                   type="number"
@@ -770,18 +1091,18 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   label={t("codeExpiry")}
                   type="number"
-                  value={formData.offerCodeExpiryMinutes}
+                  value={formData.offerCodeExpirySeconds}
                   onChange={(e) =>
-                    updateField("offerCodeExpiryMinutes", parseInt(e.target.value) || 30)
+                    updateField("offerCodeExpirySeconds", parseInt(e.target.value) || 60)
                   }
                   InputProps={{
-                    endAdornment: <InputAdornment position="end">{t("minutes")}</InputAdornment>,
+                    endAdornment: <InputAdornment position="end">{t("offers@seconds")}</InputAdornment>,
                   }}
-                  helperText={t("offers@minExpiry30")}
+                  helperText={t("offers@minExpiry60")}
                   required
                   fullWidth
                 />
@@ -795,7 +1116,7 @@ export default function ActiveOffersScreen() {
               {t("validPeriod")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label={t("offers@validFrom")}
                   type="datetime-local"
@@ -806,34 +1127,102 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label={t("offers@validTo")}
                   type="datetime-local"
-                  value={formData.validTo}
-                  onChange={(e) => updateField("validTo", e.target.value)}
+                  value={formData.validTo ?? ""}
+                  onChange={(e) => updateField("validTo", e.target.value || null)}
                   InputLabelProps={{ shrink: true }}
-                  required
+                  helperText={t("offers@leaveEmptyNoExpiry")}
                   fullWidth
                 />
               </Grid>
             </Grid>
 
-            {/* Image URL */}
-            <TextField
-              label={t("offers@imageUrl")}
-              value={formData.imageUrl ?? ""}
-              onChange={(e) => updateField("imageUrl", e.target.value || null)}
-              fullWidth
-              helperText={t("offers@imageUrlHelp")}
-            />
+            {/* Offer Image Upload */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 2 }}>
+                {t("offers@offerImage")}
+              </Typography>
+              <Stack direction="row" spacing={2.5} alignItems="flex-start">
+                {/* Preview */}
+                <Box
+                  sx={{
+                    width: 110,
+                    height: 110,
+                    borderRadius: 2.5,
+                    overflow: "hidden",
+                    border: "2px dashed",
+                    borderColor: imagePreview ? "info.main" : "grey.300",
+                    bgcolor: imagePreview ? "transparent" : "grey.50",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    transition: "all 0.25s ease",
+                  }}
+                >
+                  {imagePreview ? (
+                    <Box
+                      component="img"
+                      src={imagePreview}
+                      alt="offer preview"
+                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <AddPhotoAlternateIcon sx={{ fontSize: 36, color: "text.disabled" }} />
+                  )}
+                </Box>
+                {/* Upload area */}
+                <Stack spacing={1.5} flex={1}>
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<CloudUploadIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      borderStyle: "dashed",
+                      borderWidth: 2,
+                      py: 1.5,
+                      color: "info.main",
+                      borderColor: "info.200",
+                      bgcolor: "rgba(2, 136, 209, 0.04)",
+                      "&:hover": {
+                        borderStyle: "dashed",
+                        borderWidth: 2,
+                        bgcolor: "rgba(2, 136, 209, 0.08)",
+                        borderColor: "info.main",
+                      },
+                    }}
+                  >
+                    {imageFile ? imageFile.name : t("offers@selectImage")}
+                    <input type="file" accept="image/*" hidden onChange={handleImageFileChange} />
+                  </Button>
+                  <Typography variant="caption" color="text.disabled">
+                    {t("offers@imageUploadHint")}
+                  </Typography>
+                  {imagePreview && (
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      sx={{ alignSelf: "flex-start", borderRadius: 2, fontSize: "0.75rem" }}
+                    >
+                      {t("offers@removeImage")}
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
+            </Box>
           </Stack>
         </DialogContent>
-        <Divider />
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Divider sx={{ flexShrink: 0 }} />
+        <DialogActions sx={{ px: 3, py: 2, gap: 1, flexShrink: 0 }}>
           <Button
             onClick={handleCloseCreateDialog}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || uploadImageMutation.isPending}
             size="large"
           >
             {t("cancel")}
@@ -842,12 +1231,263 @@ export default function ActiveOffersScreen() {
             onClick={handleCreateSubmit}
             variant="contained"
             size="large"
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || uploadImageMutation.isPending}
             startIcon={
-              createMutation.isPending ? <CircularProgress size={20} /> : <AddIcon />
+              (createMutation.isPending || uploadImageMutation.isPending) ? <CircularProgress size={20} /> : <AddIcon />
             }
           >
-            {createMutation.isPending ? t("creating") : t("offers@createOffer")}
+            {uploadImageMutation.isPending ? t("offers@uploadingImage") : createMutation.isPending ? t("creating") : t("offers@createOffer")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Edit Offer Dialog ── */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", maxHeight: "92vh", display: "flex", flexDirection: "column" } }}
+      >
+        <Box sx={{ background: "linear-gradient(135deg, #e65100 0%, #f57c00 100%)", px: 3, py: 2.5, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48 }}>
+              <EditIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight={700} color="white">{t("edit")} {t("offers@offers")}</Typography>
+              {editingOffer && (
+                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)" }}>
+                  #{editingOffer.id} · {editingOffer.title}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+          <IconButton size="small" onClick={() => setEditDialogOpen(false)} sx={{ color: "rgba(255,255,255,0.8)", "&:hover": { bgcolor: "rgba(255,255,255,0.15)" } }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        <DialogContent sx={{ pt: 3, pb: 1, px: 3, overflowY: "auto", flex: 1 }}>
+          {editFormData && (
+            <Stack spacing={3}>
+              {/* Image Upload */}
+              <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2.5, border: "1px solid", borderColor: "divider" }}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>{t("offers@offerImage")}</Typography>
+                <Stack direction="row" spacing={2.5} alignItems="center">
+                  <Box
+                    sx={{
+                      width: 100, height: 100, borderRadius: 2.5, overflow: "hidden",
+                      border: "2px dashed", borderColor: editImagePreview ? "primary.main" : "grey.300",
+                      bgcolor: editImagePreview ? "transparent" : "grey.50",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}
+                  >
+                    {editImagePreview ? (
+                      <Box component="img" src={editImagePreview} alt="offer" sx={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none"; }} />
+                    ) : (
+                      <AddPhotoAlternateIcon sx={{ fontSize: 32, color: "text.disabled" }} />
+                    )}
+                  </Box>
+                  <Stack spacing={1}>
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      startIcon={<CloudUploadIcon />}
+                      size="small"
+                      sx={{ borderRadius: 2, textTransform: "none" }}
+                    >
+                      {t("offers@selectImage")}
+                      <input type="file" accept="image/*" hidden onChange={handleEditImageChange} />
+                    </Button>
+                    {editImageFile && (
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 150 }}>{editImageFile.name}</Typography>
+                        <IconButton size="small" onClick={() => { setEditImageFile(null); setEditImagePreview(editingOffer?.imageUrl || null); }}>
+                          <DeleteIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      </Stack>
+                    )}
+                    <Typography variant="caption" color="text.disabled">{t("offers@imageUploadHint")}</Typography>
+                  </Stack>
+                </Stack>
+              </Paper>
+
+              {/* Basic Info */}
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label={t("offers@titleEn")}
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    required
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label={t("offers@titleAr")}
+                    value={editFormData.titleAr ?? ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, titleAr: e.target.value || null })}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label={t("offers@descriptionEn")}
+                    value={editFormData.description ?? ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value || null })}
+                    multiline
+                    rows={2}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label={t("offers@descriptionAr")}
+                    value={editFormData.descriptionAr ?? ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, descriptionAr: e.target.value || null })}
+                    multiline
+                    rows={2}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Financial */}
+              <Grid container spacing={2}>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@pointsCost")}
+                    type="number"
+                    value={editFormData.pointsCost}
+                    onChange={(e) => setEditFormData({ ...editFormData, pointsCost: Number(e.target.value) })}
+                    fullWidth
+                    size="small"
+                    InputProps={{ startAdornment: <InputAdornment position="start"><StarsIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@monetaryValue")}
+                    type="number"
+                    value={editFormData.monetaryValue}
+                    onChange={(e) => setEditFormData({ ...editFormData, monetaryValue: Number(e.target.value) })}
+                    fullWidth
+                    size="small"
+                    InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@codeExpiry")}
+                    type="number"
+                    value={editFormData.offerCodeExpirySeconds ?? ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, offerCodeExpirySeconds: e.target.value ? Number(e.target.value) : null })}
+                    fullWidth
+                    size="small"
+                    helperText={t("offers@minExpiry60")}
+                    InputProps={{ startAdornment: <InputAdornment position="start"><TimerIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@currencyCode")}
+                    value={editFormData.currencyCode}
+                    onChange={(e) => setEditFormData({ ...editFormData, currencyCode: e.target.value })}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Limits & Dates */}
+              <Grid container spacing={2}>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@maxUsesPerUser")}
+                    type="number"
+                    value={editFormData.maxUsesPerUser ?? ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, maxUsesPerUser: e.target.value ? Number(e.target.value) : null })}
+                    fullWidth
+                    size="small"
+                    helperText={t("offers@leaveEmptyUnlimited")}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@maxTotalUses")}
+                    type="number"
+                    value={editFormData.maxTotalUses ?? ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, maxTotalUses: e.target.value ? Number(e.target.value) : null })}
+                    fullWidth
+                    size="small"
+                    helperText={t("offers@leaveEmptyNoLimit")}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@validFrom")}
+                    type="date"
+                    value={editFormData.validFrom}
+                    onChange={(e) => setEditFormData({ ...editFormData, validFrom: e.target.value })}
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    label={t("offers@validTo")}
+                    type="date"
+                    value={editFormData.validTo ?? ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, validTo: e.target.value || null })}
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    helperText={t("offers@leaveEmptyNoExpiry")}
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Provider info (read-only) */}
+              {editingOffer && (
+                <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ bgcolor: editingOffer.providerType === "ChargingPoint" ? "primary.main" : "secondary.main", width: 36, height: 36 }}>
+                      {editingOffer.providerType === "ChargingPoint" ? <EvStationIcon sx={{ fontSize: 18 }} /> : <BusinessIcon sx={{ fontSize: 18 }} />}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" fontWeight={700}>{editingOffer.providerName}</Typography>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Chip label={editingOffer.providerType === "ChargingPoint" ? t("offers@chargingPoint") : t("offers@serviceProvider")} size="small" sx={{ height: 18, "& .MuiChip-label": { px: 0.75, fontSize: "0.6rem" } }} />
+                        <Typography variant="caption" color="text.disabled">#{editingOffer.providerId}</Typography>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Paper>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+
+        <Divider sx={{ flexShrink: 0 }} />
+        <DialogActions sx={{ px: 3, py: 2, gap: 1, flexShrink: 0 }}>
+          <Button onClick={() => setEditDialogOpen(false)} variant="outlined" color="inherit" sx={{ borderRadius: 2 }}>
+            {t("cancel")}
+          </Button>
+          <Button
+            onClick={handleEditSubmit}
+            variant="contained"
+            disabled={updateMutation.isPending || uploadImageMutation.isPending}
+            startIcon={(updateMutation.isPending || uploadImageMutation.isPending) ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
+            sx={{ borderRadius: 2, minWidth: 140, background: "linear-gradient(135deg, #e65100 0%, #f57c00 100%)", "&:hover": { background: "linear-gradient(135deg, #bf360c 0%, #e65100 100%)" } }}
+          >
+            {updateMutation.isPending ? t("updating") : uploadImageMutation.isPending ? t("offers@uploadingImage") : t("update")}
           </Button>
         </DialogActions>
       </Dialog>

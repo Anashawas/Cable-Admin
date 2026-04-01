@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,10 @@ import {
   Typography,
   CircularProgress,
   Paper,
+  Chip,
+  InputAdornment,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import {
   CITIES,
@@ -35,6 +38,103 @@ import { stationFormSchema, type StationFormValues } from "../validators/station
 import LocationPicker from "./LocationPicker";
 import { useSnackbarStore } from "../../../stores";
 import type { ChargingPointDto } from "../types/api";
+
+// ── Services chip categories (display only) ───────────────────────────────────
+const SERVICE_CATEGORIES: { label: string; items: string[] }[] = [
+  { label: "Parking", items: ["Covered Parking", "Open Parking", "Valet Parking", "Long-Term Parking", "Reserved Parking Spots"] },
+  { label: "Restrooms", items: ["Public Restrooms", "Male/Female Restrooms", "Shower Facilities", "Baby Changing Room"] },
+  { label: "Food & Drinks", items: ["Restaurant", "Cafeteria", "Cafe", "Branded Cafe", "Food Court", "Coffee Machines", "Vending Machines", "Fast Food"] },
+  { label: "Shopping", items: ["Supermarket", "Convenience Store", "Shopping Mall Nearby", "Pharmacy", "ATM", "Gift Shop"] },
+  { label: "Vehicle", items: ["Car Wash", "Tire Service", "Car Maintenance", "Oil Change", "Auto Parts Store", "Vehicle Inspection"] },
+  { label: "Comfort", items: ["Air-Conditioned Lounge", "Waiting Lounge", "VIP Lounge", "Entertainment Area", "Children's Play Area", "Gaming Zone", "Reading Area"] },
+  { label: "Personal", items: ["Barber Shop", "Beauty Salon", "Spa & Massage", "Laundry Service", "Dry Cleaning"] },
+  { label: "Health", items: ["Gym/Fitness Center", "Medical Clinic", "First Aid", "Dental Clinic"] },
+  { label: "Tech & Work", items: ["Wi-Fi", "Phone/Laptop Charging"] },
+  { label: "Religious", items: ["Prayer Room (Musalla)", "Mosque Nearby", "Wudu Area"] },
+  { label: "Accommodation", items: ["Hotel", "Rest Cabins", "Sleeping Pods"] },
+  { label: "Entertainment", items: ["Movie Theater", "Kids Entertainment", "Arcade Games"] },
+  { label: "Security", items: ["24/7 Security", "Emergency Services"] },
+  { label: "Pets", items: ["Pet Washing Station", "Pet Shop"] },
+  { label: "Smart Services", items: ["Mobile App Booking", "Online Reservation", "Real-Time Availability", "QR Code Check-In", "Digital Payment Only", "Contactless Payment", "Pre-Book Charging Slot", "Queue Management System"] },
+  { label: "Accessibility", items: ["Wheelchair Accessible", "Elevator Access"] },
+  { label: "Membership", items: ["Loyalty Program", "Fleet Charging"] },
+  { label: "Other", items: ["Recycling Facilities", "Car Rental", "Currency Exchange", "Other"] },
+];
+
+interface ServicesChipPickerProps {
+  value: string[];
+  onChange: (v: string[]) => void;
+}
+
+function ServicesChipPicker({ value, onChange }: ServicesChipPickerProps) {
+  const [search, setSearch] = useState("");
+  const q = search.trim().toLowerCase();
+
+  const toggle = (service: string) => {
+    if (value.includes(service)) {
+      onChange(value.filter((s) => s !== service));
+    } else {
+      onChange([...value, service]);
+    }
+  };
+
+  const visibleCategories = SERVICE_CATEGORIES
+    .map((cat) => ({
+      ...cat,
+      items: q ? cat.items.filter((s) => s.toLowerCase().includes(q)) : cat.items,
+    }))
+    .filter((cat) => cat.items.length > 0);
+
+  return (
+    <Box>
+      <TextField
+        size="small"
+        fullWidth
+        placeholder="Search services…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" color="action" />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ mb: 2 }}
+      />
+      <Box sx={{ maxHeight: 320, overflowY: "auto", pr: 0.5 }}>
+        {visibleCategories.map((cat) => (
+          <Box key={cat.label} sx={{ mb: 1.5 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, mb: 0.75, display: "block" }}>
+              {cat.label}
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+              {cat.items.map((service) => {
+                const selected = value.includes(service);
+                return (
+                  <Chip
+                    key={service}
+                    label={service}
+                    size="small"
+                    onClick={() => toggle(service)}
+                    color={selected ? "primary" : "default"}
+                    variant={selected ? "filled" : "outlined"}
+                    sx={{ cursor: "pointer", fontWeight: selected ? 600 : 400, fontSize: "0.75rem" }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
+        ))}
+        {visibleCategories.length === 0 && (
+          <Typography variant="body2" color="text.disabled" sx={{ textAlign: "center", py: 3 }}>
+            No services match "{search}"
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  );
+}
 
 /** Parse API service string "[A, B]" to array ["A", "B"]. */
 function parseServiceString(str: string | null | undefined): string[] {
@@ -283,6 +383,54 @@ export default function StationFormScreen() {
                         <TextField {...field} label={t("chargeManagement@form.address")} fullWidth />
                       )}
                     />
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 6 }}>
+                        <Controller
+                          name="latitude"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              type="number"
+                              label={t("chargeManagement@form.latitude")}
+                              fullWidth
+                              inputProps={{ step: "any" }}
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                field.onChange(val);
+                                setValue("latitude", val);
+                              }}
+                              error={!!errors.latitude}
+                              helperText={errors.latitude?.message}
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 6 }}>
+                        <Controller
+                          name="longitude"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              type="number"
+                              label={t("chargeManagement@form.longitude")}
+                              fullWidth
+                              inputProps={{ step: "any" }}
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                field.onChange(val);
+                                setValue("longitude", val);
+                              }}
+                              error={!!errors.longitude}
+                              helperText={errors.longitude?.message}
+                            />
+                          )}
+                        />
+                      </Grid>
+                    </Grid>
                     <Box sx={{ width: "100%", height: 300, borderRadius: 1, overflow: "hidden" }}>
                       <LocationPicker
                         latitude={watch("latitude") ?? 0}
@@ -483,23 +631,30 @@ export default function StationFormScreen() {
                 </Paper>
 
                 <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    {t("chargeManagement@form.services")}
-                  </Typography>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                    <Typography variant="subtitle1" fontWeight="600">
+                      {t("chargeManagement@form.services")}
+                    </Typography>
+                    <Controller
+                      name="services"
+                      control={control}
+                      render={({ field }) =>
+                        field.value.length > 0 ? (
+                          <Chip
+                            label={`${field.value.length} selected`}
+                            size="small"
+                            color="primary"
+                            onDelete={() => field.onChange([])}
+                          />
+                        ) : <span />
+                      }
+                    />
+                  </Stack>
                   <Controller
                     name="services"
                     control={control}
                     render={({ field }) => (
-                      <Autocomplete
-                        multiple
-                        options={SERVICE_OPTIONS}
-                        value={field.value}
-                        onChange={(_, selected) => field.onChange(selected)}
-                        freeSolo
-                        renderInput={(params) => (
-                          <TextField {...params} label={t("chargeManagement@form.services")} />
-                        )}
-                      />
+                      <ServicesChipPicker value={field.value} onChange={field.onChange} />
                     )}
                   />
                 </Paper>

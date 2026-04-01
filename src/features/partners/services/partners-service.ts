@@ -3,6 +3,8 @@ import type {
   PartnerAgreementDto,
   CreatePartnerAgreementRequest,
   UpdatePartnerAgreementRequest,
+  SetCreditLimitRequest,
+  ProviderBalanceDto,
 } from "../types/api";
 
 const BASE = "/api/partners/admin";
@@ -32,4 +34,22 @@ export async function updatePartnerAgreement(
 
 export async function deactivatePartnerAgreement(id: number): Promise<void> {
   await server.put(`${BASE}/DeactivatePartnerAgreement/${id}`);
+}
+
+// ============================================
+// Credit Limit & Balance — 2026-02-28
+// ============================================
+
+export async function getProviderBalance(
+  providerType: string,
+  providerId: number
+): Promise<ProviderBalanceDto> {
+  const { data } = await server.get<ProviderBalanceDto>(`${BASE}/GetProviderBalance`, {
+    params: { providerType, providerId },
+  });
+  return data;
+}
+
+export async function setCreditLimit(body: SetCreditLimitRequest): Promise<void> {
+  await server.put(`${BASE}/SetCreditLimit`, body);
 }

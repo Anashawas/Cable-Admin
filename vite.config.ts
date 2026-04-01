@@ -31,6 +31,9 @@ export default defineConfig(({ mode }) => {
       host: "127.0.0.1",
       port: 3000,
       open: true,
+      watch: {
+        ignored: ["**/build/**", "**/node_modules/**", "**/.git/**"],
+      },
     },
 
     build: {

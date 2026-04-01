@@ -3,6 +3,7 @@ import type {
   UserSummaryDto,
   UserDetailDto,
   UpdateUserRequestSpec,
+  CreateUserRequest,
 } from "../types/api";
 
 /**
@@ -57,4 +58,16 @@ const deleteUserById = async (
   await server.delete(`api/users/${id}`, { signal });
 };
 
-export { getUsersList, getUserById, updateUserProfile, deleteUserById };
+/**
+ * POST api/users/AddUser
+ * Admin creates a new user with role, password, etc.
+ */
+const createUser = async (
+  body: CreateUserRequest,
+  signal?: AbortSignal
+): Promise<number> => {
+  const { data } = await server.post<number>("api/users/AddUser", body, { signal });
+  return data;
+};
+
+export { getUsersList, getUserById, updateUserProfile, deleteUserById, createUser };

@@ -1,5 +1,5 @@
 import { refreshAccess } from "../features/authentication/services/authentication-service";
-import { useAuthenticationStore, useLanguageStore } from "../stores";
+import { useAuthenticationStore, useLanguageStore, useSnackbarStore } from "../stores";
 import axios from "axios";
 const server = axios.create({
   baseURL: window.env.server.url,
@@ -50,6 +50,17 @@ server.interceptors.response.use(
     // Any status codes that falls outside the range of 2xx cause this function to trigger
 
     const { user, setTokens, logout } = useAuthenticationStore.getState();
+
+    // Single-device enforcement: session invalidated by login on another device
+    if (error?.response?.status === 401) {
+      const detail: string = error?.response?.data?.detail ?? "";
+      if (detail.toLowerCase().includes("another device")) {
+        useSnackbarStore.getState().openErrorSnackbar({ message: detail });
+        logout();
+        return Promise.reject(error);
+      }
+    }
+
     if (shouldThrowError(error)) {
       return Promise.reject(error);
     }

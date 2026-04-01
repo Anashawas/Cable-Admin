@@ -29,6 +29,8 @@
     "noBrands": "No brands yet.",
     "modelsFor": "Models — {{name}}",
     "selectBrand": "Select a brand",
+    "selectBrandHint": "Click a brand from the left panel to view its models",
+    "modelsCount": "Models",
     "addModel": "Add Model",
     "editModel": "Edit Model",
     "modelName": "Model name",

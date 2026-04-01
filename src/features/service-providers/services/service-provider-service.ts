@@ -23,7 +23,7 @@ export const getAllServiceCategories = async (): Promise<ServiceCategoryDto[]> =
 export const createServiceCategory = async (
   data: CreateServiceCategoryRequest
 ): Promise<number> => {
-  const response = await server.post("/api/service-categories/CreateServiceCategory", data);
+  const response = await server.post("/api/service-categories/AddServiceCategory", data);
   return response.data;
 };
 
@@ -32,6 +32,18 @@ export const updateServiceCategory = async (
   data: UpdateServiceCategoryRequest
 ): Promise<void> => {
   await server.put(`/api/service-categories/UpdateServiceCategory/${id}`, data);
+};
+
+export const deleteServiceCategory = async (id: number): Promise<void> => {
+  await server.delete(`/api/service-categories/DeleteServiceCategory/${id}`);
+};
+
+export const uploadServiceCategoryIcon = async (id: number, file: File): Promise<void> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  await server.post(`/api/service-categories/UploadServiceCategoryIcon/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 // ============================================
@@ -148,5 +160,5 @@ export const changeServiceProviderOwner = async (
   serviceProviderId: number,
   data: ChangeOwnerRequest
 ): Promise<void> => {
-  await server.patch(`/api/provider/service-providers/change-owner/${serviceProviderId}`, data);
+  await server.put(`/api/service-providers/ChangeOwner/${serviceProviderId}`, data);
 };

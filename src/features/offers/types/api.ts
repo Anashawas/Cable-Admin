@@ -57,10 +57,10 @@ export interface OfferDto {
   maxUsesPerUser: number | null;
   maxTotalUses: number | null;
   currentTotalUses: number;
-  offerCodeExpiryMinutes: number;
+  offerCodeExpirySeconds: number | null;
   imageUrl: string | null;
   validFrom: string;
-  validTo: string;
+  validTo: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -77,10 +77,10 @@ export interface ProposeOfferRequest {
   currencyCode: string;
   maxUsesPerUser?: number | null;
   maxTotalUses?: number | null;
-  offerCodeExpiryMinutes: number;
+  offerCodeExpirySeconds?: number | null;
   imageUrl?: string | null;
   validFrom: string;
-  validTo: string;
+  validTo?: string | null;
 }
 
 export interface UpdateOfferRequest {
@@ -95,10 +95,10 @@ export interface UpdateOfferRequest {
   currencyCode: string;
   maxUsesPerUser?: number | null;
   maxTotalUses?: number | null;
-  offerCodeExpiryMinutes: number;
+  offerCodeExpirySeconds?: number | null;
   imageUrl?: string | null;
   validFrom: string;
-  validTo: string;
+  validTo?: string | null;
   isActive: boolean;
 }
 
@@ -142,51 +142,113 @@ export interface OfferTransactionDto {
 
 export enum SettlementStatus {
   Pending = 1,
-  Invoiced = 2,
   Paid = 3,
   Disputed = 4,
 }
 
 export interface ProviderSettlementDto {
   id: number;
+  // Provider details
   providerType: ProviderType;
   providerId: number;
+  providerName: string;
+  providerPhone: string | null;
+  providerAddress: string | null;
+  providerIcon: string | null;
+  // Owner details
   providerOwnerId: number;
   providerOwnerName: string;
+  ownerEmail: string | null;
+  ownerPhone: string | null;
+  // Period
   periodYear: number;
   periodMonth: number;
-  totalTransactions: number;
-  totalTransactionAmount: number;
-  totalCommissionAmount: number;
+  periodType: number;
+  periodWeek: number;
+  // Partner transactions
+  partnerTransactionCount: number;
+  partnerTransactionAmount: number;
+  partnerCommissionAmount: number;
   totalPointsAwarded: number;
+  // Offer transactions
+  offerTransactionCount: number;
+  offerPaymentAmount: number;
   totalPointsDeducted: number;
+  // Financials
+  netBalance: number; // OfferPaymentAmount - PartnerCommissionAmount (positive = Cable owes, negative = provider owes)
+  walletApplied: number;
+  outstandingAmount: number; // PartnerCommissionAmount - WalletApplied (computed)
+  // Status & dates
   settlementStatus: SettlementStatus;
-  invoicedAt: string | null;
   paidAt: string | null;
-  paidAmount: number | null;
   adminNote: string | null;
   createdAt: string;
 }
 
 export interface UpdateSettlementStatusRequest {
   status: SettlementStatus;
-  paidAmount?: number | null;
   note?: string | null;
-}
-
-export interface GenerateSettlementRequest {
-  year: number;
-  month: number;
 }
 
 export interface SettlementSummaryDto {
   totalSettlements: number;
-  totalTransactionAmount: number;
-  totalCommissionAmount: number;
+  totalPartnerTransactions: number;
+  totalPartnerTransactionAmount: number;
+  totalPartnerCommissionAmount: number;
   totalPointsAwarded: number;
+  totalOfferTransactions: number;
+  totalOfferPaymentAmount: number;
   totalPointsDeducted: number;
+  totalNetBalance: number;
+  totalWalletApplied: number;
   pendingCount: number;
-  invoicedCount: number;
   paidCount: number;
   disputedCount: number;
+}
+
+// ============================================
+// Wallet DTOs (formerly PreCredit)
+// ============================================
+
+export enum WalletTransactionType {
+  Deposit = 1,
+  SettlementDeduction = 2,
+  Refund = 3,
+  Adjustment = 4,
+  CommissionDeduction = 5,
+  CommissionRefund = 6,
+  OfferPaymentCredit = 7,
+  OfferPaymentRefund = 8,
+}
+
+export interface AddWalletDepositRequest {
+  providerId: number;
+  providerType: ProviderType;
+  amount: number;
+  transactionType: WalletTransactionType;
+  note?: string | null;
+}
+
+export interface WalletBalanceDto {
+  providerId: number;
+  providerType: ProviderType;
+  providerOwnerName: string;
+  walletBalance: number; // positive = credit, negative = debt
+  totalDeposited: number;
+  totalDeducted: number;
+  walletCreditLimit: number | null; // max debt allowed, null = unlimited
+  availableCredit: number | null; // how much more debt before blocked
+}
+
+export interface WalletTransactionDto {
+  id: number;
+  providerId: number;
+  providerType: ProviderType;
+  amount: number;
+  transactionType: WalletTransactionType;
+  settlementId: number | null;
+  note: string | null;
+  createdByUserId: number;
+  createdByUserName: string;
+  createdAt: string;
 }

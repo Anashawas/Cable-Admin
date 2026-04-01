@@ -1,5 +1,6 @@
 import { server } from "../../../lib/@axios";
 import type { UserComplaintDto } from "../types/api";
+import { ComplaintStatus } from "../types/api";
 
 /**
  * GET api/usercomplaints/GetAllUserComplaints
@@ -29,4 +30,14 @@ const deleteComplaint = async (
   );
 };
 
-export { getAllComplaints, deleteComplaint };
+/**
+ * PATCH api/usercomplaints/UpdateUserComplaintStatus/{id}
+ */
+const updateComplaintStatus = async (
+  id: number,
+  status: ComplaintStatus
+): Promise<void> => {
+  await server.patch(`api/usercomplaints/UpdateUserComplaintStatus/${id}`, { status });
+};
+
+export { getAllComplaints, deleteComplaint, updateComplaintStatus };

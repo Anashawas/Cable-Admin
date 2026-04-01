@@ -4,6 +4,8 @@ import {
   getAllServiceCategories,
   createServiceCategory,
   updateServiceCategory,
+  deleteServiceCategory,
+  uploadServiceCategoryIcon,
 } from "../services/service-provider-service";
 import type {
   ServiceCategoryDto,
@@ -75,6 +77,29 @@ export function useUpdateServiceCategory() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateServiceCategoryRequest }) =>
       updateServiceCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SERVICE_CATEGORIES_QUERY_KEY });
+    },
+  });
+}
+
+export function useDeleteServiceCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteServiceCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SERVICE_CATEGORIES_QUERY_KEY });
+    },
+  });
+}
+
+export function useUploadServiceCategoryIcon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) =>
+      uploadServiceCategoryIcon(id, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SERVICE_CATEGORIES_QUERY_KEY });
     },
