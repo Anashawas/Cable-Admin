@@ -388,7 +388,7 @@ export default function RedemptionsScreen() {
               {/* Stats Grid */}
               <Grid container spacing={2}>
                 {/* Points Spent */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <StarsIcon sx={{ fontSize: 18, color: "warning.main" }} />
@@ -403,7 +403,7 @@ export default function RedemptionsScreen() {
                 </Grid>
 
                 {/* Redeemed Date */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <CalendarTodayIcon sx={{ fontSize: 18, color: "info.main" }} />
@@ -419,7 +419,7 @@ export default function RedemptionsScreen() {
 
                 {/* Fulfilled Date (if exists) */}
                 {selectedRedemption.fulfilledAt && (
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <Paper elevation={2} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                         <CheckCircleIcon sx={{ fontSize: 18, color: "success.main" }} />

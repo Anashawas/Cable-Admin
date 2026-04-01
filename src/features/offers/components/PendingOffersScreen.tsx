@@ -342,7 +342,7 @@ export default function PendingOffersScreen() {
 
               {/* Stats Grid */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <StarsIcon sx={{ fontSize: 20, color: "info.main" }} />
@@ -359,7 +359,7 @@ export default function PendingOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <AttachMoneyIcon sx={{ fontSize: 20, color: "success.main" }} />
@@ -376,7 +376,7 @@ export default function PendingOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <TimerIcon sx={{ fontSize: 20, color: "warning.main" }} />
@@ -393,7 +393,7 @@ export default function PendingOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "error.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <PeopleIcon sx={{ fontSize: 20, color: "error.main" }} />

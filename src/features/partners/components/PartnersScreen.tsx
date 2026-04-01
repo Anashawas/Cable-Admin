@@ -299,8 +299,8 @@ export default function PartnersScreen() {
   ];
 
   const headerActions: ScreenHeaderAction[] = [
-    { label: t("partners@add"), icon: <AddIcon />, onClick: handleAdd, variant: "contained" },
-    { label: t("refresh"), icon: <RefreshIcon />, onClick: () => refetch(), variant: "outlined" },
+    { id: "add", label: t("partners@add"), icon: <AddIcon />, onClick: handleAdd },
+    { id: "refresh", label: t("refresh"), icon: <RefreshIcon />, onClick: () => refetch() },
   ];
 
   return (
@@ -324,13 +324,13 @@ export default function PartnersScreen() {
             label={t("partners@status")}
             onChange={(e) =>
               setActiveFilter(
-                e.target.value === "all" ? "" : (e.target.value as boolean)
+                e.target.value === "all" ? "" : e.target.value === "true"
               )
             }
           >
             <MenuItem value="all">{t("all")}</MenuItem>
-            <MenuItem value={true}>{t("active")}</MenuItem>
-            <MenuItem value={false}>{t("inactive")}</MenuItem>
+            <MenuItem value="true">{t("active")}</MenuItem>
+            <MenuItem value="false">{t("inactive")}</MenuItem>
           </Select>
         </FormControl>
       </Stack>
@@ -426,7 +426,7 @@ export default function PartnersScreen() {
                   setFormData({
                     ...formData,
                     pointsConversionRateId:
-                      e.target.value === "" ? null : Number(e.target.value),
+                      String(e.target.value) === "" ? null : Number(e.target.value),
                   })
                 }
               >

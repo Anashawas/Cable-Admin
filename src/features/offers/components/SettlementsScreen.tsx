@@ -280,7 +280,7 @@ export default function SettlementsScreen() {
       {/* Summary Cards */}
       {summary && (
         <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               elevation={2}
               sx={{
@@ -306,7 +306,7 @@ export default function SettlementsScreen() {
               </Stack>
             </Paper>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               elevation={2}
               sx={{
@@ -332,7 +332,7 @@ export default function SettlementsScreen() {
               </Stack>
             </Paper>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               elevation={2}
               sx={{
@@ -358,7 +358,7 @@ export default function SettlementsScreen() {
               </Stack>
             </Paper>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               elevation={2}
               sx={{
@@ -519,7 +519,7 @@ export default function SettlementsScreen() {
               {/* Stats Grid */}
               <Grid container spacing={2}>
                 {/* Total Transactions */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "primary.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <ReceiptLongIcon sx={{ fontSize: 18, color: "primary.main" }} />
@@ -534,7 +534,7 @@ export default function SettlementsScreen() {
                 </Grid>
 
                 {/* Total Amount */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <AttachMoneyIcon sx={{ fontSize: 18, color: "info.main" }} />
@@ -549,7 +549,7 @@ export default function SettlementsScreen() {
                 </Grid>
 
                 {/* Commission */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <PaymentsIcon sx={{ fontSize: 18, color: "success.main" }} />
@@ -564,7 +564,7 @@ export default function SettlementsScreen() {
                 </Grid>
 
                 {/* Points Awarded */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <StarsIcon sx={{ fontSize: 18, color: "warning.main" }} />
@@ -579,7 +579,7 @@ export default function SettlementsScreen() {
                 </Grid>
 
                 {/* Points Deducted */}
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "error.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <StarsIcon sx={{ fontSize: 18, color: "error.main" }} />

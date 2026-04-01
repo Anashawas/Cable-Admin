@@ -384,7 +384,7 @@ export default function TransactionsScreen() {
 
               {/* Stats */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <StarsIcon sx={{ fontSize: 18, color: "info.main" }} />
@@ -401,7 +401,7 @@ export default function TransactionsScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <AttachMoneyIcon sx={{ fontSize: 18, color: "success.main" }} />
@@ -418,7 +418,7 @@ export default function TransactionsScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <AttachMoneyIcon sx={{ fontSize: 18, color: "warning.main" }} />
@@ -432,7 +432,7 @@ export default function TransactionsScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "error.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <TimerIcon sx={{ fontSize: 18, color: "error.main" }} />
@@ -449,7 +449,7 @@ export default function TransactionsScreen() {
 
               {/* Dates */}
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                       <CalendarTodayIcon sx={{ fontSize: 18, color: "primary.main" }} />
@@ -464,7 +464,7 @@ export default function TransactionsScreen() {
                 </Grid>
 
                 {selectedTransaction.completedAt && (
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <Paper elevation={0} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                         <CalendarTodayIcon sx={{ fontSize: 18, color: "success.main" }} />

@@ -863,7 +863,7 @@ export default function ServiceProvidersScreen() {
               </Stack>
             )}
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("name")}
                   value={formData.name}
@@ -872,7 +872,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth required>
                   <InputLabel>{t("category")}</InputLabel>
                   <Select
@@ -888,7 +888,7 @@ export default function ServiceProvidersScreen() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("phone")}
                   value={formData.phone}
@@ -896,7 +896,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("whatsApp")}
                   value={formData.whatsAppNumber}
@@ -904,7 +904,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("cityName")}
                   value={formData.cityName}
@@ -912,7 +912,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("countryName")}
                   value={formData.countryName}
@@ -920,7 +920,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("address")}
                   value={formData.address}
@@ -928,7 +928,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("price")}
                   value={formData.price}
@@ -937,7 +937,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("priceDescription")}
                   value={formData.priceDescription}
@@ -945,7 +945,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("fromTime")}
                   value={formData.fromTime}
@@ -954,7 +954,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("toTime")}
                   value={formData.toTime}
@@ -963,7 +963,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("methodPayment")}
                   value={formData.methodPayment}
@@ -971,7 +971,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("websiteUrl")}
                   value={formData.websiteUrl}
@@ -979,7 +979,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("description")}
                   value={formData.description}
@@ -989,7 +989,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("service")}
                   value={formData.service}
@@ -999,7 +999,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -1011,7 +1011,7 @@ export default function ServiceProvidersScreen() {
                 />
               </Grid>
               {formData.hasOffer && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     label={t("offerDescription")}
                     value={formData.offerDescription}
@@ -1111,7 +1111,7 @@ export default function ServiceProvidersScreen() {
           ) : (
             <Grid container spacing={3}>
               {providerOffers.map((offer) => (
-                <Grid item xs={12} key={offer.id}>
+                <Grid size={{ xs: 12 }} key={offer.id}>
                   <Card
                     elevation={2}
                     sx={{
@@ -1174,7 +1174,7 @@ export default function ServiceProvidersScreen() {
 
                           {/* Stats Grid */}
                           <Grid container spacing={2}>
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <LoyaltyIcon sx={{ fontSize: 18, color: "success.main" }} />
@@ -1188,7 +1188,7 @@ export default function ServiceProvidersScreen() {
                               </Paper>
                             </Grid>
 
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <AttachMoneyIcon sx={{ fontSize: 18, color: "info.main" }} />
@@ -1205,7 +1205,7 @@ export default function ServiceProvidersScreen() {
                               </Paper>
                             </Grid>
 
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <CalendarTodayIcon sx={{ fontSize: 18, color: "warning.main" }} />
@@ -1222,7 +1222,7 @@ export default function ServiceProvidersScreen() {
                               </Paper>
                             </Grid>
 
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "primary.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <StarIcon sx={{ fontSize: 18, color: "primary.main" }} />
@@ -1313,7 +1313,7 @@ export default function ServiceProvidersScreen() {
         <form onSubmit={handleOfferFormSubmit}>
           <DialogContent sx={{ pt: 3 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offerTitle")}
                   value={offerFormData.title}
@@ -1322,7 +1322,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offerTitleAr")}
                   value={offerFormData.titleAr}
@@ -1330,7 +1330,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("description")}
                   value={offerFormData.description}
@@ -1340,7 +1340,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("descriptionAr")}
                   value={offerFormData.descriptionAr}
@@ -1350,7 +1350,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("pointsCost")}
                   type="number"
@@ -1363,7 +1363,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("offers@pointsCostHelp")}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("monetaryValue")}
                   type="number"
@@ -1376,7 +1376,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("offers@monetaryValueHelp")}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("currencyCode")}
                   value={offerFormData.currencyCode}
@@ -1387,7 +1387,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("codeExpiry")}
                   type="number"
@@ -1400,7 +1400,7 @@ export default function ServiceProvidersScreen() {
                   InputProps={{ endAdornment: t("minutes") }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("maxUsesPerUser")}
                   type="number"
@@ -1415,7 +1415,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("leaveEmptyForUnlimited")}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("maxTotalUses")}
                   type="number"
@@ -1430,7 +1430,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("leaveEmptyForUnlimited")}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("validFrom")}
                   type="date"
@@ -1441,7 +1441,7 @@ export default function ServiceProvidersScreen() {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("validTo")}
                   type="date"
@@ -1452,7 +1452,7 @@ export default function ServiceProvidersScreen() {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("imageUrl")}
                   value={offerFormData.imageUrl}
@@ -1460,7 +1460,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <FormControlLabel
                   control={
                     <Checkbox
