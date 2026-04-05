@@ -11,6 +11,11 @@
   "serviceCategories_addNew": "Add New Category",
   "serviceCategories_edit": "Edit Category",
   "serviceCategories_total": "Total",
+  "serviceCategories_iconPreview": "Icon Preview",
+  "serviceCategories_noIcon": "No icon set",
+  "serviceCategories_sectionNames": "Category Name",
+  "serviceCategories_sectionDetails": "Description & Icon",
+  "serviceCategories_sectionSettings": "Settings",
 
   "serviceProviders": "Service Providers",
   "subtitle": "Manage and verify service providers",

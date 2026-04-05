@@ -11,6 +11,11 @@
   "serviceCategories_addNew": "إضافة فئة جديدة",
   "serviceCategories_edit": "تعديل الفئة",
   "serviceCategories_total": "الإجمالي",
+  "serviceCategories_iconPreview": "معاينة الأيقونة",
+  "serviceCategories_noIcon": "لا توجد أيقونة",
+  "serviceCategories_sectionNames": "اسم الفئة",
+  "serviceCategories_sectionDetails": "الوصف والأيقونة",
+  "serviceCategories_sectionSettings": "الإعدادات",
 
   "serviceProviders": "مقدمو الخدمات",
   "subtitle": "إدارة والتحقق من مقدمي الخدمات",

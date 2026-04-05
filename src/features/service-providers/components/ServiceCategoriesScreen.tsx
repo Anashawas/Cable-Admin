@@ -72,10 +72,10 @@ export default function ServiceCategoriesScreen() {
   const [editingCategory, setEditingCategory] = useState<ServiceCategoryDto | null>(null);
   const [formData, setFormData] = useState<CreateServiceCategoryRequest>({
     name: "",
-    nameAr: "",
-    description: "",
-    iconUrl: "",
-    sortOrder: 0,
+    nameAr: null,
+    description: null,
+    iconUrl: null,
+    sortOrder: 1,
     isActive: true,
   });
 
@@ -110,7 +110,7 @@ export default function ServiceCategoriesScreen() {
 
   const handleAddNew = useCallback(() => {
     setEditingCategory(null);
-    setFormData({ name: "", nameAr: "", description: "", iconUrl: "", sortOrder: 0, isActive: true });
+    setFormData({ name: "", nameAr: null, description: null, iconUrl: null, sortOrder: 1, isActive: true });
     setFormDialogOpen(true);
   }, []);
 
@@ -119,9 +119,9 @@ export default function ServiceCategoriesScreen() {
     setEditingCategory(row);
     setFormData({
       name: row.name,
-      nameAr: row.nameAr || "",
-      description: row.description || "",
-      iconUrl: row.iconUrl || "",
+      nameAr: row.nameAr ?? null,
+      description: row.description ?? null,
+      iconUrl: row.iconUrl ?? null,
       sortOrder: row.sortOrder,
       isActive: row.isActive,
     });
@@ -140,9 +140,17 @@ export default function ServiceCategoriesScreen() {
       openErrorSnackbar({ message: t("nameRequired") });
       return;
     }
+    const payload = {
+      name: formData.name,
+      nameAr: formData.nameAr?.trim() || null,
+      description: formData.description?.trim() || null,
+      iconUrl: editingCategory?.iconUrl ?? null,
+      sortOrder: editingCategory?.sortOrder ?? 1,
+      isActive: formData.isActive,
+    };
     if (editingCategory) {
       updateMutation.mutate(
-        { id: editingCategory.id, data: formData as UpdateServiceCategoryRequest },
+        { id: editingCategory.id, data: payload as UpdateServiceCategoryRequest },
         {
           onSuccess: () => {
             openSuccessSnackbar({ message: t("serviceCategories_updated") });
@@ -153,7 +161,7 @@ export default function ServiceCategoriesScreen() {
         }
       );
     } else {
-      createMutation.mutate(formData, {
+      createMutation.mutate(payload, {
         onSuccess: () => {
           openSuccessSnackbar({ message: t("serviceCategories_created") });
           setFormDialogOpen(false);
@@ -407,148 +415,110 @@ export default function ServiceCategoriesScreen() {
       <Dialog
         open={formDialogOpen}
         onClose={handleCloseFormDialog}
-        maxWidth="sm"
+        maxWidth="xs"
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
+        {/* Header */}
         <Box sx={{
-          background: editingCategory
-            ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)"
-            : "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
-          px: 3, py: 2.5,
+          px: 3, py: 2,
           display: "flex", alignItems: "center", justifyContent: "space-between",
+          borderBottom: "1px solid", borderColor: "divider",
         }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Box sx={{ width: 44, height: 44, borderRadius: 2, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {editingCategory ? <EditIcon sx={{ color: "white" }} /> : <AddIcon sx={{ color: "white" }} />}
-            </Box>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Avatar sx={{
+              width: 36, height: 36,
+              bgcolor: editingCategory ? "warning.100" : "primary.100",
+              color: editingCategory ? "warning.dark" : "primary.dark",
+            }}>
+              {editingCategory ? <EditIcon sx={{ fontSize: 18 }} /> : <AddIcon sx={{ fontSize: 18 }} />}
+            </Avatar>
             <Box>
-              <Typography variant="h6" fontWeight={700} color="white">
+              <Typography variant="subtitle1" fontWeight={700}>
                 {editingCategory ? t("serviceCategories_edit") : t("serviceCategories_addNew")}
               </Typography>
               {editingCategory && (
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>
+                <Typography variant="caption" color="text.secondary">
                   {editingCategory.name}
                 </Typography>
               )}
             </Box>
           </Stack>
-          <IconButton size="small" onClick={handleCloseFormDialog} disabled={isPending} sx={{ color: "rgba(255,255,255,0.8)", "&:hover": { bgcolor: "rgba(255,255,255,0.15)" } }}>
-            <CloseIcon />
+          <IconButton size="small" onClick={handleCloseFormDialog} disabled={isPending}>
+            <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
 
-        <DialogContent sx={{ pt: 3 }}>
+        <DialogContent sx={{ px: 3, py: 3 }}>
           <Stack spacing={2.5}>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                label={t("name")}
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                fullWidth
-                autoFocus
-              />
-              <TextField
-                label={t("nameAr")}
-                value={formData.nameAr}
-                onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
-                fullWidth
-                inputProps={{ dir: "rtl" }}
-              />
-            </Stack>
-
+            <TextField
+              label={t("name")}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              fullWidth
+              autoFocus
+              size="small"
+            />
+            <TextField
+              label={t("nameAr")}
+              value={formData.nameAr ?? ""}
+              onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
+              fullWidth
+              size="small"
+              inputProps={{ dir: "rtl" }}
+            />
             <TextField
               label={t("description")}
-              value={formData.description}
+              value={formData.description ?? ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               multiline
-              rows={2}
+              rows={3}
               fullWidth
+              size="small"
             />
 
-            <Box>
-              <TextField
-                label={t("iconUrl")}
-                value={formData.iconUrl}
-                onChange={(e) => setFormData({ ...formData, iconUrl: e.target.value })}
-                fullWidth
-                placeholder="https://..."
-                InputProps={{
-                  endAdornment: formData.iconUrl ? (
-                    <Avatar src={formData.iconUrl} variant="rounded" sx={{ width: 32, height: 32, ml: 1, flexShrink: 0 }}>
-                      <CategoryIcon fontSize="small" />
-                    </Avatar>
-                  ) : null,
-                }}
+            {/* Active status */}
+            <Paper
+              variant="outlined"
+              sx={{
+                px: 2, py: 1,
+                borderRadius: 2,
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                borderColor: formData.isActive ? "success.light" : "divider",
+              }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                {formData.isActive
+                  ? <CheckCircleIcon color="success" sx={{ fontSize: 20 }} />
+                  : <CancelIcon color="disabled" sx={{ fontSize: 20 }} />}
+                <Typography variant="body2" fontWeight={600} color={formData.isActive ? "success.dark" : "text.secondary"}>
+                  {formData.isActive ? t("active") : t("inactive")}
+                </Typography>
+              </Stack>
+              <Switch
+                checked={formData.isActive}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                color="success"
+                size="small"
               />
-              {formData.iconUrl && (
-                <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
-                  <Box sx={{ p: 1.5, borderRadius: 3, border: "2px dashed", borderColor: "divider", bgcolor: "grey.50" }}>
-                    <Avatar src={formData.iconUrl} variant="rounded" sx={{ width: 80, height: 80 }}>
-                      <CategoryIcon sx={{ fontSize: 40 }} color="disabled" />
-                    </Avatar>
-                  </Box>
-                </Box>
-              )}
-            </Box>
-
-            <Stack direction="row" spacing={2} alignItems="center">
-              <TextField
-                label={t("sortOrder")}
-                type="number"
-                value={formData.sortOrder}
-                onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
-                sx={{ width: 140 }}
-                inputProps={{ min: 0 }}
-              />
-              <Paper
-                variant="outlined"
-                sx={{
-                  flex: 1, px: 2, py: 1.5, borderRadius: 2,
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  borderColor: formData.isActive ? "success.main" : "divider",
-                  bgcolor: formData.isActive ? "success.50" : "transparent",
-                }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {formData.isActive
-                    ? <CheckCircleIcon color="success" fontSize="small" />
-                    : <CancelIcon color="disabled" fontSize="small" />}
-                  <Typography variant="body2" fontWeight={600} color={formData.isActive ? "success.dark" : "text.secondary"}>
-                    {formData.isActive ? t("active") : t("inactive")}
-                  </Typography>
-                </Stack>
-                <Switch
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  color="success"
-                />
-              </Paper>
-            </Stack>
+            </Paper>
           </Stack>
         </DialogContent>
 
-        <Divider />
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button onClick={handleCloseFormDialog} disabled={isPending} color="inherit" variant="outlined" sx={{ borderRadius: 2, minWidth: 100 }}>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid", borderColor: "divider", gap: 1 }}>
+          <Button onClick={handleCloseFormDialog} disabled={isPending} color="inherit" sx={{ borderRadius: 2 }}>
             {t("cancel")}
           </Button>
           <Button
             onClick={handleFormSubmit}
             variant="contained"
-            disabled={isPending}
-            startIcon={isPending ? <CircularProgress size={18} color="inherit" /> : editingCategory ? <EditIcon /> : <AddIcon />}
+            disabled={isPending || !formData.name.trim()}
+            startIcon={isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
             sx={{
-              borderRadius: 2, minWidth: 130,
-              background: editingCategory
-                ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)"
-                : "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
-              "&:hover": {
-                background: editingCategory
-                  ? "linear-gradient(135deg, #bf360c 0%, #e65100 100%)"
-                  : "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)",
-              },
+              borderRadius: 2, minWidth: 100, fontWeight: 600,
+              bgcolor: editingCategory ? "warning.main" : "primary.main",
+              "&:hover": { bgcolor: editingCategory ? "warning.dark" : "primary.dark" },
             }}
           >
             {isPending

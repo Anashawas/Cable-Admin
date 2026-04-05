@@ -23,7 +23,7 @@ export const getAllServiceCategories = async (): Promise<ServiceCategoryDto[]> =
 export const createServiceCategory = async (
   data: CreateServiceCategoryRequest
 ): Promise<number> => {
-  const response = await server.post("/api/service-categories/AddServiceCategory", data);
+  const response = await server.post("/api/service-categories/CreateServiceCategory", data);
   return response.data;
 };
 
