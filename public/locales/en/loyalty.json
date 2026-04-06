@@ -84,6 +84,8 @@
   "noteRequired": "Note is required for audit purposes",
   "enterUserId": "Enter the user ID",
   "userIdHelp": "The numeric ID of the user to adjust points for",
+  "searchUserPlaceholder": "Search by name, email, phone, or ID...",
+  "searchUserHelp": "Search and select the user to adjust points for",
   "pointsAmountHelp": "Enter the number of points to add or deduct",
   "noteHelp": "Explain the reason for this adjustment (required for audit trail)",
   "notePlaceholder": "e.g., Compensation for issue #123, Promotional bonus, etc.",

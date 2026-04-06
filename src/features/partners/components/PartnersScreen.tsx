@@ -8,6 +8,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Autocomplete,
   Dialog,
   DialogContent,
   DialogActions,
@@ -606,171 +607,239 @@ export default function PartnersScreen() {
 
       {/* ── Create / Edit Dialog ── */}
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>
-        <Box sx={{ background: editing ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)" : "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)", p: 2.5, color: "white" }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {editing ? <EditIcon /> : <AddIcon />}
-              </Box>
-              <Typography variant="h6" fontWeight={700} color="white">{editing ? t("partners@edit") : t("partners@add")}</Typography>
-            </Stack>
-            <IconButton size="small" onClick={() => setFormOpen(false)} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white" } }}>
-              <CloseIcon />
-            </IconButton>
+        {/* Header */}
+        <Box sx={{ px: 3, py: 2, display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid", borderColor: "divider" }}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Avatar sx={{ width: 36, height: 36, bgcolor: editing ? "warning.100" : "primary.100", color: editing ? "warning.dark" : "primary.dark" }}>
+              {editing ? <EditIcon sx={{ fontSize: 18 }} /> : <AddIcon sx={{ fontSize: 18 }} />}
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700}>{editing ? t("partners@edit") : t("partners@add")}</Typography>
+              {editing && <Typography variant="caption" color="text.secondary">{editing.providerName}</Typography>}
+            </Box>
           </Stack>
+          <IconButton size="small" onClick={() => setFormOpen(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         </Box>
-        <Divider />
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormControl fullWidth size="small" disabled={!!editing}>
-              <InputLabel>{t("partners@providerType")}</InputLabel>
-              <Select
-                value={formData.providerType}
-                label={t("partners@providerType")}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    providerType: e.target.value as PartnerProviderType,
-                    providerId: 0,
-                  })
-                }
-              >
-                <MenuItem value="ChargingPoint">{t("chargingPoint")}</MenuItem>
-                <MenuItem value="ServiceProvider">{t("serviceProvider")}</MenuItem>
-              </Select>
-            </FormControl>
 
-            <FormControl fullWidth size="small" disabled={!!editing}>
-              <InputLabel>{t("partners@provider")}</InputLabel>
-              <Select
-                value={formData.providerId || ""}
-                label={t("partners@provider")}
-                onChange={(e) =>
-                  setFormData({ ...formData, providerId: Number(e.target.value) })
-                }
-              >
-                <MenuItem value="">—</MenuItem>
-                {providerOptions.map((p) => (
-                  <MenuItem key={p.id} value={p.id}>
-                    {p.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+        <DialogContent sx={{ px: 3, py: 3 }}>
+          <Stack spacing={3}>
+            {/* Section: Provider */}
+            <Box>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1.5, display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {t("partners@providerType")}
+              </Typography>
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={1}>
+                  {(["ChargingPoint", "ServiceProvider"] as PartnerProviderType[]).map((type) => (
+                    <Paper
+                      key={type}
+                      variant="outlined"
+                      onClick={() => !editing && setFormData({ ...formData, providerType: type, providerId: 0 })}
+                      sx={{
+                        flex: 1, py: 1.5, px: 2,
+                        borderRadius: 2,
+                        cursor: editing ? "default" : "pointer",
+                        textAlign: "center",
+                        borderColor: formData.providerType === type ? "primary.main" : "divider",
+                        bgcolor: formData.providerType === type ? "primary.50" : "transparent",
+                        opacity: editing ? 0.6 : 1,
+                        transition: "all 0.15s ease",
+                        "&:hover": !editing ? { borderColor: "primary.light", bgcolor: "action.hover" } : {},
+                      }}
+                    >
+                      <Stack alignItems="center" spacing={0.5}>
+                        {type === "ChargingPoint"
+                          ? <EvStationIcon sx={{ fontSize: 22, color: formData.providerType === type ? "primary.main" : "text.disabled" }} />
+                          : <StoreIcon sx={{ fontSize: 22, color: formData.providerType === type ? "primary.main" : "text.disabled" }} />}
+                        <Typography variant="caption" fontWeight={600} color={formData.providerType === type ? "primary.main" : "text.secondary"}>
+                          {type === "ChargingPoint" ? t("chargingPoint") : t("serviceProvider")}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
 
-            <TextField
-              size="small"
-              label={t("partners@commission")}
-              type="number"
-              value={formData.commissionPercentage}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  commissionPercentage: parseFloat(e.target.value) || 0,
-                })
-              }
-              inputProps={{ min: 0, max: 100, step: 0.5 }}
-              helperText="%"
-            />
-            <TextField
-              size="small"
-              label={t("partners@pointsReward")}
-              type="number"
-              value={formData.pointsRewardPercentage}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  pointsRewardPercentage: parseFloat(e.target.value) || 0,
-                })
-              }
-              inputProps={{ min: 0, max: 100, step: 0.5 }}
-              helperText="%"
-            />
-            <FormControl fullWidth size="small">
-              <InputLabel>{t("partners@conversionRate")}</InputLabel>
-              <Select
-                value={formData.pointsConversionRateId ?? ""}
-                label={t("partners@conversionRate")}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    pointsConversionRateId:
-                      e.target.value === "" ? null : Number(e.target.value),
-                  })
-                }
-              >
-                <MenuItem value="">{t("default")}</MenuItem>
-                {conversionRates.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>
-                    {r.name} ({r.currencyCode} = {r.pointsPerUnit} pts)
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              size="small"
-              label={t("partners@codeExpiry")}
-              type="number"
-              value={formData.codeExpirySeconds}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  codeExpirySeconds: parseInt(e.target.value, 10) || 60,
-                })
-              }
-              helperText={t("seconds")}
-            />
-            <TextField
-              size="small"
-              label={t("partners@minimumAmount")}
-              type="number"
-              value={formData.minimumTransactionAmount ?? ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  minimumTransactionAmount: e.target.value ? parseFloat(e.target.value) : null,
-                })
-              }
-              helperText={t("partners@minimumAmountHint")}
-              InputProps={{ endAdornment: <InputAdornment position="end">JOD</InputAdornment> }}
-              inputProps={{ min: 0, step: 0.001 }}
-            />
-            {editing && (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.isActive}
+                <Autocomplete
+                  fullWidth
+                  size="small"
+                  disabled={!!editing}
+                  options={providerOptions}
+                  getOptionLabel={(opt) => `#${opt.id} — ${opt.name}`}
+                  filterOptions={(options, { inputValue }) => {
+                    const q = inputValue.trim().toLowerCase();
+                    if (!q) return options;
+                    return options.filter(
+                      (opt) =>
+                        String(opt.id).includes(q) ||
+                        (opt.name ?? "").toLowerCase().includes(q)
+                    );
+                  }}
+                  value={providerOptions.find((p) => p.id === formData.providerId) ?? null}
+                  onChange={(_, val) =>
+                    setFormData({ ...formData, providerId: val?.id ?? 0 })
+                  }
+                  isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                  noOptionsText={t("noResults")}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={t("partners@provider")}
+                      placeholder={t("partners@searchProvider")}
+                    />
+                  )}
+                  renderOption={(props, opt) => (
+                    <li {...props} key={opt.id}>
+                      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", py: 0.5 }}>
+                        <Avatar sx={{ width: 28, height: 28, bgcolor: "primary.100", color: "primary.dark", fontSize: 11, fontWeight: 700 }}>
+                          {opt.id}
+                        </Avatar>
+                        <Typography variant="body2" noWrap>{opt.name}</Typography>
+                      </Stack>
+                    </li>
+                  )}
+                />
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* Section: Commission & Rewards */}
+            <Box>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1.5, display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {t("partners@commissionAndRewards")}
+              </Typography>
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label={t("partners@commission")}
+                    type="number"
+                    value={formData.commissionPercentage}
+                    onChange={(e) =>
+                      setFormData({ ...formData, commissionPercentage: parseFloat(e.target.value) || 0 })
+                    }
+                    inputProps={{ min: 0, max: 100, step: 0.5 }}
+                    InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                  />
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label={t("partners@pointsReward")}
+                    type="number"
+                    value={formData.pointsRewardPercentage}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pointsRewardPercentage: parseFloat(e.target.value) || 0 })
+                    }
+                    inputProps={{ min: 0, max: 100, step: 0.5 }}
+                    InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                  />
+                </Stack>
+                <FormControl fullWidth size="small">
+                  <InputLabel>{t("partners@conversionRate")}</InputLabel>
+                  <Select
+                    value={formData.pointsConversionRateId ?? ""}
+                    label={t("partners@conversionRate")}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        isActive: e.target.checked,
+                        pointsConversionRateId:
+                          e.target.value === "" ? null : Number(e.target.value),
                       })
                     }
-                  />
-                }
-                label={t("partners@active")}
-              />
+                  >
+                    <MenuItem value="">{t("default")}</MenuItem>
+                    {conversionRates.map((r) => (
+                      <MenuItem key={r.id} value={r.id}>
+                        {r.name} ({r.currencyCode} = {r.pointsPerUnit} pts)
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* Section: Limits & Expiry */}
+            <Box>
+              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1.5, display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {t("partners@limitsAndExpiry")}
+              </Typography>
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label={t("partners@codeExpiry")}
+                  type="number"
+                  value={formData.codeExpirySeconds}
+                  onChange={(e) =>
+                    setFormData({ ...formData, codeExpirySeconds: parseInt(e.target.value, 10) || 60 })
+                  }
+                  InputProps={{ endAdornment: <InputAdornment position="end">{t("seconds")}</InputAdornment> }}
+                />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label={t("partners@minimumAmount")}
+                  type="number"
+                  value={formData.minimumTransactionAmount ?? ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, minimumTransactionAmount: e.target.value ? parseFloat(e.target.value) : null })
+                  }
+                  InputProps={{ endAdornment: <InputAdornment position="end">JOD</InputAdornment> }}
+                  inputProps={{ min: 0, step: 0.001 }}
+                  helperText={t("partners@minimumAmountHint")}
+                />
+              </Stack>
+            </Box>
+
+            {/* Active toggle (edit only) + Note */}
+            {editing && (
+              <Paper variant="outlined" sx={{ px: 2, py: 1, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "space-between", borderColor: formData.isActive ? "success.light" : "divider" }}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {formData.isActive ? <CheckCircleOutlineIcon color="success" sx={{ fontSize: 20 }} /> : <BlockIcon color="disabled" sx={{ fontSize: 20 }} />}
+                  <Typography variant="body2" fontWeight={600} color={formData.isActive ? "success.dark" : "text.secondary"}>
+                    {t("partners@active")}
+                  </Typography>
+                </Stack>
+                <Switch
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  color="success"
+                  size="small"
+                />
+              </Paper>
             )}
+
             <TextField
               size="small"
               label={t("note")}
               value={formData.note ?? ""}
-              onChange={(e) =>
-                setFormData({ ...formData, note: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, note: e.target.value })}
               multiline
               rows={2}
+              placeholder={t("partners@notePlaceholder")}
             />
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button onClick={() => setFormOpen(false)}>{t("cancel")}</Button>
+
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid", borderColor: "divider", gap: 1 }}>
+          <Button onClick={() => setFormOpen(false)} color="inherit" sx={{ borderRadius: 2 }}>
+            {t("cancel")}
+          </Button>
           <Button
             variant="contained"
             onClick={handleFormSubmit}
             disabled={createMutation.isPending || updateMutation.isPending || (formData.providerId <= 0 && !editing)}
-            startIcon={createMutation.isPending || updateMutation.isPending ? <CircularProgress size={16} color="inherit" /> : null}
-            sx={{ background: editing ? "linear-gradient(135deg, #e65100, #f57c00)" : "linear-gradient(135deg, #0d47a1, #1565c0)", fontWeight: 700 }}
+            startIcon={createMutation.isPending || updateMutation.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
+            sx={{
+              borderRadius: 2, minWidth: 100, fontWeight: 600,
+              bgcolor: editing ? "warning.main" : "primary.main",
+              "&:hover": { bgcolor: editing ? "warning.dark" : "primary.dark" },
+            }}
           >
             {editing ? t("update") : t("partners@add")}
           </Button>

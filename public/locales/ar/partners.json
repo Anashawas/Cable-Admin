@@ -46,5 +46,9 @@
   "invalidCreditLimit": "يجب أن يكون الحد الائتماني رقماً موجباً",
   "settlementHistory": "سجل التسويات",
   "minimumAmount": "الحد الأدنى للمعاملة",
-  "minimumAmountHint": "اتركه فارغاً بدون حد أدنى"
+  "minimumAmountHint": "اتركه فارغاً بدون حد أدنى",
+  "searchProvider": "ابحث بالاسم أو المعرف...",
+  "commissionAndRewards": "العمولة والمكافآت",
+  "limitsAndExpiry": "الحدود والصلاحية",
+  "notePlaceholder": "ملاحظات اختيارية..."
 }

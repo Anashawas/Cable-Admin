@@ -59,14 +59,14 @@ const updateStation = async (
 };
 
 /**
- * PATCH api/provider/charging-points/change-owner/{id}
+ * PATCH api/charging-points/ChangeOwner/{id}
  * Body: { newOwnerId: number }
  */
 const changeStationOwner = async (
   stationId: number,
   newOwnerId: number
 ): Promise<void> => {
-  await server.patch(`api/provider/charging-points/change-owner/${stationId}`, {
+  await server.patch(`api/charging-points/ChangeOwner/${stationId}`, {
     newOwnerId,
   });
 };

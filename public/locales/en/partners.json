@@ -46,5 +46,9 @@
   "invalidCreditLimit": "Credit limit must be a positive number",
   "settlementHistory": "Settlement History",
   "minimumAmount": "Min Transaction",
-  "minimumAmountHint": "Leave empty for no minimum"
+  "minimumAmountHint": "Leave empty for no minimum",
+  "searchProvider": "Search by name or ID...",
+  "commissionAndRewards": "Commission & Rewards",
+  "limitsAndExpiry": "Limits & Expiry",
+  "notePlaceholder": "Optional notes..."
 }

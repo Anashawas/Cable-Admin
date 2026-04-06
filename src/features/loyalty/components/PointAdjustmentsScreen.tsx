@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Box,
@@ -17,6 +17,7 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Chip,
+  Autocomplete,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
@@ -27,6 +28,9 @@ import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import { useAdjustPoints } from "../hooks/use-loyalty";
+import { useQuery } from "@tanstack/react-query";
+import { getUsersList } from "../../users/services/user-service";
+import type { UserSummaryDto } from "../../users/types/api";
 
 type AdjustmentType = "add" | "deduct";
 
@@ -37,8 +41,15 @@ export default function PointAdjustmentsScreen() {
 
   const adjustMutation = useAdjustPoints();
 
+  // ── Users list ───────────────────────────────────────────────────────────
+  const { data: users = [] } = useQuery({
+    queryKey: ["users-list"],
+    queryFn: ({ signal }) => getUsersList(signal),
+    staleTime: 5 * 60 * 1000,
+  });
+
   // ── Adjust Points state ──────────────────────────────────────────────────
-  const [userId, setUserId] = useState<string>("");
+  const [selectedUser, setSelectedUser] = useState<UserSummaryDto | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>("add");
   const [pointsAmount, setPointsAmount] = useState<string>("");
   const [note, setNote] = useState<string>("");
@@ -52,26 +63,24 @@ export default function PointAdjustmentsScreen() {
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (!userId || !userId.trim()) { openErrorSnackbar({ message: t("loyalty@userIdRequired") }); return; }
-      const userIdNum = parseInt(userId, 10);
-      if (isNaN(userIdNum) || userIdNum <= 0) { openErrorSnackbar({ message: t("loyalty@invalidUserId") }); return; }
+      if (!selectedUser?.id) { openErrorSnackbar({ message: t("loyalty@userIdRequired") }); return; }
       if (!pointsAmount || !pointsAmount.trim()) { openErrorSnackbar({ message: t("loyalty@pointsRequired") }); return; }
       const points = parseInt(pointsAmount, 10);
       if (isNaN(points) || points <= 0) { openErrorSnackbar({ message: t("loyalty@invalidPoints") }); return; }
       if (!note || !note.trim()) { openErrorSnackbar({ message: t("loyalty@noteRequired") }); return; }
       const finalPoints = isAdd ? points : -points;
       adjustMutation.mutate(
-        { userId: userIdNum, points: finalPoints, note: note.trim() },
+        { userId: selectedUser.id, points: finalPoints, note: note.trim() },
         {
           onSuccess: () => {
             openSuccessSnackbar({ message: t(isAdd ? "loyalty@pointsAddedSuccess" : "loyalty@pointsDeductedSuccess") });
-            setUserId(""); setPointsAmount(""); setNote("");
+            setSelectedUser(null); setPointsAmount(""); setNote("");
           },
           onError: (err: Error) => { openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }); },
         }
       );
     },
-    [userId, pointsAmount, note, isAdd, adjustMutation, openSuccessSnackbar, openErrorSnackbar, t]
+    [selectedUser, pointsAmount, note, isAdd, adjustMutation, openSuccessSnackbar, openErrorSnackbar, t]
   );
 
   return (
@@ -202,23 +211,53 @@ export default function PointAdjustmentsScreen() {
                     </ToggleButtonGroup>
                   </Box>
 
-                  {/* User ID */}
-                  <TextField
-                    label={t("loyalty@userId")}
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    required
+                  {/* User Search */}
+                  <Autocomplete
                     fullWidth
-                    type="number"
-                    placeholder={t("loyalty@enterUserId")}
-                    helperText={t("loyalty@userIdHelp")}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <PersonIcon fontSize="small" color="action" />
-                        </InputAdornment>
-                      ),
+                    options={users}
+                    getOptionLabel={(opt) => `#${opt.id} — ${opt.name}`}
+                    filterOptions={(options, { inputValue }) => {
+                      const q = inputValue.trim().toLowerCase();
+                      if (!q) return options.slice(0, 50);
+                      return options.filter(
+                        (u) =>
+                          String(u.id ?? "").includes(q) ||
+                          (u.name ?? "").toLowerCase().includes(q) ||
+                          (u.email ?? "").toLowerCase().includes(q) ||
+                          (u.phone ?? "").toLowerCase().includes(q)
+                      );
                     }}
+                    value={selectedUser}
+                    onChange={(_, val) => setSelectedUser(val)}
+                    isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                    noOptionsText={t("noResults")}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t("loyalty@userId")}
+                        required
+                        placeholder={t("loyalty@searchUserPlaceholder")}
+                        helperText={t("loyalty@searchUserHelp")}
+                      />
+                    )}
+                    renderOption={(props, opt) => (
+                      <li {...props} key={opt.id}>
+                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", py: 0.5 }}>
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.100", color: "primary.dark", fontSize: 12, fontWeight: 700 }}>
+                            {opt.name?.[0]?.toUpperCase() ?? "#"}
+                          </Avatar>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Typography variant="body2" fontWeight={600} noWrap>{opt.name}</Typography>
+                              <Chip label={`#${opt.id}`} size="small" variant="outlined" sx={{ fontWeight: 700, fontSize: "0.7rem", height: 20 }} />
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary" noWrap>
+                              {opt.email}{opt.phone ? ` · ${opt.phone}` : ""}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </li>
+                    )}
                   />
 
                   {/* Points Amount */}
