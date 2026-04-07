@@ -103,6 +103,8 @@
     "photosUploaded": "Photos uploaded successfully",
     "noPhotos": "No photos yet. Add photos using the button above.",
     "deleteUnavailable": "Delete unavailable (No ID from server)",
-    "iconHint": "PNG, JPG or SVG — recommended 256×256px"
+    "iconHint": "PNG, JPG or SVG — recommended 256×256px",
+    "photoDeleted": "Photo deleted successfully",
+    "confirmDelete": "Are you sure you want to delete this photo?"
   }
 }

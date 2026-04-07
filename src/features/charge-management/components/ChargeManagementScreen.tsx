@@ -139,8 +139,13 @@ export default function ChargeManagementScreen() {
       setChangeOwnerStation(null);
       setOwnerSearch("");
     },
-    onError: (err: Error) =>
-      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+    onError: (err: any) => {
+      const detail = err?.response?.data?.detail
+        || err?.response?.data?.title
+        || err?.message
+        || t("loadingFailed");
+      openErrorSnackbar({ message: detail });
+    },
   });
 
   const {

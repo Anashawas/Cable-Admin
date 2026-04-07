@@ -27,6 +27,7 @@ import {
   getStationPhotos,
   uploadStationIcon,
   uploadStationPhotos,
+  deleteStationPhoto,
   type StationAttachmentDto,
 } from "../services/station-media-service";
 import { useSnackbarStore } from "../../../stores";
@@ -82,6 +83,45 @@ export default function StationMediaScreen() {
       openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
     },
   });
+
+  const deletePhotoMutation = useMutation({
+    mutationFn: (attachmentId: number) => deleteStationPhoto(attachmentId),
+    onSuccess: () => {
+      refetchPhotos();
+      openSuccessSnackbar({ message: t("chargeManagement@media.photoDeleted") });
+    },
+    onError: (err: Error) => {
+      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+    },
+  });
+
+  const getAttachmentId = useCallback((photo: StationAttachmentDto): number | null => {
+    const candidates = [
+      photo.id,
+      (photo as Record<string, unknown>).attachmentId,
+      (photo as Record<string, unknown>).chargingPointAttachmentId,
+    ];
+    for (const c of candidates) {
+      if (typeof c === "number") return c;
+      if (typeof c === "string" && c.trim() && !Number.isNaN(Number(c))) return Number(c);
+    }
+    return null;
+  }, []);
+
+  const handleDeletePhoto = useCallback(
+    (photo: StationAttachmentDto) => {
+      const attachmentId = getAttachmentId(photo);
+      if (attachmentId == null) {
+        // eslint-disable-next-line no-console
+        console.warn("[StationMediaScreen] Cannot delete — no recognizable ID in attachment object:", photo);
+        openErrorSnackbar({ message: t("chargeManagement@media.deleteUnavailable") });
+        return;
+      }
+      if (!window.confirm(t("chargeManagement@media.confirmDelete") as string)) return;
+      deletePhotoMutation.mutate(attachmentId);
+    },
+    [deletePhotoMutation, getAttachmentId, openErrorSnackbar, t]
+  );
 
   const handleChangeIconClick = useCallback(() => {
     iconInputRef.current?.click();
@@ -302,16 +342,24 @@ export default function StationMediaScreen() {
                           className="overlay"
                           sx={{ position: "absolute", inset: 0, bgcolor: "rgba(0,0,0,0.35)", opacity: 0, transition: "opacity 0.2s", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", p: 1 }}
                         >
-                          <Tooltip title={t("chargeManagement@media.deleteUnavailable")}>
-                            <span>
-                              <IconButton
-                                size="small"
-                                disabled
-                                sx={{ bgcolor: "rgba(255,255,255,0.85)", "&.Mui-disabled": { bgcolor: "rgba(255,255,255,0.6)", color: "text.disabled" } }}
-                              >
+                          <Tooltip title={t("delete")}>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo); }}
+                              disabled={deletePhotoMutation.isPending}
+                              sx={{
+                                bgcolor: "rgba(255,255,255,0.92)",
+                                color: "error.main",
+                                "&:hover": { bgcolor: "error.main", color: "white" },
+                                "&.Mui-disabled": { bgcolor: "rgba(255,255,255,0.6)", color: "text.disabled" },
+                              }}
+                            >
+                              {deletePhotoMutation.isPending && deletePhotoMutation.variables === getAttachmentId(photo) ? (
+                                <CircularProgress size={14} color="inherit" />
+                              ) : (
                                 <DeleteOutlineIcon fontSize="small" />
-                              </IconButton>
-                            </span>
+                              )}
+                            </IconButton>
                           </Tooltip>
                         </Box>
                       </Box>

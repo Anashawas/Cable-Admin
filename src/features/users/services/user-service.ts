@@ -70,4 +70,30 @@ const createUser = async (
   return data;
 };
 
-export { getUsersList, getUserById, updateUserProfile, deleteUserById, createUser };
+/**
+ * PATCH api/users/{id}/change-password
+ * Body: { password: string }
+ * Admin sets a new password for the given user.
+ */
+const changeUserPassword = async (
+  id: number,
+  password: string,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.patch(`api/users/${id}/change-password`, { password }, { signal });
+};
+
+/**
+ * PATCH api/users/{id}/change-phone
+ * Body: { phoneNumber: string }
+ * Admin sets a new phone number for the given user.
+ */
+const changeUserPhone = async (
+  id: number,
+  phoneNumber: string,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.patch(`api/users/${id}/change-phone`, { phoneNumber }, { signal });
+};
+
+export { getUsersList, getUserById, updateUserProfile, deleteUserById, createUser, changeUserPassword, changeUserPhone };

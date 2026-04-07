@@ -59,4 +59,18 @@ const uploadStationPhotos = async (
   );
 };
 
-export { uploadStationIcon, getStationPhotos, uploadStationPhotos };
+/**
+ * DELETE api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/{attachmentId}
+ * Note: URL typo "Attchments" kept as per API.
+ */
+const deleteStationPhoto = async (
+  attachmentId: number,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.delete(
+    `api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/${attachmentId}`,
+    { signal }
+  );
+};
+
+export { uploadStationIcon, getStationPhotos, uploadStationPhotos, deleteStationPhoto };
