@@ -60,17 +60,18 @@ const uploadStationPhotos = async (
 };
 
 /**
- * DELETE api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/{attachmentId}
- * Note: URL typo "Attchments" kept as per API.
+ * DELETE api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/{stationId}
+ * Deletes ALL attachments for a charging point.
+ * Note: API does not support single-photo delete (no ID in response).
  */
-const deleteStationPhoto = async (
-  attachmentId: number,
+const deleteAllStationPhotos = async (
+  stationId: number,
   signal?: AbortSignal
 ): Promise<void> => {
   await server.delete(
-    `api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/${attachmentId}`,
+    `api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/${stationId}`,
     { signal }
   );
 };
 
-export { uploadStationIcon, getStationPhotos, uploadStationPhotos, deleteStationPhoto };
+export { uploadStationIcon, getStationPhotos, uploadStationPhotos, deleteAllStationPhotos };

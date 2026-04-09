@@ -25,6 +25,7 @@ export interface UserDetails {
   city?: string | null;
   role: { id: number; name: string };
   userCars?: UserCarType[];
+  hasReadUpdateNotes?: boolean;
 }
 
 export interface UserCarType {

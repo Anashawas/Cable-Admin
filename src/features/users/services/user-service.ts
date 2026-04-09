@@ -8,14 +8,15 @@ import type {
 
 /**
  * GET api/users/GetAllUsers
- * No query params. Returns full list; client-side search/paging.
+ * Supports optional query params: deletedOnly, includeDeleted.
  */
 const getUsersList = async (
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  params?: { deletedOnly?: boolean; includeDeleted?: boolean }
 ): Promise<UserSummaryDto[]> => {
   const { data } = await server.get<UserSummaryDto[]>(
     "api/users/GetAllUsers",
-    { signal }
+    { signal, params }
   );
   return Array.isArray(data) ? data : [];
 };
@@ -96,4 +97,35 @@ const changeUserPhone = async (
   await server.patch(`api/users/${id}/change-phone`, { phoneNumber }, { signal });
 };
 
-export { getUsersList, getUserById, updateUserProfile, deleteUserById, createUser, changeUserPassword, changeUserPhone };
+/**
+ * PATCH api/users/restore
+ * Body: { userIds: number[] }
+ */
+const restoreUsers = async (
+  ids: number[],
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.patch("api/users/restore", { ids }, { signal });
+};
+
+/**
+ * PATCH api/users/mark-update-notes-read
+ * Marks update notes as read for the current user.
+ */
+const markUpdateNotesRead = async (
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.patch("api/users/mark-update-notes-read", null, { signal });
+};
+
+export {
+  getUsersList,
+  getUserById,
+  updateUserProfile,
+  deleteUserById,
+  createUser,
+  changeUserPassword,
+  changeUserPhone,
+  restoreUsers,
+  markUpdateNotesRead,
+};

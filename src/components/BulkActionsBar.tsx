@@ -1,5 +1,6 @@
 import { Box, Button, Typography, Stack } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import RestoreIcon from "@mui/icons-material/Restore";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useTranslation } from "react-i18next";
 
@@ -8,6 +9,7 @@ export interface BulkActionsBarProps {
   onClearSelection: () => void;
   onBulkDelete: () => void;
   onBulkExport: () => void;
+  onBulkRestore?: () => void;
   loading?: boolean;
 }
 
@@ -16,6 +18,7 @@ export default function BulkActionsBar({
   onClearSelection,
   onBulkDelete,
   onBulkExport,
+  onBulkRestore,
   loading = false,
 }: BulkActionsBarProps) {
   const { t } = useTranslation();
@@ -67,6 +70,18 @@ export default function BulkActionsBar({
         >
           {t("search@bulkExport", "Export")}
         </Button>
+        {onBulkRestore && (
+          <Button
+            size="small"
+            variant="contained"
+            color="success"
+            startIcon={<RestoreIcon />}
+            onClick={onBulkRestore}
+            disabled={loading}
+          >
+            {t("search@bulkRestore", "Restore")}
+          </Button>
+        )}
         <Button
           size="small"
           variant="outlined"

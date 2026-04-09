@@ -47,6 +47,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PersonIcon from "@mui/icons-material/Person";
 import StoreIcon from "@mui/icons-material/Store";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import RestoreIcon from "@mui/icons-material/Restore";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -58,7 +59,7 @@ import PublicIcon from "@mui/icons-material/Public";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
-import { getUsersList, deleteUserById, updateUserProfile, getUserById, createUser } from "../services/user-service";
+import { getUsersList, deleteUserById, updateUserProfile, getUserById, createUser, restoreUsers } from "../services/user-service";
 import type { UserSummaryDto, CreateUserRequest } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 import { useCarTypeStats } from "../hooks/use-user-stats";
@@ -99,6 +100,7 @@ export default function UserListScreen() {
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [newUserForm, setNewUserForm] = useState<CreateUserRequest>({
     name: "",
@@ -110,8 +112,8 @@ export default function UserListScreen() {
   });
 
   const { data = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["users", "list"],
-    queryFn: ({ signal }) => getUsersList(signal),
+    queryKey: ["users", "list", showDeleted],
+    queryFn: ({ signal }) => getUsersList(signal, showDeleted ? { deletedOnly: true } : undefined),
   });
 
   const { data: allServiceProviders = [] } = useQuery({
@@ -162,15 +164,21 @@ export default function UserListScreen() {
       });
     },
     onSuccess: (_, user) => {
-      queryClient.setQueryData<UserSummaryDto[]>(["users", "list"], (old) =>
-        old?.map((u) =>
-          u.id === user.id ? { ...u, role: { id: PROVIDER_ROLE_ID, name: "Provider" } } : u
-        ) ?? []
-      );
+      queryClient.invalidateQueries({ queryKey: ["users", "list"] });
       queryClient.invalidateQueries({ queryKey: ["users", "detail", user.id] });
       openSuccessSnackbar({ message: t("userManagement@roleChangedToProvider") });
       setChangeRoleDialogOpen(false);
       setUserToChangeRole(null);
+    },
+    onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (ids: number[]) => restoreUsers(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+      openSuccessSnackbar({ message: t("userManagement@restored") });
+      setRowSelectionModel([]);
     },
     onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
@@ -383,25 +391,43 @@ export default function UserListScreen() {
           : <Typography variant="caption" color="text.disabled">—</Typography>,
       },
       {
-        field: "actions", headerName: t("userManagement@columns.actions"), width: 120, align: "center", headerAlign: "center", filterable: false, sortable: false, disableColumnMenu: true,
+        field: "actions", headerName: t("userManagement@columns.actions"), width: 140, align: "center", headerAlign: "center", filterable: false, sortable: false, disableColumnMenu: true,
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} onClick={(e) => e.stopPropagation()}>
-            <Tooltip title={t("userManagement@actions.edit")}>
-              <IconButton size="small" onClick={(e) => handleEdit(e, row)}><EditIcon fontSize="small" /></IconButton>
-            </Tooltip>
-            {!isProvider(row) && (
-              <Tooltip title={t("userManagement@actions.makeProvider")}>
-                <IconButton size="small" color="warning" onClick={(e) => handleChangeRoleClick(e, row)}><BusinessCenterIcon fontSize="small" /></IconButton>
+            {showDeleted ? (
+              <Tooltip title={t("userManagement@restore")}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="success"
+                  startIcon={<RestoreIcon sx={{ fontSize: 16 }} />}
+                  onClick={() => { if (row.id) restoreMutation.mutate([row.id]); }}
+                  disabled={restoreMutation.isPending}
+                  sx={{ fontWeight: 700, textTransform: "none", borderRadius: 2, fontSize: "0.75rem" }}
+                >
+                  {t("userManagement@restore")}
+                </Button>
               </Tooltip>
+            ) : (
+              <>
+                <Tooltip title={t("userManagement@actions.edit")}>
+                  <IconButton size="small" onClick={(e) => handleEdit(e, row)}><EditIcon fontSize="small" /></IconButton>
+                </Tooltip>
+                {!isProvider(row) && (
+                  <Tooltip title={t("userManagement@actions.makeProvider")}>
+                    <IconButton size="small" color="warning" onClick={(e) => handleChangeRoleClick(e, row)}><BusinessCenterIcon fontSize="small" /></IconButton>
+                  </Tooltip>
+                )}
+                <Tooltip title={t("userManagement@actions.delete")}>
+                  <IconButton size="small" color="error" onClick={(e) => handleDeleteClick(e, row)}><DeleteIcon fontSize="small" /></IconButton>
+                </Tooltip>
+              </>
             )}
-            <Tooltip title={t("userManagement@actions.delete")}>
-              <IconButton size="small" color="error" onClick={(e) => handleDeleteClick(e, row)}><DeleteIcon fontSize="small" /></IconButton>
-            </Tooltip>
           </Stack>
         ),
       },
     ],
-    [t, roleChip, handleEdit, handleDeleteClick, handleChangeRoleClick, providersByOwner]
+    [t, roleChip, handleEdit, handleDeleteClick, handleChangeRoleClick, providersByOwner, showDeleted, restoreMutation]
   );
 
   const tabConfig = ROLE_TAB_CONFIG[activeTab];
@@ -422,7 +448,9 @@ export default function UserListScreen() {
           {/* ── Gradient Page Header ── */}
           <Box
             sx={{
-              background: tabConfig.gradient,
+              background: showDeleted
+                ? "linear-gradient(135deg, #b71c1c 0%, #c62828 55%, #d32f2f 100%)"
+                : tabConfig.gradient,
               borderRadius: 3, p: 3, color: "white",
               position: "relative", overflow: "hidden",
               transition: "background 0.4s ease",
@@ -434,12 +462,14 @@ export default function UserListScreen() {
             <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} spacing={2}>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 54, height: 54 }}>
-                  {tabConfig.icon}
+                  {showDeleted ? <DeleteIcon sx={{ fontSize: 28 }} /> : tabConfig.icon}
                 </Avatar>
                 <Box>
-                  <Typography variant="h5" fontWeight={800}>{t("userManagement@title")}</Typography>
+                  <Typography variant="h5" fontWeight={800}>
+                    {showDeleted ? t("userManagement@deletedUsers") : t("userManagement@title")}
+                  </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.3 }}>
-                    {t("userManagement@subtitle") ?? "Manage platform users by role"}
+                    {showDeleted ? t("userManagement@deletedUsersHint") : t("userManagement@subtitle")}
                   </Typography>
                 </Box>
               </Stack>
@@ -459,6 +489,22 @@ export default function UserListScreen() {
                 >
                   {t("userManagement@addUser")}
                 </Button>
+                <Button
+                  variant={showDeleted ? "contained" : "outlined"}
+                  startIcon={<DeleteIcon />}
+                  onClick={() => { setShowDeleted((v) => !v); setRowSelectionModel([]); }}
+                  size="small"
+                  sx={{
+                    bgcolor: showDeleted ? "rgba(244,67,54,0.85)" : "transparent",
+                    color: "white",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    fontWeight: 600,
+                    textTransform: "none",
+                    "&:hover": { bgcolor: showDeleted ? "rgba(244,67,54,1)" : "rgba(255,255,255,0.15)" },
+                  }}
+                >
+                  {t("userManagement@deletedUsers")}
+                </Button>
                 <Tooltip title={t("refresh")}>
                   <IconButton
                     onClick={() => refetch()}
@@ -470,8 +516,8 @@ export default function UserListScreen() {
               </Stack>
             </Stack>
 
-            {/* Clickable KPI cards */}
-            <Stack direction="row" spacing={1.5} sx={{ mt: 3 }} flexWrap="wrap">
+            {/* Clickable KPI cards — hidden in deleted mode */}
+            {!showDeleted && <Stack direction="row" spacing={1.5} sx={{ mt: 3 }} flexWrap="wrap">
               {(Object.keys(ROLE_TAB_CONFIG) as RoleTab[]).map((key) => {
                 const cfg = ROLE_TAB_CONFIG[key];
                 const count = roleCounts[key];
@@ -500,14 +546,14 @@ export default function UserListScreen() {
                   </Paper>
                 );
               })}
-            </Stack>
+            </Stack>}
           </Box>
 
           {/* ── Main Table Card ── */}
           <Paper elevation={2} sx={{ borderRadius: 3, overflow: "hidden" }}>
 
-            {/* Role Tabs */}
-            <Box sx={{ borderBottom: "1px solid", borderColor: "divider", px: 1 }}>
+            {/* Role Tabs — hidden in deleted mode */}
+            {!showDeleted && <Box sx={{ borderBottom: "1px solid", borderColor: "divider", px: 1 }}>
               <Tabs value={activeTab} onChange={handleTabChange} sx={{ "& .MuiTab-root": { fontWeight: 600, minHeight: 52 } }}>
                 {(Object.keys(ROLE_TAB_CONFIG) as RoleTab[]).map((key) => {
                   const cfg = ROLE_TAB_CONFIG[key];
@@ -527,7 +573,46 @@ export default function UserListScreen() {
                   );
                 })}
               </Tabs>
-            </Box>
+            </Box>}
+
+            {/* Deleted mode warning banner */}
+            {showDeleted && (
+              <Box sx={{ px: 2.5, pt: 2, pb: 0 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    borderRadius: 2.5,
+                    bgcolor: "error.50",
+                    border: "1px solid",
+                    borderColor: "error.200",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                  }}
+                >
+                  <WarningAmberIcon color="error" />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" fontWeight={700} color="error.dark">
+                      {t("userManagement@deletedUsers")}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {t("userManagement@deletedUsersHint")}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    startIcon={<GroupIcon />}
+                    onClick={() => setShowDeleted(false)}
+                    sx={{ textTransform: "none", fontWeight: 700, borderRadius: 2 }}
+                  >
+                    {t("userManagement@backToActive")}
+                  </Button>
+                </Paper>
+              </Box>
+            )}
 
             <Box sx={{ p: 2.5 }}>
               {/* Filter bar */}
@@ -618,7 +703,8 @@ export default function UserListScreen() {
             onClearSelection={() => setRowSelectionModel([])}
             onBulkExport={handleBulkExport}
             onBulkDelete={handleBulkDeleteClick}
-            loading={deleteMutation.isPending}
+            onBulkRestore={showDeleted ? () => restoreMutation.mutate(selectedIds) : undefined}
+            loading={deleteMutation.isPending || restoreMutation.isPending}
           />
         </Stack>
       </Box>

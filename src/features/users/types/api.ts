@@ -28,6 +28,10 @@ export interface UserSummaryDto {
   createdAt?: string | null;
   /** User's registered vehicles — available directly in list since 2026-03-04 API update. */
   userCars?: UserCarSummaryDto[];
+  /** Whether the user has read the latest update notes. */
+  hasReadUpdateNotes?: boolean;
+  /** Whether this account has been soft-deleted. */
+  isDeleted?: boolean;
 }
 
 /** Nested car structure in UserDetailDto (minimal for display). */
@@ -52,6 +56,7 @@ export interface UserDetailDto {
   city: string | null;
   role: RoleDto;
   userCars: UserCarDto[];
+  hasReadUpdateNotes?: boolean;
 }
 
 /** Payload for POST api/users/AddUser. Phone is managed via verify-phone endpoints. */

@@ -86,6 +86,7 @@ function WalletBalanceCell({
   providerId: number;
   onOpen: () => void;
 }) {
+  const { t } = useTranslation(["offers", "common"]);
   const { data, isLoading } = useWalletBalance(providerType, providerId);
 
   const balance = data?.walletBalance ?? null;
@@ -93,7 +94,7 @@ function WalletBalanceCell({
   const isZero = balance === 0;
 
   return (
-    <Tooltip title="Click to open wallet">
+    <Tooltip title={t("offers@settlements_walletBalance")}>
       <Box
         onClick={(e) => { e.stopPropagation(); onOpen(); }}
         sx={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}

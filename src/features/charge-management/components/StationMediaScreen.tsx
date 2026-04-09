@@ -27,7 +27,7 @@ import {
   getStationPhotos,
   uploadStationIcon,
   uploadStationPhotos,
-  deleteStationPhoto,
+  deleteAllStationPhotos,
   type StationAttachmentDto,
 } from "../services/station-media-service";
 import { useSnackbarStore } from "../../../stores";
@@ -84,44 +84,22 @@ export default function StationMediaScreen() {
     },
   });
 
-  const deletePhotoMutation = useMutation({
-    mutationFn: (attachmentId: number) => deleteStationPhoto(attachmentId),
+  const deleteAllPhotosMutation = useMutation({
+    mutationFn: (sid: number) => deleteAllStationPhotos(sid),
     onSuccess: () => {
       refetchPhotos();
-      openSuccessSnackbar({ message: t("chargeManagement@media.photoDeleted") });
+      openSuccessSnackbar({ message: t("chargeManagement@media.allPhotosDeleted") });
     },
     onError: (err: Error) => {
       openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
     },
   });
 
-  const getAttachmentId = useCallback((photo: StationAttachmentDto): number | null => {
-    const candidates = [
-      photo.id,
-      (photo as Record<string, unknown>).attachmentId,
-      (photo as Record<string, unknown>).chargingPointAttachmentId,
-    ];
-    for (const c of candidates) {
-      if (typeof c === "number") return c;
-      if (typeof c === "string" && c.trim() && !Number.isNaN(Number(c))) return Number(c);
-    }
-    return null;
-  }, []);
-
-  const handleDeletePhoto = useCallback(
-    (photo: StationAttachmentDto) => {
-      const attachmentId = getAttachmentId(photo);
-      if (attachmentId == null) {
-        // eslint-disable-next-line no-console
-        console.warn("[StationMediaScreen] Cannot delete — no recognizable ID in attachment object:", photo);
-        openErrorSnackbar({ message: t("chargeManagement@media.deleteUnavailable") });
-        return;
-      }
-      if (!window.confirm(t("chargeManagement@media.confirmDelete") as string)) return;
-      deletePhotoMutation.mutate(attachmentId);
-    },
-    [deletePhotoMutation, getAttachmentId, openErrorSnackbar, t]
-  );
+  const handleDeleteAllPhotos = useCallback(() => {
+    if (!stationId || photos.length === 0) return;
+    if (!window.confirm(t("chargeManagement@media.confirmDeleteAll") as string)) return;
+    deleteAllPhotosMutation.mutate(stationId);
+  }, [stationId, photos.length, deleteAllPhotosMutation, t]);
 
   const handleChangeIconClick = useCallback(() => {
     iconInputRef.current?.click();
@@ -277,7 +255,19 @@ export default function StationMediaScreen() {
                 </Box>
               )}
             </Stack>
-            <Box>
+            <Stack direction="row" spacing={1}>
+              {photos.length > 0 && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={deleteAllPhotosMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineIcon />}
+                  onClick={handleDeleteAllPhotos}
+                  disabled={deleteAllPhotosMutation.isPending}
+                  sx={{ fontWeight: 600, textTransform: "none", borderRadius: 2 }}
+                >
+                  {deleteAllPhotosMutation.isPending ? t("deleting") : t("chargeManagement@media.deleteAll")}
+                </Button>
+              )}
               <input ref={photosInputRef} type="file" accept="image/*" multiple hidden onChange={handlePhotosFileChange} />
               <Button
                 variant="contained"
@@ -292,7 +282,7 @@ export default function StationMediaScreen() {
               >
                 {uploadPhotosMutation.isPending ? t("uploading") : t("chargeManagement@media.addPhotos")}
               </Button>
-            </Box>
+            </Stack>
           </Stack>
 
           <Box sx={{ p: 3 }}>
@@ -338,30 +328,22 @@ export default function StationMediaScreen() {
                             <Typography variant="caption" color="text.secondary">{t("NA")}</Typography>
                           </Box>
                         )}
-                        <Box
-                          className="overlay"
-                          sx={{ position: "absolute", inset: 0, bgcolor: "rgba(0,0,0,0.35)", opacity: 0, transition: "opacity 0.2s", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", p: 1 }}
-                        >
-                          <Tooltip title={t("delete")}>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo); }}
-                              disabled={deletePhotoMutation.isPending}
-                              sx={{
-                                bgcolor: "rgba(255,255,255,0.92)",
-                                color: "error.main",
-                                "&:hover": { bgcolor: "error.main", color: "white" },
-                                "&.Mui-disabled": { bgcolor: "rgba(255,255,255,0.6)", color: "text.disabled" },
-                              }}
-                            >
-                              {deletePhotoMutation.isPending && deletePhotoMutation.variables === getAttachmentId(photo) ? (
-                                <CircularProgress size={14} color="inherit" />
-                              ) : (
-                                <DeleteOutlineIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
+                        {url && (
+                          <Box
+                            className="overlay"
+                            onClick={() => window.open(url, "_blank")}
+                            sx={{
+                              position: "absolute", inset: 0,
+                              bgcolor: "rgba(0,0,0,0.3)", opacity: 0, transition: "opacity 0.2s",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ color: "white", fontWeight: 700, bgcolor: "rgba(0,0,0,0.5)", px: 1.5, py: 0.5, borderRadius: 1.5, fontSize: "0.7rem" }}>
+                              {t("viewDetails")}
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
                     </Grid>
                   );

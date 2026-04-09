@@ -101,5 +101,11 @@
   "insights_noDateData": "Registration date is not available from the server yet. This filter will apply once the API includes it.",
   "insights_tableFiltered": "Table is filtered to this period",
   "insights_carTypeStats": "Car Type Distribution",
-  "insights_noCarData": "No car data found for any user"
+  "insights_noCarData": "No car data found for any user",
+  "deletedUsers": "Deleted Users",
+  "deletedUsersHint": "These accounts have been soft-deleted. Select users and click Restore to reactivate them.",
+  "restore": "Restore",
+  "restored": "Users restored successfully",
+  "backToActive": "Back to Active Users",
+  "subtitle": "Manage platform users by role"
 }
