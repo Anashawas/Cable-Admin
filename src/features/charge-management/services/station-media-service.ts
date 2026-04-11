@@ -3,9 +3,21 @@ import { server } from "../../../lib/@axios";
 /** Single attachment from GetAllChargingPointAttachmentsById (shape may vary). */
 export interface StationAttachmentDto {
   id?: number;
+  attachmentId?: number;
   url?: string | null;
   attachmentUrl?: string | null;
   [key: string]: unknown;
+}
+
+/** Stable attachment PK for DELETE /api/files/attachment/CableAttachments/{id} */
+export function getStationAttachmentId(
+  photo: StationAttachmentDto
+): number | undefined {
+  if (typeof photo.id === "number" && photo.id > 0) return photo.id;
+  if (typeof photo.attachmentId === "number" && photo.attachmentId > 0) {
+    return photo.attachmentId;
+  }
+  return undefined;
 }
 
 /**
@@ -59,19 +71,4 @@ const uploadStationPhotos = async (
   );
 };
 
-/**
- * DELETE api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/{stationId}
- * Deletes ALL attachments for a charging point.
- * Note: API does not support single-photo delete (no ID in response).
- */
-const deleteAllStationPhotos = async (
-  stationId: number,
-  signal?: AbortSignal
-): Promise<void> => {
-  await server.delete(
-    `api/chargingPointAttchments/DeleteChargingPointAttachmentCommand/${stationId}`,
-    { signal }
-  );
-};
-
-export { uploadStationIcon, getStationPhotos, uploadStationPhotos, deleteAllStationPhotos };
+export { uploadStationIcon, getStationPhotos, uploadStationPhotos };

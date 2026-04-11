@@ -27,9 +27,10 @@ import {
   getStationPhotos,
   uploadStationIcon,
   uploadStationPhotos,
-  deleteAllStationPhotos,
+  getStationAttachmentId,
   type StationAttachmentDto,
 } from "../services/station-media-service";
+import { deleteAttachment, UploadFileFolders } from "../../../services/file-service";
 import { useSnackbarStore } from "../../../stores";
 
 function getPhotoUrl(photo: StationAttachmentDto): string | null {
@@ -84,8 +85,24 @@ export default function StationMediaScreen() {
     },
   });
 
+  const deletePhotoMutation = useMutation({
+    mutationFn: (attachmentId: number) =>
+      deleteAttachment(UploadFileFolders.CableAttachments, attachmentId),
+    onSuccess: () => {
+      refetchPhotos();
+      openSuccessSnackbar({ message: t("chargeManagement@media.photoDeleted") });
+    },
+    onError: (err: Error) => {
+      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+    },
+  });
+
   const deleteAllPhotosMutation = useMutation({
-    mutationFn: (sid: number) => deleteAllStationPhotos(sid),
+    mutationFn: async (attachmentIds: number[]) => {
+      for (const aid of attachmentIds) {
+        await deleteAttachment(UploadFileFolders.CableAttachments, aid);
+      }
+    },
     onSuccess: () => {
       refetchPhotos();
       openSuccessSnackbar({ message: t("chargeManagement@media.allPhotosDeleted") });
@@ -95,11 +112,26 @@ export default function StationMediaScreen() {
     },
   });
 
+  const handleDeleteOnePhoto = useCallback(
+    (attachmentId: number) => {
+      if (!window.confirm(t("chargeManagement@media.confirmDelete") as string)) return;
+      deletePhotoMutation.mutate(attachmentId);
+    },
+    [deletePhotoMutation, t]
+  );
+
   const handleDeleteAllPhotos = useCallback(() => {
     if (!stationId || photos.length === 0) return;
+    const ids = photos
+      .map((p) => getStationAttachmentId(p))
+      .filter((x): x is number => x != null);
+    if (ids.length === 0) {
+      openErrorSnackbar({ message: t("chargeManagement@media.deleteUnavailable") });
+      return;
+    }
     if (!window.confirm(t("chargeManagement@media.confirmDeleteAll") as string)) return;
-    deleteAllPhotosMutation.mutate(stationId);
-  }, [stationId, photos.length, deleteAllPhotosMutation, t]);
+    deleteAllPhotosMutation.mutate(ids);
+  }, [stationId, photos, deleteAllPhotosMutation, t, openErrorSnackbar]);
 
   const handleChangeIconClick = useCallback(() => {
     iconInputRef.current?.click();
@@ -262,7 +294,7 @@ export default function StationMediaScreen() {
                   color="error"
                   startIcon={deleteAllPhotosMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineIcon />}
                   onClick={handleDeleteAllPhotos}
-                  disabled={deleteAllPhotosMutation.isPending}
+                  disabled={deleteAllPhotosMutation.isPending || deletePhotoMutation.isPending}
                   sx={{ fontWeight: 600, textTransform: "none", borderRadius: 2 }}
                 >
                   {deleteAllPhotosMutation.isPending ? t("deleting") : t("chargeManagement@media.deleteAll")}
@@ -307,8 +339,11 @@ export default function StationMediaScreen() {
               <Grid container spacing={2}>
                 {photos.map((photo, index) => {
                   const url = getPhotoUrl(photo);
+                  const attachmentId = getStationAttachmentId(photo);
+                  const deletePending =
+                    deletePhotoMutation.isPending || deleteAllPhotosMutation.isPending;
                   return (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={photo.id ?? index}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={attachmentId ?? photo.id ?? index}>
                       <Box
                         sx={{
                           position: "relative",
@@ -321,6 +356,36 @@ export default function StationMediaScreen() {
                           "&:hover .overlay": { opacity: 1 },
                         }}
                       >
+                        <Tooltip
+                          title={
+                            attachmentId == null
+                              ? t("chargeManagement@media.deleteUnavailable")
+                              : t("delete")
+                          }
+                        >
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              aria-label={t("delete")}
+                              sx={{
+                                position: "absolute",
+                                top: 6,
+                                right: 6,
+                                zIndex: 2,
+                                bgcolor: "rgba(255,255,255,0.95)",
+                                "&:hover": { bgcolor: "rgba(255,255,255,1)" },
+                              }}
+                              disabled={attachmentId == null || deletePending}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (attachmentId != null) handleDeleteOnePhoto(attachmentId);
+                              }}
+                            >
+                              <DeleteOutlineIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                         {url ? (
                           <Box component="img" src={url} alt="" sx={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         ) : (
