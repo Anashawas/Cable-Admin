@@ -71,4 +71,14 @@ const changeStationOwner = async (
   });
 };
 
-export { getAllPlugTypes, getStationById, addStation, updateStation, changeStationOwner };
+/**
+ * DELETE api/charging-points/DeleteChargingPoint/{id}
+ */
+const deleteStation = async (
+  id: number,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.delete(`api/charging-points/DeleteChargingPoint/${id}`, { signal });
+};
+
+export { getAllPlugTypes, getStationById, addStation, updateStation, changeStationOwner, deleteStation };

@@ -17,8 +17,13 @@ import {
   Paper,
   Chip,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import {
   CITIES,
@@ -33,6 +38,7 @@ import {
   getStationById,
   addStation,
   updateStation,
+  deleteStation,
 } from "../services/station-form-service";
 import { stationFormSchema, type StationFormValues } from "../validators/station-schema";
 import LocationPicker from "./LocationPicker";
@@ -262,6 +268,20 @@ export default function StationFormScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["charge-management"] });
       openSuccessSnackbar({ message: t("chargeManagement@form.saved") });
+      navigate("/charge-management");
+    },
+    onError: (err: Error) => {
+      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+    },
+  });
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleteMutation = useMutation({
+    mutationFn: (sid: number) => deleteStation(sid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["charge-management"] });
+      openSuccessSnackbar({ message: t("chargeManagement@stationDeleted") });
+      setDeleteOpen(false);
       navigate("/charge-management");
     },
     onError: (err: Error) => {
@@ -662,19 +682,96 @@ export default function StationFormScreen() {
             </Grid>
           </Grid>
 
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+          <Stack direction="row" spacing={2} sx={{ mt: 3 }} alignItems="center">
             <Button
               type="submit"
               variant="contained"
               disabled={isSubmitting}
+              sx={{ borderRadius: 2, fontWeight: 700, minWidth: 120 }}
             >
               {isSubmitting ? <CircularProgress size={24} /> : t("save")}
             </Button>
-            <Button type="button" variant="outlined" onClick={() => navigate("/charge-management")}>
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={() => navigate("/charge-management")}
+              sx={{ borderRadius: 2, fontWeight: 700 }}
+            >
               {t("cancel")}
             </Button>
+            {isEditMode && (
+              <>
+                <Box sx={{ flex: 1 }} />
+                <Button
+                  type="button"
+                  variant="contained"
+                  color="error"
+                  size="large"
+                  startIcon={<DeleteOutlineIcon />}
+                  onClick={() => setDeleteOpen(true)}
+                  sx={{
+                    borderRadius: 2,
+                    fontWeight: 800,
+                    px: 3,
+                    boxShadow: "0 4px 14px rgba(211,47,47,0.4)",
+                    "&:hover": { boxShadow: "0 6px 20px rgba(211,47,47,0.5)" },
+                  }}
+                >
+                  {t("chargeManagement@deleteStation")}
+                </Button>
+              </>
+            )}
           </Stack>
         </form>
+
+        {/* ── Delete Confirmation Dialog ── */}
+        <Dialog
+          open={deleteOpen}
+          onClose={() => !deleteMutation.isPending && setDeleteOpen(false)}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          <DialogTitle sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", color: "#fff", display: "flex", alignItems: "center", gap: 1.5 }}>
+            <DeleteOutlineIcon />
+            {t("chargeManagement@confirmDeleteTitle")}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Typography variant="body1" sx={{ mb: 1, mt: 2 }}>
+              {t("chargeManagement@confirmDeleteMessage")}
+            </Typography>
+            {station && (
+              <Paper elevation={0} sx={{ p: 2, mt: 1.5, borderRadius: 2, bgcolor: "error.50", border: "1px solid", borderColor: "error.200" }}>
+                <Typography variant="subtitle1" fontWeight={800} color="error.dark">
+                  {station.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  #{station.id}
+                </Typography>
+              </Paper>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+            <Button
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleteMutation.isPending}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={() => stationId && deleteMutation.mutate(stationId)}
+              disabled={deleteMutation.isPending}
+              variant="contained"
+              color="error"
+              startIcon={deleteMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineIcon />}
+              sx={{ borderRadius: 2, fontWeight: 700 }}
+            >
+              {deleteMutation.isPending ? t("deleting") : t("delete")}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </AppScreenContainer>
   );

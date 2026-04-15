@@ -55,6 +55,7 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import ClearIcon from "@mui/icons-material/Clear";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -62,7 +63,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
 import { useChargeManagement, type SortOption } from "../hooks/use-charge-management";
-import { getAllPlugTypes, changeStationOwner } from "../services/station-form-service";
+import { getAllPlugTypes, changeStationOwner, deleteStation } from "../services/station-form-service";
 import { getUsersList } from "../../users/services/user-service";
 import { useSnackbarStore } from "../../../stores";
 import { PROVIDER_ROLE_ID } from "../../users/constants/roles";
@@ -95,6 +96,7 @@ export default function ChargeManagementScreen() {
   const [detailStation, setDetailStation] = useState<ChargingPointDto | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [changeOwnerStation, setChangeOwnerStation] = useState<ChargingPointDto | null>(null);
+  const [deleteStationTarget, setDeleteStationTarget] = useState<ChargingPointDto | null>(null);
   const [ownerSearch, setOwnerSearch] = useState("");
   const [cityFilter, setCityFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -138,6 +140,22 @@ export default function ChargeManagementScreen() {
       openSuccessSnackbar({ message: t("chargeManagement@ownerChanged") });
       setChangeOwnerStation(null);
       setOwnerSearch("");
+    },
+    onError: (err: any) => {
+      const detail = err?.response?.data?.detail
+        || err?.response?.data?.title
+        || err?.message
+        || t("loadingFailed");
+      openErrorSnackbar({ message: detail });
+    },
+  });
+
+  const deleteStationMutation = useMutation({
+    mutationFn: (id: number) => deleteStation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["charge-management"] });
+      openSuccessSnackbar({ message: t("chargeManagement@stationDeleted") });
+      setDeleteStationTarget(null);
     },
     onError: (err: any) => {
       const detail = err?.response?.data?.detail
@@ -545,8 +563,8 @@ export default function ChargeManagementScreen() {
       {
         field: "actions",
         headerName: t("chargeManagement@columns.actions"),
-        width: 140,
-        minWidth: 140,
+        width: 175,
+        minWidth: 175,
         filterable: false,
         sortable: false,
         disableColumnMenu: true,
@@ -575,6 +593,22 @@ export default function ChargeManagementScreen() {
                 }}
               >
                 <PersonSearchIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("delete")}>
+              <IconButton
+                size="small"
+                onClick={(e) => { e.stopPropagation(); setDeleteStationTarget(row); }}
+                sx={{
+                  bgcolor: "error.main",
+                  color: "#fff",
+                  width: 28,
+                  height: 28,
+                  boxShadow: "0 2px 6px rgba(211,47,47,0.4)",
+                  "&:hover": { bgcolor: "error.dark", boxShadow: "0 3px 10px rgba(211,47,47,0.6)" },
+                }}
+              >
+                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
           </Stack>
@@ -1084,6 +1118,56 @@ export default function ChargeManagementScreen() {
               </Button>
             </DialogActions>
           </Dialog>
+
+          {/* ── Delete Station Confirmation Dialog ── */}
+          <Dialog
+            open={deleteStationTarget != null}
+            onClose={() => !deleteStationMutation.isPending && setDeleteStationTarget(null)}
+            maxWidth="xs"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3 } }}
+          >
+            <DialogTitle sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", color: "#fff", display: "flex", alignItems: "center", gap: 1.5 }}>
+              <DeleteOutlineIcon />
+              {t("chargeManagement@confirmDeleteTitle")}
+            </DialogTitle>
+            <DialogContent sx={{ pt: 3 }}>
+              <Typography variant="body1" sx={{ mb: 1, mt: 2 }}>
+                {t("chargeManagement@confirmDeleteMessage")}
+              </Typography>
+              {deleteStationTarget && (
+                <Paper elevation={0} sx={{ p: 2, mt: 1.5, borderRadius: 2, bgcolor: "error.50", border: "1px solid", borderColor: "error.200" }}>
+                  <Typography variant="subtitle1" fontWeight={800} color="error.dark">
+                    {deleteStationTarget.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    #{deleteStationTarget.id}
+                  </Typography>
+                </Paper>
+              )}
+            </DialogContent>
+            <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+              <Button
+                onClick={() => setDeleteStationTarget(null)}
+                disabled={deleteStationMutation.isPending}
+                variant="outlined"
+                sx={{ borderRadius: 2 }}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                onClick={() => deleteStationTarget && deleteStationMutation.mutate(deleteStationTarget.id)}
+                disabled={deleteStationMutation.isPending}
+                variant="contained"
+                color="error"
+                startIcon={deleteStationMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineIcon />}
+                sx={{ borderRadius: 2, fontWeight: 700 }}
+              >
+                {deleteStationMutation.isPending ? t("deleting") : t("delete")}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
           <BulkActionsBar
             selectedCount={(rowSelectionModel as number[]).length}
             onClearSelection={() => setRowSelectionModel([])}

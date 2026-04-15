@@ -109,5 +109,9 @@
     "deleteAll": "Delete All Photos",
     "allPhotosDeleted": "All photos deleted successfully",
     "confirmDeleteAll": "Are you sure you want to delete ALL photos for this station? This cannot be undone."
-  }
+  },
+  "stationDeleted": "Station deleted successfully",
+  "confirmDeleteTitle": "Delete Station",
+  "confirmDeleteMessage": "Are you sure you want to delete this station? This action cannot be undone.",
+  "deleteStation": "Delete Station"
 }

@@ -109,5 +109,9 @@
     "deleteAll": "حذف جميع الصور",
     "allPhotosDeleted": "تم حذف جميع الصور بنجاح",
     "confirmDeleteAll": "هل أنت متأكد من حذف جميع صور هذه المحطة؟ لا يمكن التراجع عن هذا."
-  }
+  },
+  "stationDeleted": "تم حذف المحطة بنجاح",
+  "confirmDeleteTitle": "حذف المحطة",
+  "confirmDeleteMessage": "هل أنت متأكد من حذف هذه المحطة؟ لا يمكن التراجع عن هذا الإجراء.",
+  "deleteStation": "حذف المحطة"
 }
