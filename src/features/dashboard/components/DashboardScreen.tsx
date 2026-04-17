@@ -317,7 +317,7 @@ export default function DashboardScreen() {
                     series={[{ data: stationsByCity.map(([, c]) => c), color: theme.palette.primary.main, label: t("dashboard@kpi.stations") }]}
                     height={Math.max(stationsByCity.length * 30 + 40, 180)}
                     margin={{ top: 5, right: 20, bottom: 30, left: 90 }}
-                    slotProps={{ legend: { hidden: true } }}
+                    hideLegend
                   />
                 ) : (
                   <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>{t("dashboard@noStations")}</Typography>
@@ -338,7 +338,7 @@ export default function DashboardScreen() {
                       series={[{ data: topByVisitors.map(s => s.count), color: theme.palette.secondary.main, label: t("dashboard@charts.visitors") }]}
                       height={Math.max(topByVisitors.length * 30 + 40, 180)}
                       margin={{ top: 5, right: 20, bottom: 30, left: 110 }}
-                      slotProps={{ legend: { hidden: true } }}
+                      hideLegend
                     />
                   )}
                 </ChartCard>

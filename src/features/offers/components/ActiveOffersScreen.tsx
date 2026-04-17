@@ -631,7 +631,7 @@ export default function ActiveOffersScreen() {
 
               {/* Stats Grid */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <StarsIcon sx={{ fontSize: 20, color: "info.main" }} />
@@ -648,7 +648,7 @@ export default function ActiveOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <AttachMoneyIcon sx={{ fontSize: 20, color: "success.main" }} />
@@ -665,7 +665,7 @@ export default function ActiveOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <TimerIcon sx={{ fontSize: 20, color: "warning.main" }} />
@@ -682,7 +682,7 @@ export default function ActiveOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper elevation={2} sx={{ p: 2, bgcolor: "error.50", borderRadius: 2 }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                       <PeopleIcon sx={{ fontSize: 20, color: "error.main" }} />
@@ -704,7 +704,7 @@ export default function ActiveOffersScreen() {
 
               {/* Additional Info */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={4}>
+                <Grid size={{ xs: 6, sm: 4 }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
                     {t("maxUsesPerUser")}
                   </Typography>
@@ -712,7 +712,7 @@ export default function ActiveOffersScreen() {
                     {selectedOffer.maxUsesPerUser ?? t("unlimited")}
                   </Typography>
                 </Grid>
-                <Grid item xs={6} sm={4}>
+                <Grid size={{ xs: 6, sm: 4 }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
                     {t("codeExpiry")}
                   </Typography>
@@ -720,7 +720,7 @@ export default function ActiveOffersScreen() {
                     {selectedOffer.offerCodeExpirySeconds} {t("offers@seconds")}
                   </Typography>
                 </Grid>
-                <Grid item xs={6} sm={4}>
+                <Grid size={{ xs: 6, sm: 4 }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
                     {t("proposedBy")}
                   </Typography>
@@ -820,7 +820,7 @@ export default function ActiveOffersScreen() {
               {t("offers@basicInfo")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offers@titleEn")}
                   value={formData.title}
@@ -829,7 +829,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offers@titleAr")}
                   value={formData.titleAr ?? ""}
@@ -837,7 +837,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offers@descriptionEn")}
                   value={formData.description ?? ""}
@@ -847,7 +847,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offers@descriptionAr")}
                   value={formData.descriptionAr ?? ""}
@@ -1018,7 +1018,7 @@ export default function ActiveOffersScreen() {
               {t("offers@financialSettings")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("pointsCost")}
                   type="number"
@@ -1034,7 +1034,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("monetaryValue")}
                   type="number"
@@ -1050,7 +1050,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("currencyCode")}
                   value={formData.currencyCode}
@@ -1067,7 +1067,7 @@ export default function ActiveOffersScreen() {
               {t("offers@transactionLimits")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("maxUsesPerUser")}
                   type="number"
@@ -1079,7 +1079,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("offers@maxTotalUses")}
                   type="number"
@@ -1091,7 +1091,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("codeExpiry")}
                   type="number"
@@ -1116,7 +1116,7 @@ export default function ActiveOffersScreen() {
               {t("validPeriod")}
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offers@validFrom")}
                   type="datetime-local"
@@ -1127,7 +1127,7 @@ export default function ActiveOffersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offers@validTo")}
                   type="datetime-local"
@@ -1315,7 +1315,7 @@ export default function ActiveOffersScreen() {
 
               {/* Basic Info */}
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("offers@titleEn")}
                     value={editFormData.title}
@@ -1325,7 +1325,7 @@ export default function ActiveOffersScreen() {
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("offers@titleAr")}
                     value={editFormData.titleAr ?? ""}
@@ -1334,7 +1334,7 @@ export default function ActiveOffersScreen() {
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("offers@descriptionEn")}
                     value={editFormData.description ?? ""}
@@ -1345,7 +1345,7 @@ export default function ActiveOffersScreen() {
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("offers@descriptionAr")}
                     value={editFormData.descriptionAr ?? ""}
@@ -1360,7 +1360,7 @@ export default function ActiveOffersScreen() {
 
               {/* Financial */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@pointsCost")}
                     type="number"
@@ -1371,7 +1371,7 @@ export default function ActiveOffersScreen() {
                     InputProps={{ startAdornment: <InputAdornment position="start"><StarsIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                   />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@monetaryValue")}
                     type="number"
@@ -1382,7 +1382,7 @@ export default function ActiveOffersScreen() {
                     InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                   />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@codeExpiry")}
                     type="number"
@@ -1394,7 +1394,7 @@ export default function ActiveOffersScreen() {
                     InputProps={{ startAdornment: <InputAdornment position="start"><TimerIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                   />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@currencyCode")}
                     value={editFormData.currencyCode}
@@ -1407,7 +1407,7 @@ export default function ActiveOffersScreen() {
 
               {/* Limits & Dates */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@maxUsesPerUser")}
                     type="number"
@@ -1418,7 +1418,7 @@ export default function ActiveOffersScreen() {
                     helperText={t("offers@leaveEmptyUnlimited")}
                   />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@maxTotalUses")}
                     type="number"
@@ -1429,7 +1429,7 @@ export default function ActiveOffersScreen() {
                     helperText={t("offers@leaveEmptyNoLimit")}
                   />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@validFrom")}
                     type="date"
@@ -1440,7 +1440,7 @@ export default function ActiveOffersScreen() {
                     InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField
                     label={t("offers@validTo")}
                     type="date"

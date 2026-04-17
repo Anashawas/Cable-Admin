@@ -879,7 +879,7 @@ export default function UserListScreen() {
 
             {/* Country + City */}
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("userManagement@form.country")}
                   value={newUserForm.country ?? ""}
@@ -889,7 +889,7 @@ export default function UserListScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("userManagement@form.city")}
                   value={newUserForm.city ?? ""}

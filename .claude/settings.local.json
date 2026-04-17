@@ -22,7 +22,11 @@
       "Bash(sudo tee -a /etc/sysctl.conf)",
       "Bash(sudo sysctl -p)",
       "Bash(find /home/ihr/Cable-Admin/src -type d -name *provider* -o -type d -name *service*)",
-      "Bash(npm -v)"
+      "Bash(npm -v)",
+      "mcp__MSSQL_MCP_Violation_DevServer__ListTables",
+      "mcp__MSSQL_MCP_Violation_DevServer__DescribeTable",
+      "Bash(powershell -Command \"Compress-Archive -Path * -DestinationPath '../Cable-Admin-deploy.zip' -Force\")",
+      "Read(//d/NewOpenware-Server/**)"
     ],
     "deny": [],
     "ask": []

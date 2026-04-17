@@ -9,7 +9,7 @@ import {
   type GridRowHeightParams,
 } from "@mui/x-data-grid";
 import { GridApiCommunity } from "@mui/x-data-grid/internals";
-import { Box, LinearProgress, Typography, Stack } from "@mui/material";
+import { Box, LinearProgress, Typography, Stack, type SxProps, type Theme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 interface AppDataGridProps<T = any> {
@@ -37,6 +37,8 @@ interface AppDataGridProps<T = any> {
   getRowClassName?: (params: { row: T }) => string;
   /** Optional fixed or dynamic row height (px). */
   getRowHeight?: (params: { row: T }) => number;
+  /** Additional MUI sx styles merged onto the DataGrid. */
+  sx?: SxProps<Theme>;
 }
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -61,6 +63,7 @@ const AppDataGrid = <T extends Record<string, any>>({
   onRowSelectionModelChange,
   getRowClassName,
   getRowHeight,
+  sx: sxOverrides,
 }: AppDataGridProps<T>) => {
   const { t } = useTranslation();
   const apiRef = useRef<GridApiCommunity>(
@@ -252,6 +255,7 @@ const AppDataGrid = <T extends Record<string, any>>({
       "& .MuiTablePagination-spacer": {
         display: "none",
       },
+      ...(Array.isArray(sxOverrides) ? Object.assign({}, ...sxOverrides) : sxOverrides),
     },
   };
 

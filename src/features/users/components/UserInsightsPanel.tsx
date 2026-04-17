@@ -62,7 +62,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
         <Grid container spacing={2.5}>
 
           {/* ── Stat cards ── */}
-          <Grid item xs={12} md={5}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <Stack spacing={1.5} height="100%">
               {[
                 { label: t("userManagement@insights_totalUsers"), value: users.length, icon: <PeopleIcon />, color: "primary" as const },
@@ -89,7 +89,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
           </Grid>
 
           {/* ── Donut chart ── */}
-          <Grid item xs={12} md={7} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Grid size={{ xs: 12, md: 7 }} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             {users.length > 0 && (
               <Box sx={{ textAlign: "center" }}>
                 <PieChart
@@ -105,7 +105,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
                   }]}
                   width={280}
                   height={200}
-                  slotProps={{ legend: { direction: "row", position: { vertical: "bottom", horizontal: "middle" }, itemMarkWidth: 10, itemMarkHeight: 10, markGap: 5, itemGap: 12, labelStyle: { fontSize: 12 } } }}
+                  slotProps={{ legend: { direction: "horizontal", position: { vertical: "bottom", horizontal: "center" } } }}
                 />
               </Box>
             )}
@@ -113,7 +113,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
 
           {/* ── Registration trend ── */}
           {monthlyStats.length > 0 && (
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: 1, borderColor: "divider", height: "100%" }}>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                   <TrendingUpIcon fontSize="small" color="primary" />
@@ -126,7 +126,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
                   series={[{ data: monthlyStats.map((m) => m.count), color: theme.palette.primary.main }]}
                   height={200}
                   margin={{ top: 10, right: 10, bottom: 35, left: 40 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               </Paper>
             </Grid>
@@ -134,7 +134,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
 
           {/* ── Top brands chart ── */}
           {topBrands.length > 0 && (
-            <Grid item xs={12} md={monthlyStats.length > 0 ? 6 : 12}>
+            <Grid size={{ xs: 12, md: monthlyStats.length > 0 ? 6 : 12 }}>
               <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: 1, borderColor: "divider", height: "100%" }}>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                   <DirectionsCarIcon fontSize="small" color="primary" />
@@ -150,7 +150,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
                   series={[{ data: topBrands.map((s) => s.count), color: theme.palette.primary.main }]}
                   height={Math.max(topBrands.length * 30 + 40, 180)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 80 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               </Paper>
             </Grid>
@@ -158,7 +158,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
 
           {/* ── Car details: models + plugs per brand ── */}
           {carStats.length > 0 && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ mb: 2 }} />
               <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
                 {t("userManagement@insights_carTypeStats")} — {t("userManagement@insights_totalUsers", { count: carStats.length })}

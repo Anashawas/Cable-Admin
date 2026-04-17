@@ -948,7 +948,7 @@ export default function OffersScreen() {
           {selectedActiveOffer && (
             <Stack spacing={2.5}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, height: "100%" }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Avatar sx={{ bgcolor: selectedActiveOffer.providerType === "ChargingPoint" ? "primary.main" : "secondary.main", width: 40, height: 40 }}>
@@ -968,7 +968,7 @@ export default function OffersScreen() {
                     </Stack>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, height: "100%" }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Avatar sx={{ bgcolor: "purple", width: 40, height: 40 }}>
@@ -991,7 +991,7 @@ export default function OffersScreen() {
                   { icon: <TimerIcon />, value: selectedActiveOffer.offerCodeExpirySeconds != null ? `${selectedActiveOffer.offerCodeExpirySeconds} ${t("offers@seconds")}` : t("offers@unlimited"), label: t("offers@codeExpiry"), color: "warning" },
                   { icon: <PeopleIcon />, value: selectedActiveOffer.currentTotalUses, label: t("offers@totalUses"), color: "info" },
                 ].map(({ icon, value, label, color }) => (
-                  <Grid item xs={6} sm={3} key={label}>
+                  <Grid size={{ xs: 6, sm: 3 }} key={label}>
                     <Paper elevation={0} sx={{ p: 2, bgcolor: `${color}.50`, borderRadius: 2, border: "1px solid", borderColor: `${color}.100`, textAlign: "center" }}>
                       <Box sx={{ color: `${color}.main`, mb: 0.5 }}>{icon}</Box>
                       <Typography variant="h6" fontWeight={800} color={`${color}.dark`}>{value}</Typography>
@@ -1125,7 +1125,7 @@ export default function OffersScreen() {
           {selectedPendingOffer && (
             <Stack spacing={2.5}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, height: "100%" }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Avatar sx={{ bgcolor: selectedPendingOffer.providerType === "ChargingPoint" ? "primary.main" : "secondary.main", width: 40, height: 40 }}>
@@ -1145,7 +1145,7 @@ export default function OffersScreen() {
                     </Stack>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, height: "100%" }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Avatar sx={{ bgcolor: "purple", width: 40, height: 40 }}>
@@ -1168,7 +1168,7 @@ export default function OffersScreen() {
                   { icon: <TimerIcon />, value: selectedPendingOffer.offerCodeExpirySeconds != null ? `${selectedPendingOffer.offerCodeExpirySeconds}` : "∞", suffix: selectedPendingOffer.offerCodeExpirySeconds != null ? t("offers@seconds") : "", label: t("offers@codeExpiry"), color: "warning" },
                   { icon: <PeopleIcon />, value: selectedPendingOffer.maxUsesPerUser ?? "∞", suffix: "", label: t("offers@maxUsesPerUser"), color: "error" },
                 ].map(({ icon, value, suffix, label, color }) => (
-                  <Grid item xs={6} sm={3} key={label}>
+                  <Grid size={{ xs: 6, sm: 3 }} key={label}>
                     <Paper elevation={0} sx={{ p: 2, bgcolor: `${color}.50`, borderRadius: 2, border: "1px solid", borderColor: `${color}.100`, textAlign: "center" }}>
                       <Box sx={{ color: `${color}.main`, mb: 0.5 }}>{icon}</Box>
                       <Typography variant="h5" fontWeight={800} color={`${color}.dark`}>
@@ -1371,16 +1371,16 @@ export default function OffersScreen() {
                 {t("offers@basicInfo")}
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@titleEn")} value={formData.title} onChange={(e) => updateField("title", e.target.value)} required fullWidth />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@titleAr")} value={formData.titleAr ?? ""} onChange={(e) => updateField("titleAr", e.target.value)} fullWidth />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@descriptionEn")} value={formData.description ?? ""} onChange={(e) => updateField("description", e.target.value)} multiline rows={2} fullWidth />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@descriptionAr")} value={formData.descriptionAr ?? ""} onChange={(e) => updateField("descriptionAr", e.target.value)} multiline rows={2} fullWidth />
                 </Grid>
               </Grid>
@@ -1491,7 +1491,7 @@ export default function OffersScreen() {
                 {t("offers@financialSettings")}
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     label={t("pointsCost")}
                     type="number"
@@ -1502,7 +1502,7 @@ export default function OffersScreen() {
                     required fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     label={t("monetaryValue")}
                     type="number"
@@ -1513,7 +1513,7 @@ export default function OffersScreen() {
                     required fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     label={t("currencyCode")}
                     value={formData.currencyCode}
@@ -1532,7 +1532,7 @@ export default function OffersScreen() {
                 {t("offers@transactionLimits")}
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     label={t("offers@maxUsesPerUser")}
                     type="number"
@@ -1542,7 +1542,7 @@ export default function OffersScreen() {
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     label={t("offers@maxTotalUses")}
                     type="number"
@@ -1552,7 +1552,7 @@ export default function OffersScreen() {
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     label={t("offers@codeExpiry")}
                     type="number"
@@ -1574,7 +1574,7 @@ export default function OffersScreen() {
                 {t("offers@validPeriod")}
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("offers@validFrom")}
                     type="datetime-local"
@@ -1584,7 +1584,7 @@ export default function OffersScreen() {
                     required fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("offers@validTo")}
                     type="datetime-local"
@@ -1775,48 +1775,48 @@ export default function OffersScreen() {
 
               {/* Basic Info */}
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@titleEn")} value={editFormData.title} onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })} required fullWidth size="small" />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@titleAr")} value={editFormData.titleAr ?? ""} onChange={(e) => setEditFormData({ ...editFormData, titleAr: e.target.value || null })} fullWidth size="small" />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@descriptionEn")} value={editFormData.description ?? ""} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value || null })} multiline rows={2} fullWidth size="small" />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField label={t("offers@descriptionAr")} value={editFormData.descriptionAr ?? ""} onChange={(e) => setEditFormData({ ...editFormData, descriptionAr: e.target.value || null })} multiline rows={2} fullWidth size="small" />
                 </Grid>
               </Grid>
 
               {/* Financial */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@pointsCost")} type="number" value={editFormData.pointsCost} onChange={(e) => setEditFormData({ ...editFormData, pointsCost: Number(e.target.value) })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><StarsIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@monetaryValue")} type="number" value={editFormData.monetaryValue} onChange={(e) => setEditFormData({ ...editFormData, monetaryValue: Number(e.target.value) })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@codeExpiry")} type="number" value={editFormData.offerCodeExpirySeconds ?? ""} onChange={(e) => setEditFormData({ ...editFormData, offerCodeExpirySeconds: e.target.value ? Number(e.target.value) : null })} fullWidth size="small" helperText={t("offers@minExpiry60")} InputProps={{ startAdornment: <InputAdornment position="start"><TimerIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@currencyCode")} value={editFormData.currencyCode} onChange={(e) => setEditFormData({ ...editFormData, currencyCode: e.target.value })} fullWidth size="small" />
                 </Grid>
               </Grid>
 
               {/* Limits & Dates */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@maxUsesPerUser")} type="number" value={editFormData.maxUsesPerUser ?? ""} onChange={(e) => setEditFormData({ ...editFormData, maxUsesPerUser: e.target.value ? Number(e.target.value) : null })} fullWidth size="small" helperText={t("offers@leaveEmptyUnlimited")} />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@maxTotalUses")} type="number" value={editFormData.maxTotalUses ?? ""} onChange={(e) => setEditFormData({ ...editFormData, maxTotalUses: e.target.value ? Number(e.target.value) : null })} fullWidth size="small" helperText={t("offers@leaveEmptyNoLimit")} />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@validFrom")} type="date" value={editFormData.validFrom} onChange={(e) => setEditFormData({ ...editFormData, validFrom: e.target.value })} fullWidth size="small" InputLabelProps={{ shrink: true }} />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@validTo")} type="date" value={editFormData.validTo ?? ""} onChange={(e) => setEditFormData({ ...editFormData, validTo: e.target.value || null })} fullWidth size="small" InputLabelProps={{ shrink: true }} helperText={t("offers@leaveEmptyNoExpiry")} />
                 </Grid>
               </Grid>

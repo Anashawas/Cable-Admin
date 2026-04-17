@@ -312,7 +312,7 @@ export default function TransactionsScreen() {
               { label: t("offers@totalPointsDeducted"), value: `${kpis.totalPts} pts`, color: "rgba(255,255,255,0.12)" },
               { label: t("offers@amount"), value: `${kpis.totalAmount.toFixed(2)} ${kpis.currency}`, color: "rgba(255,255,255,0.12)" },
             ].map(({ label, value, color }) => (
-              <Grid item xs={6} sm={4} md={2} key={label}>
+              <Grid size={{ xs: 6, sm: 4, md: 2 }} key={label}>
                 <Box
                   sx={{
                     bgcolor: color,
@@ -658,7 +658,7 @@ export default function TransactionsScreen() {
             <Stack spacing={2.5}>
               {/* User + Offer row */}
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, height: "100%" }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Avatar sx={{ bgcolor: "secondary.main", width: 40, height: 40 }}>
@@ -672,7 +672,7 @@ export default function TransactionsScreen() {
                     </Stack>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2, height: "100%" }}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Avatar sx={{ bgcolor: "info.main", width: 40, height: 40 }}>
@@ -692,7 +692,7 @@ export default function TransactionsScreen() {
 
               {/* Stats */}
               <Grid container spacing={1.5}>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "primary.50", borderRadius: 2, border: "1px solid", borderColor: "primary.100", textAlign: "center" }}>
                     <StarsIcon sx={{ fontSize: 28, color: "primary.main", mb: 0.5 }} />
                     <Typography variant="h5" fontWeight={800} color="primary.dark">
@@ -701,7 +701,7 @@ export default function TransactionsScreen() {
                     <Typography variant="caption" color="text.secondary" fontWeight={600}>{t("offers@pointsDeducted")}</Typography>
                   </Paper>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Paper elevation={0} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2, border: "1px solid", borderColor: "success.100", textAlign: "center" }}>
                     <AttachMoneyIcon sx={{ fontSize: 28, color: "success.main", mb: 0.5 }} />
                     <Typography variant="h5" fontWeight={800} color="success.dark">
