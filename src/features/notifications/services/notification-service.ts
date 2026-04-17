@@ -1,9 +1,8 @@
 import { server } from "../../../lib/@axios";
-import type { NotificationTypeDto, SendNotificationRequest } from "../types/api";
+import type { NotificationTypeDto, SendNotificationRequest, SendByFilterRequest } from "../types/api";
 
 /**
  * GET api/notification-types
- * Returns list of notification types for the send form.
  */
 const getNotificationTypes = async (
   signal?: AbortSignal
@@ -17,7 +16,7 @@ const getNotificationTypes = async (
 
 /**
  * POST api/notifications
- * Sends broadcast or targeted notification. Success = HTTP 2xx.
+ * Send to all users or specific user IDs.
  */
 const sendNotification = async (
   payload: SendNotificationRequest,
@@ -26,4 +25,15 @@ const sendNotification = async (
   await server.post("api/notifications", payload, { signal });
 };
 
-export { getNotificationTypes, sendNotification };
+/**
+ * POST api/notifications/send-by-filter
+ * Send to users filtered by CarTypeId, CarModelId, or City.
+ */
+const sendNotificationByFilter = async (
+  payload: SendByFilterRequest,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.post("api/notifications/send-by-filter", payload, { signal });
+};
+
+export { getNotificationTypes, sendNotification, sendNotificationByFilter };

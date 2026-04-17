@@ -5,7 +5,9 @@ export interface NotificationTypeDto {
   description: string;
 }
 
-/** Payload for POST api/notifications. */
+export type AppType = "UserApp" | "StationApp";
+
+/** Payload for POST api/notifications (send to all or specific users). */
 export interface SendNotificationRequest {
   userIds: number[] | null;
   notificationTypeId: number;
@@ -14,5 +16,18 @@ export interface SendNotificationRequest {
   isForAll: boolean;
   deepLink?: string | null;
   data?: string | null;
-  time?: string | null; // "YYYY-MM-DD HH:MM:SS" for offer type
+  time?: string | null;
+}
+
+/** Payload for POST api/notifications/send-by-filter (send by car/city filter). */
+export interface SendByFilterRequest {
+  notificationTypeId: number;
+  title: string;
+  body: string;
+  carTypeId: number | null;
+  carModelId: number | null;
+  city: string | null;
+  appType: AppType;
+  deepLink?: string | null;
+  data?: string | null;
 }
