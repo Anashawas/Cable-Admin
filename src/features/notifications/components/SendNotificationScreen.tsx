@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,12 +17,13 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Chip,
-  Divider,
-  Avatar,
   InputAdornment,
-  IconButton,
   Alert,
+  Tabs,
+  Tab,
 } from "@mui/material";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import HistoryIcon from "@mui/icons-material/History";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import SendIcon from "@mui/icons-material/Send";
 import GroupIcon from "@mui/icons-material/Group";
@@ -33,6 +35,7 @@ import EvStationIcon from "@mui/icons-material/EvStation";
 import PersonIcon from "@mui/icons-material/Person";
 import CloseIcon from "@mui/icons-material/Close";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import NotificationHistoryTab from "./NotificationHistoryTab";
 import {
   getNotificationTypes,
   sendNotification,
@@ -53,8 +56,15 @@ type SendMode = "broadcast" | "filter";
 
 export default function SendNotificationScreen() {
   const { t } = useTranslation("notifications");
+  const location = useLocation();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
+
+  // Accept pre-filled user ID via navigation state (from User detail screen)
+  const prefilledUserId = (location.state as { userId?: number } | null)?.userId;
+
+  // ── Top-level tabs ──
+  const [activeTab, setActiveTab] = useState<"compose" | "history">("compose");
 
   // ── Shared state ──
   const [mode, setMode] = useState<SendMode>("broadcast");
@@ -65,10 +75,21 @@ export default function SendNotificationScreen() {
   const [data, setData] = useState("");
   const [offerDate, setOfferDate] = useState(""); // YYYY-MM-DD
   const [offerTime, setOfferTime] = useState(""); // HH:MM:SS
+  const [scheduleForLater, setScheduleForLater] = useState(false);
 
   // ── Broadcast mode ──
   const [isForAll, setIsForAll] = useState(false);
-  const [userIdsString, setUserIdsString] = useState("");
+  const [userIdsString, setUserIdsString] = useState(prefilledUserId ? String(prefilledUserId) : "");
+
+  // Pre-fill user ID from navigation state on mount
+  useEffect(() => {
+    if (prefilledUserId) {
+      setActiveTab("compose");
+      setMode("broadcast");
+      setIsForAll(false);
+      setUserIdsString(String(prefilledUserId));
+    }
+  }, [prefilledUserId]);
 
   // ── Filter mode ──
   const [carTypeId, setCarTypeId] = useState<number | null>(null);
@@ -129,6 +150,7 @@ export default function SendNotificationScreen() {
     setData("");
     setOfferDate("");
     setOfferTime("");
+    setScheduleForLater(false);
     setUserIdsString("");
     setCarTypeId(null);
     setCarModelId(null);
@@ -153,8 +175,8 @@ export default function SendNotificationScreen() {
         return;
       }
 
-      // Offer type validation (same as KMP: regex for YYYY-MM-DD and HH:MM:SS)
-      if (isOfferType) {
+      // Offer type validation — only when scheduling for later
+      if (isOfferType && scheduleForLater) {
         if (!offerDate.trim() || !offerTime.trim()) {
           openErrorSnackbar({ message: t("send.offerDateRequired") });
           return;
@@ -169,8 +191,8 @@ export default function SendNotificationScreen() {
         }
       }
 
-      // Format time as "YYYY-MM-DD HH:MM:SS" (same as KMP)
-      const formattedTime = offerDate.trim() && offerTime.trim()
+      // Format time as "YYYY-MM-DD HH:MM:SS" only when scheduling for later
+      const formattedTime = scheduleForLater && offerDate.trim() && offerTime.trim()
         ? `${offerDate.trim()} ${offerTime.trim()}`
         : null;
 
@@ -210,7 +232,7 @@ export default function SendNotificationScreen() {
         });
       }
     },
-    [mode, notificationTypeId, title, body, isForAll, userIdsString, carTypeId, carModelId, city, appType, deepLink, data, offerDate, offerTime, isOfferType, broadcastMutation, filterMutation, openErrorSnackbar, t]
+    [mode, notificationTypeId, title, body, isForAll, userIdsString, carTypeId, carModelId, city, appType, deepLink, data, offerDate, offerTime, isOfferType, scheduleForLater, broadcastMutation, filterMutation, openErrorSnackbar, t]
   );
 
   const hasFilters = carTypeId != null || carModelId != null || city != null;
@@ -243,42 +265,87 @@ export default function SendNotificationScreen() {
             </Box>
           </Stack>
 
-          {/* Mode toggle */}
-          <ToggleButtonGroup
-            value={mode}
-            exclusive
-            onChange={(_e, v) => v && setMode(v)}
-            sx={{
-              bgcolor: "rgba(255,255,255,0.12)",
-              borderRadius: 2.5,
-              "& .MuiToggleButton-root": {
-                color: "rgba(255,255,255,0.7)",
-                border: "none",
-                px: 2.5,
-                py: 1,
-                fontWeight: 700,
-                textTransform: "none",
-                borderRadius: "10px !important",
-                "&.Mui-selected": {
-                  bgcolor: "rgba(255,255,255,0.25)",
-                  color: "white",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+          {/* Mode toggle — only visible on Compose tab */}
+          {activeTab === "compose" && (
+            <ToggleButtonGroup
+              value={mode}
+              exclusive
+              onChange={(_e, v) => v && setMode(v)}
+              sx={{
+                bgcolor: "rgba(255,255,255,0.12)",
+                borderRadius: 2.5,
+                "& .MuiToggleButton-root": {
+                  color: "rgba(255,255,255,0.7)",
+                  border: "none",
+                  px: 2.5,
+                  py: 1,
+                  fontWeight: 700,
+                  textTransform: "none",
+                  borderRadius: "10px !important",
+                  "&.Mui-selected": {
+                    bgcolor: "rgba(255,255,255,0.25)",
+                    color: "white",
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                  },
                 },
-              },
-            }}
-          >
-            <ToggleButton value="broadcast">
-              <GroupIcon sx={{ fontSize: 18, mr: 1 }} />
-              {t("send.modeBroadcast")}
-            </ToggleButton>
-            <ToggleButton value="filter">
-              <FilterListIcon sx={{ fontSize: 18, mr: 1 }} />
-              {t("send.modeFilter")}
-            </ToggleButton>
-          </ToggleButtonGroup>
+              }}
+            >
+              <ToggleButton value="broadcast">
+                <GroupIcon sx={{ fontSize: 18, mr: 1 }} />
+                {t("send.modeBroadcast")}
+              </ToggleButton>
+              <ToggleButton value="filter">
+                <FilterListIcon sx={{ fontSize: 18, mr: 1 }} />
+                {t("send.modeFilter")}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          )}
         </Stack>
       </Box>
 
+      {/* ── Top-level Tabs ── */}
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          mb: 3,
+          overflow: "hidden",
+        }}
+      >
+        <Tabs
+          value={activeTab}
+          onChange={(_e, v) => setActiveTab(v)}
+          sx={{
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: "0.95rem",
+              minHeight: 56,
+              px: 3,
+            },
+            "& .MuiTabs-indicator": { height: 3, borderRadius: "3px 3px 0 0" },
+          }}
+        >
+          <Tab
+            value="compose"
+            icon={<EditNoteIcon sx={{ fontSize: 20 }} />}
+            iconPosition="start"
+            label={t("tabs.compose")}
+          />
+          <Tab
+            value="history"
+            icon={<HistoryIcon sx={{ fontSize: 20 }} />}
+            iconPosition="start"
+            label={t("tabs.history")}
+          />
+        </Tabs>
+      </Paper>
+
+      {activeTab === "history" ? (
+        <NotificationHistoryTab />
+      ) : (
       <form onSubmit={handleSubmit}>
         <Stack spacing={3} sx={{ maxWidth: 800, mx: "auto" }}>
 
@@ -345,7 +412,7 @@ export default function SendNotificationScreen() {
             </Stack>
           </Paper>
 
-          {/* ── Offer Scheduling (conditional, same as KMP) ── */}
+          {/* ── Offer Scheduling (conditional) ── */}
           {isOfferType && (
             <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: "1px solid", borderColor: "secondary.200", bgcolor: "secondary.50" }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2.5 }}>
@@ -353,49 +420,86 @@ export default function SendNotificationScreen() {
                   <NotificationsActiveIcon sx={{ fontSize: 18, color: "secondary.main" }} />
                 </Box>
                 <Typography variant="subtitle1" fontWeight={800} color="secondary.main">{t("send.offerSchedule")}</Typography>
-                <Chip label={t("send.required")} size="small" color="secondary" variant="outlined" sx={{ fontWeight: 700 }} />
               </Stack>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label={t("send.offerDate")}
-                    value={offerDate}
-                    onChange={(e) => {
-                      const filtered = e.target.value.replace(/[^\d-]/g, "");
-                      setOfferDate(filtered);
-                    }}
-                    fullWidth
-                    required
-                    placeholder="YYYY-MM-DD"
-                    helperText={t("send.offerDateHint")}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start"><NotificationsActiveIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment>,
-                    }}
-                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5, bgcolor: "white" } }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label={t("send.offerTime")}
-                    value={offerTime}
-                    onChange={(e) => {
-                      const filtered = e.target.value.replace(/[^\d:]/g, "");
-                      setOfferTime(filtered);
-                    }}
-                    fullWidth
-                    required
-                    placeholder="HH:MM:SS"
-                    helperText={t("send.offerTimeHint")}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start"><NotificationsActiveIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment>,
-                    }}
-                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5, bgcolor: "white" } }}
-                  />
-                </Grid>
-              </Grid>
-              <Alert severity="info" sx={{ mt: 2, borderRadius: 2, "& .MuiAlert-message": { fontSize: "0.82rem" } }}>
-                {t("send.offerScheduleHint")}
-              </Alert>
+
+              {/* Toggle: Send Now vs Schedule for Later */}
+              <ToggleButtonGroup
+                value={scheduleForLater ? "schedule" : "now"}
+                exclusive
+                onChange={(_e, v) => { if (v) setScheduleForLater(v === "schedule"); }}
+                fullWidth
+                sx={{
+                  mb: scheduleForLater ? 2.5 : 0,
+                  bgcolor: "white",
+                  borderRadius: 2,
+                  "& .MuiToggleButton-root": {
+                    textTransform: "none",
+                    fontWeight: 700,
+                    py: 1.25,
+                    borderRadius: "10px !important",
+                    "&.Mui-selected": {
+                      bgcolor: "secondary.main",
+                      color: "white",
+                      "&:hover": { bgcolor: "secondary.dark" },
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="now">
+                  <SendIcon sx={{ fontSize: 18, mr: 1 }} />
+                  {t("send.sendNow")}
+                </ToggleButton>
+                <ToggleButton value="schedule">
+                  <NotificationsActiveIcon sx={{ fontSize: 18, mr: 1 }} />
+                  {t("send.scheduleForLater")}
+                </ToggleButton>
+              </ToggleButtonGroup>
+
+              {scheduleForLater && (
+                <>
+                  <Grid container spacing={2.5}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label={t("send.offerDate")}
+                        value={offerDate}
+                        onChange={(e) => {
+                          const filtered = e.target.value.replace(/[^\d-]/g, "");
+                          setOfferDate(filtered);
+                        }}
+                        fullWidth
+                        required
+                        placeholder="YYYY-MM-DD"
+                        helperText={t("send.offerDateHint")}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start"><NotificationsActiveIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment>,
+                        }}
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5, bgcolor: "white" } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label={t("send.offerTime")}
+                        value={offerTime}
+                        onChange={(e) => {
+                          const filtered = e.target.value.replace(/[^\d:]/g, "");
+                          setOfferTime(filtered);
+                        }}
+                        fullWidth
+                        required
+                        placeholder="HH:MM:SS"
+                        helperText={t("send.offerTimeHint")}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start"><NotificationsActiveIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment>,
+                        }}
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5, bgcolor: "white" } }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <Alert severity="info" sx={{ mt: 2, borderRadius: 2, "& .MuiAlert-message": { fontSize: "0.82rem" } }}>
+                    {t("send.offerScheduleHint")}
+                  </Alert>
+                </>
+              )}
             </Paper>
           )}
 
@@ -669,6 +773,7 @@ export default function SendNotificationScreen() {
           </Paper>
         </Stack>
       </form>
+      )}
     </AppScreenContainer>
   );
 }

@@ -23,6 +23,9 @@ import {
   Avatar,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import InboxIcon from "@mui/icons-material/Inbox";
+import UserNotificationsDialog from "../../notifications/components/UserNotificationsDialog";
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import LockResetIcon from "@mui/icons-material/LockReset";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -236,8 +239,31 @@ export default function EditUserScreen() {
     [updateMutation]
   );
 
+  const handleSendNotification = useCallback(() => {
+    if (!Number.isNaN(userId) && userId > 0) {
+      navigate("/send-notification", { state: { userId } });
+    }
+  }, [navigate, userId]);
+
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const handleViewNotifications = useCallback(() => {
+    setNotificationsOpen(true);
+  }, []);
+
   const headerActions = useMemo(
     () => [
+      {
+        id: "view-notifications",
+        icon: <InboxIcon />,
+        label: t("userManagement@viewNotifications"),
+        onClick: handleViewNotifications,
+      },
+      {
+        id: "send-notification",
+        icon: <NotificationsActiveIcon />,
+        label: t("userManagement@sendNotification"),
+        onClick: handleSendNotification,
+      },
       {
         id: "back",
         icon: <ArrowBackIcon />,
@@ -245,7 +271,7 @@ export default function EditUserScreen() {
         onClick: handleBack,
       },
     ],
-    [t, handleBack]
+    [t, handleBack, handleSendNotification, handleViewNotifications]
   );
 
   if (!validId) {
@@ -660,6 +686,13 @@ export default function EditUserScreen() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <UserNotificationsDialog
+        userId={!Number.isNaN(userId) && userId > 0 ? userId : null}
+        userName={user?.name ?? null}
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
     </AppScreenContainer>
   );
 }

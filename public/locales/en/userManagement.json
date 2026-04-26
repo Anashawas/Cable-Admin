@@ -107,5 +107,7 @@
   "restore": "Restore",
   "restored": "Users restored successfully",
   "backToActive": "Back to Active Users",
-  "subtitle": "Manage platform users by role"
+  "subtitle": "Manage platform users by role",
+  "sendNotification": "Send Notification",
+  "viewNotifications": "View Notifications"
 }
