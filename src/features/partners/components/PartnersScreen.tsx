@@ -746,7 +746,7 @@ export default function PartnersScreen() {
                       setFormData({
                         ...formData,
                         pointsConversionRateId:
-                          e.target.value === "" ? null : Number(e.target.value),
+                          String(e.target.value) === "" ? null : Number(e.target.value),
                       })
                     }
                   >

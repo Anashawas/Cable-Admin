@@ -26,7 +26,11 @@
       "mcp__MSSQL_MCP_Violation_DevServer__ListTables",
       "mcp__MSSQL_MCP_Violation_DevServer__DescribeTable",
       "Bash(powershell -Command \"Compress-Archive -Path * -DestinationPath '../Cable-Admin-deploy.zip' -Force\")",
-      "Read(//d/NewOpenware-Server/**)"
+      "Read(//d/NewOpenware-Server/**)",
+      "Bash(npm run:*)",
+      "Bash(git fetch *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ],
     "deny": [],
     "ask": []
