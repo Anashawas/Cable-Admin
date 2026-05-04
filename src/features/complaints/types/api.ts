@@ -1,7 +1,11 @@
 export enum ComplaintStatus {
-  Pending = 0,
-  Rejected = 1,
+  New = 0,
+  NotComplaint = 1,
   Solved = 2,
+  Opened = 3,
+  FollowUp = 4,
+  Unsolved = 5,
+  SystemIssue = 6,
 }
 
 /** User who reported the complaint. */

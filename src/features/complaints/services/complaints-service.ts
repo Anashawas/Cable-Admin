@@ -31,13 +31,13 @@ const deleteComplaint = async (
 };
 
 /**
- * PATCH api/usercomplaints/UpdateUserComplaintStatus/{id}
+ * PUT api/user-complaints/{id}/status
  */
 const updateComplaintStatus = async (
   id: number,
   status: ComplaintStatus
 ): Promise<void> => {
-  await server.patch(`api/usercomplaints/UpdateUserComplaintStatus/${id}`, { status });
+  await server.put(`api/user-complaints/${id}/status`, { status });
 };
 
 export { getAllComplaints, deleteComplaint, updateComplaintStatus };

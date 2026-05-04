@@ -32,12 +32,16 @@ import PersonIcon from "@mui/icons-material/Person";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import ReplyIcon from "@mui/icons-material/Reply";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import LaunchIcon from "@mui/icons-material/Launch";
 import SendIcon from "@mui/icons-material/Send";
+import FiberNewIcon from "@mui/icons-material/FiberNew";
+import DoNotDisturbAltIcon from "@mui/icons-material/DoNotDisturbAlt";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
+import BugReportIcon from "@mui/icons-material/BugReport";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getAllComplaints, deleteComplaint, updateComplaintStatus } from "../services/complaints-service";
 import type { UserComplaintDto } from "../types/api";
@@ -50,18 +54,34 @@ import {
 import type { SendNotificationRequest } from "../../notifications/types/api";
 
 type StatusFilter = "all" | ComplaintStatus;
+type StatusKey = "new" | "notComplaint" | "solved" | "opened" | "followUp" | "unsolved" | "systemIssue";
+type ChipColor = "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning";
 
 const STATUS_META: Record<ComplaintStatus, {
-  key: "pending" | "rejected" | "solved";
-  color: "warning" | "error" | "success";
+  key: StatusKey;
+  color: ChipColor;
   hex: string;
   bg: string;
   icon: React.ReactNode;
 }> = {
-  [ComplaintStatus.Pending]: { key: "pending", color: "warning", hex: "#e65100", bg: "#fff3e0", icon: <PendingActionsIcon /> },
-  [ComplaintStatus.Rejected]: { key: "rejected", color: "error", hex: "#c62828", bg: "#ffebee", icon: <CancelIcon /> },
-  [ComplaintStatus.Solved]: { key: "solved", color: "success", hex: "#2e7d32", bg: "#e8f5e9", icon: <CheckCircleIcon /> },
+  [ComplaintStatus.New]:          { key: "new",          color: "info",      hex: "#0277bd", bg: "#e1f5fe", icon: <FiberNewIcon /> },
+  [ComplaintStatus.NotComplaint]: { key: "notComplaint", color: "default",   hex: "#546e7a", bg: "#eceff1", icon: <DoNotDisturbAltIcon /> },
+  [ComplaintStatus.Solved]:       { key: "solved",       color: "success",   hex: "#2e7d32", bg: "#e8f5e9", icon: <CheckCircleIcon /> },
+  [ComplaintStatus.Opened]:       { key: "opened",       color: "primary",   hex: "#1565c0", bg: "#e3f2fd", icon: <FolderOpenIcon /> },
+  [ComplaintStatus.FollowUp]:     { key: "followUp",     color: "warning",   hex: "#e65100", bg: "#fff3e0", icon: <HourglassTopIcon /> },
+  [ComplaintStatus.Unsolved]:     { key: "unsolved",     color: "error",     hex: "#c62828", bg: "#ffebee", icon: <CancelIcon /> },
+  [ComplaintStatus.SystemIssue]:  { key: "systemIssue",  color: "secondary", hex: "#6a1b9a", bg: "#f3e5f5", icon: <BugReportIcon /> },
 };
+
+const STATUS_ORDER: ComplaintStatus[] = [
+  ComplaintStatus.New,
+  ComplaintStatus.Opened,
+  ComplaintStatus.FollowUp,
+  ComplaintStatus.Solved,
+  ComplaintStatus.Unsolved,
+  ComplaintStatus.NotComplaint,
+  ComplaintStatus.SystemIssue,
+];
 
 export default function ComplaintsScreen() {
   const { t } = useTranslation();
@@ -86,9 +106,9 @@ export default function ComplaintsScreen() {
   const [replyBody, setReplyBody] = useState("");
   const [replyTypeId, setReplyTypeId] = useState<number>(0);
 
-  // Mark as solved follow-up
-  const [markSolvedOpen, setMarkSolvedOpen] = useState(false);
-  const [markSolvedTarget, setMarkSolvedTarget] = useState<UserComplaintDto | null>(null);
+  // After-reply status prompt (Solved / FollowUp)
+  const [postReplyOpen, setPostReplyOpen] = useState(false);
+  const [postReplyTarget, setPostReplyTarget] = useState<UserComplaintDto | null>(null);
 
   // ── Queries ──
   const { data = [], isLoading, error, refetch } = useQuery({
@@ -133,10 +153,11 @@ export default function ComplaintsScreen() {
       setReplyBody("");
       setReplyTypeId(0);
       setReplyTarget(null);
-      // Offer to mark as solved if it wasn't already
-      if (target && target.status !== ComplaintStatus.Solved) {
-        setMarkSolvedTarget(target);
-        setMarkSolvedOpen(true);
+      // After replying, offer to advance status (Solved / FollowUp) — skip if already terminal
+      const terminal = [ComplaintStatus.Solved, ComplaintStatus.NotComplaint, ComplaintStatus.Unsolved];
+      if (target && !terminal.includes(target.status) && target.status !== ComplaintStatus.FollowUp) {
+        setPostReplyTarget(target);
+        setPostReplyOpen(true);
       }
     },
     onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
@@ -144,7 +165,16 @@ export default function ComplaintsScreen() {
 
   // ── Derived ──
   const statusCounts = useMemo(() => {
-    const counts = { all: data.length, [ComplaintStatus.Pending]: 0, [ComplaintStatus.Rejected]: 0, [ComplaintStatus.Solved]: 0 };
+    const counts: Record<"all" | ComplaintStatus, number> = {
+      all: data.length,
+      [ComplaintStatus.New]: 0,
+      [ComplaintStatus.NotComplaint]: 0,
+      [ComplaintStatus.Solved]: 0,
+      [ComplaintStatus.Opened]: 0,
+      [ComplaintStatus.FollowUp]: 0,
+      [ComplaintStatus.Unsolved]: 0,
+      [ComplaintStatus.SystemIssue]: 0,
+    };
     data.forEach((c) => { counts[c.status] = (counts[c.status] ?? 0) + 1; });
     return counts;
   }, [data]);
@@ -210,18 +240,18 @@ export default function ComplaintsScreen() {
     });
   }, [replyTarget, replyTypeId, replyTitle, replyBody, replyMutation, openErrorSnackbar, t]);
 
-  const handleConfirmMarkSolved = useCallback(() => {
-    if (!markSolvedTarget) return;
+  const handlePostReplyStatus = useCallback((status: ComplaintStatus) => {
+    if (!postReplyTarget) return;
     statusMutation.mutate(
-      { id: markSolvedTarget.id, status: ComplaintStatus.Solved },
+      { id: postReplyTarget.id, status },
       {
         onSuccess: () => {
-          setMarkSolvedOpen(false);
-          setMarkSolvedTarget(null);
+          setPostReplyOpen(false);
+          setPostReplyTarget(null);
         },
       }
     );
-  }, [markSolvedTarget, statusMutation]);
+  }, [postReplyTarget, statusMutation]);
 
   return (
     <AppScreenContainer>
@@ -272,13 +302,27 @@ export default function ComplaintsScreen() {
           </Button>
         </Stack>
 
-        {/* KPI cards */}
-        <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+        {/* KPI cards — auto-fitting grid for 8 cards */}
+        <Box
+          sx={{
+            display: "grid",
+            gap: 1.25,
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)",
+              lg: "repeat(8, 1fr)",
+            },
+          }}
+        >
           {([
             { key: "all" as StatusFilter, label: t("all"), count: statusCounts.all, icon: <ReportProblemIcon /> },
-            { key: ComplaintStatus.Pending as StatusFilter, label: t("complaints@status_pending"), count: statusCounts[ComplaintStatus.Pending], icon: <PendingActionsIcon /> },
-            { key: ComplaintStatus.Rejected as StatusFilter, label: t("complaints@status_rejected"), count: statusCounts[ComplaintStatus.Rejected], icon: <CancelIcon /> },
-            { key: ComplaintStatus.Solved as StatusFilter, label: t("complaints@status_solved"), count: statusCounts[ComplaintStatus.Solved], icon: <CheckCircleIcon /> },
+            ...STATUS_ORDER.map((s) => ({
+              key: s as StatusFilter,
+              label: t(`complaints@status_${STATUS_META[s].key}`),
+              count: statusCounts[s],
+              icon: STATUS_META[s].icon,
+            })),
           ]).map((card) => {
             const active = statusFilter === card.key;
             return (
@@ -288,28 +332,40 @@ export default function ComplaintsScreen() {
                 onClick={() => { setStatusFilter(card.key); setPage(0); }}
                 sx={{
                   cursor: "pointer",
-                  flex: "1 1 auto",
-                  minWidth: 140,
-                  px: 2.5,
-                  py: 2.25,
+                  px: 1.75,
+                  py: 1.75,
                   borderRadius: 2.5,
                   bgcolor: active ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.12)",
                   border: "1px solid",
-                  borderColor: active ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)",
+                  borderColor: active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)",
                   backdropFilter: "blur(4px)",
                   transition: "all 0.2s",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.22)" },
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.22)", transform: "translateY(-1px)" },
+                  minWidth: 0,
                 }}
               >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
-                  <Box sx={{ opacity: 0.85, display: "flex" }}>{card.icon}</Box>
-                  <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.88)", fontWeight: 700 }}>{card.label}</Typography>
+                <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0.5, minWidth: 0 }}>
+                  <Box sx={{ opacity: 0.9, display: "flex", "& svg": { fontSize: 18 } }}>{card.icon}</Box>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "rgba(255,255,255,0.92)",
+                      fontWeight: 700,
+                      fontSize: "0.72rem",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                    title={card.label}
+                  >
+                    {card.label}
+                  </Typography>
                 </Stack>
                 <Typography variant="h5" fontWeight={900} color="white" lineHeight={1}>{card.count}</Typography>
               </Paper>
             );
           })}
-        </Stack>
+        </Box>
       </Box>
 
       {/* ── Search bar ── */}
@@ -372,7 +428,7 @@ export default function ComplaintsScreen() {
       ) : (
         <Stack spacing={1.5}>
           {paginated.map((c) => {
-            const meta = STATUS_META[c.status] ?? STATUS_META[ComplaintStatus.Pending];
+            const meta = STATUS_META[c.status] ?? STATUS_META[ComplaintStatus.New];
             return (
               <Paper
                 key={c.id}
@@ -410,18 +466,39 @@ export default function ComplaintsScreen() {
                     </Box>
                   </Stack>
                   {/* Quick status select */}
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                  <FormControl size="small" sx={{ minWidth: 200 }}>
                     <InputLabel>{t("complaints@changeStatus")}</InputLabel>
                     <Select
                       value={c.status}
                       label={t("complaints@changeStatus")}
                       disabled={statusMutation.isPending}
                       onChange={(e) => statusMutation.mutate({ id: c.id, status: e.target.value as ComplaintStatus })}
+                      renderValue={(value) => {
+                        const m = STATUS_META[value as ComplaintStatus];
+                        return (
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Box sx={{ color: m.hex, display: "flex", "& svg": { fontSize: 18 } }}>{m.icon}</Box>
+                            <Typography variant="body2" fontWeight={700} sx={{ color: m.hex }}>
+                              {t(`complaints@status_${m.key}`)}
+                            </Typography>
+                          </Stack>
+                        );
+                      }}
                       sx={{ borderRadius: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: meta.hex } }}
                     >
-                      <MenuItem value={ComplaintStatus.Pending}>{t("complaints@status_pending")}</MenuItem>
-                      <MenuItem value={ComplaintStatus.Rejected}>{t("complaints@status_rejected")}</MenuItem>
-                      <MenuItem value={ComplaintStatus.Solved}>{t("complaints@status_solved")}</MenuItem>
+                      {STATUS_ORDER.map((s) => {
+                        const m = STATUS_META[s];
+                        return (
+                          <MenuItem key={s} value={s}>
+                            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ width: "100%" }}>
+                              <Box sx={{ color: m.hex, display: "flex", "& svg": { fontSize: 20 } }}>{m.icon}</Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {t(`complaints@status_${m.key}`)}
+                              </Typography>
+                            </Stack>
+                          </MenuItem>
+                        );
+                      })}
                     </Select>
                   </FormControl>
                 </Stack>
@@ -703,34 +780,53 @@ export default function ComplaintsScreen() {
         </DialogActions>
       </Dialog>
 
-      {/* ── Mark as Solved Follow-up Dialog ── */}
+      {/* ── Post-reply status prompt ── */}
       <Dialog
-        open={markSolvedOpen}
-        onClose={() => { setMarkSolvedOpen(false); setMarkSolvedTarget(null); }}
+        open={postReplyOpen}
+        onClose={() => { if (!statusMutation.isPending) { setPostReplyOpen(false); setPostReplyTarget(null); } }}
         maxWidth="xs"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)", p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
-          <CheckCircleIcon />
-          <Typography variant="h6" fontWeight={700}>{t("complaints@markSolvedTitle")}</Typography>
+        <Box sx={{ background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)", p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
+          <ReplyIcon />
+          <Typography variant="h6" fontWeight={700}>{t("complaints@postReplyTitle")}</Typography>
         </Box>
         <DialogContent sx={{ pt: 3 }}>
-          <Typography variant="body1">{t("complaints@markSolvedMessage")}</Typography>
+          <Typography variant="body1" sx={{ mb: 2 }}>{t("complaints@postReplyMessage")}</Typography>
+          <Stack spacing={1.25}>
+            <Button
+              onClick={() => handlePostReplyStatus(ComplaintStatus.FollowUp)}
+              variant="contained"
+              color="warning"
+              fullWidth
+              disabled={statusMutation.isPending}
+              startIcon={<HourglassTopIcon />}
+              sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none", justifyContent: "flex-start", py: 1.25 }}
+            >
+              {t("complaints@moveToFollowUp")}
+            </Button>
+            <Button
+              onClick={() => handlePostReplyStatus(ComplaintStatus.Solved)}
+              variant="contained"
+              color="success"
+              fullWidth
+              disabled={statusMutation.isPending}
+              startIcon={<CheckCircleIcon />}
+              sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none", justifyContent: "flex-start", py: 1.25 }}
+            >
+              {t("complaints@markSolved")}
+            </Button>
+          </Stack>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button onClick={() => { setMarkSolvedOpen(false); setMarkSolvedTarget(null); }} variant="outlined" sx={{ borderRadius: 2, fontWeight: 700 }}>
-            {t("complaints@keepStatus")}
-          </Button>
+        <DialogActions sx={{ px: 3, py: 2 }}>
           <Button
-            onClick={handleConfirmMarkSolved}
-            color="success"
-            variant="contained"
+            onClick={() => { setPostReplyOpen(false); setPostReplyTarget(null); }}
+            variant="text"
             disabled={statusMutation.isPending}
-            startIcon={statusMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
-            sx={{ borderRadius: 2, fontWeight: 700 }}
+            sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none" }}
           >
-            {t("complaints@markSolved")}
+            {t("complaints@keepStatus")}
           </Button>
         </DialogActions>
       </Dialog>
