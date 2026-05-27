@@ -27,6 +27,7 @@ const BannersScreen = lazy(() => import("../features/system/components/BannersSc
 const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
 const CarDatabaseScreen = lazy(() => import("../features/system/components/CarDatabaseScreen"));
 const SendNotificationScreen = lazy(() => import("../features/notifications/components/SendNotificationScreen"));
+const ReceiptGeneratorScreen = lazy(() => import("../features/receipts/components/ReceiptGeneratorScreen"));
 const EmergencyServicesScreen = lazy(() => import("../features/system/components/EmergencyServicesScreen"));
 const ServiceCategoriesScreen = lazy(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
 const ServiceProvidersScreen = lazy(() => import("../features/service-providers/components/ServiceProvidersScreen"));
@@ -215,6 +216,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <SendNotificationScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/receipts"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ReceiptGeneratorScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

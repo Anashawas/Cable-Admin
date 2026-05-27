@@ -157,6 +157,7 @@ const AppCollapsibleSidebar = () => {
 				{ label: t("appVersions"), path: "/app-versions", icon: <SettingsIcon /> },
 				{ label: t("emergencyServices"), path: "/emergency-services", icon: <LocalHospitalIcon /> },
 				{ label: t("sendNotification"), path: "/send-notification", icon: <NotificationsActiveIcon /> },
+				{ label: t("generateReceipt"), path: "/receipts", icon: <ReceiptLongIcon /> },
 			],
 		},
 	];
