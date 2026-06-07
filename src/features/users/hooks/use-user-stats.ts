@@ -59,6 +59,36 @@ export function useCarTypeStats(users: UserSummaryDto[]): CarTypeStat[] {
   }, [users]);
 }
 
+// ── City stats ────────────────────────────────────────────────────────────────
+// Pure client-side aggregation of users per city from the already-loaded list.
+// Zero extra API calls — possible because GetAllUsers now returns `city`.
+
+export interface CityStat {
+  /** City name, or null for users with no city set. */
+  name: string | null;
+  count: number;
+}
+
+export function useCityStats(users: UserSummaryDto[]): CityStat[] {
+  return useMemo(() => {
+    const map = new Map<string, number>();
+    let unknown = 0;
+
+    for (const user of users) {
+      const city = user.city?.trim();
+      if (city) map.set(city, (map.get(city) ?? 0) + 1);
+      else unknown += 1;
+    }
+
+    const stats: CityStat[] = Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({ name, count }));
+
+    if (unknown > 0) stats.push({ name: null, count: unknown });
+    return stats;
+  }, [users]);
+}
+
 // ── Monthly registration trend ───────────────────────────────────────────────
 // Groups users by year+month based on createdAt. Zero extra API calls.
 

@@ -19,18 +19,28 @@ export interface UserCarSummaryDto {
 export interface UserSummaryDto {
   id?: number | null;
   name: string;
+  /** Login/display username returned by the list API (often same as name). */
+  userName?: string | null;
   email: string;
   phone?: string | null;
+  /** User's city — returned by the list API; used for the City column & per-city analytics. */
+  city?: string | null;
   role: RoleDto;
-  /** Optional; show Status chip when present. */
+  /**
+   * NOTE: GetAllUsers does NOT return isActive — it returns isDeleted instead.
+   * isActive is only present on the detail endpoint (GetUserById). For list/analytics
+   * status, derive from isDeleted. Kept here for callers that merge in detail data.
+   */
   isActive?: boolean | null;
+  /** Whether the user's phone number has been verified. */
+  isPhoneVerified?: boolean;
   /** ISO string from the server (e.g. "2025-01-15T10:23:00Z"). Used for date-range stats. */
   createdAt?: string | null;
   /** User's registered vehicles — available directly in list since 2026-03-04 API update. */
   userCars?: UserCarSummaryDto[];
   /** Whether the user has read the latest update notes. */
   hasReadUpdateNotes?: boolean;
-  /** Whether this account has been soft-deleted. */
+  /** Whether this account has been soft-deleted. This is the real status signal in the list. */
   isDeleted?: boolean;
 }
 

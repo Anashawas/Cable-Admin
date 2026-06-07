@@ -3,6 +3,7 @@
   "editTitle": "تعديل المستخدم",
   "search": "بحث",
   "searchPlaceholder": "الاسم، البريد، أو المعرف",
+  "searchByPhone": "بحث بالهاتف",
   "deleted": "تم حذف المستخدم",
   "updated": "تم تحديث المستخدم",
   "invalidId": "معرف مستخدم غير صالح",
@@ -20,13 +21,16 @@
     "actions": "إجراءات",
     "active": "نشط",
     "inactive": "غير نشط",
-    "providers": "مقدمو الخدمات"
+    "providers": "مقدمو الخدمات",
+    "city": "المدينة"
   },
   "actions": {
     "edit": "تعديل",
     "delete": "حذف",
-    "makeProvider": "تغيير الدور إلى مزود"
+    "makeProvider": "تغيير الدور إلى مزود",
+    "addPoints": "إضافة نقاط"
   },
+  "backToUsers": "العودة للمستخدمين",
   "makeProviderTitle": "تغيير الدور إلى مزود",
   "makeProviderConfirm": "هل أنت متأكد من تغيير دور {{name}} إلى مزود؟",
   "makeProviderAction": "جعله مزوداً",
@@ -86,7 +90,9 @@
   "allBrands": "جميع الماركات",
   "allModels": "جميع الموديلات",
   "allPlugTypes": "جميع أنواع القابس",
+  "allCities": "جميع المدن",
   "filterByCar": "فلتر حسب السيارة",
+  "filterByCity": "فلتر حسب المدينة",
   "clearFilters": "مسح الفلاتر",
   "insights_title": "إحصاءات المستخدمين",
   "insights_totalUsers": "إجمالي المستخدمين",
@@ -102,6 +108,9 @@
   "insights_tableFiltered": "الجدول مفلتر لهذه الفترة",
   "insights_carTypeStats": "توزيع أنواع السيارات",
   "insights_noCarData": "لا توجد بيانات سيارات لأي مستخدم",
+  "insights_cityStats": "المستخدمون حسب المدينة",
+  "insights_noCityData": "لا توجد بيانات مدن لأي مستخدم",
+  "insights_unknownCity": "غير معروف",
   "deletedUsers": "المستخدمون المحذوفون",
   "deletedUsersHint": "هذه الحسابات تم حذفها. حدد المستخدمين واضغط استعادة لإعادة تفعيلهم.",
   "restore": "استعادة",

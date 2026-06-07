@@ -19,8 +19,9 @@ import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import InsightsIcon from "@mui/icons-material/Insights";
+import LocationCityIcon from "@mui/icons-material/LocationCity";
 import type { UserSummaryDto } from "../types/api";
-import { useCarTypeStats, useMonthlyStats } from "../hooks/use-user-stats";
+import { useCarTypeStats, useMonthlyStats, useCityStats } from "../hooks/use-user-stats";
 
 interface UserInsightsPanelProps {
   users: UserSummaryDto[];
@@ -32,11 +33,17 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
 
   const carStats = useCarTypeStats(users);
   const monthlyStats = useMonthlyStats(users);
+  const cityStats = useCityStats(users);
 
-  const activeCount = users.filter((u) => u.isActive !== false).length;
+  // List API returns `isDeleted`, not `isActive` — derive status from it.
+  const activeCount = users.filter((u) => !u.isDeleted).length;
   const inactiveCount = users.length - activeCount;
   const maxCarCount = carStats[0]?.count ?? 1;
   const topBrands = carStats.slice(0, 10);
+
+  const namedCityStats = cityStats.filter((c) => c.name != null);
+  const topCities = namedCityStats.slice(0, 10);
+  const unknownCityCount = cityStats.find((c) => c.name == null)?.count ?? 0;
 
   return (
     <Paper elevation={2} sx={{ borderRadius: 2, overflow: "hidden" }}>
@@ -150,6 +157,40 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
                   series={[{ data: topBrands.map((s) => s.count), color: theme.palette.primary.main }]}
                   height={Math.max(topBrands.length * 30 + 40, 180)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 80 }}
+                  slotProps={{ legend: { hidden: true } }}
+                />
+              </Paper>
+            </Grid>
+          )}
+
+          {/* ── Users per city ── */}
+          {topCities.length > 0 && (
+            <Grid item xs={12}>
+              <Divider sx={{ mb: 2 }} />
+              <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: 1, borderColor: "divider" }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <LocationCityIcon fontSize="small" color="primary" />
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    {t("userManagement@insights_cityStats")}
+                  </Typography>
+                  <Chip label={namedCityStats.length} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                  {unknownCityCount > 0 && (
+                    <Chip
+                      label={`${t("userManagement@insights_unknownCity")}: ${unknownCityCount}`}
+                      size="small"
+                      variant="outlined"
+                      color="default"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  )}
+                </Stack>
+                <BarChart
+                  layout="horizontal"
+                  yAxis={[{ scaleType: "band", data: topCities.map((c) => c.name as string), tickLabelStyle: { fontSize: 11 } }]}
+                  xAxis={[{ tickLabelStyle: { fontSize: 10 } }]}
+                  series={[{ data: topCities.map((c) => c.count), color: theme.palette.info.main }]}
+                  height={Math.max(topCities.length * 30 + 40, 180)}
+                  margin={{ top: 5, right: 20, bottom: 30, left: 90 }}
                   slotProps={{ legend: { hidden: true } }}
                 />
               </Paper>

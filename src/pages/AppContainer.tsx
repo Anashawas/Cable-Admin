@@ -17,6 +17,7 @@ const DashboardScreen = lazy(() => import("../features/dashboard/components/Dash
 const UserListScreen = lazy(() => import("../features/users/components/UserListScreen"));
 const UserAnalyticsScreen = lazy(() => import("../features/users/components/UserAnalyticsScreen"));
 const EditUserScreen = lazy(() => import("../features/users/components/EditUserScreen"));
+const UserPointsScreen = lazy(() => import("../features/users/components/UserPointsScreen"));
 const ChargeManagementScreen = lazy(() => import("../features/charge-management/components/ChargeManagementScreen"));
 const StationFormScreen = lazy(() => import("../features/charge-management/components/StationFormScreen"));
 const StationMediaScreen = lazy(() => import("../features/charge-management/components/StationMediaScreen"));
@@ -176,6 +177,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <EditUserScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/:id/points"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <UserPointsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

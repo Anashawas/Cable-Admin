@@ -6,6 +6,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import InsightsIcon from "@mui/icons-material/Insights";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import LocationCityIcon from "@mui/icons-material/LocationCity";
 import ClearIcon from "@mui/icons-material/Clear";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import UserInsightsPanel from "./UserInsightsPanel";
@@ -20,6 +21,7 @@ export default function UserAnalyticsScreen() {
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedPlug, setSelectedPlug] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["users", "list"],
@@ -27,6 +29,12 @@ export default function UserAnalyticsScreen() {
   });
 
   const carStats = useCarTypeStats(data);
+
+  const cityOptions = useMemo(() => {
+    const set = new Set<string>();
+    data.forEach((u) => { const c = u.city?.trim(); if (c) set.add(c); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [data]);
 
   const modelOptions = useMemo(() => {
     if (!selectedBrand) return [];
@@ -64,12 +72,15 @@ export default function UserAnalyticsScreen() {
       );
     }
 
+    if (selectedCity) result = result.filter((u) => (u.city?.trim() ?? "") === selectedCity);
+
     return result;
-  }, [data, dateFrom, dateTo, selectedBrand, selectedModel, selectedPlug]);
+  }, [data, dateFrom, dateTo, selectedBrand, selectedModel, selectedPlug, selectedCity]);
 
   const isDateFiltered = !!(dateFrom || dateTo);
   const isCarFiltered = !!selectedBrand;
-  const isFiltered = isDateFiltered || isCarFiltered;
+  const isCityFiltered = !!selectedCity;
+  const isFiltered = isDateFiltered || isCarFiltered || isCityFiltered;
   const displayUsers = isFiltered ? filteredUsers : data;
 
   const clearCarFilter = () => { setSelectedBrand(""); setSelectedModel(""); setSelectedPlug(""); };
@@ -114,7 +125,7 @@ export default function UserAnalyticsScreen() {
                 {isLoading ? (
                   <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
                 ) : (
-                  <Typography variant="h5" fontWeight={700} color="white">{displayUsers.filter((u) => u.isActive !== false).length}</Typography>
+                  <Typography variant="h5" fontWeight={700} color="white">{displayUsers.filter((u) => !u.isDeleted).length}</Typography>
                 )}
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("insights_activeUsers")}</Typography>
               </Box>
@@ -122,7 +133,7 @@ export default function UserAnalyticsScreen() {
                 {isLoading ? (
                   <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
                 ) : (
-                  <Typography variant="h5" fontWeight={700} color="white">{displayUsers.filter((u) => u.isActive === false).length}</Typography>
+                  <Typography variant="h5" fontWeight={700} color="white">{displayUsers.filter((u) => u.isDeleted).length}</Typography>
                 )}
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("insights_inactiveUsers")}</Typography>
               </Box>
@@ -246,6 +257,39 @@ export default function UserAnalyticsScreen() {
               </Tooltip>
             )}
           </Stack>
+
+          <Divider />
+
+          {/* City filter row */}
+          {cityOptions.length > 0 && (
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
+              <LocationCityIcon color="action" fontSize="small" />
+              <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 140 }}>
+                {t("filterByCity")}
+              </Typography>
+              <TextField
+                select
+                size="small"
+                label={t("allCities")}
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                sx={{ minWidth: 160 }}
+              >
+                <MenuItem value="">{t("allCities")}</MenuItem>
+                <Divider />
+                {cityOptions.map((c) => (
+                  <MenuItem key={c} value={c}>{c}</MenuItem>
+                ))}
+              </TextField>
+              {isCityFiltered && (
+                <Tooltip title={t("clearFilters")}>
+                  <IconButton size="small" onClick={() => setSelectedCity("")}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Stack>
+          )}
 
           {/* Combined result chip */}
           {isFiltered && (
