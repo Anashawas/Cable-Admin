@@ -26,6 +26,7 @@ import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import StoreIcon from "@mui/icons-material/Store";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import type { UserSummaryDto } from "../types/api";
 import { getUserById } from "../services/user-service";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
@@ -35,6 +36,7 @@ interface UserDetailDrawerProps {
   onClose: () => void;
   onEdit: (user: UserSummaryDto) => void;
   onDelete: (user: UserSummaryDto) => void;
+  onAddPoints: (user: UserSummaryDto) => void;
 }
 
 function getInitials(name: string) {
@@ -46,7 +48,7 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-export default function UserDetailDrawer({ user, onClose, onEdit, onDelete }: UserDetailDrawerProps) {
+export default function UserDetailDrawer({ user, onClose, onEdit, onDelete, onAddPoints }: UserDetailDrawerProps) {
   const { t } = useTranslation();
 
   const { data: detail, isLoading } = useQuery({
@@ -71,11 +73,12 @@ export default function UserDetailDrawer({ user, onClose, onEdit, onDelete }: Us
   // Use fresh detail data when available, fall back to list summary
   const name = detail?.name ?? user?.name ?? "?";
   const roleName = detail?.role?.name ?? user?.role?.name ?? "—";
-  const isActive = detail?.isActive ?? user?.isActive ?? true;
+  // Detail API has `isActive`; list summary only has `isDeleted` — fall back to that.
+  const isActive = detail?.isActive ?? (user ? !user.isDeleted : true);
   const email = detail?.email ?? user?.email ?? "—";
   const phone = detail?.phone ?? user?.phone;
   const country = detail?.country;
-  const city = detail?.city;
+  const city = detail?.city ?? user?.city;
   const createdAt = user?.createdAt;
   const userCars = user?.userCars;
 
@@ -300,26 +303,37 @@ export default function UserDetailDrawer({ user, onClose, onEdit, onDelete }: Us
 
           {/* Actions */}
           <Box sx={{ px: 2.5, py: 2, borderTop: 1, borderColor: "divider" }}>
-            <Stack direction="row" spacing={1.5}>
+            <Stack spacing={1.5}>
               <Button
                 fullWidth
                 variant="contained"
-                startIcon={<EditIcon />}
-                onClick={() => { onEdit(user); onClose(); }}
+                color="success"
+                startIcon={<AccountBalanceWalletIcon />}
+                onClick={() => { onAddPoints(user); onClose(); }}
               >
-                {t("userManagement@actions.edit")}
+                {t("userManagement@actions.addPoints")}
               </Button>
-              <Tooltip title={t("userManagement@actions.delete")}>
+              <Stack direction="row" spacing={1.5}>
                 <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={() => { onDelete(user); onClose(); }}
-                  sx={{ minWidth: 0, px: 2 }}
+                  fullWidth
+                  variant="contained"
+                  startIcon={<EditIcon />}
+                  onClick={() => { onEdit(user); onClose(); }}
                 >
-                  {t("userManagement@actions.delete")}
+                  {t("userManagement@actions.edit")}
                 </Button>
-              </Tooltip>
+                <Tooltip title={t("userManagement@actions.delete")}>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => { onDelete(user); onClose(); }}
+                    sx={{ minWidth: 0, px: 2 }}
+                  >
+                    {t("userManagement@actions.delete")}
+                  </Button>
+                </Tooltip>
+              </Stack>
             </Stack>
           </Box>
         </>

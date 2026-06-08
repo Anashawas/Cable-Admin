@@ -88,9 +88,11 @@ export default function UserListScreen() {
 
   const [activeTab, setActiveTab] = useState<RoleTab>("all");
   const [search, setSearch] = useState("");
+  const [phoneSearch, setPhoneSearch] = useState("");
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 20 });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserSummaryDto | null>(null);
@@ -132,6 +134,12 @@ export default function UserListScreen() {
 
   const carStats = useCarTypeStats(data);
   const brandOptions = useMemo(() => carStats.map((s) => s.name), [carStats]);
+
+  const cityOptions = useMemo(() => {
+    const set = new Set<string>();
+    data.forEach((u) => { const c = u.city?.trim(); if (c) set.add(c); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [data]);
 
   const roleCounts = useMemo(() => ({
     all:       data.length,
@@ -239,19 +247,22 @@ export default function UserListScreen() {
         return ms >= from && ms <= to;
       });
     }
+    const phoneQ = phoneSearch.replace(/\D/g, "");
+    if (phoneQ) result = result.filter((row) => (row.phone ?? "").replace(/\D/g, "").includes(phoneQ));
     if (selectedBrand) result = result.filter((row) => row.userCars?.some((c) => c.carTypeName?.trim() === selectedBrand));
+    if (selectedCity) result = result.filter((row) => (row.city?.trim() ?? "") === selectedCity);
     return result;
-  }, [data, activeTab, search, dateFrom, dateTo, selectedBrand]);
+  }, [data, activeTab, search, phoneSearch, dateFrom, dateTo, selectedBrand, selectedCity]);
 
   const paginatedData = useMemo(() => {
     const start = paginationModel.page * paginationModel.pageSize;
     return filteredData.slice(start, start + paginationModel.pageSize);
   }, [filteredData, paginationModel.page, paginationModel.pageSize]);
 
-  const hasActiveFilters = search || dateFrom || dateTo || selectedBrand;
+  const hasActiveFilters = search || phoneSearch || dateFrom || dateTo || selectedBrand || selectedCity;
 
   const clearFilters = useCallback(() => {
-    setSearch(""); setDateFrom(null); setDateTo(null); setSelectedBrand("");
+    setSearch(""); setPhoneSearch(""); setDateFrom(null); setDateTo(null); setSelectedBrand(""); setSelectedCity("");
     setPaginationModel((p) => ({ ...p, page: 0 }));
   }, []);
 
@@ -290,7 +301,7 @@ export default function UserListScreen() {
   const handleBulkExport = useCallback(() => {
     const rows = filteredData.filter((r) => selectedIds.includes(r.id ?? -1));
     if (rows.length === 0) return;
-    const headers = ["id", "name", "email", "phone", "role"];
+    const headers = ["id", "name", "email", "phone", "city", "role"];
     const csv = [
       headers.join(","),
       ...rows.map((r) =>
@@ -360,6 +371,18 @@ export default function UserListScreen() {
         renderCell: ({ row }) => row.role ? roleChip(row.role.name) : <Typography variant="body2" color="text.disabled">—</Typography>,
       },
       {
+        field: "city", headerName: t("userManagement@columns.city"), minWidth: 120, flex: 0.4, filterable: false, sortable: false,
+        valueGetter: (_, row) => row.city ?? "",
+        renderCell: ({ row }) => row.city
+          ? (
+            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+              <LocationCityIcon sx={{ fontSize: 15, color: "text.secondary", flexShrink: 0 }} />
+              <Typography variant="body2" noWrap>{row.city}</Typography>
+            </Stack>
+          )
+          : <Typography variant="body2" color="text.disabled">—</Typography>,
+      },
+      {
         field: "providers", headerName: t("userManagement@columns.providers"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
         renderCell: ({ row }) => {
           const count = providersByOwner.get(row.id!) ?? 0;
@@ -380,7 +403,8 @@ export default function UserListScreen() {
       {
         field: "isActive", headerName: t("userManagement@columns.status"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
         renderCell: ({ row }) => {
-          const active = row.isActive !== false;
+          // List API returns `isDeleted`, not `isActive`. Derive status from it.
+          const active = row.isDeleted !== true;
           return <Chip size="small" label={active ? t("userManagement@columns.active") : t("userManagement@columns.inactive")} color={active ? "success" : "error"} variant="outlined" sx={{ fontWeight: 600 }} />;
         },
       },
@@ -632,6 +656,22 @@ export default function UserListScreen() {
                     ) : undefined,
                   }}
                 />
+                <TextField
+                  size="small"
+                  type="tel"
+                  placeholder={t("userManagement@searchByPhone")}
+                  value={phoneSearch}
+                  onChange={(e) => { setPhoneSearch(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
+                  sx={{ minWidth: 190 }}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" color="action" /></InputAdornment>,
+                    endAdornment: phoneSearch ? (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setPhoneSearch("")}><ClearIcon fontSize="small" /></IconButton>
+                      </InputAdornment>
+                    ) : undefined,
+                  }}
+                />
                 <DatePicker
                   label={t("userManagement@insights_dateFrom")}
                   value={dateFrom}
@@ -658,6 +698,20 @@ export default function UserListScreen() {
                     <MenuItem value="">{t("userManagement@allBrands")}</MenuItem>
                     <Divider />
                     {brandOptions.map((brand) => <MenuItem key={brand} value={brand}>{brand}</MenuItem>)}
+                  </TextField>
+                )}
+                {cityOptions.length > 0 && (
+                  <TextField
+                    select size="small"
+                    label={t("userManagement@filterByCity")}
+                    value={selectedCity}
+                    onChange={(e) => { setSelectedCity(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
+                    sx={{ minWidth: 175 }}
+                    InputProps={{ startAdornment: <InputAdornment position="start"><LocationCityIcon fontSize="small" color="action" /></InputAdornment> }}
+                  >
+                    <MenuItem value="">{t("userManagement@allCities")}</MenuItem>
+                    <Divider />
+                    {cityOptions.map((city) => <MenuItem key={city} value={city}>{city}</MenuItem>)}
                   </TextField>
                 )}
                 {hasActiveFilters && (
@@ -714,6 +768,7 @@ export default function UserListScreen() {
         onClose={() => setDrawerUser(null)}
         onEdit={(u) => { const id = u.id ?? 0; if (id > 0) navigate(`/users/${id}/edit`); }}
         onDelete={(u) => { setUserToDelete(u); setDeleteDialogOpen(true); }}
+        onAddPoints={(u) => { const id = u.id ?? 0; if (id > 0) navigate(`/users/${id}/points`); }}
       />
 
       {/* ── Single Delete Dialog ── */}

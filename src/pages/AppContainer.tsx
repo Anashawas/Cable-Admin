@@ -17,6 +17,7 @@ const DashboardScreen = lazy(() => import("../features/dashboard/components/Dash
 const UserListScreen = lazy(() => import("../features/users/components/UserListScreen"));
 const UserAnalyticsScreen = lazy(() => import("../features/users/components/UserAnalyticsScreen"));
 const EditUserScreen = lazy(() => import("../features/users/components/EditUserScreen"));
+const UserPointsScreen = lazy(() => import("../features/users/components/UserPointsScreen"));
 const ChargeManagementScreen = lazy(() => import("../features/charge-management/components/ChargeManagementScreen"));
 const StationFormScreen = lazy(() => import("../features/charge-management/components/StationFormScreen"));
 const StationMediaScreen = lazy(() => import("../features/charge-management/components/StationMediaScreen"));
@@ -27,6 +28,7 @@ const BannersScreen = lazy(() => import("../features/system/components/BannersSc
 const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
 const CarDatabaseScreen = lazy(() => import("../features/system/components/CarDatabaseScreen"));
 const SendNotificationScreen = lazy(() => import("../features/notifications/components/SendNotificationScreen"));
+const ReceiptGeneratorScreen = lazy(() => import("../features/receipts/components/ReceiptGeneratorScreen"));
 const EmergencyServicesScreen = lazy(() => import("../features/system/components/EmergencyServicesScreen"));
 const ServiceCategoriesScreen = lazy(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
 const ServiceProvidersScreen = lazy(() => import("../features/service-providers/components/ServiceProvidersScreen"));
@@ -180,6 +182,16 @@ function AppContainer() {
             }
           />
           <Route
+            path="/users/:id/points"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <UserPointsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/car-management"
             element={
               <ProtectedRoute isAllowed={!!user}>
@@ -215,6 +227,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <SendNotificationScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/receipts"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ReceiptGeneratorScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

@@ -3,6 +3,7 @@
   "editTitle": "Edit User",
   "search": "Search",
   "searchPlaceholder": "Name, email, or ID",
+  "searchByPhone": "Search by phone",
   "deleted": "User deleted",
   "updated": "User updated",
   "invalidId": "Invalid user ID",
@@ -20,13 +21,16 @@
     "actions": "Actions",
     "active": "Active",
     "inactive": "Inactive",
-    "providers": "Providers"
+    "providers": "Providers",
+    "city": "City"
   },
   "actions": {
     "edit": "Edit",
     "delete": "Delete",
-    "makeProvider": "Change Role to Provider"
+    "makeProvider": "Change Role to Provider",
+    "addPoints": "Add Points"
   },
+  "backToUsers": "Back to Users",
   "makeProviderTitle": "Change Role to Provider",
   "makeProviderConfirm": "Are you sure you want to change {{name}}'s role to Provider?",
   "makeProviderAction": "Make Provider",
@@ -86,7 +90,9 @@
   "allBrands": "All Brands",
   "allModels": "All Models",
   "allPlugTypes": "All Plug Types",
+  "allCities": "All Cities",
   "filterByCar": "Filter by Car",
+  "filterByCity": "Filter by City",
   "clearFilters": "Clear Filters",
   "insights_title": "User Insights",
   "insights_totalUsers": "Total Users",
@@ -102,6 +108,9 @@
   "insights_tableFiltered": "Table is filtered to this period",
   "insights_carTypeStats": "Car Type Distribution",
   "insights_noCarData": "No car data found for any user",
+  "insights_cityStats": "Users by City",
+  "insights_noCityData": "No city data available for any user",
+  "insights_unknownCity": "Unknown",
   "deletedUsers": "Deleted Users",
   "deletedUsersHint": "These accounts have been soft-deleted. Select users and click Restore to reactivate them.",
   "restore": "Restore",

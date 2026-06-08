@@ -1,0 +1,35 @@
+{
+  "title": "Generate Receipt",
+  "subtitle": "Create and download a PDF utility invoice",
+  "generate": "Generate PDF",
+  "generating": "Generating...",
+  "success": "Receipt generated successfully",
+  "sections": {
+    "customer": "Customer Information",
+    "invoice": "Invoice Details",
+    "payment": "Payment & Duration"
+  },
+  "fields": {
+    "customerName": "Customer Name",
+    "email": "Email",
+    "phone": "Phone",
+    "serviceName": "Service Name",
+    "invoiceName": "Invoice Name",
+    "titleName": "Title",
+    "privacyName": "Privacy / Disclaimer",
+    "totalAmount": "Total Amount",
+    "paymentDate": "Payment Date",
+    "durationFrom": "Duration From",
+    "durationTo": "Duration To",
+    "year": "Year"
+  },
+  "hints": {
+    "year": "Duration in years (e.g. 1, 2, 3)"
+  },
+  "errors": {
+    "allFieldsRequired": "All fields are required",
+    "invalidAmount": "Please enter a valid amount",
+    "invalidYear": "Please enter a valid year value",
+    "emptyFile": "Server returned an empty file"
+  }
+}

@@ -55,6 +55,7 @@ i18n
       "loyalty",
       "serviceProviders",
       "stationStats",
+      "receipts",
     ],
   });
 

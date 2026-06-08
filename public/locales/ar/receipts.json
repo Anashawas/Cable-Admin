@@ -1,0 +1,35 @@
+{
+  "title": "إنشاء إيصال",
+  "subtitle": "إنشاء وتنزيل فاتورة خدمات بصيغة PDF",
+  "generate": "إنشاء PDF",
+  "generating": "جاري الإنشاء...",
+  "success": "تم إنشاء الإيصال بنجاح",
+  "sections": {
+    "customer": "بيانات العميل",
+    "invoice": "تفاصيل الفاتورة",
+    "payment": "الدفع والمدة"
+  },
+  "fields": {
+    "customerName": "اسم العميل",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "serviceName": "اسم الخدمة",
+    "invoiceName": "اسم الفاتورة",
+    "titleName": "العنوان",
+    "privacyName": "الخصوصية / إخلاء المسؤولية",
+    "totalAmount": "المبلغ الإجمالي",
+    "paymentDate": "تاريخ الدفع",
+    "durationFrom": "المدة من",
+    "durationTo": "المدة إلى",
+    "year": "السنة"
+  },
+  "hints": {
+    "year": "المدة بالسنوات (مثال: 1، 2، 3)"
+  },
+  "errors": {
+    "allFieldsRequired": "جميع الحقول مطلوبة",
+    "invalidAmount": "الرجاء إدخال مبلغ صحيح",
+    "invalidYear": "الرجاء إدخال قيمة سنة صحيحة",
+    "emptyFile": "الخادم أرجع ملفاً فارغاً"
+  }
+}
