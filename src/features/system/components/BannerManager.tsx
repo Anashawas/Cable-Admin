@@ -21,6 +21,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import InsightsIcon from "@mui/icons-material/Insights";
+import AnalyticsDialog from "../../analytics/components/AnalyticsDialog";
 import {
   getAllBanners,
   addBanner,
@@ -53,6 +55,7 @@ export default function BannerManager() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [bannerToDelete, setBannerToDelete] = useState<BannerDto | null>(null);
+  const [analyticsBanner, setAnalyticsBanner] = useState<BannerDto | null>(null);
 
   const { data: banners = [], isLoading, error, refetch } = useQuery({
     queryKey: ["banners"],
@@ -212,7 +215,15 @@ export default function BannerManager() {
                     </Typography>
                   )}
                 </CardContent>
-                <CardActions disableSpacing sx={{ justifyContent: "flex-end" }}>
+                <CardActions disableSpacing sx={{ justifyContent: "space-between" }}>
+                  <Button
+                    size="small"
+                    color="success"
+                    startIcon={<InsightsIcon />}
+                    onClick={() => setAnalyticsBanner(b)}
+                  >
+                    {t("analytics@manage")}
+                  </Button>
                   <Button
                     size="small"
                     color="error"
@@ -370,6 +381,14 @@ export default function BannerManager() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <AnalyticsDialog
+        open={analyticsBanner != null}
+        entityType="Banner"
+        entityId={analyticsBanner?.id ?? null}
+        entityName={analyticsBanner?.name ?? undefined}
+        onClose={() => setAnalyticsBanner(null)}
+      />
     </Box>
   );
 }

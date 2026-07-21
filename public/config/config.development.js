@@ -20,7 +20,7 @@ window.env = {
     ],
   },
   server: {
-    url: "https://cable-app.com/",
+    url: "http://dev.cable-app.com/",
   },
   search: {
     geocoderServiceUrl:

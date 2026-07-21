@@ -14,11 +14,17 @@
     "visitorsHighToLow": "Most visitors",
     "visitorsLowToHigh": "Least visitors",
     "ratingHighToLow": "Highest rating",
-    "nameAtoZ": "Name (A–Z)"
+    "nameAtoZ": "Name (A–Z)",
+    "joinedNewest": "Newest joined",
+    "joinedOldest": "Oldest joined",
+    "editedNewest": "Recently edited",
+    "editedOldest": "Least recently edited"
   },
   "columns": {
     "id": "ID",
     "stationName": "Station Name",
+    "joined": "Joined",
+    "lastEdit": "Last edit",
     "city": "City",
     "address": "Address",
     "phone": "Phone",
@@ -38,7 +44,54 @@
   "detail": {
     "title": "Station detail",
     "services": "Services",
-    "images": "Images"
+    "images": "Images",
+    "contact": "Contact & Hours",
+    "charging": "Charging",
+    "pricing": "Pricing & Payment",
+    "offer": "Offer",
+    "hours": "Working Hours",
+    "country": "Country",
+    "coordinates": "Coordinates",
+    "viewOnMap": "View on map",
+    "brand": "Charger Brand"
+  },
+  "premium": {
+    "title": "Premium Subscription",
+    "manage": "Premium",
+    "recordPayment": "Record Payment",
+    "record": "Record",
+    "renew": "Renew",
+    "paymentDate": "Payment Date",
+    "expiresAt": "Expires At",
+    "amount": "Amount",
+    "note": "Note",
+    "history": "Payment History",
+    "noHistory": "No premium payments recorded yet.",
+    "active": "Premium Active",
+    "inactive": "Not Premium",
+    "expired": "Premium Expired",
+    "paidOn": "Paid on",
+    "expiresOn": "Expires on",
+    "saved": "Premium payment recorded",
+    "paymentDateRequired": "Payment date is required",
+    "expiresAtRequired": "Expiry date is required",
+    "expiryAfterPayment": "Expiry date must be after the payment date",
+    "amountInvalid": "Amount must be 0 or greater",
+    "noteTooLong": "Note must be 500 characters or fewer"
+  },
+  "partner": "Partner",
+  "profile": {
+    "overview": "Overview"
+  },
+  "complaints": {
+    "title": "Complaints",
+    "empty": "No complaints for this station"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "basedOn": "Based on {{count}} reviews",
+    "noComment": "No comment",
+    "noReviews": "No reviews yet"
   },
   "filters": {
     "title": "Filters",
@@ -47,6 +100,12 @@
     "city": "City",
     "status": "Status",
     "verified": "Verified",
+    "joined": "Joined",
+    "lastEdit": "Last edit",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "last90Days": "Last 90 days",
+    "lastYear": "Last year",
     "stationType": "Station type",
     "plugType": "Plug type",
     "plugTypeCount": "{{count}} selected",
@@ -69,6 +128,16 @@
     "searchPlaceholder": "Search by name, email or ID",
     "noProviders": "No providers found"
   },
+  "owner": {
+    "title": "Owner",
+    "current": "Current owner",
+    "unassigned": "Unassigned",
+    "none": "No owner assigned",
+    "email": "Owner email",
+    "phone": "Owner phone",
+    "unassign": "Unassign owner",
+    "unassignedSuccess": "Station unassigned successfully"
+  },
   "form": {
     "addTitle": "Add Charging Point",
     "editTitle": "Edit Charging Point",
@@ -86,6 +155,7 @@
     "status": "Status",
     "chargerPointType": "Charger Point Type",
     "stationType": "Station Type",
+    "chargerBrand": "Charger Brand",
     "chargerSpeed": "Charger Speed (kW)",
     "price": "Price",
     "chargersCount": "Chargers Count",

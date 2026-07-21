@@ -50,5 +50,25 @@
   "searchProvider": "Search by name or ID...",
   "commissionAndRewards": "Commission & Rewards",
   "limitsAndExpiry": "Limits & Expiry",
-  "notePlaceholder": "Optional notes..."
+  "notePlaceholder": "Optional notes...",
+  "wizard": {
+    "subtitle": "Onboard a new partner step by step.",
+    "step1": "Station & Owner",
+    "step2": "Provider",
+    "step3": "Commission & Rewards",
+    "step4": "Limits & Details",
+    "selectStation": "Select Station",
+    "selectStationPlaceholder": "Search station by name or ID...",
+    "selectOwner": "Select Owner",
+    "selectOwnerPlaceholder": "Search owner by name, email or ID...",
+    "stationOwnerHint": "Choose the station and assign its owner. The selected provider becomes the station's owner.",
+    "ownerAssigned": "Station owner assigned successfully",
+    "selectStationFirst": "Please select a station",
+    "selectOwnerFirst": "Please select an owner",
+    "comingSoon": "This step will be configured next.",
+    "reviewHint": "Review the details, then create the partner agreement.",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Create Partner"
+  }
 }

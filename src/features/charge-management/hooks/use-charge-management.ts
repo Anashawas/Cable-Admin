@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState, useCallback } from "react";
 import { getAllChargingPoints } from "../services/charge-management-service";
 import type { ChargingPointDto } from "../types/api";
+import { toTimestamp } from "../../../utils/date-format";
 
 const REQUEST_BODY = { name: null, chargerPointTypeId: null, cityName: null };
 
@@ -10,7 +11,29 @@ export type SortOption =
   | "VISITORS_HIGH_TO_LOW"
   | "VISITORS_LOW_TO_HIGH"
   | "RATING_HIGH_TO_LOW"
-  | "NAME_A_TO_Z";
+  | "NAME_A_TO_Z"
+  | "JOINED_NEWEST"
+  | "JOINED_OLDEST"
+  | "EDITED_NEWEST"
+  | "EDITED_OLDEST";
+
+/**
+ * Rows with no timestamp always sink to the bottom, whichever direction is
+ * chosen — an unknown date is not "oldest", it is unknown.
+ */
+function byDate(
+  pick: (row: ChargingPointDto) => string | null | undefined,
+  direction: "asc" | "desc"
+) {
+  return (a: ChargingPointDto, b: ChargingPointDto) => {
+    const ta = toTimestamp(pick(a));
+    const tb = toTimestamp(pick(b));
+    if (ta == null && tb == null) return 0;
+    if (ta == null) return 1;
+    if (tb == null) return -1;
+    return direction === "desc" ? tb - ta : ta - tb;
+  };
+}
 
 function applyFilter(items: ChargingPointDto[], search: string): ChargingPointDto[] {
   if (!search.trim()) return items;
@@ -35,6 +58,14 @@ function applySort(items: ChargingPointDto[], sort: SortOption): ChargingPointDt
       return list.sort((a, b) =>
         (a.name ?? "").localeCompare(b.name ?? "", undefined, { sensitivity: "base" })
       );
+    case "JOINED_NEWEST":
+      return list.sort(byDate((r) => r.createdAt, "desc"));
+    case "JOINED_OLDEST":
+      return list.sort(byDate((r) => r.createdAt, "asc"));
+    case "EDITED_NEWEST":
+      return list.sort(byDate((r) => r.modifiedAt, "desc"));
+    case "EDITED_OLDEST":
+      return list.sort(byDate((r) => r.modifiedAt, "asc"));
     default:
       return list;
   }

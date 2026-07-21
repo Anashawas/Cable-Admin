@@ -3,6 +3,7 @@ import type {
   CarTypeDto,
   CarModelDto,
   CarModelWithTypeDto,
+  CarModelSizeDto,
   AddCarModelRequest,
   EditCarModelRequest,
 } from "../types/api";
@@ -54,6 +55,23 @@ const deleteCarType = async (
   signal?: AbortSignal
 ): Promise<void> => {
   await server.delete(`api/carmanagement/DeleteCarType/${id}`, { signal });
+};
+
+/**
+ * POST api/carmanagement/UploadCarTypeIcon/{id} (admin, multipart/form-data)
+ * Form field: `file`. Replaces the old icon automatically.
+ */
+const uploadCarTypeIcon = async (
+  id: number,
+  file: File,
+  signal?: AbortSignal
+): Promise<void> => {
+  const form = new FormData();
+  form.append("file", file);
+  await server.post(`api/carmanagement/UploadCarTypeIcon/${id}`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+    signal,
+  });
 };
 
 // --- Car Models ---
@@ -124,14 +142,32 @@ const deleteCarModel = async (
   await server.delete(`api/carmanagement/DeleteCarModel/${id}`, { signal });
 };
 
+// --- Car Model Sizes (lookup) ---
+
+/**
+ * GET api/carmanagement/GetAllCarModelSizes
+ * Lookup seeded with SUV, Hatchback, Sedan, Crossover, Coupe, Pickup, Van.
+ */
+const getAllCarModelSizes = async (
+  signal?: AbortSignal
+): Promise<CarModelSizeDto[]> => {
+  const { data } = await server.get<CarModelSizeDto[]>(
+    "api/carmanagement/GetAllCarModelSizes",
+    { signal }
+  );
+  return Array.isArray(data) ? data : [];
+};
+
 export {
   getAllCarTypes,
   addCarType,
   updateCarType,
   deleteCarType,
+  uploadCarTypeIcon,
   getAllCarModels,
   getCarModelsByType,
   addCarModel,
   updateCarModel,
   deleteCarModel,
+  getAllCarModelSizes,
 };

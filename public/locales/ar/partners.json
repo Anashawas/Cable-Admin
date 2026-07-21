@@ -50,5 +50,25 @@
   "searchProvider": "ابحث بالاسم أو المعرف...",
   "commissionAndRewards": "العمولة والمكافآت",
   "limitsAndExpiry": "الحدود والصلاحية",
-  "notePlaceholder": "ملاحظات اختيارية..."
+  "notePlaceholder": "ملاحظات اختيارية...",
+  "wizard": {
+    "subtitle": "إضافة شريك جديد خطوة بخطوة.",
+    "step1": "المحطة والمالك",
+    "step2": "مقدم الخدمة",
+    "step3": "العمولة والمكافآت",
+    "step4": "الحدود والتفاصيل",
+    "selectStation": "اختر المحطة",
+    "selectStationPlaceholder": "ابحث عن المحطة بالاسم أو المعرف...",
+    "selectOwner": "اختر المالك",
+    "selectOwnerPlaceholder": "ابحث عن المالك بالاسم أو البريد أو المعرف...",
+    "stationOwnerHint": "اختر المحطة وعيّن مالكها. يصبح مقدم الخدمة المحدد مالكاً للمحطة.",
+    "ownerAssigned": "تم تعيين مالك المحطة بنجاح",
+    "selectStationFirst": "الرجاء اختيار محطة",
+    "selectOwnerFirst": "الرجاء اختيار مالك",
+    "comingSoon": "سيتم إعداد هذه الخطوة لاحقاً.",
+    "reviewHint": "راجع التفاصيل ثم أنشئ اتفاقية الشريك.",
+    "back": "السابق",
+    "next": "التالي",
+    "finish": "إنشاء شريك"
+  }
 }

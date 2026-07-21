@@ -18,11 +18,14 @@ const UserListScreen = lazy(() => import("../features/users/components/UserListS
 const UserAnalyticsScreen = lazy(() => import("../features/users/components/UserAnalyticsScreen"));
 const EditUserScreen = lazy(() => import("../features/users/components/EditUserScreen"));
 const UserPointsScreen = lazy(() => import("../features/users/components/UserPointsScreen"));
+const UserProfileScreen = lazy(() => import("../features/users/components/UserProfileScreen"));
 const ChargeManagementScreen = lazy(() => import("../features/charge-management/components/ChargeManagementScreen"));
 const StationFormScreen = lazy(() => import("../features/charge-management/components/StationFormScreen"));
 const StationMediaScreen = lazy(() => import("../features/charge-management/components/StationMediaScreen"));
+const StationProfileScreen = lazy(() => import("../features/charge-management/components/StationProfileScreen"));
 const StationsRequestScreen = lazy(() => import("../features/charge-management/components/StationsRequestScreen"));
 const StationStatisticsScreen = lazy(() => import("../features/charge-management/components/StationStatisticsScreen"));
+const ChargerBrandsScreen = lazy(() => import("../features/charge-management/components/ChargerBrandsScreen"));
 const ComplaintsScreen = lazy(() => import("../features/complaints/components/ComplaintsScreen"));
 const BannersScreen = lazy(() => import("../features/system/components/BannersScreen"));
 const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
@@ -33,6 +36,7 @@ const EmergencyServicesScreen = lazy(() => import("../features/system/components
 const ServiceCategoriesScreen = lazy(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
 const ServiceProvidersScreen = lazy(() => import("../features/service-providers/components/ServiceProvidersScreen"));
 const AddServiceProviderScreen = lazy(() => import("../features/service-providers/components/AddServiceProviderScreen"));
+const ServiceProviderProfileScreen = lazy(() => import("../features/service-providers/components/ServiceProviderProfileScreen"));
 const ConversionRatesScreen = lazy(() => import("../features/offers/components/ConversionRatesScreen"));
 const PendingOffersScreen = lazy(() => import("../features/offers/components/PendingOffersScreen"));
 const ActiveOffersScreen = lazy(() => import("../features/offers/components/ActiveOffersScreen"));
@@ -41,10 +45,18 @@ const TransactionsScreen = lazy(() => import("../features/offers/components/Tran
 const SettlementsScreen = lazy(() => import("../features/offers/components/SettlementsScreen"));
 const ProviderSettlementsScreen = lazy(() => import("../features/offers/components/ProviderSettlementsScreen"));
 const PartnersScreen = lazy(() => import("../features/partners/components/PartnersScreen"));
+const AddPartnerScreen = lazy(() => import("../features/partners/components/AddPartnerScreen"));
+const SocialMediaPlatformsScreen = lazy(() => import("../features/social-media/components/SocialMediaPlatformsScreen"));
 const LoyaltyManagementScreen = lazy(() => import("../features/loyalty/components/LoyaltyManagementScreen"));
 const RedemptionsScreen = lazy(() => import("../features/loyalty/components/RedemptionsScreen"));
 const PointAdjustmentsScreen = lazy(() => import("../features/loyalty/components/PointAdjustmentsScreen"));
+const LeaderboardScreen = lazy(() => import("../features/loyalty/components/LeaderboardScreen"));
+const LoyaltyDashboardScreen = lazy(() => import("../features/loyalty/components/LoyaltyDashboardScreen"));
 const BlockUsersScreen = lazy(() => import("../features/loyalty/components/BlockUsersScreen"));
+const BulkAwardScreen = lazy(() => import("../features/loyalty/components/BulkAwardScreen"));
+const PointsLedgerScreen = lazy(() => import("../features/loyalty/components/PointsLedgerScreen"));
+const FlaggedActivityScreen = lazy(() => import("../features/loyalty/components/FlaggedActivityScreen"));
+const TermsScreen = lazy(() => import("../features/terms/components/TermsScreen"));
 const NotFound = lazy(() => import("../components/NotFound"));
 
 function AppContainer() {
@@ -122,6 +134,16 @@ function AppContainer() {
             }
           />
           <Route
+            path="/charge-management/:id"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <StationProfileScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/stations-request"
             element={
               <ProtectedRoute isAllowed={!!user}>
@@ -137,6 +159,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <StationStatisticsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/charger-brands"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ChargerBrandsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -192,6 +224,16 @@ function AppContainer() {
             }
           />
           <Route
+            path="/users/:id"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <UserProfileScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/car-management"
             element={
               <ProtectedRoute isAllowed={!!user}>
@@ -217,6 +259,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <AppVersionsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/terms-conditions"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <TermsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -277,6 +329,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <AddServiceProviderScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/service-providers/:id"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ServiceProviderProfileScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -362,6 +424,26 @@ function AppContainer() {
             }
           />
           <Route
+            path="/add-partner"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <AddPartnerScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/social-media-platforms"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <SocialMediaPlatformsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/loyalty-management"
             element={
               <ProtectedRoute isAllowed={!!user}>
@@ -392,11 +474,61 @@ function AppContainer() {
             }
           />
           <Route
+            path="/loyalty-leaderboard"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <LeaderboardScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loyalty-dashboard"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <LoyaltyDashboardScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/block-users"
             element={
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <BlockUsersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loyalty-bulk-award"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <BulkAwardScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loyalty-ledger"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PointsLedgerScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loyalty-flagged"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <FlaggedActivityScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

@@ -46,6 +46,11 @@ import {
 	QueryStats as QueryStatsIcon,
 	Insights as InsightsIcon,
 	Block as BlockIcon,
+	Share as ShareIcon,
+	PersonAddAlt1 as PersonAddAlt1Icon,
+	Bolt as BoltIcon,
+	EmojiEvents as EmojiEventsIcon,
+	Gavel as GavelIcon,
 } from "@mui/icons-material";
 import { PRIVILEGES, PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -101,6 +106,7 @@ const AppCollapsibleSidebar = () => {
 			icon: <EvStationIcon />,
 			items: [
 				{ label: t("chargeManagement"), path: "/charge-management", icon: <EvStationIcon /> },
+				{ label: t("chargerBrands"), path: "/charger-brands", icon: <BoltIcon /> },
 				{ label: t("stationStatistics"), path: "/station-statistics", icon: <QueryStatsIcon /> },
 				{ label: t("stationsRequest"), path: "/stations-request", icon: <ListAltIcon /> },
 				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },
@@ -133,6 +139,7 @@ const AppCollapsibleSidebar = () => {
 			icon: <HandshakeIcon />,
 			items: [
 				{ label: t("partners"), path: "/partners", icon: <HandshakeIcon /> },
+				{ label: t("addNewPartner"), path: "/add-partner", icon: <PersonAddAlt1Icon /> },
 			],
 		},
 		{
@@ -140,10 +147,15 @@ const AppCollapsibleSidebar = () => {
 			label: t("loyaltySystem"),
 			icon: <CardGiftcardIcon />,
 			items: [
+				{ label: t("loyaltyDashboard"), path: "/loyalty-dashboard", icon: <AccountBalanceIcon /> },
 				{ label: t("conversionRates"), path: "/conversion-rates", icon: <MonetizationOnIcon /> },
 				{ label: t("loyaltyManagement"), path: "/loyalty-management", icon: <ManageAccountsIcon /> },
+				{ label: t("leaderboard"), path: "/loyalty-leaderboard", icon: <EmojiEventsIcon /> },
 				{ label: t("redemptions"), path: "/redemptions", icon: <RedeemIcon /> },
 				{ label: t("pointAdjustments"), path: "/point-adjustments", icon: <AccountBalanceWalletIcon /> },
+				{ label: t("pointsLedger"), path: "/loyalty-ledger", icon: <ReceiptLongIcon /> },
+				{ label: t("bulkAward"), path: "/loyalty-bulk-award", icon: <CardGiftcardIcon /> },
+				{ label: t("flaggedActivity"), path: "/loyalty-flagged", icon: <ReportProblemIcon /> },
 				{ label: t("blockUsers"), path: "/block-users", icon: <BlockIcon /> },
 			],
 		},
@@ -153,11 +165,13 @@ const AppCollapsibleSidebar = () => {
 			icon: <SettingsIcon />,
 			items: [
 				{ label: t("carManagement"), path: "/car-management", icon: <SettingsIcon /> },
+				{ label: t("socialMediaPlatforms"), path: "/social-media-platforms", icon: <ShareIcon /> },
 				{ label: t("banners"), path: "/banners", icon: <SettingsIcon /> },
 				{ label: t("appVersions"), path: "/app-versions", icon: <SettingsIcon /> },
 				{ label: t("emergencyServices"), path: "/emergency-services", icon: <LocalHospitalIcon /> },
 				{ label: t("sendNotification"), path: "/send-notification", icon: <NotificationsActiveIcon /> },
 				{ label: t("generateReceipt"), path: "/receipts", icon: <ReceiptLongIcon /> },
+				{ label: t("termsConditions"), path: "/terms-conditions", icon: <GavelIcon /> },
 			],
 		},
 	];

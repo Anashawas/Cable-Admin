@@ -60,11 +60,11 @@ const updateStation = async (
 
 /**
  * PATCH api/charging-points/ChangeOwner/{id}
- * Body: { newOwnerId: number }
+ * Body: { newOwnerId: number | null }  — null unassigns the station (§7).
  */
 const changeStationOwner = async (
   stationId: number,
-  newOwnerId: number
+  newOwnerId: number | null
 ): Promise<void> => {
   await server.patch(`api/charging-points/ChangeOwner/${stationId}`, {
     newOwnerId,

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  MenuItem,
   CircularProgress,
   InputAdornment,
   Chip,
@@ -29,6 +30,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import StraightenIcon from "@mui/icons-material/Straighten";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader } from "../../../components";
 import {
@@ -36,10 +39,12 @@ import {
   addCarType,
   updateCarType,
   deleteCarType,
+  uploadCarTypeIcon,
   getCarModelsByType,
   addCarModel,
   updateCarModel,
   deleteCarModel,
+  getAllCarModelSizes,
 } from "../services/car-management-service";
 import type { CarTypeDto, CarModelDto } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
@@ -86,9 +91,13 @@ export default function CarDatabaseScreen() {
   // Model dialogs
   const [addModelOpen, setAddModelOpen] = useState(false);
   const [addModelName, setAddModelName] = useState("");
+  const [addModelSizeId, setAddModelSizeId] = useState<number | "">("");
   const [editModel, setEditModel] = useState<CarModelDto | null>(null);
   const [editModelName, setEditModelName] = useState("");
+  const [editModelSizeId, setEditModelSizeId] = useState<number | "">("");
   const [modelToDelete, setModelToDelete] = useState<CarModelDto | null>(null);
+
+  const iconInputRef = useRef<HTMLInputElement>(null);
 
   const { data: carTypes = [], isLoading: loadingTypes, refetch: refetchTypes } = useQuery({
     queryKey: ["car-management", "types"],
@@ -99,6 +108,12 @@ export default function CarDatabaseScreen() {
     queryKey: ["car-management", "models", selectedTypeId],
     queryFn: ({ signal }) => getCarModelsByType(selectedTypeId!, signal),
     enabled: selectedTypeId != null,
+  });
+
+  const { data: carModelSizes = [] } = useQuery({
+    queryKey: ["car-management", "sizes"],
+    queryFn: ({ signal }) => getAllCarModelSizes(signal),
+    staleTime: 10 * 60 * 1000,
   });
 
   const invalidateCarQueries = useCallback(() => {
@@ -138,21 +153,32 @@ export default function CarDatabaseScreen() {
     onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
 
+  const uploadIconMutation = useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) => uploadCarTypeIcon(id, file),
+    onSuccess: () => {
+      invalidateCarQueries();
+      refetchTypes();
+      openSuccessSnackbar({ message: t("platform@carManagement.iconUploaded") });
+    },
+    onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+  });
+
   const addModelMutation = useMutation({
-    mutationFn: (body: { name: string; carTypeId: number }) => addCarModel(body),
+    mutationFn: (body: { name: string; carTypeId: number; sizeId?: number | null }) => addCarModel(body),
     onSuccess: () => {
       invalidateCarQueries();
       openSuccessSnackbar({ message: t("platform@carManagement.modelAdded") });
       setAddModelOpen(false);
       setAddModelName("");
+      setAddModelSizeId("");
       refetchModels();
     },
     onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
 
   const updateModelMutation = useMutation({
-    mutationFn: ({ id, name, carTypeId }: { id: number; name: string; carTypeId: number }) =>
-      updateCarModel(id, { name, carTypeId }),
+    mutationFn: ({ id, name, carTypeId, sizeId }: { id: number; name: string; carTypeId: number; sizeId?: number | null }) =>
+      updateCarModel(id, { name, carTypeId, sizeId }),
     onSuccess: () => {
       invalidateCarQueries();
       openSuccessSnackbar({ message: t("platform@carManagement.modelUpdated") });
@@ -161,6 +187,12 @@ export default function CarDatabaseScreen() {
     },
     onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
   });
+
+  const handleIconPick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && editBrand) uploadIconMutation.mutate({ id: editBrand.id, file });
+    e.target.value = "";
+  }, [editBrand, uploadIconMutation]);
 
   const deleteModelMutation = useMutation({
     mutationFn: (id: number) => deleteCarModel(id),
@@ -318,9 +350,10 @@ export default function CarDatabaseScreen() {
                           }}
                         >
                           <Avatar
+                            src={brand.iconUrl ?? undefined}
                             sx={{
                               width: 34, height: 34,
-                              bgcolor: selectedTypeId === brand.id ? "primary.main" : "grey.200",
+                              bgcolor: brand.iconUrl ? "transparent" : selectedTypeId === brand.id ? "primary.main" : "grey.200",
                               color: selectedTypeId === brand.id ? "#fff" : "text.secondary",
                               fontSize: 13, fontWeight: 700, mr: 1.5, flexShrink: 0,
                             }}
@@ -388,7 +421,7 @@ export default function CarDatabaseScreen() {
                       size="small"
                       variant="contained"
                       startIcon={<AddIcon />}
-                      onClick={() => { setAddModelName(""); setAddModelOpen(true); }}
+                      onClick={() => { setAddModelName(""); setAddModelSizeId(""); setAddModelOpen(true); }}
                       sx={{ fontSize: 12 }}
                     >
                       {t("platform@carManagement.addModel")}
@@ -452,7 +485,7 @@ export default function CarDatabaseScreen() {
                         size="small"
                         variant="outlined"
                         startIcon={<AddIcon />}
-                        onClick={() => { setAddModelName(""); setAddModelOpen(true); }}
+                        onClick={() => { setAddModelName(""); setAddModelSizeId(""); setAddModelOpen(true); }}
                       >
                         {t("platform@carManagement.addModel")}
                       </Button>
@@ -476,9 +509,18 @@ export default function CarDatabaseScreen() {
                         <Typography variant="body2" fontWeight={500} sx={{ flex: 1 }}>
                           {model.name}
                         </Typography>
+                        {model.sizeName && (
+                          <Chip
+                            icon={<StraightenIcon sx={{ fontSize: "13px !important" }} />}
+                            label={model.sizeName}
+                            size="small"
+                            variant="outlined"
+                            sx={{ mr: 1, height: 22, fontSize: 11, fontWeight: 600 }}
+                          />
+                        )}
                         <Stack direction="row" spacing={0.5}>
                           <Tooltip title={t("edit")}>
-                            <IconButton size="small" onClick={() => { setEditModel(model); setEditModelName(model.name); }}>
+                            <IconButton size="small" onClick={() => { setEditModel(model); setEditModelName(model.name); setEditModelSizeId(model.sizeId ?? ""); }}>
                               <EditIcon sx={{ fontSize: 15 }} />
                             </IconButton>
                           </Tooltip>
@@ -531,16 +573,44 @@ export default function CarDatabaseScreen() {
           {t("platform@carManagement.editBrand")}
         </DialogTitle>
         <DialogContent sx={{ pt: 2.5 }}>
-          <TextField
-            autoFocus fullWidth
-            label={t("platform@carManagement.brandName")}
-            value={editBrandName}
-            onChange={(e) => setEditBrandName(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === "Enter" && editBrand && editBrandName.trim() &&
-              updateBrandMutation.mutate({ id: editBrand.id, name: editBrandName.trim() })
-            }
-          />
+          <Stack spacing={2.5}>
+            {/* Logo icon upload */}
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Avatar
+                src={(carTypes.find((b) => b.id === editBrand?.id)?.iconUrl) ?? undefined}
+                variant="rounded"
+                sx={{ width: 60, height: 60, bgcolor: "grey.100", color: "text.disabled", border: 1, borderColor: "divider" }}
+              >
+                <DirectionsCarIcon />
+              </Avatar>
+              <Box>
+                <Button
+                  variant="outlined" size="small" startIcon={uploadIconMutation.isPending ? <CircularProgress size={14} /> : <CloudUploadIcon />}
+                  onClick={() => iconInputRef.current?.click()} disabled={uploadIconMutation.isPending}
+                  sx={{ borderRadius: 2, textTransform: "none" }}
+                >
+                  {carTypes.find((b) => b.id === editBrand?.id)?.iconUrl
+                    ? t("platform@carManagement.changeIcon")
+                    : t("platform@carManagement.uploadIcon")}
+                </Button>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  {t("platform@carManagement.iconHint")}
+                </Typography>
+              </Box>
+              <input ref={iconInputRef} type="file" accept="image/*" hidden onChange={handleIconPick} />
+            </Stack>
+
+            <TextField
+              autoFocus fullWidth
+              label={t("platform@carManagement.brandName")}
+              value={editBrandName}
+              onChange={(e) => setEditBrandName(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && editBrand && editBrandName.trim() &&
+                updateBrandMutation.mutate({ id: editBrand.id, name: editBrandName.trim() })
+              }
+            />
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditBrand(null)} color="inherit" disabled={updateBrandMutation.isPending}>{t("cancel")}</Button>
@@ -592,22 +662,33 @@ export default function CarDatabaseScreen() {
               sx={{ mb: 2 }}
             />
           )}
-          <TextField
-            autoFocus fullWidth
-            label={t("platform@carManagement.modelName")}
-            value={addModelName}
-            onChange={(e) => setAddModelName(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === "Enter" && selectedTypeId != null && addModelName.trim() &&
-              addModelMutation.mutate({ name: addModelName.trim(), carTypeId: selectedTypeId })
-            }
-          />
+          <Stack spacing={2}>
+            <TextField
+              autoFocus fullWidth
+              label={t("platform@carManagement.modelName")}
+              value={addModelName}
+              onChange={(e) => setAddModelName(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && selectedTypeId != null && addModelName.trim() &&
+                addModelMutation.mutate({ name: addModelName.trim(), carTypeId: selectedTypeId, sizeId: addModelSizeId === "" ? null : addModelSizeId })
+              }
+            />
+            <TextField
+              select fullWidth
+              label={t("platform@carManagement.size")}
+              value={addModelSizeId}
+              onChange={(e) => setAddModelSizeId(e.target.value === "" ? "" : Number(e.target.value))}
+            >
+              <MenuItem value="">{t("platform@carManagement.noSize")}</MenuItem>
+              {carModelSizes.map((s) => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
+            </TextField>
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAddModelOpen(false)} color="inherit" disabled={addModelMutation.isPending}>{t("cancel")}</Button>
           <Button
             variant="contained"
-            onClick={() => selectedTypeId != null && addModelName.trim() && addModelMutation.mutate({ name: addModelName.trim(), carTypeId: selectedTypeId })}
+            onClick={() => selectedTypeId != null && addModelName.trim() && addModelMutation.mutate({ name: addModelName.trim(), carTypeId: selectedTypeId, sizeId: addModelSizeId === "" ? null : addModelSizeId })}
             disabled={!addModelName.trim() || selectedTypeId == null || addModelMutation.isPending}
             startIcon={addModelMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <AddIcon />}
           >
@@ -622,22 +703,33 @@ export default function CarDatabaseScreen() {
           {t("platform@carManagement.editModel")}
         </DialogTitle>
         <DialogContent sx={{ pt: 2.5 }}>
-          <TextField
-            autoFocus fullWidth
-            label={t("platform@carManagement.modelName")}
-            value={editModelName}
-            onChange={(e) => setEditModelName(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === "Enter" && editModel && selectedTypeId != null && editModelName.trim() &&
-              updateModelMutation.mutate({ id: editModel.id, name: editModelName.trim(), carTypeId: selectedTypeId })
-            }
-          />
+          <Stack spacing={2}>
+            <TextField
+              autoFocus fullWidth
+              label={t("platform@carManagement.modelName")}
+              value={editModelName}
+              onChange={(e) => setEditModelName(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && editModel && selectedTypeId != null && editModelName.trim() &&
+                updateModelMutation.mutate({ id: editModel.id, name: editModelName.trim(), carTypeId: selectedTypeId, sizeId: editModelSizeId === "" ? null : editModelSizeId })
+              }
+            />
+            <TextField
+              select fullWidth
+              label={t("platform@carManagement.size")}
+              value={editModelSizeId}
+              onChange={(e) => setEditModelSizeId(e.target.value === "" ? "" : Number(e.target.value))}
+            >
+              <MenuItem value="">{t("platform@carManagement.noSize")}</MenuItem>
+              {carModelSizes.map((s) => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
+            </TextField>
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditModel(null)} color="inherit" disabled={updateModelMutation.isPending}>{t("cancel")}</Button>
           <Button
             variant="contained"
-            onClick={() => editModel && selectedTypeId != null && editModelName.trim() && updateModelMutation.mutate({ id: editModel.id, name: editModelName.trim(), carTypeId: selectedTypeId })}
+            onClick={() => editModel && selectedTypeId != null && editModelName.trim() && updateModelMutation.mutate({ id: editModel.id, name: editModelName.trim(), carTypeId: selectedTypeId, sizeId: editModelSizeId === "" ? null : editModelSizeId })}
             disabled={!editModelName.trim() || selectedTypeId == null || updateModelMutation.isPending}
             startIcon={updateModelMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <EditIcon />}
           >

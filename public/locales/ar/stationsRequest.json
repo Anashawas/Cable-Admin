@@ -1,9 +1,27 @@
 {
   "title": "طلبات المحطات",
+  "subtitle": "راجع واعتمد أو ارفض طلبات تعديل المحطات المقدمة من المزودين",
   "filterByStatus": "تصفية حسب الحالة",
   "filterPlaceholder": "مثال: pending, approved, rejected",
+  "empty": "لا توجد طلبات",
+  "requestedBy": "مقدَّم من",
+  "phone": "الهاتف",
+  "reviewedBy": "روجع بواسطة",
+  "viewData": "عرض البيانات",
+  "currentData": "بيانات المحطة الحالية",
+  "requestedChanges": "التغييرات المطلوبة",
+  "noChanges": "الواجهة البرمجية لا تُرجع التغييرات المطلوبة بعد — يتم عرض بيانات المحطة الحالية أدناه.",
+  "status": {
+    "all": "الكل",
+    "pending": "معلق",
+    "approved": "موافق عليه",
+    "rejected": "مرفوض"
+  },
   "approved": "تم الموافقة على الطلب",
   "rejected": "تم رفض الطلب",
+  "rejectReason": "سبب الرفض",
+  "rejectReasonHint": "يمكنك اختيارياً إخبار المزود بسبب رفض هذا الطلب.",
+  "rejectReasonPlaceholder": "مثال: إحداثيات الموقع غير صحيحة",
   "columns": {
     "requestId": "معرف الطلب",
     "stationName": "اسم المحطة",
@@ -16,5 +34,39 @@
     "reject": "رفض",
     "edit": "تعديل المحطة",
     "media": "وسائط المحطة"
+  },
+  "attachments": "المرفقات",
+  "diff": {
+    "none": "لا يوجد تغييرات على الحقول في هذا الطلب."
+  },
+  "fields": {
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "ownerPhone": "هاتف التواصل",
+    "fromTime": "وقت الفتح",
+    "toTime": "وقت الإغلاق",
+    "status": "الحالة",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
+    "address": "العنوان",
+    "service": "الخدمات",
+    "offerDescription": "وصف العرض",
+    "note": "ملاحظة",
+    "methodPayment": "طرق الدفع",
+    "chargerSpeed": "سرعة الشحن",
+    "chargersCount": "عدد الشواحن",
+    "plugTypes": "أنواع القوابس",
+    "price": "السعر",
+    "cityName": "المدينة",
+    "countryName": "الدولة",
+    "images": "الصور",
+    "icon": "الأيقونة"
+  },
+  "risk": {
+    "title": "تنبيهات",
+    "name_changed": "تغيير الاسم",
+    "contact_phone_changed": "تغيير هاتف التواصل",
+    "owner_contact_changed": "تغيير بيانات تواصل المالك",
+    "location_moved": "تغيير الموقع"
   }
 }

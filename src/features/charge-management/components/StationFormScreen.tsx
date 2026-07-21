@@ -21,9 +21,20 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import SaveIcon from "@mui/icons-material/Save";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import TuneIcon from "@mui/icons-material/Tune";
+import PowerIcon from "@mui/icons-material/Power";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import RoomServiceIcon from "@mui/icons-material/RoomService";
+import EvStationIcon from "@mui/icons-material/EvStation";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import {
   CITIES,
@@ -41,6 +52,7 @@ import {
   deleteStation,
 } from "../services/station-form-service";
 import { stationFormSchema, type StationFormValues } from "../validators/station-schema";
+import { useChargerBrands } from "../hooks/use-charger-brands";
 import LocationPicker from "./LocationPicker";
 import { useSnackbarStore } from "../../../stores";
 import type { ChargingPointDto } from "../types/api";
@@ -180,6 +192,7 @@ const defaultValues: StationFormValues = {
   statusId: 1,
   chargerPointTypeId: 1,
   stationTypeId: null,
+  chargerBrandId: null,
   plugTypeIds: [],
   paymentMethods: [],
   services: [],
@@ -201,6 +214,7 @@ function mapStationToFormValues(station: ChargingPointDto): Partial<StationFormV
     statusId: station.statusSummary?.id ?? 1,
     chargerPointTypeId: station.chargingPointType?.id ?? 1,
     stationTypeId: station.stationType?.id ?? null,
+    chargerBrandId: station.chargerBrandId ?? null,
     plugTypeIds: station.plugTypeSummary?.map((p) => p.id) ?? [],
     paymentMethods: [], // Extend when API returns methodPayment
     services,
@@ -237,6 +251,8 @@ export default function StationFormScreen() {
     queryKey: ["charge-management", "plug-types"],
     queryFn: ({ signal }) => getAllPlugTypes(signal),
   });
+
+  const { data: chargerBrands = [] } = useChargerBrands();
 
   const { data: station, isLoading: isLoadingStation } = useQuery({
     queryKey: ["charge-management", "station", stationId],
@@ -302,6 +318,7 @@ export default function StationFormScreen() {
         statusId: values.statusId,
         chargerPointTypeId: values.chargerPointTypeId,
         stationTypeId: values.stationTypeId ?? null,
+        chargerBrandId: values.chargerBrandId ?? null,
         plugTypeIds: values.plugTypeIds,
         service: formatServiceString(values.services),
         methodPayment: formatPaymentString(values.paymentMethods),
@@ -333,19 +350,37 @@ export default function StationFormScreen() {
   return (
     <AppScreenContainer>
       <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 1200, mx: "auto" }}>
-        <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
-          {isEditMode ? t("chargeManagement@form.editTitle") : t("chargeManagement@form.addTitle")}
-        </Typography>
+        {/* ── Gradient hero ── */}
+        <Box sx={{ background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)", borderRadius: 3, p: { xs: 2, md: 2.5 }, mb: 3, color: "#fff", position: "relative", overflow: "hidden" }}>
+          <Box sx={{ position: "absolute", top: -40, right: -40, width: 150, height: 150, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Tooltip title={t("back")}>
+              <IconButton onClick={() => navigate(isEditMode && stationId ? `/charge-management/${stationId}` : "/charge-management")} sx={{ color: "#fff", bgcolor: "rgba(255,255,255,0.15)", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}>
+                <ArrowBackIcon />
+              </IconButton>
+            </Tooltip>
+            <Box sx={{ width: 48, height: 48, borderRadius: 2, bgcolor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <EvStationIcon sx={{ fontSize: 26 }} />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h5" fontWeight={800} noWrap>
+                {isEditMode ? t("chargeManagement@form.editTitle") : t("chargeManagement@form.addTitle")}
+              </Typography>
+              {isEditMode && station?.name && <Typography variant="body2" sx={{ opacity: 0.8 }} noWrap>{station.name}</Typography>}
+            </Box>
+          </Stack>
+        </Box>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={3}>
             {/* Left: Basic Info + Location */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Stack spacing={3}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    {t("chargeManagement@form.basicInfo")}
-                  </Typography>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+                    <Box sx={{ width: 34, height: 34, borderRadius: 2, bgcolor: "primary.50", color: "primary.main", display: "flex", alignItems: "center", justifyContent: "center" }}><InfoOutlinedIcon fontSize="small" /></Box>
+                    <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@form.basicInfo")}</Typography>
+                  </Stack>
                   <Stack spacing={2}>
                     <Controller
                       name="name"
@@ -377,10 +412,11 @@ export default function StationFormScreen() {
                   </Stack>
                 </Paper>
 
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    {t("chargeManagement@form.location")}
-                  </Typography>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+                    <Box sx={{ width: 34, height: 34, borderRadius: 2, bgcolor: "error.50", color: "error.main", display: "flex", alignItems: "center", justifyContent: "center" }}><LocationOnIcon fontSize="small" /></Box>
+                    <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@form.location")}</Typography>
+                  </Stack>
                   <Stack spacing={2}>
                     <Controller
                       name="cityName"
@@ -469,10 +505,11 @@ export default function StationFormScreen() {
             {/* Right: Settings + Multi-Selects */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Stack spacing={3}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    {t("chargeManagement@form.settings")}
-                  </Typography>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+                    <Box sx={{ width: 34, height: 34, borderRadius: 2, bgcolor: "info.50", color: "info.main", display: "flex", alignItems: "center", justifyContent: "center" }}><TuneIcon fontSize="small" /></Box>
+                    <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@form.settings")}</Typography>
+                  </Stack>
                   <Stack spacing={2}>
                     <Controller
                       name="statusId"
@@ -532,6 +569,27 @@ export default function StationFormScreen() {
                           {STATION_TYPES.map((s) => (
                             <MenuItem key={s.id} value={s.id}>
                               {s.name}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      )}
+                    />
+                    <Controller
+                      name="chargerBrandId"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          select
+                          label={t("chargeManagement@form.chargerBrand")}
+                          fullWidth
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
+                        >
+                          <MenuItem value="">—</MenuItem>
+                          {chargerBrands.map((b) => (
+                            <MenuItem key={b.id} value={b.id}>
+                              {b.name}
                             </MenuItem>
                           ))}
                         </TextField>
@@ -597,10 +655,11 @@ export default function StationFormScreen() {
                   </Stack>
                 </Paper>
 
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    {t("chargeManagement@form.plugTypes")}
-                  </Typography>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+                    <Box sx={{ width: 34, height: 34, borderRadius: 2, bgcolor: "success.50", color: "success.main", display: "flex", alignItems: "center", justifyContent: "center" }}><PowerIcon fontSize="small" /></Box>
+                    <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@form.plugTypes")}</Typography>
+                  </Stack>
                   <Controller
                     name="plugTypeIds"
                     control={control}
@@ -629,10 +688,11 @@ export default function StationFormScreen() {
                   />
                 </Paper>
 
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    {t("chargeManagement@form.paymentMethods")}
-                  </Typography>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+                  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+                    <Box sx={{ width: 34, height: 34, borderRadius: 2, bgcolor: "warning.50", color: "warning.main", display: "flex", alignItems: "center", justifyContent: "center" }}><PaymentsIcon fontSize="small" /></Box>
+                    <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@form.paymentMethods")}</Typography>
+                  </Stack>
                   <Controller
                     name="paymentMethods"
                     control={control}
@@ -650,11 +710,12 @@ export default function StationFormScreen() {
                   />
                 </Paper>
 
-                <Paper variant="outlined" sx={{ p: 2 }}>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-                    <Typography variant="subtitle1" fontWeight="600">
-                      {t("chargeManagement@form.services")}
-                    </Typography>
+                    <Stack direction="row" spacing={1.25} alignItems="center">
+                      <Box sx={{ width: 34, height: 34, borderRadius: 2, bgcolor: "secondary.50", color: "secondary.main", display: "flex", alignItems: "center", justifyContent: "center" }}><RoomServiceIcon fontSize="small" /></Box>
+                      <Typography variant="subtitle1" fontWeight={700}>{t("chargeManagement@form.services")}</Typography>
+                    </Stack>
                     <Controller
                       name="services"
                       control={control}
@@ -682,46 +743,72 @@ export default function StationFormScreen() {
             </Grid>
           </Grid>
 
-          <Stack direction="row" spacing={2} sx={{ mt: 3 }} alignItems="center">
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isSubmitting}
-              sx={{ borderRadius: 2, fontWeight: 700, minWidth: 120 }}
-            >
-              {isSubmitting ? <CircularProgress size={24} /> : t("save")}
-            </Button>
-            <Button
-              type="button"
-              variant="outlined"
-              onClick={() => navigate("/charge-management")}
-              sx={{ borderRadius: 2, fontWeight: 700 }}
-            >
-              {t("cancel")}
-            </Button>
-            {isEditMode && (
-              <>
-                <Box sx={{ flex: 1 }} />
-                <Button
-                  type="button"
-                  variant="contained"
-                  color="error"
-                  size="large"
-                  startIcon={<DeleteOutlineIcon />}
-                  onClick={() => setDeleteOpen(true)}
-                  sx={{
-                    borderRadius: 2,
-                    fontWeight: 800,
-                    px: 3,
-                    boxShadow: "0 4px 14px rgba(211,47,47,0.4)",
-                    "&:hover": { boxShadow: "0 6px 20px rgba(211,47,47,0.5)" },
-                  }}
-                >
-                  {t("chargeManagement@deleteStation")}
-                </Button>
-              </>
-            )}
-          </Stack>
+          <Paper
+            elevation={0}
+            sx={{
+              mt: 3,
+              p: { xs: 1.5, sm: 2 },
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.default",
+              position: "sticky",
+              bottom: 12,
+              zIndex: 2,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={isSubmitting}
+                startIcon={!isSubmitting && <SaveIcon />}
+                sx={{
+                  borderRadius: 2,
+                  fontWeight: 800,
+                  px: 3,
+                  minWidth: 140,
+                  boxShadow: "0 4px 14px rgba(25,118,210,0.35)",
+                  "&:hover": { boxShadow: "0 6px 20px rgba(25,118,210,0.45)" },
+                }}
+              >
+                {isSubmitting ? <CircularProgress size={24} color="inherit" /> : t("save")}
+              </Button>
+              <Button
+                type="button"
+                variant="outlined"
+                size="large"
+                onClick={() => navigate(isEditMode ? `/charge-management/${stationId}` : "/charge-management")}
+                sx={{ borderRadius: 2, fontWeight: 700 }}
+              >
+                {t("cancel")}
+              </Button>
+              {isEditMode && (
+                <>
+                  <Box sx={{ flex: 1 }} />
+                  <Button
+                    type="button"
+                    variant="contained"
+                    color="error"
+                    size="large"
+                    startIcon={<DeleteOutlineIcon />}
+                    onClick={() => setDeleteOpen(true)}
+                    sx={{
+                      borderRadius: 2,
+                      fontWeight: 800,
+                      px: 3,
+                      boxShadow: "0 4px 14px rgba(211,47,47,0.4)",
+                      "&:hover": { boxShadow: "0 6px 20px rgba(211,47,47,0.5)" },
+                    }}
+                  >
+                    {t("chargeManagement@deleteStation")}
+                  </Button>
+                </>
+              )}
+            </Stack>
+          </Paper>
         </form>
 
         {/* ── Delete Confirmation Dialog ── */}

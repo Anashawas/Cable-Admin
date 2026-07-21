@@ -41,6 +41,7 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import StarsIcon from "@mui/icons-material/Stars";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TimerIcon from "@mui/icons-material/Timer";
 import PeopleIcon from "@mui/icons-material/People";
 import SearchIcon from "@mui/icons-material/Search";
@@ -72,6 +73,7 @@ import {
   useOfferAttachments,
   useDeleteOfferAttachments,
 } from "../hooks/use-offers";
+import { useConversionRates } from "../hooks/use-conversion-rates";
 import type { OfferDto, ProposeOfferRequest, UpdateOfferRequest, ProviderType } from "../types/api";
 import { useQuery } from "@tanstack/react-query";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
@@ -86,6 +88,7 @@ const INITIAL_FORM_DATA: ProposeOfferRequest = {
   providerType: "ServiceProvider",
   providerId: 0,
   pointsCost: 0,
+  pointsPriceValue: 0,
   monetaryValue: 0,
   currencyCode: "JOD",
   maxUsesPerUser: null,
@@ -284,11 +287,48 @@ export default function OffersScreen() {
       .map((p) => ({ id: p.id, name: p.name ?? `Station #${p.id}`, city: p.cityName }));
   }, [formData.providerType, serviceProviders, chargingPoints, providerSearch]);
 
+  // ── Conversion rate (points ⇄ cash link) ─────────────────────────────────
+  const { allData: conversionRates } = useConversionRates();
+  const resolveRate = useCallback(
+    (currency: string) => {
+      const rates = conversionRates ?? [];
+      const r =
+        rates.find((x) => x.isActive && x.isDefault && x.currencyCode === currency) ??
+        rates.find((x) => x.isActive && x.currencyCode === currency) ??
+        rates.find((x) => x.isActive && x.isDefault) ??
+        rates.find((x) => x.isActive) ??
+        null;
+      return r?.pointsPerUnit ?? 0;
+    },
+    [conversionRates]
+  );
+  const pointsPerUnit = resolveRate(formData.currencyCode);
+
   // ── Handlers ─────────────────────────────────────────────────────────────
   const updateField = <K extends keyof ProposeOfferRequest>(
     field: K,
     value: ProposeOfferRequest[K]
   ) => setFormData((prev) => ({ ...prev, [field]: value }));
+
+  /** Points cost changed → recompute the linked cash price. */
+  const handlePointsCostChange = (raw: string) => {
+    const pc = parseInt(raw) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      pointsCost: pc,
+      pointsPriceValue: pointsPerUnit > 0 ? Number((pc / pointsPerUnit).toFixed(2)) : prev.pointsPriceValue,
+    }));
+  };
+
+  /** Cash price changed → recompute the linked points cost. */
+  const handlePointsPriceChange = (raw: string) => {
+    const price = parseFloat(raw) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      pointsPriceValue: price,
+      pointsCost: pointsPerUnit > 0 ? Math.round(price * pointsPerUnit) : prev.pointsCost,
+    }));
+  };
 
   const handleOpenCreate = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
@@ -396,6 +436,7 @@ export default function OffersScreen() {
       providerType: row.providerType,
       providerId: row.providerId,
       pointsCost: row.pointsCost,
+      pointsPriceValue: row.pointsPriceValue ?? null,
       monetaryValue: row.monetaryValue,
       currencyCode: row.currencyCode,
       maxUsesPerUser: row.maxUsesPerUser,
@@ -1487,22 +1528,48 @@ export default function OffersScreen() {
 
             {/* Financial Settings */}
             <Box>
-              <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 2 }}>
-                {t("offers@financialSettings")}
-              </Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" fontWeight={700} color="primary.main">
+                  {t("offers@financialSettings")}
+                </Typography>
+                <Chip
+                  size="small"
+                  icon={<SwapHorizIcon sx={{ fontSize: "16px !important" }} />}
+                  color={pointsPerUnit > 0 ? "info" : "default"}
+                  variant={pointsPerUnit > 0 ? "filled" : "outlined"}
+                  label={
+                    pointsPerUnit > 0
+                      ? t("offers@conversionRateInfo", { points: pointsPerUnit, currency: formData.currencyCode })
+                      : t("offers@noConversionRate")
+                  }
+                  sx={{ fontWeight: 700 }}
+                />
+              </Stack>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("pointsCost")}
                     type="number"
                     value={formData.pointsCost || ""}
-                    onChange={(e) => updateField("pointsCost", parseInt(e.target.value) || 0)}
+                    onChange={(e) => handlePointsCostChange(e.target.value)}
                     InputProps={{ endAdornment: <InputAdornment position="end">pts</InputAdornment> }}
                     helperText={t("offers@pointsCostHelp")}
                     required fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    label={t("offers@pointsPrice")}
+                    type="number"
+                    value={formData.pointsPriceValue || ""}
+                    onChange={(e) => handlePointsPriceChange(e.target.value)}
+                    disabled={pointsPerUnit <= 0}
+                    InputProps={{ endAdornment: <InputAdornment position="end">{formData.currencyCode}</InputAdornment> }}
+                    helperText={t("offers@pointsPriceHelp")}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("monetaryValue")}
                     type="number"
@@ -1513,7 +1580,7 @@ export default function OffersScreen() {
                     required fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     label={t("currencyCode")}
                     value={formData.currencyCode}
@@ -1791,10 +1858,28 @@ export default function OffersScreen() {
 
               {/* Financial */}
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
-                  <TextField label={t("offers@pointsCost")} type="number" value={editFormData.pointsCost} onChange={(e) => setEditFormData({ ...editFormData, pointsCost: Number(e.target.value) })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><StarsIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <TextField
+                    label={t("offers@pointsCost")} type="number" value={editFormData.pointsCost}
+                    onChange={(e) => {
+                      const pc = Number(e.target.value) || 0;
+                      const rate = resolveRate(editFormData.currencyCode);
+                      setEditFormData({ ...editFormData, pointsCost: pc, pointsPriceValue: rate > 0 ? Number((pc / rate).toFixed(2)) : editFormData.pointsPriceValue });
+                    }}
+                    fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><StarsIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <TextField
+                    label={t("offers@pointsPrice")} type="number" value={editFormData.pointsPriceValue ?? ""}
+                    disabled={resolveRate(editFormData.currencyCode) <= 0}
+                    onChange={(e) => {
+                      const price = parseFloat(e.target.value) || 0;
+                      const rate = resolveRate(editFormData.currencyCode);
+                      setEditFormData({ ...editFormData, pointsPriceValue: price, pointsCost: rate > 0 ? Math.round(price * rate) : editFormData.pointsCost });
+                    }}
+                    fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><SwapHorizIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment>, endAdornment: <InputAdornment position="end">{editFormData.currencyCode}</InputAdornment> }} />
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@monetaryValue")} type="number" value={editFormData.monetaryValue} onChange={(e) => setEditFormData({ ...editFormData, monetaryValue: Number(e.target.value) })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
                 </Grid>
                 <Grid item xs={6} sm={3}>

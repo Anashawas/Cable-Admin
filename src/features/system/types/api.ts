@@ -71,12 +71,23 @@ export interface CheckSystemVersionRequest {
 export interface CarTypeDto {
   id: number;
   name: string;
+  /** Full logo icon URL (2026-07-03); null until an icon is uploaded. */
+  iconUrl?: string | null;
+}
+
+/** Car model size lookup (2026-07-03): SUV, Hatchback, Sedan, … */
+export interface CarModelSizeDto {
+  id: number;
+  name: string;
 }
 
 /** Car model (flat) from GetCarModelsByType or inside CarModelWithTypeDto. */
 export interface CarModelDto {
   id: number;
   name: string;
+  /** Size classification (2026-07-03); null when unclassified. */
+  sizeId?: number | null;
+  sizeName?: string | null;
 }
 
 /** Car type with its models from GET api/carmanagement/GetAllCarModels (no query). */
@@ -90,12 +101,14 @@ export interface CarModelWithTypeDto {
 export interface AddCarModelRequest {
   name: string;
   carTypeId: number;
+  sizeId?: number | null;
 }
 
 /** Request body for PUT api/carmanagement/UpdateCarModel/{id}. */
 export interface EditCarModelRequest {
   name: string;
   carTypeId: number;
+  sizeId?: number | null;
 }
 
 // --- Emergency Services ---

@@ -11,6 +11,7 @@ import type {
   ProviderSettlementDto,
   UpdateSettlementStatusRequest,
   SettlementSummaryDto,
+  SettlementTransactionDto,
   ProviderType,
   AddWalletDepositRequest,
   WalletBalanceDto,
@@ -151,6 +152,7 @@ const normalizeSettlement = (raw: any): ProviderSettlementDto => ({
   paidAt: raw.paidAt,
   adminNote: raw.adminNote,
   createdAt: raw.createdAt,
+  currentWalletBalance: raw.currentWalletBalance ?? null,
 });
 
 const normalizeSummary = (raw: any): SettlementSummaryDto => ({
@@ -201,6 +203,41 @@ export const updateSettlementStatus = async (
   data: UpdateSettlementStatusRequest
 ): Promise<void> => {
   await server.put(`/api/offers/UpdateSettlementStatus/${id}`, data);
+};
+
+/** C3 — mark many settlements Paid/Disputed at once. */
+export const updateSettlementStatusBatch = async (data: {
+  settlementIds: number[];
+  status: number;
+  note?: string | null;
+}): Promise<{ updated: number[]; failed: { settlementId: number; reason: string }[] }> => {
+  const { data: res } = await server.put("/api/offers/UpdateSettlementStatusBatch", data);
+  return res;
+};
+
+/** C1 — the transaction line-items behind a single settlement. */
+export const getSettlementTransactions = async (
+  settlementId: number
+): Promise<SettlementTransactionDto[]> => {
+  const response = await server.get("/api/offers/GetSettlementTransactions", {
+    params: { settlementId },
+  });
+  return response.data ?? [];
+};
+
+/** C4 — download settlements as CSV honoring the current filters. */
+export const getSettlementsCsv = async (params?: {
+  year?: number;
+  week?: number;
+  periodType?: number;
+  status?: number;
+  search?: string;
+}): Promise<Blob> => {
+  const response = await server.get("/api/offers/GetSettlementsCsv", {
+    params,
+    responseType: "blob",
+  });
+  return response.data as Blob;
 };
 
 // ============================================

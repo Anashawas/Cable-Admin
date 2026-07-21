@@ -75,6 +75,12 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid } from "../../../components";
+import BadgeIcon from "@mui/icons-material/Badge";
+import InsightsIcon from "@mui/icons-material/Insights";
+import RedeemIcon from "@mui/icons-material/Redeem";
+import WorkerDialog from "../../workers/components/WorkerDialog";
+import AnalyticsDialog from "../../analytics/components/AnalyticsDialog";
+import ProviderRedemptionsDialog from "../../loyalty/components/ProviderRedemptionsDialog";
 import { useSnackbarStore } from "../../../stores";
 import {
   useServiceProviders,
@@ -194,6 +200,9 @@ export default function ServiceProvidersScreen() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [changeOwnerDialogOpen, setChangeOwnerDialogOpen] = useState(false);
   const [changeOwnerProvider, setChangeOwnerProvider] = useState<ServiceProviderDto | null>(null);
+  const [workerProvider, setWorkerProvider] = useState<ServiceProviderDto | null>(null);
+  const [analyticsProvider, setAnalyticsProvider] = useState<ServiceProviderDto | null>(null);
+  const [redemptionsProvider, setRedemptionsProvider] = useState<ServiceProviderDto | null>(null);
   const [newOwnerId, setNewOwnerId] = useState("");
   const [selectedOwner, setSelectedOwner] = useState<UserSummaryDto | null>(null);
   const [ownerSearch, setOwnerSearch] = useState("");
@@ -316,9 +325,8 @@ export default function ServiceProvidersScreen() {
 
   const handleViewDetails = useCallback((e: React.MouseEvent, row: ServiceProviderDto) => {
     e.stopPropagation();
-    setSelectedProviderId(row.id);
-    setDetailDialogOpen(true);
-  }, []);
+    navigate(`/service-providers/${row.id}`);
+  }, [navigate]);
 
   const handleVerify = useCallback(
     (e: React.MouseEvent, row: ServiceProviderDto) => {
@@ -427,6 +435,21 @@ export default function ServiceProvidersScreen() {
     setSelectedOwner(null);
     setOwnerSearch("");
     setChangeOwnerDialogOpen(true);
+  }, []);
+
+  const handleAnalyticsClick = useCallback((e: React.MouseEvent, row: ServiceProviderDto) => {
+    e.stopPropagation();
+    setAnalyticsProvider(row);
+  }, []);
+
+  const handleRedemptionsClick = useCallback((e: React.MouseEvent, row: ServiceProviderDto) => {
+    e.stopPropagation();
+    setRedemptionsProvider(row);
+  }, []);
+
+  const handleManageWorkerClick = useCallback((e: React.MouseEvent, row: ServiceProviderDto) => {
+    e.stopPropagation();
+    setWorkerProvider(row);
   }, []);
 
   const handleChangeOwnerSubmit = useCallback(() => {
@@ -758,9 +781,24 @@ export default function ServiceProvidersScreen() {
               <LocalOfferIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          <Tooltip title={t("analytics@manage")}>
+            <IconButton size="small" color="success" onClick={(e) => handleAnalyticsClick(e, params.row)}>
+              <InsightsIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t("loyalty@redemptions")}>
+            <IconButton size="small" color="secondary" onClick={(e) => handleRedemptionsClick(e, params.row)}>
+              <RedeemIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={t("serviceProviders@changeOwner")}>
             <IconButton size="small" color="info" onClick={(e) => handleChangeOwnerClick(e, params.row)}>
               <SwapHorizIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t("workers@manageWorker")}>
+            <IconButton size="small" color="primary" onClick={(e) => handleManageWorkerClick(e, params.row)}>
+              <BadgeIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title={t("loyalty@blockProvider")}>
@@ -2600,6 +2638,32 @@ export default function ServiceProvidersScreen() {
           </Stack>
         )}
       </Dialog>
+
+      {workerProvider != null && (
+        <WorkerDialog
+          open={workerProvider != null}
+          providerType="ServiceProvider"
+          providerId={workerProvider.id}
+          providerName={workerProvider.name}
+          onClose={() => setWorkerProvider(null)}
+        />
+      )}
+
+      <AnalyticsDialog
+        open={analyticsProvider != null}
+        entityType="ServiceProvider"
+        entityId={analyticsProvider?.id ?? null}
+        entityName={analyticsProvider?.name ?? undefined}
+        onClose={() => setAnalyticsProvider(null)}
+      />
+
+      <ProviderRedemptionsDialog
+        open={redemptionsProvider != null}
+        providerType="ServiceProvider"
+        providerId={redemptionsProvider?.id ?? null}
+        providerName={redemptionsProvider?.name ?? undefined}
+        onClose={() => setRedemptionsProvider(null)}
+      />
     </AppScreenContainer>
   );
 }

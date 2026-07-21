@@ -1,0 +1,18 @@
+{
+  "title": "Charger Brands",
+  "subtitle": "Manage the charger brand lookup used by stations",
+  "total": "Total",
+  "addNew": "Add Brand",
+  "editTitle": "Edit Brand",
+  "name": "Brand Name",
+  "nameRequired": "Brand name is required",
+  "created": "Brand added successfully",
+  "updated": "Brand updated successfully",
+  "deleted": "Brand deleted successfully",
+  "deleteTitle": "Delete Brand",
+  "deleteMessage": "Are you sure you want to delete",
+  "deleteHint": "A brand can only be deleted when no station is using it.",
+  "deleteInUse": "This brand can't be deleted while stations are using it.",
+  "empty": "No charger brands yet",
+  "noResults": "No results for \"{{query}}\""
+}

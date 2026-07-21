@@ -44,6 +44,32 @@ export interface UserSummaryDto {
   isDeleted?: boolean;
 }
 
+/** A2a — paged envelope from GET api/users/GetAllUsers when paging params are sent. */
+export interface UsersPage {
+  items: UserSummaryDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+/** A1 — GET api/users/summary aggregate. */
+export interface UsersSummaryDto {
+  totalUsers: number;
+  active: number;
+  deleted: number;
+  phoneVerified: number;
+  withVehicles: number;
+  newToday: number;
+  newThisWeek: number;
+  newThisMonth: number;
+  byRole: { roleId: number; name: string; count: number }[];
+  byCity: { city: string; count: number }[];
+  registrationTrend: { day: string; count: number }[];
+}
+
 /** Nested car structure in UserDetailDto (minimal for display). */
 export interface UserCarDto {
   carTypeId?: number;

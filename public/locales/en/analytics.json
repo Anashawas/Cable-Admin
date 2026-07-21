@@ -1,0 +1,18 @@
+{
+  "title": "Analytics",
+  "manage": "Analytics",
+  "from": "From",
+  "to": "To",
+  "lastNDays": "Last {{count}} days",
+  "uniqueUsers": "{{count}} users",
+  "dailyTrend": "Daily activity",
+  "ctr": "Click-through rate",
+  "clicksPerView": "Clicks per view",
+  "noData": "No activity in this period",
+  "rangeNote": "Showing {{from}} — {{to}}",
+  "entity": {
+    "ChargingPoint": "Station",
+    "ServiceProvider": "Provider",
+    "Banner": "Banner"
+  }
+}

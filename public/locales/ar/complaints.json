@@ -1,5 +1,20 @@
 {
   "title": "شكاوى المستخدمين",
+  "submittedOn": "أُرسلت في {{date}}",
+  "sort": {
+    "label": "ترتيب حسب",
+    "newest": "الأحدث أولاً",
+    "oldest": "الأقدم أولاً",
+    "recentlyUpdated": "الأحدث تحديثاً"
+  },
+  "filters": {
+    "submitted": "تاريخ الإرسال",
+    "anyTime": "أي وقت",
+    "last7Days": "آخر ٧ أيام",
+    "last30Days": "آخر ٣٠ يوماً",
+    "last90Days": "آخر ٩٠ يوماً",
+    "lastYear": "آخر سنة"
+  },
   "subtitle": "إدارة شكاوى المستخدمين والرد عليها",
   "deleted": "تم حذف الشكوى",
   "deleteConfirmTitle": "حذف الشكوى",

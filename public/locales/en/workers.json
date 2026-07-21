@@ -1,0 +1,22 @@
+{
+  "title": "Manage Worker",
+  "manageWorker": "Manage Worker",
+  "createHint": "Create a worker account for this provider. The worker logs into the partner app with this email and password.",
+  "activeHint": "Inactive workers cannot log in.",
+  "name": "Name",
+  "email": "Email",
+  "phone": "Phone",
+  "password": "Password",
+  "passwordHint": "At least 6 characters",
+  "create": "Create Worker",
+  "delete": "Delete Worker",
+  "deleteConfirm": "Delete this worker? Their account will be disabled and the provider can receive a new worker.",
+  "created": "Worker created successfully",
+  "activated": "Worker activated",
+  "deactivated": "Worker deactivated",
+  "deleted": "Worker deleted",
+  "nameRequired": "Name is required",
+  "emailRequired": "Email is required",
+  "phoneRequired": "Phone is required",
+  "passwordTooShort": "Password must be at least 6 characters"
+}

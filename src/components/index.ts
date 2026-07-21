@@ -10,5 +10,6 @@ export { default as AppDataGrid } from './AppDataGrid';
 export { default as GlobalSearch } from './GlobalSearch';
 export { default as BulkActionsBar } from './BulkActionsBar';
 export type { BulkActionsBarProps } from './BulkActionsBar';
+export { default as DateCell } from './DateCell';
 export { default as CollapsibleFilters } from './CollapsibleFilters';
 export type { FilterField, FilterSelectOption, CollapsibleFiltersProps } from './CollapsibleFilters';

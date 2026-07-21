@@ -24,13 +24,13 @@ import {
   Divider,
   Paper,
   InputAdornment,
-  Tab,
-  Tabs,
   TablePagination,
   Switch,
   FormControlLabel,
+  Checkbox,
+  Alert,
 } from "@mui/material";
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridPaginationModel } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -55,18 +55,21 @@ import EvStationIcon from "@mui/icons-material/EvStation";
 import MiscellaneousServicesIcon from "@mui/icons-material/MiscellaneousServices";
 import CreditScoreIcon from "@mui/icons-material/CreditScore";
 import HistoryIcon from "@mui/icons-material/History";
+import PersonIcon from "@mui/icons-material/Person";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { AppDataGrid } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import {
   useSettlements,
   useSettlementSummary,
+  useSettlementTransactions,
   useUpdateSettlementStatus,
+  useUpdateSettlementStatusBatch,
   useWalletBalance,
   useWalletHistory,
   useAddWalletDeposit,
 } from "../hooks/use-settlements";
-import { getSettlements } from "../services/offers-service";
+import { getSettlements, getSettlementsCsv } from "../services/offers-service";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useSetCreditLimit } from "../../partners/hooks/use-partners";
 import type { ProviderSettlementDto, SettlementStatus, WalletTransactionType, ProviderType } from "../types/api";
 
@@ -80,16 +83,23 @@ const STATUS_CFG: Record<number, { label_key: string; color: "warning" | "succes
 function WalletBalanceCell({
   providerType,
   providerId,
+  batchedBalance,
   onOpen,
 }: {
   providerType: ProviderType;
   providerId: number;
+  batchedBalance?: number | null;
   onOpen: () => void;
 }) {
   const { t } = useTranslation(["offers", "common"]);
-  const { data, isLoading } = useWalletBalance(providerType, providerId);
+  // C6: the list now includes currentWalletBalance per row — only fetch if it's missing.
+  const hasBatched = batchedBalance != null;
+  const { data, isLoading } = useWalletBalance(
+    hasBatched ? undefined : providerType,
+    hasBatched ? undefined : providerId
+  );
 
-  const balance = data?.walletBalance ?? null;
+  const balance = hasBatched ? batchedBalance : (data?.walletBalance ?? null);
   const isDebt = balance !== null && balance < 0;
   const isZero = balance === 0;
 
@@ -137,9 +147,22 @@ export default function SettlementsScreen() {
   const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined);
   const [providerTypeFilter, setProviderTypeFilter] = useState<"ChargingPoint" | "ServiceProvider" | undefined>(undefined);
 
-  const { data: rawData, isLoading, search, handleSearchChange, handleRefresh } = useSettlements({
+  const { data: rawData, isLoading, error, search, handleSearchChange, handleRefresh } = useSettlements({
     year: selectedYear,
   });
+
+  // Totals the summary endpoint doesn't return — derived from the loaded rows.
+  const derivedTotals = useMemo(() => {
+    let outstanding = 0;
+    let userPayments = 0;
+    let disputedAmount = 0;
+    rawData.forEach((s) => {
+      outstanding += s.outstandingAmount ?? 0;
+      userPayments += s.partnerTransactionAmount ?? 0;
+      if (s.settlementStatus === 4) disputedAmount += Math.abs(s.netBalance ?? 0);
+    });
+    return { outstanding, userPayments, disputedAmount };
+  }, [rawData]);
 
   const data = useMemo(() => {
     let filtered = rawData;
@@ -173,6 +196,10 @@ export default function SettlementsScreen() {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 20 });
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedSettlement, setSelectedSettlement] = useState<ProviderSettlementDto | null>(null);
+  const { data: settlementTx, isLoading: settlementTxLoading } = useSettlementTransactions(
+    selectedSettlement?.id,
+    detailDialogOpen
+  );
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<SettlementStatus>(3);
   const [adminNote, setAdminNote] = useState("");
@@ -226,6 +253,59 @@ export default function SettlementsScreen() {
     const start = paginationModel.page * paginationModel.pageSize;
     return data.slice(start, start + paginationModel.pageSize);
   }, [data, paginationModel.page, paginationModel.pageSize]);
+
+  // C3 — batch mark-Paid
+  const batchMutation = useUpdateSettlementStatusBatch();
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [batchNote, setBatchNote] = useState("");
+  const toggleSelected = useCallback((id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+  const handleConfirmBatch = useCallback(() => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    batchMutation.mutate(
+      { settlementIds: ids, status: 3, note: batchNote || undefined },
+      {
+        onSuccess: (res) => {
+          const failed = res?.failed?.length ?? 0;
+          openSuccessSnackbar({ message: t("offers@settlements_batchResult", { updated: res?.updated?.length ?? 0, failed }) });
+          setBatchDialogOpen(false); setBatchNote(""); setSelectedIds(new Set());
+        },
+        onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+      }
+    );
+  }, [selectedIds, batchNote, batchMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+
+  const [exporting, setExporting] = useState(false);
+  const handleExport = useCallback(async () => {
+    try {
+      setExporting(true);
+      const blob = await getSettlementsCsv({
+        year: selectedYear,
+        week: selectedWeek,
+        status: statusFilter,
+        search: search || undefined,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `settlements-${selectedYear}${selectedWeek ? `-W${selectedWeek}` : ""}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      openErrorSnackbar({ message: t("loadingFailed") });
+    } finally {
+      setExporting(false);
+    }
+  }, [selectedYear, selectedWeek, statusFilter, search, openErrorSnackbar, t]);
 
   const handleViewDetails = useCallback((e: React.MouseEvent, row: ProviderSettlementDto) => {
     e.stopPropagation();
@@ -385,264 +465,24 @@ export default function SettlementsScreen() {
   const cableOwesProvider = (row: ProviderSettlementDto) => row.netBalance > 0;
   const providerOwesCable = (row: ProviderSettlementDto) => row.netBalance < 0;
 
-  const columns: GridColDef<ProviderSettlementDto>[] = [
-    { field: "id", headerName: "#", width: 50, align: "center", headerAlign: "center" },
-    {
-      field: "providerName",
-      headerName: t("offers@provider"),
-      flex: 1,
-      minWidth: 250,
-      renderCell: (params) => {
-        const row = params.row;
-        const isCP = row.providerType === "ChargingPoint";
-        return (
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                bgcolor: isCP ? "primary.main" : "secondary.main",
-                fontSize: "0.85rem",
-                fontWeight: 700,
-              }}
-            >
-              {isCP ? <EvStationIcon sx={{ fontSize: 20 }} /> : <MiscellaneousServicesIcon sx={{ fontSize: 20 }} />}
-            </Avatar>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={700} lineHeight={1.2} noWrap>{row.providerName}</Typography>
-              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.3 }}>
-                <Chip
-                  label={isCP ? t("offers@chargingPoint") : t("offers@serviceProvider")}
-                  size="small"
-                  variant="filled"
-                  color={isCP ? "primary" : "secondary"}
-                  sx={{ height: 18, "& .MuiChip-label": { px: 0.75, fontSize: "0.6rem" } }}
-                />
-                <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.65rem" }}>#{row.providerId}</Typography>
-              </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.65rem", lineHeight: 1 }}>
-                {row.providerOwnerName}{row.ownerPhone ? ` · ${row.ownerPhone}` : ""}
-              </Typography>
-            </Box>
-          </Stack>
-        );
-      },
-    },
-    {
-      field: "period",
-      headerName: t("offers@period"),
-      width: 110,
-      align: "center",
-      headerAlign: "center",
-      valueGetter: (_value: unknown, row: ProviderSettlementDto) =>
-        `${row.periodYear}-W${row.periodWeek}`,
-      renderCell: (params) => {
-        const row = params.row;
-        return (
-          <Stack alignItems="center" spacing={0.25}>
-            <Typography variant="body2" fontWeight={700}>{row.periodYear}</Typography>
-            <Chip
-              label={`W${row.periodWeek}`}
-              size="small"
-              variant="outlined"
-              color="primary"
-              sx={{ height: 18, "& .MuiChip-label": { px: 0.75, fontSize: "0.65rem", fontWeight: 700 } }}
-            />
-          </Stack>
-        );
-      },
-    },
-    {
-      field: "transactions",
-      headerName: t("offers@transactions"),
-      width: 100,
-      align: "center",
-      headerAlign: "center",
-      valueGetter: (_value: unknown, row: ProviderSettlementDto) => totalTxCount(row),
-      renderCell: (params) => {
-        const row = params.row;
-        return (
-          <Stack alignItems="center" spacing={0.25}>
-            <Typography variant="body2" fontWeight={800}>{params.value}</Typography>
-            <Stack direction="row" spacing={0.5}>
-              {row.partnerTransactionCount > 0 && (
-                <Chip
-                  icon={<HandshakeIcon sx={{ fontSize: "11px !important" }} />}
-                  label={row.partnerTransactionCount}
-                  size="small"
-                  color="success"
-                  variant="outlined"
-                  sx={{ height: 18, "& .MuiChip-label": { px: 0.4, fontSize: "0.6rem" } }}
-                />
-              )}
-              {row.offerTransactionCount > 0 && (
-                <Chip
-                  icon={<LocalOfferIcon sx={{ fontSize: "11px !important" }} />}
-                  label={row.offerTransactionCount}
-                  size="small"
-                  color="error"
-                  variant="outlined"
-                  sx={{ height: 18, "& .MuiChip-label": { px: 0.4, fontSize: "0.6rem" } }}
-                />
-              )}
-            </Stack>
-          </Stack>
-        );
-      },
-    },
-    {
-      field: "netBalance",
-      headerName: t("offers@settlements_netBalance"),
-      width: 180,
-      align: "right",
-      headerAlign: "right",
-      valueGetter: (_value: unknown, row: ProviderSettlementDto) => row.netBalance,
-      renderCell: (params) => {
-        const row = params.row;
-        const amount = getSettlementAmount(row);
-        const owes = providerOwesCable(row);
-        const owed = cableOwesProvider(row);
-        return (
-          <Box sx={{ textAlign: "right" }}>
-            <Typography variant="body2" fontWeight={800} color={owes ? "info.dark" : owed ? "warning.dark" : "text.secondary"} sx={{ fontSize: "0.95rem" }}>
-              {amount.toFixed(3)} <Typography component="span" variant="caption" color="text.secondary">JOD</Typography>
-            </Typography>
-            {owes && (
-              <Stack direction="row" spacing={0.3} alignItems="center" justifyContent="flex-end">
-                <ArrowBackIcon sx={{ fontSize: 10, color: "info.main" }} />
-                <Typography variant="caption" color="info.main" fontWeight={600} sx={{ fontSize: "0.6rem" }}>{t("offers@settlements_providerPaysCable")}</Typography>
-              </Stack>
-            )}
-            {owed && (
-              <Stack direction="row" spacing={0.3} alignItems="center" justifyContent="flex-end">
-                <ArrowForwardIcon sx={{ fontSize: 10, color: "warning.main" }} />
-                <Typography variant="caption" color="warning.main" fontWeight={600} sx={{ fontSize: "0.6rem" }}>{t("offers@settlements_cablePaysProvider")}</Typography>
-              </Stack>
-            )}
-            {!owes && !owed && (
-              <Typography variant="caption" color="success.main" fontWeight={600} sx={{ fontSize: "0.6rem" }}>{t("offers@settlements_settled")}</Typography>
-            )}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "outstandingAmount",
-      headerName: t("offers@settlements_outstanding"),
-      width: 160,
-      align: "right",
-      headerAlign: "right",
-      renderCell: (params) => {
-        const row = params.row;
-        const outstanding = row.outstandingAmount ?? 0;
-        const walletApplied = row.walletApplied ?? 0;
-
-        if (row.settlementStatus === 3) {
-          return (
-            <Stack alignItems="flex-end" spacing={0.25}>
-              <Typography variant="caption" fontWeight={600} color="success.main" sx={{ fontSize: "0.7rem" }}>
-                {t("offers@paid")} ✓
-              </Typography>
-              {walletApplied > 0 && (
-                <Typography variant="caption" fontWeight={600} color="info.main" sx={{ fontSize: "0.6rem" }}>
-                  {t("offers@settlements_walletApplied")}: {walletApplied.toFixed(3)}
-                </Typography>
-              )}
-            </Stack>
-          );
-        }
-
-        return (
-          <Box sx={{ textAlign: "right" }}>
-            {outstanding > 0 ? (
-              <Typography variant="body2" fontWeight={700} color="error.dark">
-                {outstanding.toFixed(3)} <Typography component="span" variant="caption" color="text.secondary">JOD</Typography>
-              </Typography>
-            ) : (
-              <Typography variant="caption" fontWeight={600} color="text.disabled">
-                {t("offers@settlements_notPaid")}
-              </Typography>
-            )}
-            {walletApplied > 0 && (
-              <Typography variant="caption" fontWeight={600} color="info.main" sx={{ fontSize: "0.6rem" }}>
-                {t("offers@settlements_walletApplied")}: {walletApplied.toFixed(3)}
-              </Typography>
-            )}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "walletBalance",
-      headerName: t("offers@settlements_walletBalance"),
-      width: 130,
-      align: "center",
-      headerAlign: "center",
-      sortable: false,
-      renderCell: (params) => (
-        <WalletBalanceCell
-          providerType={params.row.providerType}
-          providerId={params.row.providerId}
-          onOpen={() => handleOpenWalletDialog(params.row)}
-        />
-      ),
-    },
-    {
-      field: "settlementStatus",
-      headerName: t("status"),
-      width: 110,
-      align: "center",
-      headerAlign: "center",
-      renderCell: (params) => (
-        <Stack alignItems="center" spacing={0.25}>
-          {getStatusChip(params.value)}
-          <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.55rem" }}>
-            {formatDate(params.row.createdAt)}
-          </Typography>
-        </Stack>
-      ),
-    },
-    {
-      field: "actions",
-      headerName: "",
-      width: 110,
-      align: "center",
-      headerAlign: "center",
-      sortable: false,
-      renderCell: (params) => (
-        <Stack direction="row" spacing={0.25} justifyContent="center">
-          <Tooltip title={t("offers@viewDetails")}>
-            <IconButton size="small" onClick={(e) => handleViewDetails(e, params.row)}>
-              <VisibilityIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("offers@settlements_walletHistory")}>
-            <IconButton size="small" color="secondary" onClick={(e) => { e.stopPropagation(); handleOpenWalletDialog(params.row); }}>
-              <AccountBalanceWalletIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          {params.row.settlementStatus !== 3 && (
-            <Tooltip title={t("offers@updateStatus")}>
-              <IconButton size="small" color="primary" onClick={(e) => handleUpdateStatusClick(e, params.row)}>
-                <CheckCircleIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Stack>
-      ),
-    },
-  ];
 
   const kpiCards = summary
     ? [
         { label: t("offers@totalSettlements"), value: summary.totalSettlements, sub: null, icon: <ReceiptLongIcon />, color: "rgba(255,255,255,0.13)" },
         { label: t("offers@pending"), value: summary.pendingCount, sub: summary.disputedCount > 0 ? `${summary.disputedCount} ${t("offers@disputed")}` : null, icon: <PendingActionsIcon />, color: "rgba(255,255,255,0.13)" },
         { label: t("offers@paid"), value: summary.paidCount, sub: null, icon: <PaymentsIcon />, color: "rgba(255,255,255,0.13)" },
+        { label: t("offers@settlements_userPayments"), value: `${derivedTotals.userPayments.toFixed(3)}`, sub: `${(summary.totalPointsAwarded ?? 0).toLocaleString()} ${t("offers@points")}`, icon: <PaymentsIcon />, color: "rgba(255,255,255,0.13)" },
         { label: t("offers@settlements_offerPayment"), value: `${(summary.totalOfferPaymentAmount ?? 0).toFixed(3)}`, sub: `${summary.totalOfferTransactions} ${t("offers@transactions")}`, icon: <LocalOfferIcon />, color: "rgba(239,83,80,0.25)" },
         { label: t("offers@settlements_commission"), value: `${(summary.totalPartnerCommissionAmount ?? 0).toFixed(3)}`, sub: `${summary.totalPartnerTransactions} ${t("offers@transactions")}`, icon: <HandshakeIcon />, color: "rgba(76,175,80,0.25)" },
         { label: t("offers@settlements_netBalance"), value: `${(summary.totalNetBalance ?? 0).toFixed(3)}`, sub: "JOD", icon: <TrendingUpIcon />, color: "rgba(255,193,7,0.25)" },
         ...(summary.totalWalletApplied > 0
           ? [{ label: t("offers@settlements_walletApplied"), value: `${summary.totalWalletApplied.toFixed(3)}`, sub: "JOD", icon: <AccountBalanceIcon />, color: "rgba(33,150,243,0.25)" }]
+          : []),
+        ...((summary.totalOutstandingAmount ?? derivedTotals.outstanding) > 0
+          ? [{ label: t("offers@settlements_outstanding"), value: `${(summary.totalOutstandingAmount ?? derivedTotals.outstanding).toFixed(3)}`, sub: "JOD", icon: <AccountBalanceIcon />, color: "rgba(239,83,80,0.3)" }]
+          : []),
+        ...((summary.totalDisputedAmount ?? derivedTotals.disputedAmount) > 0
+          ? [{ label: t("offers@disputed"), value: `${(summary.totalDisputedAmount ?? derivedTotals.disputedAmount).toFixed(3)}`, sub: "JOD", icon: <PendingActionsIcon />, color: "rgba(198,40,40,0.3)" }]
           : []),
       ]
     : [];
@@ -674,26 +514,35 @@ export default function SettlementsScreen() {
               <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.75)", mt: 0.5 }}>{t("offers@settlements_subtitle")}</Typography>
             </Box>
           </Stack>
-          <Button
-            variant="contained"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-            sx={{
-              bgcolor: "rgba(255,255,255,0.18)",
-              color: "white",
-              fontWeight: 700,
-              fontSize: "0.9rem",
-              textTransform: "none",
-              px: 3,
-              py: 1,
-              borderRadius: 2.5,
-              border: "1px solid rgba(255,255,255,0.25)",
-              backdropFilter: "blur(4px)",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.28)", borderColor: "rgba(255,255,255,0.5)" },
-            }}
-          >
-            {t("refresh")}
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="contained"
+              startIcon={exporting ? <CircularProgress size={16} color="inherit" /> : <FileDownloadIcon />}
+              onClick={handleExport}
+              disabled={exporting || isLoading}
+              sx={{
+                bgcolor: "rgba(255,255,255,0.18)", color: "white", fontWeight: 700, fontSize: "0.9rem",
+                textTransform: "none", px: 3, py: 1, borderRadius: 2.5, border: "1px solid rgba(255,255,255,0.25)",
+                backdropFilter: "blur(4px)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.28)", borderColor: "rgba(255,255,255,0.5)" },
+              }}
+            >
+              {t("offers@settlements_exportCsv")}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+              sx={{
+                bgcolor: "rgba(255,255,255,0.18)", color: "white", fontWeight: 700, fontSize: "0.9rem",
+                textTransform: "none", px: 3, py: 1, borderRadius: 2.5, border: "1px solid rgba(255,255,255,0.25)",
+                backdropFilter: "blur(4px)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.28)", borderColor: "rgba(255,255,255,0.5)" },
+              }}
+            >
+              {t("refresh")}
+            </Button>
+          </Stack>
         </Stack>
 
         {/* KPI Cards */}
@@ -1022,8 +871,21 @@ export default function SettlementsScreen() {
           </Box>
         )}
 
+        {/* Error state */}
+        {!isLoading && error && (
+          <Box sx={{ py: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <Box sx={{ width: 80, height: 80, borderRadius: "50%", bgcolor: "error.50", display: "flex", alignItems: "center", justifyContent: "center", border: "2px dashed", borderColor: "error.200" }}>
+              <AccountBalanceIcon sx={{ fontSize: 38, color: "error.300" }} />
+            </Box>
+            <Typography variant="h6" fontWeight={700} color="error.main">{t("loadingFailed")}</Typography>
+            <Button variant="contained" color="error" startIcon={<RefreshIcon />} onClick={handleRefresh} sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}>
+              {t("refresh")}
+            </Button>
+          </Box>
+        )}
+
         {/* Empty state */}
-        {!isLoading && data.length === 0 && (
+        {!isLoading && !error && data.length === 0 && (
           <Box sx={{ py: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
             <Box
               sx={{
@@ -1042,6 +904,19 @@ export default function SettlementsScreen() {
           </Box>
         )}
 
+        {/* Bulk action bar */}
+        {selectedIds.size > 0 && (
+          <Paper elevation={3} sx={{ position: "sticky", top: 8, zIndex: 3, mb: 1.5, p: 1.25, px: 2, borderRadius: 2.5, bgcolor: "primary.main", color: "#fff", display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Typography variant="body2" fontWeight={800} flex={1}>{t("offers@settlements_selectedCount", { count: selectedIds.size })}</Typography>
+            <Button size="small" variant="contained" color="success" startIcon={<CheckCircleIcon />} onClick={() => setBatchDialogOpen(true)} sx={{ fontWeight: 800, textTransform: "none", borderRadius: 2 }}>
+              {t("offers@settlements_markPaidBatch")}
+            </Button>
+            <Button size="small" onClick={() => setSelectedIds(new Set())} sx={{ color: "rgba(255,255,255,0.85)", textTransform: "none" }}>
+              {t("offers@settlements_clearSelection")}
+            </Button>
+          </Paper>
+        )}
+
         {/* Card list */}
         {!isLoading && data.length > 0 && (
           <Box sx={{ p: 2, bgcolor: "grey.100", borderRadius: 2 }}>
@@ -1057,6 +932,10 @@ export default function SettlementsScreen() {
               const owes = providerOwesCable(row);
               const owed = cableOwesProvider(row);
               const balanceColor = owes ? "#0277bd" : owed ? "#e65100" : "#2e7d32";
+              const daysPending = row.settlementStatus === 1 && row.createdAt
+                ? Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 86400000)
+                : 0;
+              const isOverdue = row.settlementStatus === 1 && daysPending >= 14;
 
               return (
                 <Paper
@@ -1082,6 +961,14 @@ export default function SettlementsScreen() {
                     {/* Row 1: Provider + Status + Actions */}
                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                       <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+                        {row.settlementStatus === 1 && (
+                          <Checkbox
+                            size="small"
+                            checked={selectedIds.has(row.id)}
+                            onChange={() => toggleSelected(row.id)}
+                            sx={{ p: 0.5 }}
+                          />
+                        )}
                         <Avatar
                           sx={{
                             bgcolor: isCP ? "#e3f2fd" : "#f3e5f5",
@@ -1157,12 +1044,22 @@ export default function SettlementsScreen() {
                           <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="center" sx={{ mt: 0.75 }}>
                             <Typography variant="h6" fontWeight={800}>{row.periodYear}</Typography>
                             <Chip
-                              label={`W${row.periodWeek}`}
+                              label={row.periodType === 1 ? `M${row.periodMonth}` : `W${row.periodWeek}`}
                               size="small"
                               color="primary"
                               sx={{ height: 24, fontWeight: 800, "& .MuiChip-label": { px: 1, fontSize: "0.75rem" } }}
                             />
                           </Stack>
+                          {row.settlementStatus === 1 && (
+                            <Chip
+                              size="small"
+                              icon={<PendingActionsIcon sx={{ fontSize: "13px !important" }} />}
+                              label={t("offers@settlements_pendingDays", { count: daysPending })}
+                              color={isOverdue ? "error" : "default"}
+                              variant={isOverdue ? "filled" : "outlined"}
+                              sx={{ mt: 0.75, height: 22, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.66rem" } }}
+                            />
+                          )}
                         </Paper>
                       </Box>
 
@@ -1263,6 +1160,7 @@ export default function SettlementsScreen() {
                             <WalletBalanceCell
                               providerType={row.providerType}
                               providerId={row.providerId}
+                              batchedBalance={row.currentWalletBalance}
                               onOpen={() => handleOpenWalletDialog(row)}
                             />
                           </Box>
@@ -1611,6 +1509,66 @@ export default function SettlementsScreen() {
                 </Grid>
               </Paper>
 
+              {/* Transaction line-items (C1 drill-down) */}
+              <Box>
+                <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.25 }}>
+                  <Box sx={{ width: 30, height: 30, borderRadius: 2, bgcolor: "primary.main", color: "primary.contrastText", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 8px rgba(25,118,210,0.3)" }}>
+                    <ReceiptLongIcon sx={{ fontSize: 18 }} />
+                  </Box>
+                  <Typography variant="subtitle1" fontWeight={800}>{t("offers@settlements_lineItems")}</Typography>
+                  {settlementTx && settlementTx.length > 0 && (
+                    <Chip size="small" color="primary" label={settlementTx.length} sx={{ height: 20, minWidth: 22, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem", fontWeight: 800 } }} />
+                  )}
+                </Stack>
+                {settlementTxLoading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}><CircularProgress size={28} /></Box>
+                ) : !settlementTx || settlementTx.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>{t("offers@settlements_txEmpty")}</Typography>
+                ) : (
+                  <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider", p: 1.5 }}>
+                    <Stack spacing={1} divider={<Divider flexItem />}>
+                      {settlementTx.map((tx) => {
+                        const cfg = tx.activityType === "Partner"
+                          ? { label: t("offers@settlements_typePartner"), color: "success" as const }
+                          : tx.activityType === "Offer"
+                            ? { label: t("offers@settlements_typeOffer"), color: "error" as const }
+                            : { label: t("offers@settlements_typeRedemption"), color: "secondary" as const };
+                        const positive = tx.points >= 0;
+                        return (
+                          <Stack key={`${tx.activityType}-${tx.transactionId}`} direction="row" spacing={1.5} alignItems="center" sx={{ py: 0.25 }}>
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                              <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                                <Chip label={cfg.label} size="small" color={cfg.color} variant="outlined" sx={{ height: 20, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.62rem" } }} />
+                                {tx.userName && (
+                                  <Chip
+                                    size="small"
+                                    icon={<PersonIcon sx={{ fontSize: "13px !important" }} />}
+                                    label={`${tx.userName} · #${tx.userId}`}
+                                    variant="outlined"
+                                    onClick={() => navigate(`/users/${tx.userId}`)}
+                                    sx={{ height: 20, cursor: "pointer", "& .MuiChip-label": { px: 0.5, fontSize: "0.62rem", fontWeight: 700 } }}
+                                  />
+                                )}
+                                {tx.code && <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem" }}>{tx.code}</Typography>}
+                              </Stack>
+                              <Typography variant="caption" color="text.disabled">
+                                {formatDate(tx.completedAt ?? tx.createdAt)}{tx.statusName ? ` · ${tx.statusName}` : ""}
+                              </Typography>
+                            </Box>
+                            <Stack alignItems="flex-end" sx={{ flexShrink: 0 }}>
+                              {tx.amount != null && <Typography variant="body2" fontWeight={800}>{tx.amount.toFixed(3)} JOD</Typography>}
+                              <Typography variant="caption" fontWeight={700} color={positive ? "success.main" : "error.main"}>
+                                {positive ? "+" : ""}{tx.points} pts
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                        );
+                      })}
+                    </Stack>
+                  </Paper>
+                )}
+              </Box>
+
               {selectedSettlement.adminNote && (
                 <Paper elevation={0} sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, borderLeft: "4px solid", borderColor: "warning.main" }}>
                   <Typography variant="overline" color="warning.dark" fontWeight={700} display="block" sx={{ mb: 0.5 }}>{t("offers@adminNote")}</Typography>
@@ -1827,38 +1785,22 @@ export default function SettlementsScreen() {
                         />
                       </Stack>
                     </Stack>
-                    {/* Deposited / Deducted summary */}
-                    <Stack direction="row" spacing={1}>
-                      <Box sx={{ flex: 1, px: 1, py: 0.5, borderRadius: 1, bgcolor: "rgba(255,255,255,0.08)", textAlign: "center" }}>
-                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.55rem", display: "block" }}>{t("offers@settlements_walletTotalDeposited")}</Typography>
-                        <Typography variant="caption" fontWeight={700} sx={{ color: "#a5d6a7", fontSize: "0.68rem" }}>
-                          +{(walletMgmtBalance?.totalDeposited ?? 0).toFixed(3)}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ flex: 1, px: 1, py: 0.5, borderRadius: 1, bgcolor: "rgba(255,255,255,0.08)", textAlign: "center" }}>
-                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.55rem", display: "block" }}>{t("offers@settlements_walletTotalDeducted")}</Typography>
-                        <Typography variant="caption" fontWeight={700} sx={{ color: "#ff8a80", fontSize: "0.68rem" }}>
-                          -{(walletMgmtBalance?.totalDeducted ?? 0).toFixed(3)}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    {/* Credit limit row */}
-                    <Stack direction="row" spacing={1}>
-                      <Box sx={{ flex: 1, px: 1, py: 0.5, borderRadius: 1, bgcolor: "rgba(255,255,255,0.08)", textAlign: "center" }}>
-                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.55rem", display: "block" }}>{t("offers@settlements_walletCreditLimit")}</Typography>
-                        <Typography variant="caption" fontWeight={700} sx={{ color: "#ffe082", fontSize: "0.68rem" }}>
-                          {walletMgmtBalance?.walletCreditLimit != null ? walletMgmtBalance.walletCreditLimit.toFixed(3) : t("offers@settlements_walletUnlimited")}
-                        </Typography>
-                      </Box>
-                      {walletMgmtBalance?.availableCredit != null && (
-                        <Box sx={{ flex: 1, px: 1, py: 0.5, borderRadius: 1, bgcolor: "rgba(255,255,255,0.08)", textAlign: "center" }}>
-                          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.55rem", display: "block" }}>{t("offers@settlements_walletAvailableCredit")}</Typography>
-                          <Typography variant="caption" fontWeight={700} sx={{ color: walletMgmtBalance.availableCredit > 0 ? "#a5d6a7" : "#ff8a80", fontSize: "0.68rem" }}>
-                            {walletMgmtBalance.availableCredit.toFixed(3)}
-                          </Typography>
+                    {/* Sub-stats grid — legible 2×2 */}
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.75, mt: 0.5 }}>
+                      {([
+                        { label: t("offers@settlements_walletTotalDeposited"), value: `+${(walletMgmtBalance?.totalDeposited ?? 0).toFixed(3)}`, color: "#a5d6a7" },
+                        { label: t("offers@settlements_walletTotalDeducted"), value: `-${(walletMgmtBalance?.totalDeducted ?? 0).toFixed(3)}`, color: "#ff8a80" },
+                        { label: t("offers@settlements_walletCreditLimit"), value: walletMgmtBalance?.walletCreditLimit != null ? walletMgmtBalance.walletCreditLimit.toFixed(3) : t("offers@settlements_walletUnlimited"), color: "#ffe082" },
+                        ...(walletMgmtBalance?.availableCredit != null
+                          ? [{ label: t("offers@settlements_walletAvailableCredit"), value: walletMgmtBalance.availableCredit.toFixed(3), color: walletMgmtBalance.availableCredit > 0 ? "#a5d6a7" : "#ff8a80" }]
+                          : []),
+                      ]).map((s) => (
+                        <Box key={s.label} sx={{ px: 1.25, py: 0.85, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.08)" }}>
+                          <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3, display: "block", lineHeight: 1.3 }}>{s.label}</Typography>
+                          <Typography fontWeight={800} sx={{ color: s.color, fontSize: "0.85rem", mt: 0.15 }}>{s.value}</Typography>
                         </Box>
-                      )}
-                    </Stack>
+                      ))}
+                    </Box>
                   </Stack>
                 );
               })()}
@@ -1927,21 +1869,29 @@ export default function SettlementsScreen() {
                   {/* Type selector as button group */}
                   <Stack direction="row" spacing={1}>
                     {([
-                      { value: 1, label: t("offers@settlements_walletDeposit"), color: "success" },
-                      { value: 3, label: t("offers@settlements_walletRefund"), color: "warning" },
-                      { value: 4, label: t("offers@settlements_walletAdjustment"), color: "error" },
-                    ] as { value: WalletTransactionType; label: string; color: "success" | "warning" | "error" }[]).map((opt) => (
-                      <Button
-                        key={opt.value}
-                        size="small"
-                        variant={walletDepositType === opt.value ? "contained" : "outlined"}
-                        color={opt.color}
-                        onClick={() => setWalletDepositType(opt.value)}
-                        sx={{ flex: 1, fontWeight: 700, borderRadius: 1.5, textTransform: "none" }}
-                      >
-                        {opt.label}
-                      </Button>
-                    ))}
+                      { value: 1, label: t("offers@settlements_walletDeposit"), color: "success", icon: <AddCircleOutlineIcon sx={{ fontSize: 18 }} /> },
+                      { value: 3, label: t("offers@settlements_walletRefund"), color: "warning", icon: <ArrowBackIcon sx={{ fontSize: 18 }} /> },
+                      { value: 4, label: t("offers@settlements_walletAdjustment"), color: "error", icon: <EditIcon sx={{ fontSize: 16 }} /> },
+                    ] as { value: WalletTransactionType; label: string; color: "success" | "warning" | "error"; icon: React.ReactNode }[]).map((opt) => {
+                      const active = walletDepositType === opt.value;
+                      return (
+                        <Button
+                          key={opt.value}
+                          size="small"
+                          variant={active ? "contained" : "outlined"}
+                          color={opt.color}
+                          startIcon={opt.icon}
+                          onClick={() => setWalletDepositType(opt.value)}
+                          disableElevation
+                          sx={{
+                            flex: 1, fontWeight: 800, borderRadius: 2, textTransform: "none", py: 1,
+                            ...(active ? { boxShadow: 2 } : { borderWidth: 2, "&:hover": { borderWidth: 2 } }),
+                          }}
+                        >
+                          {opt.label}
+                        </Button>
+                      );
+                    })}
                   </Stack>
 
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems="flex-start">
@@ -1964,6 +1914,15 @@ export default function SettlementsScreen() {
                       placeholder={t("offers@settlements_walletNotePlaceholder")}
                     />
                   </Stack>
+
+                  {walletDepositType === 1 && walletMgmtBalance && parseFloat(walletDepositAmount) > 0 && (
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1, borderRadius: 2, bgcolor: "success.50", border: "1px solid", borderColor: "success.100" }}>
+                      <Typography variant="caption" fontWeight={700} color="success.dark">{t("offers@settlements_walletNewBalance")}</Typography>
+                      <Typography variant="subtitle2" fontWeight={800} color="success.dark">
+                        {(walletMgmtBalance.walletBalance + parseFloat(walletDepositAmount)).toFixed(3)} JOD
+                      </Typography>
+                    </Stack>
+                  )}
 
                   <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                     <Button
@@ -1988,13 +1947,17 @@ export default function SettlementsScreen() {
 
           {/* Transaction History */}
           <Box sx={{ px: 3, pb: 3 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-              <Typography variant="subtitle2" fontWeight={700}>{t("offers@settlements_walletHistory")}</Typography>
+            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.75 }}>
+              <Box sx={{ width: 30, height: 30, borderRadius: 2, bgcolor: "primary.main", color: "primary.contrastText", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 8px rgba(25,118,210,0.3)" }}>
+                <HistoryIcon sx={{ fontSize: 18 }} />
+              </Box>
+              <Typography variant="subtitle1" fontWeight={800}>{t("offers@settlements_walletHistory")}</Typography>
               {walletHistory && walletHistory.length > 0 && (
                 <Chip
                   label={walletHistory.length}
                   size="small"
-                  sx={{ height: 18, "& .MuiChip-label": { px: 0.75, fontSize: "0.65rem", fontWeight: 700 } }}
+                  color="primary"
+                  sx={{ height: 20, minWidth: 22, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem", fontWeight: 800 } }}
                 />
               )}
             </Stack>
@@ -2050,7 +2013,7 @@ export default function SettlementsScreen() {
                                 />
                                 {tx.settlementId && (
                                   <Chip
-                                    label={`Settlement #${tx.settlementId}`}
+                                    label={t("offers@settlements_walletSettlementRef", { id: tx.settlementId })}
                                     size="small"
                                     variant="outlined"
                                     sx={{ height: 20, "& .MuiChip-label": { px: 0.75, fontSize: "0.6rem" } }}
@@ -2066,6 +2029,28 @@ export default function SettlementsScreen() {
                                   {formatDate(tx.createdAt)}
                                 </Typography>
                               </Stack>
+                              {tx.relatedUserName && (
+                                <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.4 }} flexWrap="wrap" useFlexGap>
+                                  <Chip
+                                    size="small"
+                                    icon={<PersonIcon sx={{ fontSize: "13px !important" }} />}
+                                    label={tx.relatedUserId ? `${tx.relatedUserName} · #${tx.relatedUserId}` : tx.relatedUserName}
+                                    variant="outlined"
+                                    onClick={tx.relatedUserId ? () => navigate(`/users/${tx.relatedUserId}`) : undefined}
+                                    sx={{ height: 20, cursor: tx.relatedUserId ? "pointer" : "default", "& .MuiChip-label": { px: 0.75, fontSize: "0.62rem", fontWeight: 700 } }}
+                                  />
+                                  {tx.canRefund && (
+                                    <Chip
+                                      size="small"
+                                      color="warning"
+                                      variant="outlined"
+                                      icon={<ArrowBackIcon sx={{ fontSize: "13px !important" }} />}
+                                      label={t("offers@settlements_walletRefund")}
+                                      sx={{ height: 20, "& .MuiChip-label": { px: 0.75, fontSize: "0.62rem", fontWeight: 700 } }}
+                                    />
+                                  )}
+                                </Stack>
+                              )}
                               {tx.note && (
                                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem", display: "block", mt: 0.25, fontStyle: "italic" }}>
                                   "{tx.note}"
@@ -2100,6 +2085,27 @@ export default function SettlementsScreen() {
         <DialogActions sx={{ px: 3, py: 2, flexShrink: 0 }}>
           <Button onClick={() => setWalletDialogOpen(false)} size="large" variant="outlined">
             {t("close")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Batch mark-Paid dialog ── */}
+      <Dialog open={batchDialogOpen} onClose={() => setBatchDialogOpen(false)} maxWidth="xs" fullWidth>
+        <Box sx={{ px: 3, py: 2, bgcolor: "success.main", color: "#fff" }}>
+          <Typography variant="h6" fontWeight={800}>{t("offers@settlements_markPaidBatch")}</Typography>
+        </Box>
+        <DialogContent sx={{ pt: 2.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("offers@settlements_batchConfirm", { count: selectedIds.size })}
+          </Typography>
+          <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>{t("offers@settlements_paidAutoCalc")}</Alert>
+          <TextField fullWidth multiline rows={2} label={t("offers@adminNote")} value={batchNote} onChange={(e) => setBatchNote(e.target.value)} />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setBatchDialogOpen(false)}>{t("cancel")}</Button>
+          <Button variant="contained" color="success" onClick={handleConfirmBatch} disabled={batchMutation.isPending}
+            startIcon={batchMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}>
+            {t("offers@settlements_markPaidBatch")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2186,9 +2192,12 @@ export default function SettlementsScreen() {
 
         {/* Form */}
         <DialogContent sx={{ p: 3 }}>
-          <Typography variant="overline" fontWeight={700} color="text.disabled" sx={{ letterSpacing: 1, fontSize: "0.65rem", display: "block", mb: 2 }}>
-            {t("offers@settlements_walletSetLimit")}
-          </Typography>
+          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+            <Box sx={{ width: 30, height: 30, borderRadius: 2, bgcolor: "warning.main", color: "warning.contrastText", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 8px rgba(230,81,0,0.3)" }}>
+              <CreditScoreIcon sx={{ fontSize: 18 }} />
+            </Box>
+            <Typography variant="subtitle1" fontWeight={800}>{t("offers@settlements_walletSetLimit")}</Typography>
+          </Stack>
           <Stack spacing={2.5}>
             <TextField
               label={t("offers@settlements_walletCreditLimit")}
@@ -2234,6 +2243,19 @@ export default function SettlementsScreen() {
                 <Switch checked={creditLimitUnlimited} color="warning" />
               </Stack>
             </Paper>
+
+            {!creditLimitUnlimited
+              && parseFloat(creditLimitValue) > 0
+              && creditLimitBalance
+              && creditLimitBalance.walletBalance < 0
+              && Math.abs(creditLimitBalance.walletBalance) > parseFloat(creditLimitValue) && (
+              <Paper elevation={0} sx={{ p: 1.75, borderRadius: 2, bgcolor: "error.50", border: "1px solid", borderColor: "error.200", display: "flex", gap: 1.25, alignItems: "flex-start" }}>
+                <PendingActionsIcon sx={{ fontSize: 20, color: "error.main", mt: 0.2 }} />
+                <Typography variant="caption" color="error.dark" fontWeight={600}>
+                  {t("offers@settlements_walletLimitBelowDebt", { debt: Math.abs(creditLimitBalance.walletBalance).toFixed(3) })}
+                </Typography>
+              </Paper>
+            )}
           </Stack>
         </DialogContent>
         <Box sx={{ px: 3, pb: 3 }}>
