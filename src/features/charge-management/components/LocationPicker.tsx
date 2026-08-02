@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -22,6 +22,8 @@ export interface LocationPickerProps {
   latitude: number;
   longitude: number;
   onLocationSelect: (lat: number, lng: number) => void;
+  /** When set, draws a coverage circle of this radius (meters) around the marker. */
+  radiusMeters?: number;
 }
 
 function MapClickHandler({
@@ -41,6 +43,7 @@ export default function LocationPicker({
   latitude,
   longitude,
   onLocationSelect,
+  radiusMeters,
 }: LocationPickerProps) {
   const hasValidCoords = latitude !== 0 || longitude !== 0;
   const center: [number, number] = useMemo(
@@ -79,6 +82,13 @@ export default function LocationPicker({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapClickHandler onLocationSelect={onLocationSelect} />
+      {radiusMeters != null && radiusMeters > 0 && (
+        <Circle
+          center={markerPosition}
+          radius={radiusMeters}
+          pathOptions={{ color: "#1976d2", fillColor: "#1976d2", fillOpacity: 0.12 }}
+        />
+      )}
       <Marker
         position={markerPosition}
         draggable

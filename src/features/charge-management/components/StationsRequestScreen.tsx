@@ -108,6 +108,61 @@ export default function StationsRequestScreen() {
 
   const fieldLabel = (f: string) => t(`stationsRequest@fields.${f}`, f);
 
+  // Image-valued change fields render as before/after thumbnails, not URL text.
+  const IMAGE_FIELDS = new Set(["icon", "iconurl", "images", "image", "viewimage", "photo", "photos"]);
+  const isImageField = (f: string) => IMAGE_FIELDS.has(f.toLowerCase());
+
+  const toUrls = (v: unknown): string[] => {
+    if (v == null || v === "") return [];
+    const arr = Array.isArray(v) ? v : [v];
+    return arr
+      .map((x) => (x && typeof x === "object" && "url" in (x as object) ? String((x as { url?: unknown }).url) : String(x)))
+      .filter((s) => s && s !== "null" && s !== "undefined");
+  };
+
+  const ImgThumb = ({ url, tone, size }: { url: string; tone: "old" | "new"; size: number }) => (
+    <Link href={url} target="_blank" rel="noopener" sx={{ display: "inline-block", lineHeight: 0 }}>
+      <Box component="img" src={url} alt=""
+        sx={{
+          width: size, height: size, objectFit: "cover", borderRadius: 1.5,
+          border: "2px solid", borderColor: tone === "new" ? "success.main" : "divider",
+          opacity: tone === "old" ? 0.6 : 1,
+          filter: tone === "old" ? "grayscale(0.35)" : "none",
+        }} />
+    </Link>
+  );
+
+  // One change rendered as old → new. Image fields show thumbnails; everything
+  // else keeps the strikethrough-text diff.
+  const DiffPair = ({ c, size }: { c: { field: string; oldValue?: unknown; newValue?: unknown }; size: number }) => {
+    if (isImageField(c.field)) {
+      const oldUrls = toUrls(c.oldValue);
+      const newUrls = toUrls(c.newValue);
+      return (
+        <Stack direction="row" spacing={1.25} alignItems="center" flexWrap="wrap" useFlexGap>
+          {oldUrls.length ? (
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>{oldUrls.map((u, i) => <ImgThumb key={i} url={u} tone="old" size={size} />)}</Stack>
+          ) : (
+            <Typography variant="body2" sx={{ color: "text.disabled", fontStyle: "italic" }}>{t("stationsRequest@diff.noImage", "no image")}</Typography>
+          )}
+          <ArrowRightAltIcon sx={{ fontSize: 18, color: "text.disabled", transform: isRtl ? "scaleX(-1)" : "none" }} />
+          {newUrls.length ? (
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>{newUrls.map((u, i) => <ImgThumb key={i} url={u} tone="new" size={size} />)}</Stack>
+          ) : (
+            <Typography variant="body2" sx={{ color: "error.main", fontStyle: "italic" }}>{t("stationsRequest@diff.removed", "removed")}</Typography>
+          )}
+        </Stack>
+      );
+    }
+    return (
+      <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
+        <Typography variant="body2" sx={{ color: "text.disabled", textDecoration: "line-through" }}>{fmtVal(c.oldValue)}</Typography>
+        <ArrowRightAltIcon sx={{ fontSize: 16, color: "text.disabled", transform: isRtl ? "scaleX(-1)" : "none" }} />
+        <Typography variant="body2" fontWeight={800} sx={{ color: "success.dark" }}>{fmtVal(c.newValue)}</Typography>
+      </Stack>
+    );
+  };
+
   // "location_moved (123 m)" → { label, detail: "(123 m)", red }
   const riskParts = (flag: string) => {
     const m = /^([a-z_]+)\s*(\(.*\))?$/i.exec(flag);
@@ -224,11 +279,9 @@ export default function StationsRequestScreen() {
                         <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "divider" }}>
                           <Stack spacing={0.75}>
                             {r.changes.map((c, i) => (
-                              <Stack key={i} direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
+                              <Stack key={i} direction="row" spacing={1} alignItems={isImageField(c.field) ? "center" : "baseline"} flexWrap="wrap" useFlexGap>
                                 <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ minWidth: 96 }}>{fieldLabel(c.field)}</Typography>
-                                <Typography variant="body2" sx={{ color: "text.disabled", textDecoration: "line-through" }}>{fmtVal(c.oldValue)}</Typography>
-                                <ArrowRightAltIcon sx={{ fontSize: 16, color: "text.disabled", transform: isRtl ? "scaleX(-1)" : "none" }} />
-                                <Typography variant="body2" fontWeight={800} sx={{ color: "success.dark" }}>{fmtVal(c.newValue)}</Typography>
+                                <DiffPair c={c} size={56} />
                               </Stack>
                             ))}
                           </Stack>
@@ -290,11 +343,7 @@ export default function StationsRequestScreen() {
               {detailReq.changes.map((c, i) => (
                 <Box key={i} sx={{ p: 1.25, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "divider" }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: "block", mb: 0.5 }}>{fieldLabel(c.field)}</Typography>
-                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                    <Typography variant="body2" sx={{ color: "text.disabled", textDecoration: "line-through" }}>{fmtVal(c.oldValue)}</Typography>
-                    <ArrowRightAltIcon sx={{ fontSize: 18, color: "text.disabled", transform: isRtl ? "scaleX(-1)" : "none" }} />
-                    <Typography variant="body2" fontWeight={800} sx={{ color: "success.dark" }}>{fmtVal(c.newValue)}</Typography>
-                  </Stack>
+                  <DiffPair c={c} size={76} />
                 </Box>
               ))}
             </Stack>

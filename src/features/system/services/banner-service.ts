@@ -1,4 +1,5 @@
 import { server } from "../../../lib/@axios";
+import { compressImage } from "../../../lib/image-compress";
 import type { BannerDto, AddBannerRequest } from "../types/api";
 
 /**
@@ -42,8 +43,10 @@ const uploadBannerImage = async (
   file: File,
   signal?: AbortSignal
 ): Promise<void> => {
+  // Banners are full-width photos — resize to 1600px + JPEG so they load fast.
+  const light = await compressImage(file, { maxWidth: 1600, quality: 0.82 });
   const form = new FormData();
-  form.append("files", file);
+  form.append("files", light);
   await server.post(
     `api/bannerAttachment/AddBanner/${bannerId}`,
     form,

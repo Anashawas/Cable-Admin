@@ -21,6 +21,7 @@ import {
   Alert,
   Tabs,
   Tab,
+  Autocomplete,
 } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import HistoryIcon from "@mui/icons-material/History";
@@ -45,12 +46,15 @@ import type {
   SendNotificationRequest,
   SendByFilterRequest,
   AppType,
+  NotificationTargetType,
 } from "../types/api";
 import { parseUserIds } from "../validators/send-notification-schema";
 import { useSnackbarStore } from "../../../stores";
 import { getAllCarModels } from "../../users/services/user-car-service";
 import type { CarTypeWithModelsDto } from "../../users/types/api";
 import { CITIES } from "../../charge-management/constants/options";
+import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
+import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 
 type SendMode = "broadcast" | "filter";
 
@@ -73,6 +77,9 @@ export default function SendNotificationScreen() {
   const [body, setBody] = useState("");
   const [deepLink, setDeepLink] = useState("");
   const [data, setData] = useState("");
+  // ── Structured deep-link target (R4) ──
+  const [targetType, setTargetType] = useState<NotificationTargetType>("none");
+  const [targetId, setTargetId] = useState<number | null>(null);
   const [offerDate, setOfferDate] = useState(""); // YYYY-MM-DD
   const [offerTime, setOfferTime] = useState(""); // HH:MM:SS
   const [scheduleForLater, setScheduleForLater] = useState(false);
@@ -108,6 +115,30 @@ export default function SendNotificationScreen() {
     queryFn: ({ signal }) => getAllCarModels(signal),
     staleTime: 5 * 60 * 1000,
   });
+
+  // Target pickers — fetched lazily, only for the selected target type.
+  const { data: chargingPoints = [], isLoading: loadingCPs } = useQuery({
+    queryKey: ["send-notif-charging-points"],
+    queryFn: ({ signal }) => getAllChargingPoints(undefined, signal),
+    enabled: targetType === "charging-point",
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: serviceProviders = [], isLoading: loadingSPs } = useQuery({
+    queryKey: ["send-notif-service-providers"],
+    queryFn: () => getAllServiceProviders(),
+    enabled: targetType === "service-provider",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const targetOptions = useMemo(
+    () =>
+      targetType === "charging-point"
+        ? chargingPoints.map((c) => ({ id: c.id, label: c.name ?? `#${c.id}` }))
+        : targetType === "service-provider"
+        ? serviceProviders.map((s) => ({ id: s.id, label: s.name ?? `#${s.id}` }))
+        : [],
+    [targetType, chargingPoints, serviceProviders]
+  );
 
   const selectedCarType = useMemo(
     () => carTypes.find((ct) => ct.id === carTypeId) ?? null,
@@ -148,6 +179,8 @@ export default function SendNotificationScreen() {
     setBody("");
     setDeepLink("");
     setData("");
+    setTargetType("none");
+    setTargetId(null);
     setOfferDate("");
     setOfferTime("");
     setScheduleForLater(false);
@@ -172,6 +205,10 @@ export default function SendNotificationScreen() {
       }
       if (!body.trim()) {
         openErrorSnackbar({ message: t("send.bodyRequired") });
+        return;
+      }
+      if (targetType !== "none" && !targetId) {
+        openErrorSnackbar({ message: t("send.targetRequired") });
         return;
       }
 
@@ -210,6 +247,8 @@ export default function SendNotificationScreen() {
           body: body.trim(),
           isForAll,
           userIds: isForAll ? null : parseUserIds(userIdsString),
+          targetType: targetType === "none" ? null : targetType,
+          targetId: targetType === "none" ? null : targetId,
           deepLink: deepLink.trim() || null,
           data: data.trim() || null,
           time: formattedTime,
@@ -227,12 +266,14 @@ export default function SendNotificationScreen() {
           carModelId,
           city,
           appType,
+          targetType: targetType === "none" ? null : targetType,
+          targetId: targetType === "none" ? null : targetId,
           deepLink: deepLink.trim() || null,
           data: data.trim() || null,
         });
       }
     },
-    [mode, notificationTypeId, title, body, isForAll, userIdsString, carTypeId, carModelId, city, appType, deepLink, data, offerDate, offerTime, isOfferType, scheduleForLater, broadcastMutation, filterMutation, openErrorSnackbar, t]
+    [mode, notificationTypeId, title, body, isForAll, userIdsString, carTypeId, carModelId, city, appType, targetType, targetId, deepLink, data, offerDate, offerTime, isOfferType, scheduleForLater, broadcastMutation, filterMutation, openErrorSnackbar, t]
   );
 
   const hasFilters = carTypeId != null || carModelId != null || city != null;
@@ -695,6 +736,58 @@ export default function SendNotificationScreen() {
             </Paper>
           )}
 
+          {/* ── Deep-link target (R4) ── */}
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2.5 }}>
+              <Box sx={{ width: 32, height: 32, borderRadius: 2, bgcolor: "grey.100", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <EvStationIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+              </Box>
+              <Typography variant="subtitle1" fontWeight={800} color="text.secondary">{t("send.targetTitle")}</Typography>
+              <Chip label={t("send.optional")} size="small" variant="outlined" sx={{ fontWeight: 600, ml: 1 }} />
+            </Stack>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t("send.targetHint")}
+            </Typography>
+            <Grid container spacing={2.5}>
+              <Grid item xs={12} sm={5}>
+                <TextField
+                  select
+                  label={t("send.targetType")}
+                  value={targetType}
+                  onChange={(e) => {
+                    setTargetType(e.target.value as NotificationTargetType);
+                    setTargetId(null);
+                  }}
+                  fullWidth
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
+                >
+                  <MenuItem value="none">{t("send.targetNone")}</MenuItem>
+                  <MenuItem value="charging-point">{t("send.targetChargingPoint")}</MenuItem>
+                  <MenuItem value="service-provider">{t("send.targetServiceProvider")}</MenuItem>
+                </TextField>
+              </Grid>
+              {targetType !== "none" && (
+                <Grid item xs={12} sm={7}>
+                  <Autocomplete
+                    options={targetOptions}
+                    loading={loadingCPs || loadingSPs}
+                    value={targetOptions.find((o) => o.id === targetId) ?? null}
+                    onChange={(_e, v) => setTargetId(v?.id ?? null)}
+                    isOptionEqualToValue={(o, v) => o.id === v.id}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t("send.targetPick")}
+                        placeholder={t("send.targetPickPlaceholder")}
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
+                      />
+                    )}
+                  />
+                </Grid>
+              )}
+            </Grid>
+          </Paper>
+
           {/* ── Advanced Options ── */}
           <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2.5 }}>
@@ -711,7 +804,9 @@ export default function SendNotificationScreen() {
                   value={deepLink}
                   onChange={(e) => setDeepLink(e.target.value)}
                   fullWidth
-                  placeholder="app://screen/123"
+                  placeholder="cable://charging-point?targetId=123"
+                  disabled={targetType !== "none"}
+                  helperText={targetType !== "none" ? t("send.deepLinkDisabled") : undefined}
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>

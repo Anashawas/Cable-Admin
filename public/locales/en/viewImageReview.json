@@ -1,0 +1,18 @@
+{
+  "title": "Station Ad Images — Review",
+  "subtitle": "Approve or reject promo images uploaded by partners before they appear in the app.",
+  "empty": "No images awaiting review.",
+  "pending": "Pending",
+  "approve": "Approve",
+  "reject": "Reject",
+  "approved": "Image approved",
+  "rejected": "Image rejected",
+  "promoImageTitle": "Ad image (premium card)",
+  "promoImageHint": "16:9 image shown on the home premium card. Auto-compressed on upload.",
+  "choose": "Upload image",
+  "replace": "Replace image",
+  "remove": "Remove",
+  "uploaded": "Image uploaded",
+  "removed": "Image removed",
+  "ratioError": "Image must be ~16:9 and at least 800×450."
+}

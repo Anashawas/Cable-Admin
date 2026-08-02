@@ -28,9 +28,14 @@ const StationStatisticsScreen = lazy(() => import("../features/charge-management
 const ChargerBrandsScreen = lazy(() => import("../features/charge-management/components/ChargerBrandsScreen"));
 const ComplaintsScreen = lazy(() => import("../features/complaints/components/ComplaintsScreen"));
 const BannersScreen = lazy(() => import("../features/system/components/BannersScreen"));
+const WelcomeMessagesScreen = lazy(() => import("../features/announcements/components/WelcomeMessagesScreen"));
+const ViewImageReviewScreen = lazy(() => import("../features/charge-management/components/ViewImageReviewScreen"));
+const NearestPreviewScreen = lazy(() => import("../features/charge-management/components/NearestPreviewScreen"));
+const CampaignsScreen = lazy(() => import("../features/campaigns/components/CampaignsScreen"));
 const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
 const CarDatabaseScreen = lazy(() => import("../features/system/components/CarDatabaseScreen"));
 const SendNotificationScreen = lazy(() => import("../features/notifications/components/SendNotificationScreen"));
+const NotificationTemplatesScreen = lazy(() => import("../features/notifications/components/NotificationTemplatesScreen"));
 const ReceiptGeneratorScreen = lazy(() => import("../features/receipts/components/ReceiptGeneratorScreen"));
 const EmergencyServicesScreen = lazy(() => import("../features/system/components/EmergencyServicesScreen"));
 const ServiceCategoriesScreen = lazy(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
@@ -254,6 +259,46 @@ function AppContainer() {
             }
           />
           <Route
+            path="/welcome-messages"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <WelcomeMessagesScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/view-image-review"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ViewImageReviewScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/nearest-preview"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <NearestPreviewScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/campaigns"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <CampaignsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/app-versions"
             element={
               <ProtectedRoute isAllowed={!!user}>
@@ -279,6 +324,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <SendNotificationScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notification-templates"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <NotificationTemplatesScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

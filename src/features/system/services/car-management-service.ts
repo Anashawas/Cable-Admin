@@ -1,4 +1,5 @@
 import { server } from "../../../lib/@axios";
+import { compressImage } from "../../../lib/image-compress";
 import type {
   CarTypeDto,
   CarModelDto,
@@ -66,8 +67,11 @@ const uploadCarTypeIcon = async (
   file: File,
   signal?: AbortSignal
 ): Promise<void> => {
+  // Car brand logos are simple icons — keep them light. Cap at 256px and keep
+  // PNG (transparency); a multi-MB logo becomes a few KB.
+  const light = await compressImage(file, { maxWidth: 256, maxHeight: 256 });
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", light);
   await server.post(`api/carmanagement/UploadCarTypeIcon/${id}`, form, {
     headers: { "Content-Type": "multipart/form-data" },
     signal,

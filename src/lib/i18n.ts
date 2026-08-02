@@ -61,6 +61,11 @@ i18n
       "chargerBrands",
       "analytics",
       "terms",
+      "welcome",
+      "campaigns",
+      "viewImageReview",
+      "nearestPreview",
+      "templates",
     ],
   });
 

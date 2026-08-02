@@ -3,6 +3,8 @@ import { Box, Stack } from "@mui/material";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader } from "../../../components";
 import BannerManager from "./BannerManager";
+import NearbyRadiusCard from "./NearbyRadiusCard";
+import ImpressionWindowCard from "./ImpressionWindowCard";
 
 export default function BannersScreen() {
   const { t } = useTranslation();
@@ -20,6 +22,8 @@ export default function BannersScreen() {
       >
         <Stack spacing={2}>
           <ScreenHeader title={t("platform@banners.title")} />
+          <NearbyRadiusCard />
+          <ImpressionWindowCard />
           <BannerManager />
         </Stack>
       </Box>

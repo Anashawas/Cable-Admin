@@ -51,6 +51,8 @@ import {
 	Bolt as BoltIcon,
 	EmojiEvents as EmojiEventsIcon,
 	Gavel as GavelIcon,
+	Campaign as CampaignIcon,
+	Image as ImageIcon,
 } from "@mui/icons-material";
 import { PRIVILEGES, PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -110,6 +112,7 @@ const AppCollapsibleSidebar = () => {
 				{ label: t("stationStatistics"), path: "/station-statistics", icon: <QueryStatsIcon /> },
 				{ label: t("stationsRequest"), path: "/stations-request", icon: <ListAltIcon /> },
 				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },
+				{ label: t("nearestPreview"), path: "/nearest-preview", icon: <QueryStatsIcon /> },
 			],
 		},
 		{
@@ -160,16 +163,27 @@ const AppCollapsibleSidebar = () => {
 			],
 		},
 		{
+			id: "ads",
+			label: t("ads"),
+			icon: <CampaignIcon />,
+			items: [
+				{ label: t("banners"), path: "/banners", icon: <CampaignIcon /> },
+				{ label: t("welcomeMessages"), path: "/welcome-messages", icon: <NotificationsActiveIcon /> },
+				{ label: t("stationAdImages"), path: "/view-image-review", icon: <ImageIcon /> },
+				{ label: t("campaigns"), path: "/campaigns", icon: <InsightsIcon /> },
+			],
+		},
+		{
 			id: "systemData",
 			label: t("systemData"),
 			icon: <SettingsIcon />,
 			items: [
 				{ label: t("carManagement"), path: "/car-management", icon: <SettingsIcon /> },
 				{ label: t("socialMediaPlatforms"), path: "/social-media-platforms", icon: <ShareIcon /> },
-				{ label: t("banners"), path: "/banners", icon: <SettingsIcon /> },
 				{ label: t("appVersions"), path: "/app-versions", icon: <SettingsIcon /> },
 				{ label: t("emergencyServices"), path: "/emergency-services", icon: <LocalHospitalIcon /> },
 				{ label: t("sendNotification"), path: "/send-notification", icon: <NotificationsActiveIcon /> },
+				{ label: t("notificationTemplates"), path: "/notification-templates", icon: <NotificationsActiveIcon /> },
 				{ label: t("generateReceipt"), path: "/receipts", icon: <ReceiptLongIcon /> },
 				{ label: t("termsConditions"), path: "/terms-conditions", icon: <GavelIcon /> },
 			],

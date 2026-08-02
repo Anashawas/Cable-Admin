@@ -31,6 +31,10 @@ export interface ChargingPointDto {
   avgChargingPointRate?: number | null;
   /** Image URL (capital C in API). */
   iConUrl?: string | null;
+  /** Paid premium promo image (ads system). */
+  viewImage?: string | null;
+  viewImageStatus?: string | null;
+  isPremium?: boolean | null;
   rateCount?: number | null;
   price?: number | null;
   chargerSpeed?: number | null;
@@ -59,7 +63,10 @@ export interface ChargingPointDto {
   ownerId?: number | null;
   ownerName?: string | null;
   ownerEmail?: string | null;
-  /** Owner's user-account phone (distinct from the station's contact `phone`). */
+  /** The station's owner/contact phone (what the partner sets in "owner phone").
+   * This is the field the backend actually returns. */
+  ownerPhone?: string | null;
+  /** Owner's linked user-account phone — often not returned; fall back to ownerPhone. */
   ownerAccountPhone?: string | null;
   /** Audit timestamps — when the station joined, and when its data last changed. */
   createdAt?: string | null;

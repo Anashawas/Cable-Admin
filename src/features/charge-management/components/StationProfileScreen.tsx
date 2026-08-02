@@ -40,6 +40,7 @@ import { getStationById } from "../services/station-form-service";
 import { getComplaintsByChargingPointId } from "../../complaints/services/complaints-service";
 import StationReviewsSection from "./StationReviewsSection";
 import StationPremiumSection from "./StationPremiumSection";
+import StationViewImageSection from "./StationViewImageSection";
 import SocialLinksDisplay from "../../social-media/components/SocialLinksDisplay";
 import ProviderActivityFeed from "../../loyalty/components/ProviderActivityFeed";
 import AnalyticsPanel from "../../analytics/components/AnalyticsPanel";
@@ -239,6 +240,13 @@ export default function StationProfileScreen() {
               {/* Overview */}
               {tab === 0 && (
                 <Stack spacing={2.5} divider={<Divider flexItem />}>
+                  {/* Premium ad image (viewImage) — pinned at top, highlighted */}
+                  <StationViewImageSection
+                    stationId={s.id}
+                    viewImage={s.viewImage}
+                    viewImageStatus={s.viewImageStatus}
+                  />
+
                   <Section icon={<PersonIcon fontSize="small" />} title={t("chargeManagement@owner.title")}>
                     {s.ownerId ? (
                       <Grid container spacing={1.5}>
@@ -252,7 +260,7 @@ export default function StationProfileScreen() {
                           }
                         />
                         <InfoItem icon={<EmailIcon sx={{ fontSize: 16 }} />} label={t("chargeManagement@owner.email")} value={s.ownerEmail} />
-                        <InfoItem icon={<PhoneIcon sx={{ fontSize: 16 }} />} label={t("chargeManagement@owner.phone")} value={s.ownerAccountPhone} />
+                        <InfoItem icon={<PhoneIcon sx={{ fontSize: 16 }} />} label={t("chargeManagement@owner.phone")} value={s.ownerPhone ?? s.ownerAccountPhone} />
                       </Grid>
                     ) : (
                       <Chip icon={<PersonOffIcon />} label={t("chargeManagement@owner.none")} color="warning" variant="outlined" sx={{ fontWeight: 700 }} />

@@ -23,12 +23,17 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 import { getPendingRequests } from "../../charge-management/services/request-service";
 import { getUsersSummary } from "../../users/services/user-service";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 import { getAllPartnerAgreements } from "../../partners/services/partners-service";
 import { getAllComplaints } from "../../complaints/services/complaints-service";
+import { getAttentionSummary } from "../services/attention-service";
 import { useAuthenticationStore } from "../../../stores";
 
 const SECTIONS = [
@@ -165,6 +170,14 @@ export default function DashboardScreen() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // One-call "needs attention" counts (all queues). Falls back to the
+  // per-query counts below when the endpoint is unavailable.
+  const { data: attention } = useQuery({
+    queryKey: ["dashboard", "attention-summary"],
+    queryFn: ({ signal }) => getAttentionSummary(signal),
+    staleTime: 60 * 1000,
+  });
+
   const today = new Date().toISOString().slice(0, 10);
   const todayNewUsers = usersSummary?.newToday ?? 0;
   const todayNewProviders = useMemo(() => serviceProviders.filter((sp) => sp.createdAt?.slice(0, 10) === today).length, [serviceProviders, today]);
@@ -214,10 +227,28 @@ export default function DashboardScreen() {
       sub: openComplaints > 0 ? <Chip size="small" label={`${openComplaints} ${t("dashboard@openComplaints")}`} sx={{ height: 20, bgcolor: alpha("#b71c1c", 0.1), color: "#b71c1c", fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> : null },
   ];
 
-  const actions = [
-    { show: pendingApproval > 0, label: t("dashboard@pendingApproval"), value: pendingApproval, Icon: ListAltIcon, accent: "#e65100", path: "/stations-request" },
-    { show: openComplaints > 0, label: t("dashboard@openComplaints"), value: openComplaints, Icon: ReportProblemIcon, accent: "#c62828", path: "/complaints" },
-  ].filter((a) => a.show);
+  // Prefer the single attention-summary endpoint (all queues). Fall back to the
+  // two client-side counts if it isn't available yet.
+  const actions = useMemo(() => {
+    if (attention) {
+      return [
+        { show: attention.stationUpdateRequests > 0, label: t("dashboard@pendingApproval"), value: attention.stationUpdateRequests, Icon: ListAltIcon, accent: "#e65100", path: "/stations-request" },
+        { show: attention.openComplaints > 0, label: t("dashboard@openComplaints"), value: attention.openComplaints, Icon: ReportProblemIcon, accent: "#c62828", path: "/complaints" },
+        { show: attention.pendingViewImages > 0, label: t("dashboard@pendingViewImages"), value: attention.pendingViewImages, Icon: ImageOutlinedIcon, accent: "#00838f", path: "/view-image-review" },
+        { show: attention.pendingOffers > 0, label: t("dashboard@pendingOffers"), value: attention.pendingOffers, Icon: LocalOfferIcon, accent: "#6a1b9a", path: "/pending-offers" },
+        { show: attention.settlementsPending > 0, label: t("dashboard@settlementsPending"), value: attention.settlementsPending, Icon: PaymentsIcon, accent: "#1565c0", path: "/settlements" },
+        { show: attention.settlementsDisputed > 0, label: t("dashboard@settlementsDisputed"), value: attention.settlementsDisputed, Icon: PaymentsIcon, accent: "#c62828", path: "/settlements" },
+        { show: attention.premiumExpiringSoon > 0, label: t("dashboard@premiumExpiringSoon"), value: attention.premiumExpiringSoon, Icon: WorkspacePremiumIcon, accent: "#e65100", path: "/charge-management" },
+        { show: attention.premiumExpired > 0, label: t("dashboard@premiumExpired"), value: attention.premiumExpired, Icon: WorkspacePremiumIcon, accent: "#c62828", path: "/charge-management" },
+        { show: attention.campaignsEndingSoon > 0, label: t("dashboard@campaignsEndingSoon"), value: attention.campaignsEndingSoon, Icon: CampaignIcon, accent: "#e65100", path: "/campaigns" },
+        { show: attention.announcementsExpiringSoon > 0, label: t("dashboard@announcementsExpiringSoon"), value: attention.announcementsExpiringSoon, Icon: CampaignIcon, accent: "#e65100", path: "/welcome-messages" },
+      ].filter((a) => a.show);
+    }
+    return [
+      { show: pendingApproval > 0, label: t("dashboard@pendingApproval"), value: pendingApproval, Icon: ListAltIcon, accent: "#e65100", path: "/stations-request" },
+      { show: openComplaints > 0, label: t("dashboard@openComplaints"), value: openComplaints, Icon: ReportProblemIcon, accent: "#c62828", path: "/complaints" },
+    ].filter((a) => a.show);
+  }, [attention, pendingApproval, openComplaints, t]);
 
   return (
     <Box sx={{ width: "100%", height: "100%", overflow: "auto", p: { xs: 2, sm: 3 } }}>

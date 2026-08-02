@@ -37,7 +37,9 @@
   },
   "attachments": "Attachments",
   "diff": {
-    "none": "No field changes in this request."
+    "none": "No field changes in this request.",
+    "noImage": "no image",
+    "removed": "removed"
   },
   "fields": {
     "name": "Name",

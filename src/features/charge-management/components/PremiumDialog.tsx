@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
   DialogTitle,
@@ -23,9 +24,35 @@ import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import HistoryIcon from "@mui/icons-material/History";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import EditNoteIcon from "@mui/icons-material/EditNote";
+import ImageIcon from "@mui/icons-material/Image";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useSnackbarStore } from "../../../stores";
 import { usePremiumHistory, useRecordPremiumPayment } from "../hooks/use-premium";
+import {
+  uploadStationViewImage,
+  deleteViewImage,
+} from "../services/view-image-review-service";
 import type { ChargingPointDto } from "../types/api";
+
+/** Validates a picked promo image is ~16:9 and large enough (matches mobile). */
+function validatePromoImage(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const { naturalWidth: w, naturalHeight: h } = img;
+      if (w < 800 || h < 450) return resolve("tooSmall");
+      if (Math.abs(w / h - 16 / 9) > 0.15) return resolve("ratio");
+      resolve(null);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve("read");
+    };
+    img.src = url;
+  });
+}
 
 interface PremiumDialogProps {
   open: boolean;
@@ -52,10 +79,40 @@ export default function PremiumDialog({ open, station, onClose }: PremiumDialogP
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
 
+  // Promo image (viewImage)
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
   // Reset the form each time the dialog opens for a station.
   useEffect(() => {
-    if (open) { setPaymentDate(new Date()); setExpiresAt(null); setAmount(""); setNote(""); }
-  }, [open, id]);
+    if (open) {
+      setPaymentDate(new Date()); setExpiresAt(null); setAmount(""); setNote("");
+      setImageUrl(station?.viewImage ?? null);
+    }
+  }, [open, id, station?.viewImage]);
+
+  const uploadImageMutation = useMutation({
+    mutationFn: (file: File) => uploadStationViewImage(id!, file),
+    onSuccess: (url) => {
+      if (url) setImageUrl(url);
+      openSuccessSnackbar({ message: t("viewImageReview@uploaded") });
+    },
+    onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+  });
+
+  const removeImageMutation = useMutation({
+    mutationFn: () => deleteViewImage(id!),
+    onSuccess: () => { setImageUrl(null); openSuccessSnackbar({ message: t("viewImageReview@removed") }); },
+    onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+  });
+
+  const handlePickImage = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file || id == null) return;
+    const err = await validatePromoImage(file);
+    if (err) { openErrorSnackbar({ message: t("viewImageReview@ratioError") }); return; }
+    uploadImageMutation.mutate(file);
+  }, [id, uploadImageMutation, openErrorSnackbar, t]);
 
   const handleSubmit = useCallback(() => {
     if (id == null) return;
@@ -151,6 +208,50 @@ export default function PremiumDialog({ open, station, onClose }: PremiumDialogP
             inputProps={{ maxLength: 500 }}
             InputProps={{ startAdornment: <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1 }}><EditNoteIcon fontSize="small" color="action" /></InputAdornment> }}
           />
+
+          <Divider />
+
+          {/* Promo image (viewImage) */}
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <ImageIcon fontSize="small" color="action" />
+            <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+              {t("viewImageReview@promoImageTitle")}
+            </Typography>
+          </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+            {t("viewImageReview@promoImageHint")}
+          </Typography>
+          {imageUrl && (
+            <Box
+              component="img"
+              src={imageUrl}
+              alt="promo"
+              sx={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", borderRadius: 2, border: 1, borderColor: "divider" }}
+            />
+          )}
+          <Stack direction="row" spacing={1}>
+            <Button
+              component="label"
+              variant="outlined"
+              size="small"
+              startIcon={uploadImageMutation.isPending ? <CircularProgress size={16} /> : <ImageIcon />}
+              disabled={uploadImageMutation.isPending || id == null}
+            >
+              {imageUrl ? t("viewImageReview@replace") : t("viewImageReview@choose")}
+              <input type="file" hidden accept="image/*" onChange={handlePickImage} />
+            </Button>
+            {imageUrl && (
+              <Button
+                size="small"
+                color="error"
+                startIcon={removeImageMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineIcon />}
+                disabled={removeImageMutation.isPending}
+                onClick={() => removeImageMutation.mutate()}
+              >
+                {t("viewImageReview@remove")}
+              </Button>
+            )}
+          </Stack>
 
           <Divider />
 
