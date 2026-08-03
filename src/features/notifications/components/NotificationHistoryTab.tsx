@@ -117,7 +117,7 @@ export default function NotificationHistoryTab() {
           </Stack>
         </Stack>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               select
               fullWidth
@@ -133,7 +133,7 @@ export default function NotificationHistoryTab() {
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={6} sm={4}>
+          <Grid size={{ xs: 6, sm: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -148,7 +148,7 @@ export default function NotificationHistoryTab() {
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           </Grid>
-          <Grid item xs={6} sm={4}>
+          <Grid size={{ xs: 6, sm: 4 }}>
             <TextField
               fullWidth
               size="small"

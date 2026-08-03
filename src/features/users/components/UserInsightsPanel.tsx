@@ -165,7 +165,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
 
           {/* ── Users per city ── */}
           {topCities.length > 0 && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ mb: 2 }} />
               <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: 1, borderColor: "divider" }}>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
@@ -191,7 +191,7 @@ export default function UserInsightsPanel({ users }: UserInsightsPanelProps) {
                   series={[{ data: topCities.map((c) => c.count), color: theme.palette.info.main }]}
                   height={Math.max(topCities.length * 30 + 40, 180)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 90 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               </Paper>
             </Grid>

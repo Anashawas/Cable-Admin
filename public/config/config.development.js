@@ -20,9 +20,7 @@ window.env = {
     ],
   },
   server: {
-    // TEMP: pointing the dev build at PRODUCTION.
-    // Revert to "http://dev.cable-app.com/" to go back to the dev API.
-    url: "https://cable-app.com/",
+    url: "http://dev.cable-app.com/",
   },
   search: {
     geocoderServiceUrl:

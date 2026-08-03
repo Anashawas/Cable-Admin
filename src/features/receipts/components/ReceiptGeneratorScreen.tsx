@@ -231,7 +231,7 @@ export default function ReceiptGeneratorScreen() {
             </Stack>
 
             <Grid container spacing={2.5}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.customerName")}
                   value={form.customerName}
@@ -248,7 +248,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.email")}
                   type="email"
@@ -266,7 +266,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.phone")}
                   value={form.phone}
@@ -311,7 +311,7 @@ export default function ReceiptGeneratorScreen() {
             </Stack>
 
             <Grid container spacing={2.5}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.invoiceName")}
                   value={form.invoiceName}
@@ -321,7 +321,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.titleName")}
                   value={form.titleName}
@@ -331,7 +331,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.serviceName")}
                   value={form.serviceName}
@@ -341,7 +341,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.privacyName")}
                   value={form.privacyName}
@@ -379,7 +379,7 @@ export default function ReceiptGeneratorScreen() {
             </Stack>
 
             <Grid container spacing={2.5}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.totalAmount")}
                   type="number"
@@ -398,7 +398,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.year")}
                   type="number"
@@ -411,7 +411,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.paymentDate")}
                   type="datetime-local"
@@ -430,7 +430,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.durationFrom")}
                   type="date"
@@ -449,7 +449,7 @@ export default function ReceiptGeneratorScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("receipts@fields.durationTo")}
                   type="date"

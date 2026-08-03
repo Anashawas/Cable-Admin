@@ -499,7 +499,7 @@ export default function SendNotificationScreen() {
               {scheduleForLater && (
                 <>
                   <Grid container spacing={2.5}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         label={t("send.offerDate")}
                         value={offerDate}
@@ -517,7 +517,7 @@ export default function SendNotificationScreen() {
                         sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5, bgcolor: "white" } }}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
                         label={t("send.offerTime")}
                         value={offerTime}
@@ -609,7 +609,7 @@ export default function SendNotificationScreen() {
               </Alert>
 
               <Grid container spacing={2.5}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     select
                     fullWidth
@@ -631,7 +631,7 @@ export default function SendNotificationScreen() {
                     ))}
                   </TextField>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     select
                     fullWidth
@@ -650,7 +650,7 @@ export default function SendNotificationScreen() {
                     ))}
                   </TextField>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     select
                     fullWidth
@@ -668,7 +668,7 @@ export default function SendNotificationScreen() {
                     ))}
                   </TextField>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: "block", mb: 1 }}>
                     {t("send.appType")}
                   </Typography>
@@ -749,7 +749,7 @@ export default function SendNotificationScreen() {
               {t("send.targetHint")}
             </Typography>
             <Grid container spacing={2.5}>
-              <Grid item xs={12} sm={5}>
+              <Grid size={{ xs: 12, sm: 5 }}>
                 <TextField
                   select
                   label={t("send.targetType")}
@@ -767,7 +767,7 @@ export default function SendNotificationScreen() {
                 </TextField>
               </Grid>
               {targetType !== "none" && (
-                <Grid item xs={12} sm={7}>
+                <Grid size={{ xs: 12, sm: 7 }}>
                   <Autocomplete
                     options={targetOptions}
                     loading={loadingCPs || loadingSPs}
@@ -798,7 +798,7 @@ export default function SendNotificationScreen() {
               <Chip label={t("send.optional")} size="small" variant="outlined" sx={{ fontWeight: 600, ml: 1 }} />
             </Stack>
             <Grid container spacing={2.5}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("send.deepLink")}
                   value={deepLink}
@@ -810,7 +810,7 @@ export default function SendNotificationScreen() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("send.data")}
                   value={data}
