@@ -345,7 +345,7 @@ export default function DashboardScreen() {
               <ChartCard title={t("dashboard@newUsersTrend")} icon={<ShowChartIcon fontSize="small" />}>
                 <LineChart
                   xAxis={[{ scaleType: "point", data: trend.map((d) => d.day.slice(5)), tickLabelStyle: { fontSize: 9 } }]}
-                  series={[{ data: trend.map((d) => d.count), color: theme.palette.success.main, area: true, showMark: false }]}
+                  series={[{ data: trend.map((d) => d.count), color: theme.palette.primary.main, area: true, showMark: false }]}
                   height={Math.max(topByVisitors.length * 30 + 40, 200)}
                   margin={{ top: 10, right: 16, bottom: 28, left: 34 }} />
               </ChartCard>

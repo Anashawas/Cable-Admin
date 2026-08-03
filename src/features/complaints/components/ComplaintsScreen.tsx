@@ -303,7 +303,7 @@ export default function ComplaintsScreen() {
       {/* ── Gradient Banner ── */}
       <Box
         sx={{
-          background: `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 55%, #d84315 100%)`,
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,
@@ -786,7 +786,7 @@ export default function ComplaintsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
-        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden" }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden" }}>
           <Box sx={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={2} alignItems="center">
@@ -875,7 +875,7 @@ export default function ComplaintsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
-        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.main} 100%)`, p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
           <ReplyIcon />
           <Typography variant="h6" fontWeight={700}>{t("complaints@postReplyTitle")}</Typography>
         </Box>

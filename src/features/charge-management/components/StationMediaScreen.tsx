@@ -14,6 +14,7 @@ import {
   IconButton,
   Tooltip,
   Divider,
+  useTheme,
 } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -39,6 +40,7 @@ function getPhotoUrl(photo: StationAttachmentDto): string | null {
 
 export default function StationMediaScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -195,7 +197,7 @@ export default function StationMediaScreen() {
         {/* ── Gradient Banner ── */}
         <Box
           sx={{
-            background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+            background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
             borderRadius: 3,
             p: { xs: 2.5, md: 3.5 },
             mb: 3,

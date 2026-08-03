@@ -23,6 +23,7 @@ import {
   Autocomplete,
   CircularProgress,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -89,6 +90,7 @@ const STATUS_CONFIG: Record<
 
 export default function TransactionsScreen() {
   const { t } = useTranslation(["offers", "common"]);
+  const theme = useTheme();
 
   const [providerType, setProviderType] = useState<ProviderType>("ServiceProvider");
   const [selectedProvider, setSelectedProvider] = useState<ProviderOption | null>(null);
@@ -266,7 +268,7 @@ export default function TransactionsScreen() {
       {/* ── Gradient Header ─────────────────────────────────────────────── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d3276 0%, #1565c0 60%, #1976d2 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: 3,
           mb: 3,

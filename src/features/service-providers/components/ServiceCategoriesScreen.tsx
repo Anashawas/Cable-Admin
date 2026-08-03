@@ -21,6 +21,7 @@ import {
   Skeleton,
   Pagination,
   Grid,
+  useTheme,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -54,6 +55,7 @@ type StatusFilter = "all" | "active" | "inactive";
 
 export default function ServiceCategoriesScreen() {
   const { t } = useTranslation("serviceProviders");
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -211,7 +213,7 @@ export default function ServiceCategoriesScreen() {
       {/* ── Banner ── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 4 },
           mb: 3,

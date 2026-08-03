@@ -28,6 +28,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  useTheme,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -111,6 +112,7 @@ function InfoItem({ icon, label, value }: { icon?: ReactNode; label: string; val
 
 export default function UserProfileScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
@@ -229,7 +231,7 @@ export default function UserProfileScreen() {
         <Stack spacing={2.5} sx={{ maxWidth: 1080, mx: "auto" }}>
 
           {/* ── Gradient identity hero ── */}
-          <Box sx={{ background: "linear-gradient(135deg, #1b5e20 0%, #2e7d32 55%, #388e3c 100%)", borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
+          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
             <Stack direction="row" spacing={2} alignItems="center" sx={{ position: "relative" }}>
               <Tooltip title={t("back")}>

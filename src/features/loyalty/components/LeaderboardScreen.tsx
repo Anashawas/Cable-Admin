@@ -11,6 +11,7 @@ import {
   Tooltip,
   Skeleton,
   Divider,
+  useTheme,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -30,6 +31,7 @@ function displayName(e: LeaderboardEntryDto, anon: string) {
 
 export default function LeaderboardScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [top, setTop] = useState(25);
   const { data = [], isLoading, refetch } = useLeaderboard(top);
 
@@ -44,7 +46,7 @@ export default function LeaderboardScreen() {
           {/* ── Header ── */}
           <Box
             sx={{
-              background: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 55%, #8e24aa 100%)",
+              background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               borderRadius: 3, p: { xs: 2.5, md: 3.5 }, color: "white",
               position: "relative", overflow: "hidden",
             }}

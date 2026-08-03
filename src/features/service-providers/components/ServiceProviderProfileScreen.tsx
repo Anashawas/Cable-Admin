@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Box, Stack, Typography, Avatar, Chip, Button, IconButton, Tooltip, Paper,
-  Divider, Grid, Tabs, Tab, Link, CircularProgress, Rating,
+  Divider, Grid, Tabs, Tab, Link, CircularProgress, Rating, useTheme,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MiscellaneousServicesIcon from "@mui/icons-material/MiscellaneousServices";
@@ -61,6 +61,7 @@ function InfoItem({ icon, label, value }: { icon?: ReactNode; label: string; val
 
 export default function ServiceProviderProfileScreen() {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const providerId = Number(id);
@@ -98,7 +99,7 @@ export default function ServiceProviderProfileScreen() {
       <Box sx={{ p: { xs: 1, sm: 2 } }}>
         <Stack spacing={2.5} sx={{ maxWidth: 1080, mx: "auto" }}>
           {/* Hero */}
-          <Box sx={{ background: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 55%, #7b1fa2 100%)", borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
+          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
             <Stack direction="row" spacing={2} alignItems="center" sx={{ position: "relative" }}>
               <Tooltip title={t("back")}>

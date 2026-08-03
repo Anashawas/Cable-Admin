@@ -744,7 +744,7 @@ export default function OffersScreen() {
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <Box
         sx={{
-          background: `linear-gradient(135deg, #0d3276 0%, ${theme.palette.primary.main} 60%, ${theme.palette.primary.dark} 100%)`,
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: 3,
           mb: 3,
@@ -957,7 +957,7 @@ export default function OffersScreen() {
       >
         <Box
           sx={{
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+            background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
             px: 3, pt: 3, pb: 4,
             flexShrink: 0,
           }}
@@ -1392,7 +1392,7 @@ export default function OffersScreen() {
       >
         <Box
           sx={{
-            background: `linear-gradient(135deg, #0d3276 0%, ${theme.palette.primary.main} 100%)`,
+            background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
             px: 3, pt: 2.5, pb: 3,
             flexShrink: 0,
           }}

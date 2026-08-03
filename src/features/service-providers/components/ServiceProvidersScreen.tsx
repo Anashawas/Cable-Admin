@@ -838,7 +838,7 @@ export default function ServiceProvidersScreen() {
       {/* Banner */}
       <Box
         sx={{
-          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 4 },
           mb: 3,
@@ -1198,7 +1198,7 @@ export default function ServiceProvidersScreen() {
         <Box sx={{
           background: editingProvider
             ? `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.main} 100%)`
-            : `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
+            : `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           px: 3, py: 2.5,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
@@ -2292,7 +2292,7 @@ export default function ServiceProvidersScreen() {
       >
         {/* Gradient header */}
         <Box sx={{
-          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           px: 3, py: 2.5,
           display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0,
         }}>

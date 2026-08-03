@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Box, Stack, Typography, Skeleton, Chip, Tooltip, IconButton, Paper, TextField, MenuItem, Divider } from "@mui/material";
+import { Box, Stack, Typography, Skeleton, Chip, Tooltip, IconButton, Paper, TextField, MenuItem, Divider, useTheme } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import InsightsIcon from "@mui/icons-material/Insights";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -15,6 +15,7 @@ import { getUsersList } from "../services/user-service";
 
 export default function UserAnalyticsScreen() {
   const { t } = useTranslation("userManagement");
+  const theme = useTheme();
 
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
@@ -91,7 +92,7 @@ export default function UserAnalyticsScreen() {
       {/* Banner */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 4 },
           mb: 3,

@@ -23,6 +23,7 @@ import {
   Divider,
   Tooltip,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -65,6 +66,7 @@ const defaultPayload: EmergencyServicePayload = {
 
 export default function EmergencyServicesScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -227,7 +229,7 @@ export default function EmergencyServicesScreen() {
       {/* ── Gradient Page Header ── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #b71c1c 0%, #e53935 60%, #ef5350 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, sm: 3.5 },
           mb: 3,
@@ -471,7 +473,7 @@ export default function EmergencyServicesScreen() {
         <Box
           sx={{
             background: editing
-              ? "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)"
+              ? `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`
               : "linear-gradient(135deg, #b71c1c 0%, #e53935 100%)",
             px: 3, py: 2.5, flexShrink: 0,
             borderTopLeftRadius: 12,

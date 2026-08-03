@@ -69,7 +69,7 @@ export default function LoyaltyDashboardScreen() {
         <Stack spacing={2.5}>
 
           {/* ── Header + liability + inline stats ── */}
-          <Box sx={{ background: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 55%, #8e24aa 100%)", borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
+          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -50, right: -50, width: 220, height: 220, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
             <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ sm: "center" }} spacing={2}>
               <Stack direction="row" spacing={2} alignItems="center">

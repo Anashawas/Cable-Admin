@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Box, Stack, Typography, Avatar, Chip, Button, IconButton, Tooltip, Paper,
-  Divider, Grid, Tabs, Tab, Link, CircularProgress,
+  Divider, Grid, Tabs, Tab, Link, CircularProgress, useTheme,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
@@ -104,6 +104,7 @@ const COMPLAINT_STATUS: Record<number, { key: string; color: "info" | "default" 
 
 export default function StationProfileScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const stationId = Number(id);
@@ -146,7 +147,7 @@ export default function StationProfileScreen() {
         <Stack spacing={2.5} sx={{ maxWidth: 1100, mx: "auto" }}>
 
           {/* ── Hero ── */}
-          <Box sx={{ background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)", borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "#fff", position: "relative", overflow: "hidden" }}>
+          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "#fff", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
               <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>

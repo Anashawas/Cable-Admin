@@ -792,7 +792,7 @@ export default function ChargeManagementScreen() {
           {/* ── Page Banner ─────────────────────────────────────────────────── */}
           <Box
             sx={{
-              background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+              background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               borderRadius: 3,
               p: { xs: 2, md: 3 },
               position: "relative",
@@ -1326,7 +1326,7 @@ export default function ChargeManagementScreen() {
             maxWidth="sm"
             fullWidth
           >
-            <DialogTitle sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", color: "#fff", pb: 1.5 }}>
+            <DialogTitle sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "#fff", pb: 1.5 }}>
               <Stack spacing={0.5}>
                 <Typography variant="subtitle1" fontWeight={700} color="#fff">
                   {t("chargeManagement@changeOwner.title")}

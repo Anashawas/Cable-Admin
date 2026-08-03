@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Box, Stack, Typography, Chip, IconButton, Tooltip, Button, Avatar, Paper, Link, Grid,
   Dialog, DialogContent, DialogTitle, DialogContentText, DialogActions, TextField, CircularProgress,
+  useTheme,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -59,6 +60,7 @@ function InfoItem({ icon, label, value }: { icon?: ReactNode; label: string; val
 
 export default function StationsRequestScreen() {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
@@ -198,7 +200,7 @@ export default function StationsRequestScreen() {
         <Stack spacing={2.5} sx={{ maxWidth: 1000, mx: "auto" }}>
 
           {/* Hero */}
-          <Box sx={{ background: "linear-gradient(135deg, #bf360c 0%, #e65100 55%, #f57c00 100%)", borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "#fff", position: "relative", overflow: "hidden" }}>
+          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "#fff", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -40, insetInlineEnd: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.07)" }} />
             <Stack direction="row" spacing={2} alignItems="center" sx={{ position: "relative" }}>
               <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 52, height: 52, borderRadius: 2.5 }}><ListAltIcon /></Avatar>
@@ -328,7 +330,7 @@ export default function StationsRequestScreen() {
 
       {/* ── Detail dialog: the requested changes (old → new) ── */}
       <Dialog open={detailReq != null} onClose={() => setDetailReq(null)} maxWidth="sm" fullWidth slotProps={{ paper: { sx: { borderRadius: 3, overflow: "hidden" } } }}>
-        <Box sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)", p: 2.5, color: "#fff" }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 2.5, color: "#fff" }}>
           <Typography variant="h6" fontWeight={800}>{detailReq?.chargingPointName || t("stationsRequest@viewData")}</Typography>
           <Typography variant="caption" sx={{ opacity: 0.8 }}>{t("stationsRequest@columns.requestId")} #{detailReq?.id} · {t(`stationsRequest@status.${(detailReq?.requestStatus ?? "").toLowerCase()}`, detailReq?.requestStatus ?? "")}</Typography>
         </Box>

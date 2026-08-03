@@ -18,6 +18,7 @@ import {
   Avatar,
   Grid,
   Divider,
+  useTheme,
 } from "@mui/material";
 import PublishIcon from "@mui/icons-material/Publish";
 import GavelIcon from "@mui/icons-material/Gavel";
@@ -53,6 +54,7 @@ interface Props {
 
 export default function PublishTermsDialog({ open, onClose, versions }: Props) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
   const publishMutation = usePublishTermsVersion();
@@ -138,7 +140,7 @@ export default function PublishTermsDialog({ open, onClose, versions }: Props) {
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <Box sx={{ background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)", px: 3, py: 2.5 }}>
+      <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, px: 3, py: 2.5 }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
             <GavelIcon sx={{ color: "#fff" }} />

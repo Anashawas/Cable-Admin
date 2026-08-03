@@ -13,6 +13,7 @@ import {
   Tab,
   Skeleton,
   Avatar,
+  useTheme,
 } from "@mui/material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import { useTermsVersion } from "../hooks/use-terms";
@@ -27,6 +28,7 @@ interface Props {
 
 export default function TermsVersionDialog({ versionId, onClose }: Props) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [tab, setTab] = useState(0);
   const { data, isLoading } = useTermsVersion(versionId);
 
@@ -35,7 +37,7 @@ export default function TermsVersionDialog({ versionId, onClose }: Props) {
 
   return (
     <Dialog open={versionId != null} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <Box sx={{ background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)", px: 3, py: 2.5 }}>
+      <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, px: 3, py: 2.5 }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
             <GavelIcon sx={{ color: "#fff" }} />

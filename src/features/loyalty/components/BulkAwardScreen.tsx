@@ -23,6 +23,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  useTheme,
 } from "@mui/material";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
@@ -44,6 +45,7 @@ import type { BulkAwardResult } from "../types/api";
 
 export default function BulkAwardScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -112,7 +114,7 @@ export default function BulkAwardScreen() {
       <Stack spacing={3} sx={{ mt: 3, maxWidth: 760 }}>
         <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 0 }}>
-            <Paper elevation={0} sx={{ px: 3, py: 2.5, background: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 55%, #7b1fa2 100%)", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+            <Paper elevation={0} sx={{ px: 3, py: 2.5, background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 46, height: 46 }}><CardGiftcardIcon /></Avatar>
                 <Box>

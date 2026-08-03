@@ -11,7 +11,8 @@ import {
 	Typography,
 	Divider,
 	Avatar,
-	Tooltip
+	Tooltip,
+	alpha
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -251,27 +252,27 @@ const AppCollapsibleSidebar = () => {
 		})).filter(group => group.items.length > 0);
 	};
 
-	// Same color as the AppBar so navbar and sidebar read as one surface.
-	const SIDEBAR_BG = theme.palette.primary.main;
-	const ACTIVE_BG = "rgba(255,255,255,0.18)";
-	const HOVER_BG = "rgba(255,255,255,0.08)";
-	const GROUP_ACTIVE_BG = "rgba(255,255,255,0.10)";
+	// Light sidebar: white surface, brand color reserved for the active item.
+	const SIDEBAR_BG = theme.palette.background.paper;
+	const ACTIVE_BG = alpha(theme.palette.primary.main, 0.12);
+	const HOVER_BG = theme.palette.action.hover;
+	const GROUP_ACTIVE_BG = alpha(theme.palette.primary.main, 0.06);
 
 	const navItemSx = (isActive: boolean) => ({
 		mx: 1,
 		mb: 0.5,
 		borderRadius: 2,
-		color: "white",
+		color: "text.primary",
 		justifyContent: sidebarExpanded ? "initial" : "center",
 		backgroundColor: isActive ? ACTIVE_BG : "transparent",
-		borderLeft: isActive && !isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
-		borderRight: isActive && isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
+		borderLeft: isActive && !isRTL ? `3px solid ${theme.palette.primary.main}` : "3px solid transparent",
+		borderRight: isActive && isRTL ? `3px solid ${theme.palette.primary.main}` : "3px solid transparent",
 		"&:hover": { backgroundColor: isActive ? ACTIVE_BG : HOVER_BG },
-		"& .MuiListItemIcon-root": { color: "rgba(255,255,255,0.9)" },
+		"& .MuiListItemIcon-root": { color: isActive ? theme.palette.primary.main : theme.palette.text.secondary },
 		"& .MuiListItemText-primary": {
 			fontWeight: isActive ? 700 : 500,
 			fontSize: "0.875rem",
-			color: "white",
+			color: isActive ? theme.palette.primary.main : theme.palette.text.primary,
 		},
 		"&.Mui-selected": {
 			backgroundColor: ACTIVE_BG,
@@ -290,6 +291,7 @@ const AppCollapsibleSidebar = () => {
 					width: drawerWidth,
 					boxSizing: "border-box",
 					border: "none",
+					borderInlineEnd: `1px solid ${theme.palette.divider}`,
 					background: SIDEBAR_BG,
 					transition: theme.transitions.create("width", {
 						easing: theme.transitions.easing.sharp,
@@ -314,8 +316,7 @@ const AppCollapsibleSidebar = () => {
 						px: 2,
 						py: 2,
 						minHeight: 72,
-						background: "rgba(0,0,0,0.15)",
-						borderBottom: "1px solid rgba(255,255,255,0.10)",
+						borderBottom: `1px solid ${theme.palette.divider}`,
 					}}
 				>
 					<Box display="flex" alignItems="center" sx={{ minWidth: 0 }}>
@@ -328,30 +329,30 @@ const AppCollapsibleSidebar = () => {
 								fontSize: "1.1rem",
 								fontWeight: "bold",
 								color: "white",
-								boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+								boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
 							}}
 						>
 							{user ? getUserInitial() : "?"}
 						</Avatar>
 						<Box sx={{ minWidth: 0 }}>
-							<Typography variant="subtitle2" noWrap fontWeight={700} sx={{ color: "white", lineHeight: 1.2 }}>
+							<Typography variant="subtitle2" noWrap fontWeight={700} sx={{ color: "text.primary", lineHeight: 1.2 }}>
 								{user?.email ?? t("guest")}
 							</Typography>
-							<Typography variant="caption" noWrap sx={{ color: "rgba(255,255,255,0.6)", lineHeight: 1 }}>
+							<Typography variant="caption" noWrap sx={{ color: "text.secondary", lineHeight: 1 }}>
 								{user?.name ?? ""}
 							</Typography>
 						</Box>
 					</Box>
-					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white", bgcolor: HOVER_BG } }}>
+					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: "text.secondary", "&:hover": { color: "text.primary", bgcolor: HOVER_BG } }}>
 						{isRTL ? <ChevronRightIcon /> : <ChevronLeftIcon />}
 					</IconButton>
 				</Box>
 			) : (
-				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2, minHeight: 72, gap: 1, background: "rgba(0,0,0,0.15)", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2, minHeight: 72, gap: 1, borderBottom: `1px solid ${theme.palette.divider}` }}>
 					<Avatar sx={{ width: 32, height: 32, background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`, fontSize: "0.9rem", fontWeight: "bold", color: "white" }}>
 						{user ? getUserInitial() : "?"}
 					</Avatar>
-					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white", bgcolor: HOVER_BG } }}>
+					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: "text.secondary", "&:hover": { color: "text.primary", bgcolor: HOVER_BG } }}>
 						{isRTL ? <ChevronLeftIcon /> : <ChevronRightIcon />}
 					</IconButton>
 				</Box>
@@ -386,11 +387,11 @@ const AppCollapsibleSidebar = () => {
 											mx: 1,
 											mb: 0.5,
 											borderRadius: 2,
-											color: "white",
+											color: "text.primary",
 											backgroundColor: groupActive && !groupOpen ? GROUP_ACTIVE_BG : "transparent",
 											"&:hover": { backgroundColor: HOVER_BG },
-											"& .MuiListItemIcon-root": { color: "rgba(255,255,255,0.75)" },
-											"& .MuiListItemText-primary": { fontWeight: 600, fontSize: "0.875rem", color: "white" },
+											"& .MuiListItemIcon-root": { color: groupActive ? theme.palette.primary.main : theme.palette.text.secondary },
+											"& .MuiListItemText-primary": { fontWeight: 600, fontSize: "0.875rem", color: groupActive ? theme.palette.primary.main : theme.palette.text.primary },
 										}}
 									>
 										<ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: "center" }}>
@@ -398,8 +399,8 @@ const AppCollapsibleSidebar = () => {
 										</ListItemIcon>
 										<ListItemText primary={group.label} />
 										{groupOpen
-											? <ExpandLess sx={{ color: "rgba(255,255,255,0.6)" }} />
-											: <ExpandMore sx={{ color: "rgba(255,255,255,0.6)" }} />}
+											? <ExpandLess sx={{ color: "text.disabled" }} />
+											: <ExpandMore sx={{ color: "text.disabled" }} />}
 									</ListItemButton>
 
 									<Collapse in={groupOpen} timeout="auto" unmountOnExit>
@@ -417,13 +418,13 @@ const AppCollapsibleSidebar = () => {
 															mx: 1,
 															mb: 0.5,
 															borderRadius: 2,
-															color: "white",
+															color: "text.primary",
 															backgroundColor: isActive ? ACTIVE_BG : "transparent",
-															borderLeft: isActive && !isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
-															borderRight: isActive && isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
+															borderLeft: isActive && !isRTL ? `3px solid ${theme.palette.primary.main}` : "3px solid transparent",
+															borderRight: isActive && isRTL ? `3px solid ${theme.palette.primary.main}` : "3px solid transparent",
 															"&:hover": { backgroundColor: isActive ? ACTIVE_BG : HOVER_BG },
-															"& .MuiListItemIcon-root": { color: isActive ? "white" : "rgba(255,255,255,0.6)" },
-															"& .MuiListItemText-primary": { fontWeight: isActive ? 700 : 400, fontSize: "0.85rem", color: "white" },
+															"& .MuiListItemIcon-root": { color: isActive ? theme.palette.primary.main : theme.palette.text.secondary },
+															"& .MuiListItemText-primary": { fontWeight: isActive ? 700 : 400, fontSize: "0.85rem", color: isActive ? theme.palette.primary.main : theme.palette.text.primary },
 															"&.Mui-selected": { backgroundColor: ACTIVE_BG, "&:hover": { backgroundColor: ACTIVE_BG } },
 														}}
 													>
@@ -473,13 +474,13 @@ const AppCollapsibleSidebar = () => {
 			</Box>
 
 			{/* ── Footer ── */}
-			<Box sx={{ p: 2, borderTop: "1px solid rgba(255,255,255,0.10)" }}>
+			<Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
 				{sidebarExpanded && (
 					<>
-						<Typography variant="caption" display="block" sx={{ color: "rgba(255,255,255,0.45)" }}>
+						<Typography variant="caption" display="block" sx={{ color: "text.disabled" }}>
 							© {new Date().getFullYear()} {t("kmCamping")}
 						</Typography>
-						<Typography variant="caption" display="block" sx={{ color: "rgba(255,255,255,0.45)" }}>
+						<Typography variant="caption" display="block" sx={{ color: "text.disabled" }}>
 							{t("version")}: {import.meta.env.VITE_APP_VERSION || "1.0.0"}
 						</Typography>
 					</>

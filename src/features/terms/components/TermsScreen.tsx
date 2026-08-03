@@ -18,6 +18,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -37,6 +38,7 @@ function formatDate(value?: string | null): string {
 
 export default function TermsScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { data = [], isLoading, refetch } = useTermsVersions();
 
   const [publishOpen, setPublishOpen] = useState(false);
@@ -58,7 +60,7 @@ export default function TermsScreen() {
   return (
     <AppScreenContainer>
       {/* Banner */}
-      <Box sx={{ background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)", borderRadius: 3, p: { xs: 2.5, md: 4 }, mb: 3, position: "relative", overflow: "hidden", color: "white" }}>
+      <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 4 }, mb: 3, position: "relative", overflow: "hidden", color: "white" }}>
         <Box sx={{ position: "absolute", top: -60, right: -60, width: 240, height: 240, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
         <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ xs: "flex-start", sm: "center" }} justifyContent="space-between">
           <Stack direction="row" spacing={2.5} alignItems="center">

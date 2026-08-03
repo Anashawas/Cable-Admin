@@ -481,7 +481,7 @@ export default function UserListScreen() {
             sx={{
               background: showDeleted
                 ? `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 55%, ${theme.palette.error.main} 100%)`
-                : tabConfig.gradient,
+                : `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               borderRadius: 3, p: 3, color: "white",
               position: "relative", overflow: "hidden",
               transition: "background 0.4s ease",
@@ -855,7 +855,7 @@ export default function UserListScreen() {
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
         <Box sx={{
-          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           px: 3, py: 2.5,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>

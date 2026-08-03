@@ -23,6 +23,7 @@ import {
   DialogActions,
   Tooltip,
   IconButton,
+  useTheme,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -226,6 +227,7 @@ function mapStationToFormValues(station: ChargingPointDto): Partial<StationFormV
 
 export default function StationFormScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -351,7 +353,7 @@ export default function StationFormScreen() {
     <AppScreenContainer>
       <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 1200, mx: "auto" }}>
         {/* ── Gradient hero ── */}
-        <Box sx={{ background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)", borderRadius: 3, p: { xs: 2, md: 2.5 }, mb: 3, color: "#fff", position: "relative", overflow: "hidden" }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2, md: 2.5 }, mb: 3, color: "#fff", position: "relative", overflow: "hidden" }}>
           <Box sx={{ position: "absolute", top: -40, right: -40, width: 150, height: 150, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
           <Stack direction="row" spacing={2} alignItems="center">
             <Tooltip title={t("back")}>

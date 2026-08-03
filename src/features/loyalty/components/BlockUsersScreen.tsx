@@ -20,6 +20,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  useTheme,
 } from "@mui/material";
 import BlockIcon from "@mui/icons-material/Block";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -40,6 +41,7 @@ import {
 
 export default function BlockUsersScreen() {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -131,12 +133,9 @@ export default function BlockUsersScreen() {
               elevation={0}
               sx={{
                 px: 3, py: 2.5,
-                background: blockTab === 0
-                  ? "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)"
-                  : "linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)",
+                background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                 borderTopLeftRadius: 12,
                 borderTopRightRadius: 12,
-                transition: "background 0.3s ease",
               }}
             >
               <Stack direction="row" spacing={2} alignItems="center">

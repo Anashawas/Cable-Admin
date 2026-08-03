@@ -30,6 +30,7 @@ import {
   Skeleton,
   Grid,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -71,6 +72,7 @@ import { getAllServiceProviders } from "../../service-providers/services/service
 
 export default function PartnersScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -464,7 +466,7 @@ export default function PartnersScreen() {
       {/* ── Gradient Banner ── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,
@@ -880,7 +882,7 @@ export default function PartnersScreen() {
 
       {/* ── Credit & Balance Dialog ── */}
       <Dialog open={!!balanceTarget} onClose={() => setBalanceTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>
-        <Box sx={{ background: "linear-gradient(135deg, #01579b 0%, #0277bd 100%)", p: 2.5, color: "white" }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 2.5, color: "white" }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>

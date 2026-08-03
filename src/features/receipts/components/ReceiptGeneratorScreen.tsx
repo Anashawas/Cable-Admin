@@ -11,6 +11,7 @@ import {
   Paper,
   Grid,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import PersonIcon from "@mui/icons-material/Person";
@@ -59,6 +60,7 @@ const INITIAL_STATE: FormState = {
 
 export default function ReceiptGeneratorScreen() {
   const { t } = useTranslation("receipts");
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -145,7 +147,7 @@ export default function ReceiptGeneratorScreen() {
     <AppScreenContainer>
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d3b66 0%, #145374 55%, #1f6f8b 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,

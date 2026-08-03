@@ -20,6 +20,7 @@ import {
   Typography,
   InputAdornment,
   Skeleton,
+  useTheme,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
@@ -45,6 +46,7 @@ import type {
 
 export default function ConversionRatesScreen() {
   const { t } = useTranslation(["offers", "common"]);
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -203,7 +205,7 @@ export default function ConversionRatesScreen() {
       {/* Gradient Banner */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 4 },
           mb: 3,
@@ -321,7 +323,7 @@ export default function ConversionRatesScreen() {
           sx={{
             background: editingRate
               ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)"
-              : "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+              : `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
             px: 3,
             py: 2.5,
             position: "relative",

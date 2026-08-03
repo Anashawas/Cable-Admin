@@ -495,7 +495,7 @@ export default function SettlementsScreen() {
       {/* ── Gradient Banner ── */}
       <Box
         sx={{
-          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,
@@ -1247,7 +1247,7 @@ export default function SettlementsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" } }}
       >
-        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           <Box sx={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={2} alignItems="center">
@@ -1706,7 +1706,7 @@ export default function SettlementsScreen() {
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "92vh" } }}
       >
         {/* Header */}
-        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.secondary.dark} 0%, ${theme.palette.secondary.dark} 100%)`, p: 0, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 0, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
           <Box sx={{ position: "absolute", bottom: -30, left: 80, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
 
@@ -2293,7 +2293,7 @@ export default function SettlementsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" } }}
       >
-        <Box sx={{ background: `linear-gradient(135deg, #1a237e 0%, #283593 55%, ${theme.palette.primary.main} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           <Box sx={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={2} alignItems="center">

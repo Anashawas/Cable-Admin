@@ -22,6 +22,7 @@ import {
   Tabs,
   Tab,
   Autocomplete,
+  useTheme,
 } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import HistoryIcon from "@mui/icons-material/History";
@@ -60,6 +61,7 @@ type SendMode = "broadcast" | "filter";
 
 export default function SendNotificationScreen() {
   const { t } = useTranslation("notifications");
+  const theme = useTheme();
   const location = useLocation();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -283,7 +285,7 @@ export default function SendNotificationScreen() {
       {/* ── Header ── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 55%, #7b1fa2 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,

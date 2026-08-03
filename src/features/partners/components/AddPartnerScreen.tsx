@@ -21,6 +21,7 @@ import {
   Select,
   MenuItem,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import EvStationIcon from "@mui/icons-material/EvStation";
@@ -40,6 +41,7 @@ import type { CreatePartnerAgreementRequest, PartnerProviderType } from "../type
 
 export default function AddPartnerScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -187,7 +189,7 @@ export default function AddPartnerScreen() {
       {/* ── Gradient Banner ── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,

@@ -21,6 +21,7 @@ import {
   Tooltip,
   Divider,
   Avatar,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -73,6 +74,7 @@ function ModelSkeleton() {
 
 export default function CarDatabaseScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -542,7 +544,7 @@ export default function CarDatabaseScreen() {
 
       {/* ── Add Brand ── */}
       <Dialog open={addBrandOpen} onClose={() => !addBrandMutation.isPending && setAddBrandOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ background: GRADIENT, color: "#fff", py: 1.5 }}>
+        <DialogTitle sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "#fff", py: 1.5 }}>
           {t("platform@carManagement.addBrand")}
         </DialogTitle>
         <DialogContent sx={{ pt: 2.5 }}>
@@ -569,7 +571,7 @@ export default function CarDatabaseScreen() {
 
       {/* ── Edit Brand ── */}
       <Dialog open={!!editBrand} onClose={() => !updateBrandMutation.isPending && setEditBrand(null)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ background: GRADIENT, color: "#fff", py: 1.5 }}>
+        <DialogTitle sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "#fff", py: 1.5 }}>
           {t("platform@carManagement.editBrand")}
         </DialogTitle>
         <DialogContent sx={{ pt: 2.5 }}>
@@ -648,7 +650,7 @@ export default function CarDatabaseScreen() {
 
       {/* ── Add Model ── */}
       <Dialog open={addModelOpen} onClose={() => !addModelMutation.isPending && setAddModelOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ background: GRADIENT, color: "#fff", py: 1.5 }}>
+        <DialogTitle sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "#fff", py: 1.5 }}>
           {t("platform@carManagement.addModel")}
         </DialogTitle>
         <DialogContent sx={{ pt: 2.5 }}>
@@ -699,7 +701,7 @@ export default function CarDatabaseScreen() {
 
       {/* ── Edit Model ── */}
       <Dialog open={!!editModel} onClose={() => !updateModelMutation.isPending && setEditModel(null)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ background: GRADIENT, color: "#fff", py: 1.5 }}>
+        <DialogTitle sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "#fff", py: 1.5 }}>
           {t("platform@carManagement.editModel")}
         </DialogTitle>
         <DialogContent sx={{ pt: 2.5 }}>

@@ -97,7 +97,7 @@ export default function UserDetailDrawer({ user, onClose, onEdit, onDelete, onAd
               px: 2.5,
               pt: 2.5,
               pb: 2,
-              background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
+              background: (t) => `linear-gradient(120deg, ${t.palette.primary.main} 0%, ${t.palette.secondary.main} 100%)`,
               color: "#fff",
             }}
           >

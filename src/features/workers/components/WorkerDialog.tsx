@@ -18,6 +18,7 @@ import {
   CircularProgress,
   Skeleton,
   Divider,
+  useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
@@ -57,6 +58,7 @@ export default function WorkerDialog({
   providerName,
 }: WorkerDialogProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -142,7 +144,7 @@ export default function WorkerDialog({
       fullWidth
       PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
     >
-      <DialogTitle sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", color: "#fff", pb: 1.5 }}>
+      <DialogTitle sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "#fff", pb: 1.5 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>

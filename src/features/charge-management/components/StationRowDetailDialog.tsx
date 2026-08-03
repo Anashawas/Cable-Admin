@@ -12,6 +12,7 @@ import {
   Tooltip,
   Link,
   Grid,
+  useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EvStationIcon from "@mui/icons-material/EvStation";
@@ -95,6 +96,7 @@ function InfoItem({ icon, label, value }: { icon?: ReactNode; label: string; val
 
 export default function StationRowDetailDialog({ open, onClose, station }: StationRowDetailDialogProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const services = parseList(station?.service);
   const payments = parseList(station?.methodPayment);
@@ -116,7 +118,7 @@ export default function StationRowDetailDialog({ open, onClose, station }: Stati
       ) : (
         <>
           {/* ── Header ── */}
-          <Box sx={{ background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)", color: "#fff", p: 2.5, position: "relative" }}>
+          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, color: "#fff", p: 2.5, position: "relative" }}>
             <IconButton onClick={onClose} sx={{ position: "absolute", top: 8, right: 8, color: "rgba(255,255,255,0.85)" }}>
               <CloseIcon />
             </IconButton>
