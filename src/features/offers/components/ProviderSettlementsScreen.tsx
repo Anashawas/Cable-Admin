@@ -20,6 +20,8 @@ import {
   DialogActions,
   TextField,
   InputAdornment,
+  alpha,
+  useTheme,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EvStationIcon from "@mui/icons-material/EvStation";
@@ -41,15 +43,17 @@ import { getSettlements } from "../services/offers-service";
 import { useWalletBalance } from "../hooks/use-settlements";
 import type { ProviderSettlementDto, ProviderType } from "../types/api";
 
-const STATUS_CFG: Record<number, { label_key: string; color: string; bg: string }> = {
-  1: { label_key: "pending", color: "#e65100", bg: "#fff3e0" },
-  3: { label_key: "paid", color: "#2e7d32", bg: "#e8f5e9" },
-  4: { label_key: "disputed", color: "#c62828", bg: "#ffebee" },
-};
-
 export default function ProviderSettlementsScreen() {
   const { t, i18n } = useTranslation(["offers", "common"]);
+  const theme = useTheme();
   const navigate = useNavigate();
+
+  const STATUS_CFG: Record<number, { label_key: string; color: string; bg: string }> = {
+    1: { label_key: "pending", color: theme.palette.warning.dark, bg: alpha(theme.palette.warning.main, 0.12) },
+    3: { label_key: "paid", color: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12) },
+    4: { label_key: "disputed", color: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12) },
+  };
+
   const [searchParams] = useSearchParams();
 
   const providerType = (searchParams.get("providerType") ?? "") as ProviderType;
@@ -114,7 +118,7 @@ export default function ProviderSettlementsScreen() {
       <Box
         sx={{
           background: isCP
-            ? "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)"
+            ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`
             : "linear-gradient(135deg, #4a148c 0%, #6a1b9a 55%, #7b1fa2 100%)",
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
@@ -154,7 +158,7 @@ export default function ProviderSettlementsScreen() {
               <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", display: "block" }}>
                 {t("offers@settlements_walletBalance")}
               </Typography>
-              <Typography variant="h6" fontWeight={800} sx={{ color: walletBalance.walletBalance < 0 ? "#ff8a80" : "#a5d6a7", lineHeight: 1, mt: 0.25 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ color: walletBalance.walletBalance < 0 ? theme.palette.error.light : theme.palette.success.light, lineHeight: 1, mt: 0.25 }}>
                 {walletBalance.walletBalance.toFixed(3)} <Typography component="span" variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>JOD</Typography>
               </Typography>
             </Paper>
@@ -199,10 +203,10 @@ export default function ProviderSettlementsScreen() {
       {/* ── Status filter ── */}
       <Stack direction="row" spacing={1} sx={{ mb: 2.5 }}>
         {([
-          { key: undefined as number | undefined, label: t("all"), count: settlements.length, color: "#1565c0", bg: "#e3f2fd", activeBg: "#1565c0" },
-          { key: 1 as number | undefined, label: t("offers@pending"), count: statusCounts[1] ?? 0, color: "#e65100", bg: "#fff3e0", activeBg: "#e65100" },
-          { key: 3 as number | undefined, label: t("offers@paid"), count: statusCounts[3] ?? 0, color: "#2e7d32", bg: "#e8f5e9", activeBg: "#2e7d32" },
-          { key: 4 as number | undefined, label: t("offers@disputed"), count: statusCounts[4] ?? 0, color: "#c62828", bg: "#ffebee", activeBg: "#c62828" },
+          { key: undefined as number | undefined, label: t("all"), count: settlements.length, color: theme.palette.primary.main, bg: alpha(theme.palette.primary.main, 0.08), activeBg: theme.palette.primary.main },
+          { key: 1 as number | undefined, label: t("offers@pending"), count: statusCounts[1] ?? 0, color: theme.palette.warning.dark, bg: alpha(theme.palette.warning.main, 0.12), activeBg: theme.palette.warning.dark },
+          { key: 3 as number | undefined, label: t("offers@paid"), count: statusCounts[3] ?? 0, color: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12), activeBg: theme.palette.success.main },
+          { key: 4 as number | undefined, label: t("offers@disputed"), count: statusCounts[4] ?? 0, color: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12), activeBg: theme.palette.error.dark },
         ]).map(({ key, label, count, color, bg, activeBg }) => {
           const isActive = key === undefined ? statusFilter === undefined : statusFilter === key;
           return (
@@ -245,7 +249,7 @@ export default function ProviderSettlementsScreen() {
             const sBg = cfg?.bg ?? "#f5f5f5";
             const owes = s.netBalance < 0;
             const owed = s.netBalance > 0;
-            const balColor = owes ? "#0277bd" : owed ? "#e65100" : "#2e7d32";
+            const balColor = owes ? theme.palette.secondary.dark : owed ? theme.palette.warning.dark : theme.palette.success.main;
             const isPaid = s.settlementStatus === 3;
             const outstanding = s.outstandingAmount ?? 0;
             const walletApplied = s.walletApplied ?? 0;
@@ -289,7 +293,7 @@ export default function ProviderSettlementsScreen() {
                   <Stack direction="row" spacing={1} sx={{ mx: -0.5, "& > *": { flex: 1, px: 0.5 } }}>
                     {/* Net Balance */}
                     <Box>
-                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: owes ? "#e1f5fe" : owed ? "#fff3e0" : "#e8f5e9", border: "1px solid", borderColor: owes ? "#b3e5fc" : owed ? "#ffe0b2" : "#c8e6c9" }}>
+                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: owes ? alpha(theme.palette.primary.main, 0.08) : owed ? alpha(theme.palette.warning.main, 0.12) : alpha(theme.palette.success.main, 0.12), border: "1px solid", borderColor: owes ? "#b3e5fc" : owed ? "#ffe0b2" : alpha(theme.palette.success.main, 0.25) }}>
                         <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" }}>{t("offers@settlements_netBalance")}</Typography>
                         <Typography variant="h5" fontWeight={900} sx={{ mt: 0.5, color: balColor }}>
                           {Math.abs(s.netBalance).toFixed(3)}
@@ -303,7 +307,7 @@ export default function ProviderSettlementsScreen() {
 
                     {/* Commission */}
                     <Box>
-                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: "#fafafa", border: "1px solid", borderColor: "grey.200" }}>
+                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: "background.default", border: "1px solid", borderColor: "grey.200" }}>
                         <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" }}>{t("offers@commission")}</Typography>
                         <Typography variant="h5" fontWeight={900} sx={{ mt: 0.5 }}>{s.partnerCommissionAmount.toFixed(3)}</Typography>
                         <Typography variant="caption" color="text.secondary">JOD</Typography>
@@ -312,7 +316,7 @@ export default function ProviderSettlementsScreen() {
 
                     {/* Transactions */}
                     <Box>
-                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: "#fafafa", border: "1px solid", borderColor: "grey.200" }}>
+                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: "background.default", border: "1px solid", borderColor: "grey.200" }}>
                         <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" }}>{t("offers@transactions")}</Typography>
                         <Typography variant="h5" fontWeight={900} sx={{ mt: 0.5 }}>{s.partnerTransactionCount + s.offerTransactionCount}</Typography>
                         <Stack direction="row" spacing={0.5} justifyContent="center" sx={{ mt: 0.25 }}>
@@ -324,11 +328,11 @@ export default function ProviderSettlementsScreen() {
 
                     {/* Outstanding / Paid */}
                     <Box>
-                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: isPaid ? "#e8f5e9" : outstanding > 0 ? "#ffebee" : "#fafafa", border: "1px solid", borderColor: isPaid ? "#c8e6c9" : outstanding > 0 ? "#ffcdd2" : "grey.200" }}>
+                      <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, textAlign: "center", bgcolor: isPaid ? alpha(theme.palette.success.main, 0.12) : outstanding > 0 ? alpha(theme.palette.error.main, 0.12) : "background.default", border: "1px solid", borderColor: isPaid ? alpha(theme.palette.success.main, 0.25) : outstanding > 0 ? "#ffcdd2" : "grey.200" }}>
                         <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" }}>{t("offers@settlements_outstanding")}</Typography>
                         {isPaid ? (
                           <Box sx={{ mt: 0.5 }}>
-                            <Chip label={`✓ ${t("offers@paid")}`} size="small" sx={{ bgcolor: "#2e7d32", color: "white", fontWeight: 800, height: 26 }} />
+                            <Chip label={`✓ ${t("offers@paid")}`} size="small" sx={{ bgcolor: "success.main", color: "white", fontWeight: 800, height: 26 }} />
                             {walletApplied > 0 && <Typography variant="caption" color="info.main" sx={{ fontSize: "0.62rem", display: "block", mt: 0.5 }}>{t("offers@settlements_walletApplied")}: {walletApplied.toFixed(3)}</Typography>}
                           </Box>
                         ) : (
@@ -360,7 +364,7 @@ export default function ProviderSettlementsScreen() {
 
       {/* ── Detail Dialog (simple) ── */}
       <Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>
-        <Box sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", p: 3, color: "white" }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`, p: 3, color: "white" }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="h6" fontWeight={700} color="white">{t("offers@settlementDetails")}</Typography>
             <IconButton size="small" onClick={() => setDetailDialogOpen(false)} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white" } }}><CloseIcon /></IconButton>
@@ -380,12 +384,12 @@ export default function ProviderSettlementsScreen() {
               {/* Financial details */}
               <Grid container spacing={1.5}>
                 {[
-                  { label: t("offers@settlements_partnerTx"), value: `${selectedSettlement.partnerTransactionCount} ${t("offers@transactions")}`, sub: `${selectedSettlement.partnerTransactionAmount.toFixed(3)} JOD`, color: "#2e7d32", bg: "#e8f5e9" },
-                  { label: t("offers@settlements_commission"), value: `${selectedSettlement.partnerCommissionAmount.toFixed(3)} JOD`, sub: null, color: "#2e7d32", bg: "#e8f5e9" },
-                  { label: t("offers@settlements_offerTx"), value: `${selectedSettlement.offerTransactionCount} ${t("offers@transactions")}`, sub: `${selectedSettlement.offerPaymentAmount.toFixed(3)} JOD`, color: "#c62828", bg: "#ffebee" },
-                  { label: t("offers@settlements_netBalance"), value: `${selectedSettlement.netBalance.toFixed(3)} JOD`, sub: selectedSettlement.netBalance < 0 ? t("offers@settlements_providerPaysCable") : selectedSettlement.netBalance > 0 ? t("offers@settlements_cablePaysProvider") : t("offers@settlements_settled"), color: selectedSettlement.netBalance < 0 ? "#0277bd" : "#e65100", bg: selectedSettlement.netBalance < 0 ? "#e1f5fe" : "#fff3e0" },
-                  ...(selectedSettlement.walletApplied > 0 ? [{ label: t("offers@settlements_walletApplied"), value: `${selectedSettlement.walletApplied.toFixed(3)} JOD`, sub: null, color: "#0277bd", bg: "#e1f5fe" }] : []),
-                  ...(selectedSettlement.outstandingAmount > 0 ? [{ label: t("offers@settlements_outstanding"), value: `${selectedSettlement.outstandingAmount.toFixed(3)} JOD`, sub: null, color: "#c62828", bg: "#ffebee" }] : []),
+                  { label: t("offers@settlements_partnerTx"), value: `${selectedSettlement.partnerTransactionCount} ${t("offers@transactions")}`, sub: `${selectedSettlement.partnerTransactionAmount.toFixed(3)} JOD`, color: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12) },
+                  { label: t("offers@settlements_commission"), value: `${selectedSettlement.partnerCommissionAmount.toFixed(3)} JOD`, sub: null, color: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12) },
+                  { label: t("offers@settlements_offerTx"), value: `${selectedSettlement.offerTransactionCount} ${t("offers@transactions")}`, sub: `${selectedSettlement.offerPaymentAmount.toFixed(3)} JOD`, color: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12) },
+                  { label: t("offers@settlements_netBalance"), value: `${selectedSettlement.netBalance.toFixed(3)} JOD`, sub: selectedSettlement.netBalance < 0 ? t("offers@settlements_providerPaysCable") : selectedSettlement.netBalance > 0 ? t("offers@settlements_cablePaysProvider") : t("offers@settlements_settled"), color: selectedSettlement.netBalance < 0 ? theme.palette.secondary.dark : theme.palette.warning.dark, bg: selectedSettlement.netBalance < 0 ? alpha(theme.palette.primary.main, 0.08) : alpha(theme.palette.warning.main, 0.12) },
+                  ...(selectedSettlement.walletApplied > 0 ? [{ label: t("offers@settlements_walletApplied"), value: `${selectedSettlement.walletApplied.toFixed(3)} JOD`, sub: null, color: theme.palette.secondary.dark, bg: alpha(theme.palette.primary.main, 0.08) }] : []),
+                  ...(selectedSettlement.outstandingAmount > 0 ? [{ label: t("offers@settlements_outstanding"), value: `${selectedSettlement.outstandingAmount.toFixed(3)} JOD`, sub: null, color: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12) }] : []),
                 ].map(({ label, value, sub, color, bg }) => (
                   <Grid size={{ xs: 6, sm: 4 }} key={label}>
                     <Paper elevation={0} sx={{ p: 2, bgcolor: bg, borderRadius: 2, textAlign: "center" }}>

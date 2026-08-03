@@ -29,6 +29,8 @@ import {
   FormControlLabel,
   Checkbox,
   Alert,
+  alpha,
+  useTheme,
 } from "@mui/material";
 import { GridPaginationModel } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
@@ -136,6 +138,7 @@ function WalletBalanceCell({
 
 export default function SettlementsScreen() {
   const { t, i18n } = useTranslation(["offers", "common"]);
+  const theme = useTheme();
   const navigate = useNavigate();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -492,7 +495,7 @@ export default function SettlementsScreen() {
       {/* ── Gradient Banner ── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,
@@ -763,10 +766,10 @@ export default function SettlementsScreen() {
           {/* Status pills */}
           <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1 }}>
             {([
-              { key: undefined as number | undefined, label: t("all"), count: rawData.length, color: "#1565c0", bg: "#e3f2fd", activeBg: "#1565c0" },
-              { key: 1 as number | undefined, label: t("offers@pending"), count: statusCounts[1] ?? 0, color: "#e65100", bg: "#fff3e0", activeBg: "#e65100" },
-              { key: 3 as number | undefined, label: t("offers@paid"), count: statusCounts[3] ?? 0, color: "#2e7d32", bg: "#e8f5e9", activeBg: "#2e7d32" },
-              { key: 4 as number | undefined, label: t("offers@disputed"), count: statusCounts[4] ?? 0, color: "#c62828", bg: "#ffebee", activeBg: "#c62828" },
+              { key: undefined as number | undefined, label: t("all"), count: rawData.length, color: theme.palette.primary.main, bg: alpha(theme.palette.primary.main, 0.08), activeBg: theme.palette.primary.main },
+              { key: 1 as number | undefined, label: t("offers@pending"), count: statusCounts[1] ?? 0, color: theme.palette.warning.dark, bg: alpha(theme.palette.warning.main, 0.12), activeBg: theme.palette.warning.dark },
+              { key: 3 as number | undefined, label: t("offers@paid"), count: statusCounts[3] ?? 0, color: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12), activeBg: theme.palette.success.main },
+              { key: 4 as number | undefined, label: t("offers@disputed"), count: statusCounts[4] ?? 0, color: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12), activeBg: theme.palette.error.dark },
             ]).map(({ key, label, count, color, bg, activeBg }) => {
               const isActive = key === undefined ? statusFilter === undefined : statusFilter === key;
               return (
@@ -890,7 +893,7 @@ export default function SettlementsScreen() {
             <Box
               sx={{
                 width: 80, height: 80, borderRadius: "50%",
-                background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, #bbdefb 100%)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 border: "2px dashed", borderColor: "primary.200",
               }}
@@ -906,7 +909,7 @@ export default function SettlementsScreen() {
 
         {/* Bulk action bar */}
         {selectedIds.size > 0 && (
-          <Paper elevation={3} sx={{ position: "sticky", top: 8, zIndex: 3, mb: 1.5, p: 1.25, px: 2, borderRadius: 2.5, bgcolor: "primary.main", color: "#fff", display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Paper elevation={3} sx={{ position: "sticky", top: 8, zIndex: 3, mb: 1.5, p: 1.25, px: 2, borderRadius: 2.5, bgcolor: "primary.main", color: "common.white", display: "flex", alignItems: "center", gap: 1.5 }}>
             <Typography variant="body2" fontWeight={800} flex={1}>{t("offers@settlements_selectedCount", { count: selectedIds.size })}</Typography>
             <Button size="small" variant="contained" color="success" startIcon={<CheckCircleIcon />} onClick={() => setBatchDialogOpen(true)} sx={{ fontWeight: 800, textTransform: "none", borderRadius: 2 }}>
               {t("offers@settlements_markPaidBatch")}
@@ -923,15 +926,15 @@ export default function SettlementsScreen() {
             {paginatedData.map((row) => {
               const isCP = row.providerType === "ChargingPoint";
               const statusCfg = STATUS_CFG[row.settlementStatus];
-              const statusColor = statusCfg?.color === "success" ? "#2e7d32" : statusCfg?.color === "warning" ? "#e65100" : "#c62828";
-              const statusBg = statusCfg?.color === "success" ? "#e8f5e9" : statusCfg?.color === "warning" ? "#fff3e0" : "#ffebee";
+              const statusColor = statusCfg?.color === "success" ? theme.palette.success.main : statusCfg?.color === "warning" ? theme.palette.warning.dark : theme.palette.error.dark;
+              const statusBg = statusCfg?.color === "success" ? alpha(theme.palette.success.main, 0.12) : statusCfg?.color === "warning" ? alpha(theme.palette.warning.main, 0.12) : alpha(theme.palette.error.main, 0.12);
               const statusShadow = statusCfg?.color === "success" ? "0 2px 12px rgba(46,125,50,0.15)" : statusCfg?.color === "warning" ? "0 2px 12px rgba(230,81,0,0.15)" : "0 2px 12px rgba(198,40,40,0.15)";
               const outstanding = row.outstandingAmount ?? 0;
               const walletApplied = row.walletApplied ?? 0;
               const isPaid = row.settlementStatus === 3;
               const owes = providerOwesCable(row);
               const owed = cableOwesProvider(row);
-              const balanceColor = owes ? "#0277bd" : owed ? "#e65100" : "#2e7d32";
+              const balanceColor = owes ? theme.palette.secondary.dark : owed ? theme.palette.warning.dark : theme.palette.success.main;
               const daysPending = row.settlementStatus === 1 && row.createdAt
                 ? Math.floor((Date.now() - new Date(row.createdAt).getTime()) / 86400000)
                 : 0;
@@ -971,7 +974,7 @@ export default function SettlementsScreen() {
                         )}
                         <Avatar
                           sx={{
-                            bgcolor: isCP ? "#e3f2fd" : "#f3e5f5",
+                            bgcolor: isCP ? alpha(theme.palette.primary.main, 0.08) : "#f3e5f5",
                             color: isCP ? "primary.main" : "secondary.main",
                             width: 50, height: 50, borderRadius: 2.5, flexShrink: 0,
                           }}
@@ -986,7 +989,7 @@ export default function SettlementsScreen() {
                               size="small"
                               sx={{
                                 height: 22,
-                                bgcolor: isCP ? "#e3f2fd" : "#f3e5f5",
+                                bgcolor: isCP ? alpha(theme.palette.primary.main, 0.08) : "#f3e5f5",
                                 color: isCP ? "primary.dark" : "secondary.dark",
                                 fontWeight: 700,
                                 fontSize: "0.68rem",
@@ -1036,7 +1039,7 @@ export default function SettlementsScreen() {
                       <Box>
                         <Paper
                           elevation={0}
-                          sx={{ p: 1.75, borderRadius: 2.5, bgcolor: "#fafafa", textAlign: "center", height: "100%", border: "1px solid", borderColor: "grey.200" }}
+                          sx={{ p: 1.75, borderRadius: 2.5, bgcolor: "background.default", textAlign: "center", height: "100%", border: "1px solid", borderColor: "grey.200" }}
                         >
                           <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
                             {t("offers@period")}
@@ -1067,7 +1070,7 @@ export default function SettlementsScreen() {
                       <Box>
                         <Paper
                           elevation={0}
-                          sx={{ p: 1.75, borderRadius: 2.5, bgcolor: "#fafafa", textAlign: "center", height: "100%", border: "1px solid", borderColor: "grey.200" }}
+                          sx={{ p: 1.75, borderRadius: 2.5, bgcolor: "background.default", textAlign: "center", height: "100%", border: "1px solid", borderColor: "grey.200" }}
                         >
                           <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
                             {t("offers@transactions")}
@@ -1090,9 +1093,9 @@ export default function SettlementsScreen() {
                           elevation={0}
                           sx={{
                             p: 1.75, borderRadius: 2.5, textAlign: "center", height: "100%",
-                            bgcolor: owes ? "#e1f5fe" : owed ? "#fff3e0" : "#e8f5e9",
+                            bgcolor: owes ? alpha(theme.palette.primary.main, 0.08) : owed ? alpha(theme.palette.warning.main, 0.12) : alpha(theme.palette.success.main, 0.12),
                             border: "1px solid",
-                            borderColor: owes ? "#b3e5fc" : owed ? "#ffe0b2" : "#c8e6c9",
+                            borderColor: owes ? "#b3e5fc" : owed ? "#ffe0b2" : alpha(theme.palette.success.main, 0.25),
                           }}
                         >
                           <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
@@ -1114,9 +1117,9 @@ export default function SettlementsScreen() {
                           elevation={0}
                           sx={{
                             p: 1.75, borderRadius: 2.5, textAlign: "center", height: "100%",
-                            bgcolor: isPaid ? "#e8f5e9" : outstanding > 0 ? "#ffebee" : "#fafafa",
+                            bgcolor: isPaid ? alpha(theme.palette.success.main, 0.12) : outstanding > 0 ? alpha(theme.palette.error.main, 0.12) : "background.default",
                             border: "1px solid",
-                            borderColor: isPaid ? "#c8e6c9" : outstanding > 0 ? "#ffcdd2" : "grey.200",
+                            borderColor: isPaid ? alpha(theme.palette.success.main, 0.25) : outstanding > 0 ? "#ffcdd2" : "grey.200",
                           }}
                         >
                           <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
@@ -1124,7 +1127,7 @@ export default function SettlementsScreen() {
                           </Typography>
                           {isPaid ? (
                             <Box sx={{ mt: 0.5 }}>
-                              <Chip label={`✓ ${t("offers@paid")}`} size="small" sx={{ bgcolor: "#2e7d32", color: "white", fontWeight: 800, height: 26, "& .MuiChip-label": { px: 1.25 } }} />
+                              <Chip label={`✓ ${t("offers@paid")}`} size="small" sx={{ bgcolor: "success.main", color: "white", fontWeight: 800, height: 26, "& .MuiChip-label": { px: 1.25 } }} />
                               {walletApplied > 0 && (
                                 <Typography variant="caption" color="info.main" sx={{ fontSize: "0.62rem", display: "block", mt: 0.5 }}>
                                   {t("offers@settlements_walletApplied")}: {walletApplied.toFixed(3)}
@@ -1151,7 +1154,7 @@ export default function SettlementsScreen() {
                       <Box>
                         <Paper
                           elevation={0}
-                          sx={{ p: 1.75, borderRadius: 2.5, bgcolor: "#fafafa", textAlign: "center", height: "100%", border: "1px solid", borderColor: "grey.200", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+                          sx={{ p: 1.75, borderRadius: 2.5, bgcolor: "background.default", textAlign: "center", height: "100%", border: "1px solid", borderColor: "grey.200", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
                         >
                           <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
                             {t("offers@settlements_walletBalance")}
@@ -1244,7 +1247,7 @@ export default function SettlementsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           <Box sx={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={2} alignItems="center">
@@ -1585,7 +1588,7 @@ export default function SettlementsScreen() {
               variant="contained"
               startIcon={<CheckCircleIcon />}
               onClick={(e) => { setDetailDialogOpen(false); handleUpdateStatusClick(e, selectedSettlement); }}
-              sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)", fontWeight: 700 }}
+              sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`, fontWeight: 700 }}
             >
               {t("offers@updateStatus")}
             </Button>
@@ -1604,7 +1607,7 @@ export default function SettlementsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #e65100 0%, #f57c00 100%)", p: 2.5, color: "white" }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.main} 100%)`, p: 2.5, color: "white" }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1703,7 +1706,7 @@ export default function SettlementsScreen() {
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "92vh" } }}
       >
         {/* Header */}
-        <Box sx={{ background: "linear-gradient(135deg, #0277bd 0%, #01579b 100%)", p: 0, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.secondary.dark} 0%, ${theme.palette.secondary.dark} 100%)`, p: 0, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
           <Box sx={{ position: "absolute", bottom: -30, left: 80, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
 
@@ -1766,7 +1769,7 @@ export default function SettlementsScreen() {
                         <Typography
                           variant="h4"
                           fontWeight={800}
-                          sx={{ color: isDebt ? "#ff8a80" : "#b3e5fc", lineHeight: 1 }}
+                          sx={{ color: isDebt ? theme.palette.error.light : "#b3e5fc", lineHeight: 1 }}
                         >
                           {wb.toFixed(3)}
                           <Typography component="span" variant="caption" sx={{ color: "rgba(255,255,255,0.5)", ml: 0.5 }}>JOD</Typography>
@@ -1788,11 +1791,11 @@ export default function SettlementsScreen() {
                     {/* Sub-stats grid — legible 2×2 */}
                     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.75, mt: 0.5 }}>
                       {([
-                        { label: t("offers@settlements_walletTotalDeposited"), value: `+${(walletMgmtBalance?.totalDeposited ?? 0).toFixed(3)}`, color: "#a5d6a7" },
-                        { label: t("offers@settlements_walletTotalDeducted"), value: `-${(walletMgmtBalance?.totalDeducted ?? 0).toFixed(3)}`, color: "#ff8a80" },
+                        { label: t("offers@settlements_walletTotalDeposited"), value: `+${(walletMgmtBalance?.totalDeposited ?? 0).toFixed(3)}`, color: theme.palette.success.light },
+                        { label: t("offers@settlements_walletTotalDeducted"), value: `-${(walletMgmtBalance?.totalDeducted ?? 0).toFixed(3)}`, color: theme.palette.error.light },
                         { label: t("offers@settlements_walletCreditLimit"), value: walletMgmtBalance?.walletCreditLimit != null ? walletMgmtBalance.walletCreditLimit.toFixed(3) : t("offers@settlements_walletUnlimited"), color: "#ffe082" },
                         ...(walletMgmtBalance?.availableCredit != null
-                          ? [{ label: t("offers@settlements_walletAvailableCredit"), value: walletMgmtBalance.availableCredit.toFixed(3), color: walletMgmtBalance.availableCredit > 0 ? "#a5d6a7" : "#ff8a80" }]
+                          ? [{ label: t("offers@settlements_walletAvailableCredit"), value: walletMgmtBalance.availableCredit.toFixed(3), color: walletMgmtBalance.availableCredit > 0 ? theme.palette.success.light : theme.palette.error.light }]
                           : []),
                       ]).map((s) => (
                         <Box key={s.label} sx={{ px: 1.25, py: 0.85, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.08)" }}>
@@ -1831,7 +1834,7 @@ export default function SettlementsScreen() {
                       )}
                       <Stack direction="row" justifyContent="space-between" spacing={2}>
                         <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.65rem" }}>{t("offers@settlements_outstanding")}</Typography>
-                        <Typography variant="caption" fontWeight={800} sx={{ color: walletSettlement.outstandingAmount > 0 ? "#ff8a80" : "#a5d6a7", fontSize: "0.7rem" }}>
+                        <Typography variant="caption" fontWeight={800} sx={{ color: walletSettlement.outstandingAmount > 0 ? theme.palette.error.light : theme.palette.success.light, fontSize: "0.7rem" }}>
                           {walletSettlement.outstandingAmount.toFixed(3)} JOD
                         </Typography>
                       </Stack>
@@ -1931,7 +1934,7 @@ export default function SettlementsScreen() {
                       disabled={addWalletDepositMutation.isPending || !walletDepositAmount || parseFloat(walletDepositAmount) <= 0}
                       startIcon={addWalletDepositMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <AddCircleOutlineIcon />}
                       sx={{
-                        background: "linear-gradient(135deg, #0277bd 0%, #01579b 100%)",
+                        background: `linear-gradient(135deg, ${theme.palette.secondary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
                         fontWeight: 700,
                         borderRadius: 2,
                         px: 3,
@@ -2091,7 +2094,7 @@ export default function SettlementsScreen() {
 
       {/* ── Batch mark-Paid dialog ── */}
       <Dialog open={batchDialogOpen} onClose={() => setBatchDialogOpen(false)} maxWidth="xs" fullWidth>
-        <Box sx={{ px: 3, py: 2, bgcolor: "success.main", color: "#fff" }}>
+        <Box sx={{ px: 3, py: 2, bgcolor: "success.main", color: "common.white" }}>
           <Typography variant="h6" fontWeight={800}>{t("offers@settlements_markPaidBatch")}</Typography>
         </Box>
         <DialogContent sx={{ pt: 2.5 }}>
@@ -2119,7 +2122,7 @@ export default function SettlementsScreen() {
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
         {/* Header with stats built-in */}
-        <Box sx={{ background: "linear-gradient(135deg, #e65100 0%, #ef6c00 50%, #f57c00 100%)", p: 0, color: "white", position: "relative", overflow: "hidden" }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, #ef6c00 50%, ${theme.palette.warning.main} 100%)`, p: 0, color: "white", position: "relative", overflow: "hidden" }}>
           <Box sx={{ position: "absolute", top: -25, right: -25, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
 
           {/* Title row */}
@@ -2169,7 +2172,7 @@ export default function SettlementsScreen() {
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, display: "block" }}>
                   {t("offers@settlements_walletBalance")}
                 </Typography>
-                <Typography variant="h5" fontWeight={900} sx={{ color: creditLimitBalance.walletBalance < 0 ? "#ff8a80" : "#a5d6a7", mt: 0.5, lineHeight: 1 }}>
+                <Typography variant="h5" fontWeight={900} sx={{ color: creditLimitBalance.walletBalance < 0 ? theme.palette.error.light : theme.palette.success.light, mt: 0.5, lineHeight: 1 }}>
                   {creditLimitBalance.walletBalance.toFixed(3)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>JOD</Typography>
@@ -2179,7 +2182,7 @@ export default function SettlementsScreen() {
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, display: "block" }}>
                   {t("offers@settlements_walletAvailableCredit")}
                 </Typography>
-                <Typography variant="h5" fontWeight={900} sx={{ color: (creditLimitBalance.availableCredit ?? 0) > 0 ? "#a5d6a7" : "#ff8a80", mt: 0.5, lineHeight: 1 }}>
+                <Typography variant="h5" fontWeight={900} sx={{ color: (creditLimitBalance.availableCredit ?? 0) > 0 ? theme.palette.success.light : theme.palette.error.light, mt: 0.5, lineHeight: 1 }}>
                   {creditLimitBalance.availableCredit != null ? creditLimitBalance.availableCredit.toFixed(3) : "∞"}
                 </Typography>
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
@@ -2290,7 +2293,7 @@ export default function SettlementsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #1a237e 0%, #283593 55%, #1565c0 100%)", p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <Box sx={{ background: `linear-gradient(135deg, #1a237e 0%, #283593 55%, ${theme.palette.primary.main} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           <Box sx={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={2} alignItems="center">
@@ -2333,12 +2336,12 @@ export default function SettlementsScreen() {
                   const paidCnt = providerHistory.filter((r) => r.settlementStatus === 3).length;
                   const pendingCnt = providerHistory.filter((r) => r.settlementStatus === 1).length;
                   return [
-                    { label: t("offers@totalSettlements"), value: providerHistory.length, color: "#1565c0", bg: "#e3f2fd" },
-                    { label: t("offers@paid"), value: paidCnt, color: "#2e7d32", bg: "#e8f5e9" },
-                    { label: t("offers@pending"), value: pendingCnt, color: "#e65100", bg: "#fff3e0" },
-                    { label: t("offers@settlements_commission"), value: totalCommission.toFixed(3), color: "#2e7d32", bg: "#e8f5e9" },
-                    { label: t("offers@settlements_offerPayment"), value: totalOffer.toFixed(3), color: "#c62828", bg: "#ffebee" },
-                    ...(totalWallet > 0 ? [{ label: t("offers@settlements_walletApplied"), value: totalWallet.toFixed(3), color: "#0277bd", bg: "#e1f5fe" }] : []),
+                    { label: t("offers@totalSettlements"), value: providerHistory.length, color: theme.palette.primary.main, bg: alpha(theme.palette.primary.main, 0.08) },
+                    { label: t("offers@paid"), value: paidCnt, color: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12) },
+                    { label: t("offers@pending"), value: pendingCnt, color: theme.palette.warning.dark, bg: alpha(theme.palette.warning.main, 0.12) },
+                    { label: t("offers@settlements_commission"), value: totalCommission.toFixed(3), color: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12) },
+                    { label: t("offers@settlements_offerPayment"), value: totalOffer.toFixed(3), color: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12) },
+                    ...(totalWallet > 0 ? [{ label: t("offers@settlements_walletApplied"), value: totalWallet.toFixed(3), color: theme.palette.secondary.dark, bg: alpha(theme.palette.primary.main, 0.08) }] : []),
                   ].map(({ label, value, color, bg }) => (
                     <Paper key={label} elevation={0} sx={{ flex: 1, p: 1.5, bgcolor: bg, borderRadius: 2, textAlign: "center" }}>
                       <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</Typography>
@@ -2351,8 +2354,8 @@ export default function SettlementsScreen() {
               {/* Settlement list */}
               {providerHistory.map((s) => {
                 const sCfg = STATUS_CFG[s.settlementStatus];
-                const sColor = sCfg?.color === "success" ? "#2e7d32" : sCfg?.color === "warning" ? "#e65100" : "#c62828";
-                const sBg = sCfg?.color === "success" ? "#e8f5e9" : sCfg?.color === "warning" ? "#fff3e0" : "#ffebee";
+                const sColor = sCfg?.color === "success" ? theme.palette.success.main : sCfg?.color === "warning" ? theme.palette.warning.dark : theme.palette.error.dark;
+                const sBg = sCfg?.color === "success" ? alpha(theme.palette.success.main, 0.12) : sCfg?.color === "warning" ? alpha(theme.palette.warning.main, 0.12) : alpha(theme.palette.error.main, 0.12);
                 const sOwes = s.netBalance < 0;
                 const sOwed = s.netBalance > 0;
                 return (
@@ -2379,11 +2382,11 @@ export default function SettlementsScreen() {
 
                       {/* Net Balance */}
                       <Box sx={{ flex: 1, textAlign: "center" }}>
-                        <Typography variant="subtitle1" fontWeight={800} color={sOwes ? "#0277bd" : sOwed ? "#e65100" : "#2e7d32"}>
+                        <Typography variant="subtitle1" fontWeight={800} color={sOwes ? theme.palette.secondary.dark : sOwed ? theme.palette.warning.dark : theme.palette.success.main}>
                           {Math.abs(s.netBalance).toFixed(3)}
                           <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>JOD</Typography>
                         </Typography>
-                        <Typography variant="caption" fontWeight={600} sx={{ fontSize: "0.6rem", color: sOwes ? "#0277bd" : sOwed ? "#e65100" : "#2e7d32" }}>
+                        <Typography variant="caption" fontWeight={600} sx={{ fontSize: "0.6rem", color: sOwes ? theme.palette.secondary.dark : sOwed ? theme.palette.warning.dark : theme.palette.success.main }}>
                           {sOwes ? t("offers@settlements_providerPaysCable") : sOwed ? t("offers@settlements_cablePaysProvider") : t("offers@settlements_settled")}
                         </Typography>
                       </Box>
