@@ -31,6 +31,8 @@ import {
   FormControlLabel,
   Checkbox,
   DialogTitle,
+  useTheme,
+  type Theme,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
@@ -77,15 +79,17 @@ const isProvider = (u: { role?: { id?: number } }) => u.role?.id === 4;
 
 type RoleTab = "all" | "users" | "admins" | "providers";
 
-const ROLE_TAB_CONFIG: Record<RoleTab, { label: string; roleName: string | null; icon: React.ReactNode; gradient: string }> = {
-  all:       { label: "All",       roleName: null,       icon: <GroupIcon />,              gradient: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)" },
-  users:     { label: "Users",     roleName: "user",     icon: <PersonIcon />,             gradient: "linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)" },
+const getRoleTabConfig = (theme: Theme): Record<RoleTab, { label: string; roleName: string | null; icon: React.ReactNode; gradient: string }> => ({
+  all:       { label: "All",       roleName: null,       icon: <GroupIcon />,              gradient: `linear-gradient(135deg, #0d3276 0%, ${theme.palette.primary.main} 100%)` },
+  users:     { label: "Users",     roleName: "user",     icon: <PersonIcon />,             gradient: `linear-gradient(135deg, ${theme.palette.success.dark} 0%, ${theme.palette.success.main} 100%)` },
   admins:    { label: "Admins",    roleName: "admin",    icon: <AdminPanelSettingsIcon />, gradient: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%)" },
-  providers: { label: "Providers", roleName: "provider", icon: <StoreIcon />,             gradient: "linear-gradient(135deg, #bf360c 0%, #e65100 100%)" },
-};
+  providers: { label: "Providers", roleName: "provider", icon: <StoreIcon />,             gradient: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.dark} 100%)` },
+});
 
 export default function UserListScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const ROLE_TAB_CONFIG = useMemo(() => getRoleTabConfig(theme), [theme]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
@@ -476,7 +480,7 @@ export default function UserListScreen() {
           <Box
             sx={{
               background: showDeleted
-                ? "linear-gradient(135deg, #b71c1c 0%, #c62828 55%, #d32f2f 100%)"
+                ? `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 55%, ${theme.palette.error.main} 100%)`
                 : tabConfig.gradient,
               borderRadius: 3, p: 3, color: "white",
               position: "relative", overflow: "hidden",
@@ -535,7 +539,7 @@ export default function UserListScreen() {
                 <Tooltip title={t("refresh")}>
                   <IconButton
                     onClick={() => refetch()}
-                    sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "#fff", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}
+                    sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "common.white", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}
                   >
                     <RefreshIcon />
                   </IconButton>
@@ -564,9 +568,9 @@ export default function UserListScreen() {
                     }}
                   >
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Box sx={{ color: "#fff", display: "flex" }}>{cfg.icon}</Box>
+                      <Box sx={{ color: "common.white", display: "flex" }}>{cfg.icon}</Box>
                       <Box>
-                        <Typography variant="h6" fontWeight={800} color="#fff" lineHeight={1}>{count}</Typography>
+                        <Typography variant="h6" fontWeight={800} color="common.white" lineHeight={1}>{count}</Typography>
                         <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{cfg.label}</Typography>
                       </Box>
                     </Stack>
@@ -767,12 +771,12 @@ export default function UserListScreen() {
 
       {/* ── Single Delete Dialog ── */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 10002 }}>
-        <Box sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 100%)`, px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
-              <WarningAmberIcon sx={{ color: "#fff" }} />
+              <WarningAmberIcon sx={{ color: "common.white" }} />
             </Avatar>
-            <Typography variant="h6" fontWeight={700} color="#fff">{t("userManagement@deleteConfirmTitle")}</Typography>
+            <Typography variant="h6" fontWeight={700} color="common.white">{t("userManagement@deleteConfirmTitle")}</Typography>
           </Stack>
         </Box>
         <DialogContent sx={{ pt: 2.5 }}>
@@ -796,12 +800,12 @@ export default function UserListScreen() {
         onClose={() => { if (!changeRoleMutation.isPending) { setChangeRoleDialogOpen(false); setUserToChangeRole(null); } }}
         maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 10002 }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #bf360c 0%, #e65100 100%)", px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.dark} 100%)`, px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
-              <BusinessCenterIcon sx={{ color: "#fff" }} />
+              <BusinessCenterIcon sx={{ color: "common.white" }} />
             </Avatar>
-            <Typography variant="h6" fontWeight={700} color="#fff">{t("userManagement@makeProviderTitle")}</Typography>
+            <Typography variant="h6" fontWeight={700} color="common.white">{t("userManagement@makeProviderTitle")}</Typography>
           </Stack>
         </Box>
         <DialogContent sx={{ pt: 2.5 }}>
@@ -822,12 +826,12 @@ export default function UserListScreen() {
 
       {/* ── Bulk Delete Dialog ── */}
       <Dialog open={bulkDeleteDialogOpen} onClose={() => !deleteMutation.isPending && setBulkDeleteDialogOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }} sx={{ zIndex: 10002 }}>
-        <Box sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 100%)`, px: 3, py: 2.5, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 44, height: 44 }}>
-              <WarningAmberIcon sx={{ color: "#fff" }} />
+              <WarningAmberIcon sx={{ color: "common.white" }} />
             </Avatar>
-            <Typography variant="h6" fontWeight={700} color="#fff">{t("delete")}</Typography>
+            <Typography variant="h6" fontWeight={700} color="common.white">{t("delete")}</Typography>
           </Stack>
         </Box>
         <DialogContent sx={{ pt: 2.5 }}>
@@ -851,7 +855,7 @@ export default function UserListScreen() {
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
         <Box sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
           px: 3, py: 2.5,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
@@ -970,8 +974,8 @@ export default function UserListScreen() {
             startIcon={createUserMutation.isPending ? <CircularProgress size={18} color="inherit" /> : <PersonAddIcon />}
             sx={{
               borderRadius: 2, minWidth: 160,
-              background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
-              "&:hover": { background: "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)" },
+              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
+              "&:hover": { background: `linear-gradient(135deg, #0a3880 0%, ${theme.palette.primary.dark} 100%)` },
             }}
           >
             {createUserMutation.isPending ? t("creating") : t("userManagement@createUser")}

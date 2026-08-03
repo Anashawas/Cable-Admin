@@ -24,7 +24,10 @@ import {
   FormControl,
   InputLabel,
   TablePagination,
+  useTheme,
+  type Theme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
@@ -81,21 +84,21 @@ const COMPLAINT_DATE_RANGES: { value: DateRangePreset; labelKey: string }[] = [
 type StatusKey = "new" | "notComplaint" | "solved" | "opened" | "followUp" | "unsolved" | "systemIssue";
 type ChipColor = "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning";
 
-const STATUS_META: Record<ComplaintStatus, {
+const getStatusMeta = (theme: Theme): Record<ComplaintStatus, {
   key: StatusKey;
   color: ChipColor;
   hex: string;
   bg: string;
   icon: React.ReactNode;
-}> = {
-  [ComplaintStatus.New]:          { key: "new",          color: "info",      hex: "#0277bd", bg: "#e1f5fe", icon: <FiberNewIcon /> },
+}> => ({
+  [ComplaintStatus.New]:          { key: "new",          color: "info",      hex: theme.palette.secondary.dark, bg: alpha(theme.palette.primary.main, 0.08), icon: <FiberNewIcon /> },
   [ComplaintStatus.NotComplaint]: { key: "notComplaint", color: "default",   hex: "#546e7a", bg: "#eceff1", icon: <DoNotDisturbAltIcon /> },
-  [ComplaintStatus.Solved]:       { key: "solved",       color: "success",   hex: "#2e7d32", bg: "#e8f5e9", icon: <CheckCircleIcon /> },
-  [ComplaintStatus.Opened]:       { key: "opened",       color: "primary",   hex: "#1565c0", bg: "#e3f2fd", icon: <FolderOpenIcon /> },
-  [ComplaintStatus.FollowUp]:     { key: "followUp",     color: "warning",   hex: "#e65100", bg: "#fff3e0", icon: <HourglassTopIcon /> },
-  [ComplaintStatus.Unsolved]:     { key: "unsolved",     color: "error",     hex: "#c62828", bg: "#ffebee", icon: <CancelIcon /> },
+  [ComplaintStatus.Solved]:       { key: "solved",       color: "success",   hex: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12), icon: <CheckCircleIcon /> },
+  [ComplaintStatus.Opened]:       { key: "opened",       color: "primary",   hex: theme.palette.primary.main, bg: alpha(theme.palette.primary.main, 0.08), icon: <FolderOpenIcon /> },
+  [ComplaintStatus.FollowUp]:     { key: "followUp",     color: "warning",   hex: theme.palette.warning.dark, bg: alpha(theme.palette.warning.main, 0.12), icon: <HourglassTopIcon /> },
+  [ComplaintStatus.Unsolved]:     { key: "unsolved",     color: "error",     hex: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12), icon: <CancelIcon /> },
   [ComplaintStatus.SystemIssue]:  { key: "systemIssue",  color: "secondary", hex: "#6a1b9a", bg: "#f3e5f5", icon: <BugReportIcon /> },
-};
+});
 
 const STATUS_ORDER: ComplaintStatus[] = [
   ComplaintStatus.New,
@@ -110,6 +113,8 @@ const STATUS_ORDER: ComplaintStatus[] = [
 export default function ComplaintsScreen() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language || "en";
+  const theme = useTheme();
+  const STATUS_META = useMemo(() => getStatusMeta(theme), [theme]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
@@ -298,7 +303,7 @@ export default function ComplaintsScreen() {
       {/* ── Gradient Banner ── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #b71c1c 0%, #c62828 55%, #d84315 100%)",
+          background: `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 55%, #d84315 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 3.5 },
           mb: 3,
@@ -700,7 +705,7 @@ export default function ComplaintsScreen() {
                       fontWeight: 700,
                       textTransform: "none",
                       borderRadius: 2,
-                      background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
+                      background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
                       boxShadow: "0 2px 8px rgba(13,71,161,0.3)",
                     }}
                   >
@@ -749,7 +754,7 @@ export default function ComplaintsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #b71c1c 0%, #c62828 100%)", p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 100%)`, p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
           <DeleteOutlineIcon />
           <Typography variant="h6" fontWeight={700}>{t("complaints@deleteConfirmTitle")}</Typography>
         </Box>
@@ -781,7 +786,7 @@ export default function ComplaintsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)", p: 3, color: "white", position: "relative", overflow: "hidden" }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`, p: 3, color: "white", position: "relative", overflow: "hidden" }}>
           <Box sx={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Stack direction="row" spacing={2} alignItems="center">
@@ -854,7 +859,7 @@ export default function ComplaintsScreen() {
               fontWeight: 800,
               textTransform: "none",
               px: 3,
-              background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 100%)",
+              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
             }}
           >
             {replyMutation.isPending ? t("complaints@sending") : t("complaints@sendReply")}
@@ -870,7 +875,7 @@ export default function ComplaintsScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)", p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.main} 100%)`, p: 2.5, color: "white", display: "flex", alignItems: "center", gap: 1.5 }}>
           <ReplyIcon />
           <Typography variant="h6" fontWeight={700}>{t("complaints@postReplyTitle")}</Typography>
         </Box>

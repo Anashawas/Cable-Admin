@@ -838,7 +838,7 @@ export default function ServiceProvidersScreen() {
       {/* Banner */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
           borderRadius: 3,
           p: { xs: 2.5, md: 4 },
           mb: 3,
@@ -1197,8 +1197,8 @@ export default function ServiceProvidersScreen() {
         {/* Gradient header */}
         <Box sx={{
           background: editingProvider
-            ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)"
-            : "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+            ? `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.main} 100%)`
+            : `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
           px: 3, py: 2.5,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
@@ -1756,12 +1756,12 @@ export default function ServiceProvidersScreen() {
               sx={{
                 borderRadius: 2, minWidth: 140,
                 background: editingProvider
-                  ? "linear-gradient(135deg, #e65100 0%, #f57c00 100%)"
-                  : "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+                  ? `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.main} 100%)`
+                  : `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
                 "&:hover": {
                   background: editingProvider
-                    ? "linear-gradient(135deg, #bf360c 0%, #e65100 100%)"
-                    : "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)",
+                    ? `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.dark} 100%)`
+                    : `linear-gradient(135deg, #0a3880 0%, ${theme.palette.primary.dark} 100%)`,
                 },
               }}
             >
@@ -2292,7 +2292,7 @@ export default function ServiceProvidersScreen() {
       >
         {/* Gradient header */}
         <Box sx={{
-          background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
+          background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
           px: 3, py: 2.5,
           display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0,
         }}>
@@ -2436,8 +2436,8 @@ export default function ServiceProvidersScreen() {
               startIcon={changeOwnerMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <SwapHorizIcon />}
               sx={{
                 borderRadius: 2, minWidth: 150,
-                background: "linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #0277bd 100%)",
-                "&:hover": { background: "linear-gradient(135deg, #0a3880 0%, #0d47a1 100%)" },
+                background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 100%)`,
+                "&:hover": { background: `linear-gradient(135deg, #0a3880 0%, ${theme.palette.primary.dark} 100%)` },
               }}
             >
               {changeOwnerMutation.isPending ? "Changing..." : t("serviceProviders@changeOwner")}

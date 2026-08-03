@@ -31,7 +31,9 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import BlockIcon from "@mui/icons-material/Block";
@@ -111,11 +113,12 @@ function StatCard({
   value: string | number;
   color: "primary" | "warning" | "success" | "info";
 }) {
+  const theme = useTheme();
   const colorMap = {
-    primary: { bg: "#e8f4fd", icon: "#1976d2", text: "#0d47a1" },
+    primary: { bg: "#e8f4fd", icon: theme.palette.primary.main, text: theme.palette.primary.dark },
     warning: { bg: "#fff8e1", icon: "#f59e0b", text: "#92400e" },
-    success: { bg: "#e8f5e9", icon: "#2e7d32", text: "#1b5e20" },
-    info:    { bg: "#e3f2fd", icon: "#0288d1", text: "#01579b" },
+    success: { bg: alpha(theme.palette.success.main, 0.12), icon: theme.palette.success.main, text: theme.palette.success.dark },
+    info:    { bg: alpha(theme.palette.primary.main, 0.08), icon: theme.palette.secondary.main, text: theme.palette.secondary.dark },
   };
   const c = colorMap[color];
   return (
@@ -160,6 +163,7 @@ function StatCard({
 // ── Main component ──────────────────────────────────────────────────────────
 export default function OffersScreen() {
   const { t } = useTranslation(["offers", "common"]);
+  const theme = useTheme();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -740,7 +744,7 @@ export default function OffersScreen() {
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0d3276 0%, #1565c0 60%, #0d47a1 100%)",
+          background: `linear-gradient(135deg, #0d3276 0%, ${theme.palette.primary.main} 60%, ${theme.palette.primary.dark} 100%)`,
           borderRadius: 3,
           p: 3,
           mb: 3,
@@ -953,7 +957,7 @@ export default function OffersScreen() {
       >
         <Box
           sx={{
-            background: "linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)",
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
             px: 3, pt: 3, pb: 4,
             flexShrink: 0,
           }}
@@ -1388,7 +1392,7 @@ export default function OffersScreen() {
       >
         <Box
           sx={{
-            background: "linear-gradient(135deg, #0d3276 0%, #1565c0 100%)",
+            background: `linear-gradient(135deg, #0d3276 0%, ${theme.palette.primary.main} 100%)`,
             px: 3, pt: 2.5, pb: 3,
             flexShrink: 0,
           }}
@@ -1767,7 +1771,7 @@ export default function OffersScreen() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, overflow: "hidden", maxHeight: "92vh", display: "flex", flexDirection: "column" } }}
       >
-        <Box sx={{ background: "linear-gradient(135deg, #e65100 0%, #f57c00 100%)", px: 3, py: 2.5, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <Box sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.main} 100%)`, px: 3, py: 2.5, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48 }}><EditIcon /></Avatar>
             <Box>
@@ -1935,7 +1939,7 @@ export default function OffersScreen() {
             variant="contained"
             disabled={updateMutation.isPending || uploadImageMutation.isPending}
             startIcon={(updateMutation.isPending || uploadImageMutation.isPending) ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
-            sx={{ borderRadius: 2, minWidth: 140, background: "linear-gradient(135deg, #e65100 0%, #f57c00 100%)", "&:hover": { background: "linear-gradient(135deg, #bf360c 0%, #e65100 100%)" } }}
+            sx={{ borderRadius: 2, minWidth: 140, background: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.main} 100%)`, "&:hover": { background: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.dark} 100%)` } }}
           >
             {updateMutation.isPending ? t("updating") : uploadImageMutation.isPending ? t("offers@uploadingImage") : t("update")}
           </Button>
