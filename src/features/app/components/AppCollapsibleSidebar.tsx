@@ -13,6 +13,7 @@ import {
 	Avatar,
 	Tooltip
 } from "@mui/material";
+import { darken } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -251,7 +252,9 @@ const AppCollapsibleSidebar = () => {
 		})).filter(group => group.items.length > 0);
 	};
 
-	const SIDEBAR_BG = "linear-gradient(180deg, #0d1f4e 0%, #0d3276 60%, #0a4a8f 100%)";
+	// Same hue as the AppBar (theme primary), stepped darker so the two
+	// surfaces read as one brand color instead of two different blues.
+	const SIDEBAR_BG = `linear-gradient(180deg, ${darken(theme.palette.primary.dark, 0.45)} 0%, ${darken(theme.palette.primary.dark, 0.2)} 60%, ${theme.palette.primary.dark} 100%)`;
 	const ACTIVE_BG = "rgba(255,255,255,0.18)";
 	const HOVER_BG = "rgba(255,255,255,0.08)";
 	const GROUP_ACTIVE_BG = "rgba(255,255,255,0.10)";
@@ -322,7 +325,7 @@ const AppCollapsibleSidebar = () => {
 							sx={{
 								width: 40,
 								height: 40,
-								background: "linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)",
+								background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
 								mr: 1.5,
 								fontSize: "1.1rem",
 								fontWeight: "bold",
@@ -347,7 +350,7 @@ const AppCollapsibleSidebar = () => {
 				</Box>
 			) : (
 				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2, minHeight: 72, gap: 1, background: "rgba(0,0,0,0.15)", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
-					<Avatar sx={{ width: 32, height: 32, background: "linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)", fontSize: "0.9rem", fontWeight: "bold", color: "white" }}>
+					<Avatar sx={{ width: 32, height: 32, background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`, fontSize: "0.9rem", fontWeight: "bold", color: "white" }}>
 						{user ? getUserInitial() : "?"}
 					</Avatar>
 					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white", bgcolor: HOVER_BG } }}>
