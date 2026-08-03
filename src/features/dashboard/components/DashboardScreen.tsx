@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { alpha } from "@mui/material/styles";
-import { Box, Grid, Typography, useTheme, Skeleton, Stack, Chip, Button } from "@mui/material";
+import { Box, Grid, Typography, useTheme, Skeleton, Stack, Chip, Button, type Theme } from "@mui/material";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { LineChart } from "@mui/x-charts/LineChart";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -36,16 +36,18 @@ import { getAllComplaints } from "../../complaints/services/complaints-service";
 import { getAttentionSummary } from "../services/attention-service";
 import { useAuthenticationStore } from "../../../stores";
 
-const SECTIONS = [
-  { path: "/charge-management",  titleKey: "chargeManagement",  descKey: "dashboard@sec_chargeManagement",  Icon: EvStationIcon,     accent: "#1565c0" },
+// Theme-driven where a palette token exists; the remaining hexes are
+// deliberate per-section accents with no theme equivalent.
+const getSections = (theme: Theme) => [
+  { path: "/charge-management",  titleKey: "chargeManagement",  descKey: "dashboard@sec_chargeManagement",  Icon: EvStationIcon,     accent: theme.palette.primary.main },
   { path: "/station-statistics", titleKey: "stationStatistics", descKey: "dashboard@sec_stationStats",      Icon: QueryStatsIcon,    accent: "#3949ab" },
-  { path: "/stations-request",   titleKey: "stationsRequest",   descKey: "dashboard@sec_stationsRequest",   Icon: ListAltIcon,       accent: "#e65100" },
-  { path: "/users",              titleKey: "userManagement",    descKey: "dashboard@sec_users",             Icon: PeopleIcon,        accent: "#2e7d32" },
+  { path: "/stations-request",   titleKey: "stationsRequest",   descKey: "dashboard@sec_stationsRequest",   Icon: ListAltIcon,       accent: theme.palette.warning.dark },
+  { path: "/users",              titleKey: "userManagement",    descKey: "dashboard@sec_users",             Icon: PeopleIcon,        accent: theme.palette.success.main },
   { path: "/pending-offers",     titleKey: "pendingOffers",     descKey: "dashboard@sec_offers",            Icon: LocalOfferIcon,    accent: "#6a1b9a" },
   { path: "/loyalty-management", titleKey: "loyaltySystem",     descKey: "dashboard@sec_loyalty",           Icon: CardGiftcardIcon,  accent: "#c17a00" },
   { path: "/service-providers",  titleKey: "serviceProviders",  descKey: "dashboard@sec_services",          Icon: StoreIcon,         accent: "#00695c" },
-  { path: "/partners",           titleKey: "partners",          descKey: "dashboard@sec_partners",          Icon: HandshakeIcon,     accent: "#01579b" },
-  { path: "/complaints",         titleKey: "userComplaints",    descKey: "dashboard@sec_complaints",        Icon: ReportProblemIcon, accent: "#b71c1c" },
+  { path: "/partners",           titleKey: "partners",          descKey: "dashboard@sec_partners",          Icon: HandshakeIcon,     accent: theme.palette.secondary.dark },
+  { path: "/complaints",         titleKey: "userComplaints",    descKey: "dashboard@sec_complaints",        Icon: ReportProblemIcon, accent: theme.palette.error.dark },
   { path: "/car-management",     titleKey: "systemData",        descKey: "dashboard@sec_system",            Icon: SettingsIcon,      accent: "#37474f" },
 ];
 
@@ -217,14 +219,14 @@ export default function DashboardScreen() {
   ];
 
   const kpiCards = [
-    { label: t("dashboard@kpi.users"), value: usersSummary?.totalUsers ?? 0, Icon: PeopleIcon, path: "/users", accent: "#1565c0", loading: loadingUsers,
-      sub: todayNewUsers > 0 ? <Chip size="small" icon={<ArrowUpwardIcon sx={{ fontSize: "14px !important" }} />} label={`${todayNewUsers} ${t("dashboard@todaySuffix")}`} sx={{ height: 20, bgcolor: alpha("#1565c0", 0.1), color: "#1565c0", fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> : null },
-    { label: t("dashboard@kpi.stations"), value: stations.length, Icon: EvStationIcon, path: "/charge-management", accent: "#2e7d32", loading: loadingStations,
-      sub: <Chip size="small" icon={<VerifiedIcon sx={{ fontSize: "14px !important" }} />} label={`${stations.filter((s) => s.isVerified).length}`} sx={{ height: 20, bgcolor: alpha("#2e7d32", 0.1), color: "#2e7d32", fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> },
+    { label: t("dashboard@kpi.users"), value: usersSummary?.totalUsers ?? 0, Icon: PeopleIcon, path: "/users", accent: theme.palette.primary.main, loading: loadingUsers,
+      sub: todayNewUsers > 0 ? <Chip size="small" icon={<ArrowUpwardIcon sx={{ fontSize: "14px !important" }} />} label={`${todayNewUsers} ${t("dashboard@todaySuffix")}`} sx={{ height: 20, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> : null },
+    { label: t("dashboard@kpi.stations"), value: stations.length, Icon: EvStationIcon, path: "/charge-management", accent: theme.palette.success.main, loading: loadingStations,
+      sub: <Chip size="small" icon={<VerifiedIcon sx={{ fontSize: "14px !important" }} />} label={`${stations.filter((s) => s.isVerified).length}`} sx={{ height: 20, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> },
     { label: t("dashboard@kpi.serviceProviders"), value: serviceProviders.length, Icon: StoreIcon, path: "/service-providers", accent: "#00695c", loading: loadingProviders },
     { label: t("dashboard@kpi.partners"), value: partners.length, Icon: HandshakeIcon, path: "/partners", accent: "#3949ab", loading: loadingPartners },
-    { label: t("dashboard@kpi.complaints"), value: complaints.length, Icon: ReportProblemIcon, path: "/complaints", accent: "#b71c1c", loading: loadingComplaints,
-      sub: openComplaints > 0 ? <Chip size="small" label={`${openComplaints} ${t("dashboard@openComplaints")}`} sx={{ height: 20, bgcolor: alpha("#b71c1c", 0.1), color: "#b71c1c", fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> : null },
+    { label: t("dashboard@kpi.complaints"), value: complaints.length, Icon: ReportProblemIcon, path: "/complaints", accent: theme.palette.error.dark, loading: loadingComplaints,
+      sub: openComplaints > 0 ? <Chip size="small" label={`${openComplaints} ${t("dashboard@openComplaints")}`} sx={{ height: 20, bgcolor: alpha(theme.palette.error.dark, 0.1), color: theme.palette.error.dark, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> : null },
   ];
 
   // Prefer the single attention-summary endpoint (all queues). Fall back to the
@@ -232,21 +234,21 @@ export default function DashboardScreen() {
   const actions = useMemo(() => {
     if (attention) {
       return [
-        { show: attention.stationUpdateRequests > 0, label: t("dashboard@pendingApproval"), value: attention.stationUpdateRequests, Icon: ListAltIcon, accent: "#e65100", path: "/stations-request" },
-        { show: attention.openComplaints > 0, label: t("dashboard@openComplaints"), value: attention.openComplaints, Icon: ReportProblemIcon, accent: "#c62828", path: "/complaints" },
+        { show: attention.stationUpdateRequests > 0, label: t("dashboard@pendingApproval"), value: attention.stationUpdateRequests, Icon: ListAltIcon, accent: theme.palette.warning.dark, path: "/stations-request" },
+        { show: attention.openComplaints > 0, label: t("dashboard@openComplaints"), value: attention.openComplaints, Icon: ReportProblemIcon, accent: theme.palette.error.dark, path: "/complaints" },
         { show: attention.pendingViewImages > 0, label: t("dashboard@pendingViewImages"), value: attention.pendingViewImages, Icon: ImageOutlinedIcon, accent: "#00838f", path: "/view-image-review" },
         { show: attention.pendingOffers > 0, label: t("dashboard@pendingOffers"), value: attention.pendingOffers, Icon: LocalOfferIcon, accent: "#6a1b9a", path: "/pending-offers" },
-        { show: attention.settlementsPending > 0, label: t("dashboard@settlementsPending"), value: attention.settlementsPending, Icon: PaymentsIcon, accent: "#1565c0", path: "/settlements" },
-        { show: attention.settlementsDisputed > 0, label: t("dashboard@settlementsDisputed"), value: attention.settlementsDisputed, Icon: PaymentsIcon, accent: "#c62828", path: "/settlements" },
-        { show: attention.premiumExpiringSoon > 0, label: t("dashboard@premiumExpiringSoon"), value: attention.premiumExpiringSoon, Icon: WorkspacePremiumIcon, accent: "#e65100", path: "/charge-management" },
-        { show: attention.premiumExpired > 0, label: t("dashboard@premiumExpired"), value: attention.premiumExpired, Icon: WorkspacePremiumIcon, accent: "#c62828", path: "/charge-management" },
-        { show: attention.campaignsEndingSoon > 0, label: t("dashboard@campaignsEndingSoon"), value: attention.campaignsEndingSoon, Icon: CampaignIcon, accent: "#e65100", path: "/campaigns" },
-        { show: attention.announcementsExpiringSoon > 0, label: t("dashboard@announcementsExpiringSoon"), value: attention.announcementsExpiringSoon, Icon: CampaignIcon, accent: "#e65100", path: "/welcome-messages" },
+        { show: attention.settlementsPending > 0, label: t("dashboard@settlementsPending"), value: attention.settlementsPending, Icon: PaymentsIcon, accent: theme.palette.primary.main, path: "/settlements" },
+        { show: attention.settlementsDisputed > 0, label: t("dashboard@settlementsDisputed"), value: attention.settlementsDisputed, Icon: PaymentsIcon, accent: theme.palette.error.dark, path: "/settlements" },
+        { show: attention.premiumExpiringSoon > 0, label: t("dashboard@premiumExpiringSoon"), value: attention.premiumExpiringSoon, Icon: WorkspacePremiumIcon, accent: theme.palette.warning.dark, path: "/charge-management" },
+        { show: attention.premiumExpired > 0, label: t("dashboard@premiumExpired"), value: attention.premiumExpired, Icon: WorkspacePremiumIcon, accent: theme.palette.error.dark, path: "/charge-management" },
+        { show: attention.campaignsEndingSoon > 0, label: t("dashboard@campaignsEndingSoon"), value: attention.campaignsEndingSoon, Icon: CampaignIcon, accent: theme.palette.warning.dark, path: "/campaigns" },
+        { show: attention.announcementsExpiringSoon > 0, label: t("dashboard@announcementsExpiringSoon"), value: attention.announcementsExpiringSoon, Icon: CampaignIcon, accent: theme.palette.warning.dark, path: "/welcome-messages" },
       ].filter((a) => a.show);
     }
     return [
-      { show: pendingApproval > 0, label: t("dashboard@pendingApproval"), value: pendingApproval, Icon: ListAltIcon, accent: "#e65100", path: "/stations-request" },
-      { show: openComplaints > 0, label: t("dashboard@openComplaints"), value: openComplaints, Icon: ReportProblemIcon, accent: "#c62828", path: "/complaints" },
+      { show: pendingApproval > 0, label: t("dashboard@pendingApproval"), value: pendingApproval, Icon: ListAltIcon, accent: theme.palette.warning.dark, path: "/stations-request" },
+      { show: openComplaints > 0, label: t("dashboard@openComplaints"), value: openComplaints, Icon: ReportProblemIcon, accent: theme.palette.error.dark, path: "/complaints" },
     ].filter((a) => a.show);
   }, [attention, pendingApproval, openComplaints, t]);
 
@@ -254,7 +256,7 @@ export default function DashboardScreen() {
     <Box sx={{ width: "100%", height: "100%", overflow: "auto", p: { xs: 2, sm: 3 } }}>
 
       {/* ── Hero ── */}
-      <Box sx={{ background: "linear-gradient(120deg, #0d47a1 0%, #1565c0 60%, #0277bd 100%)", borderRadius: 3, p: { xs: 2.5, md: 3 }, mb: 3, position: "relative", overflow: "hidden", color: "#fff" }}>
+      <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 60%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, mb: 3, position: "relative", overflow: "hidden", color: "common.white" }}>
         <Box sx={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)", top: -120, insetInlineEnd: -80, pointerEvents: "none" }} />
         <Box sx={{ position: "absolute", width: 150, height: 150, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.05)", bottom: -60, insetInlineStart: 40, pointerEvents: "none" }} />
         <Grid container spacing={2.5} alignItems="center" sx={{ position: "relative" }}>
@@ -284,7 +286,7 @@ export default function DashboardScreen() {
         {loadingRequests || loadingComplaints ? (
           <Grid container spacing={2}>{[0, 1].map((i) => <Grid size={{ xs: 12, sm: 6 }} key={i}><Skeleton variant="rounded" height={72} sx={{ borderRadius: 3 }} /></Grid>)}</Grid>
         ) : actions.length === 0 ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, p: 2, borderRadius: 3, bgcolor: alpha("#2e7d32", 0.08), border: "1px solid", borderColor: alpha("#2e7d32", 0.25) }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, p: 2, borderRadius: 3, bgcolor: alpha(theme.palette.success.main, 0.08), border: "1px solid", borderColor: alpha(theme.palette.success.main, 0.25) }}>
             <CheckCircleIcon sx={{ color: "success.main" }} />
             <Typography variant="body2" fontWeight={600} color="success.dark">{t("dashboard@allClear")}</Typography>
           </Box>
@@ -343,7 +345,7 @@ export default function DashboardScreen() {
               <ChartCard title={t("dashboard@newUsersTrend")} icon={<ShowChartIcon fontSize="small" />}>
                 <LineChart
                   xAxis={[{ scaleType: "point", data: trend.map((d) => d.day.slice(5)), tickLabelStyle: { fontSize: 9 } }]}
-                  series={[{ data: trend.map((d) => d.count), color: "#2e7d32", area: true, showMark: false }]}
+                  series={[{ data: trend.map((d) => d.count), color: theme.palette.success.main, area: true, showMark: false }]}
                   height={Math.max(topByVisitors.length * 30 + 40, 200)}
                   margin={{ top: 10, right: 16, bottom: 28, left: 34 }} />
               </ChartCard>
@@ -356,7 +358,7 @@ export default function DashboardScreen() {
       <Box>
         <SectionLabel icon={<ListAltIcon sx={{ fontSize: 18, color: "primary.main" }} />}>{t("dashboard@sections")}</SectionLabel>
         <Grid container spacing={1.5} sx={{ pb: 3 }}>
-          {SECTIONS.map(({ path, titleKey, descKey, Icon, accent }) => (
+          {getSections(theme).map(({ path, titleKey, descKey, Icon, accent }) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={path}>
               <Box onClick={() => navigate(path)} sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider", borderTop: `3px solid ${accent}`, borderRadius: 2, p: 2, height: "100%", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", transition: "box-shadow .2s, transform .15s", "&:hover": { boxShadow: `0 6px 20px ${alpha(accent, 0.18)}`, transform: "translateY(-2px)" } }}>
                 <Stack direction="row" spacing={1.5} alignItems="flex-start">
