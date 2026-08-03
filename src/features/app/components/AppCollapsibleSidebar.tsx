@@ -13,7 +13,6 @@ import {
 	Avatar,
 	Tooltip
 } from "@mui/material";
-import { darken } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -252,9 +251,8 @@ const AppCollapsibleSidebar = () => {
 		})).filter(group => group.items.length > 0);
 	};
 
-	// Same hue as the AppBar (theme primary), stepped darker so the two
-	// surfaces read as one brand color instead of two different blues.
-	const SIDEBAR_BG = `linear-gradient(180deg, ${darken(theme.palette.primary.dark, 0.45)} 0%, ${darken(theme.palette.primary.dark, 0.2)} 60%, ${theme.palette.primary.dark} 100%)`;
+	// Same color as the AppBar so navbar and sidebar read as one surface.
+	const SIDEBAR_BG = theme.palette.primary.main;
 	const ACTIVE_BG = "rgba(255,255,255,0.18)";
 	const HOVER_BG = "rgba(255,255,255,0.08)";
 	const GROUP_ACTIVE_BG = "rgba(255,255,255,0.10)";
