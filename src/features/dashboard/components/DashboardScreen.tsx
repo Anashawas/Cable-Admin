@@ -256,7 +256,7 @@ export default function DashboardScreen() {
     <Box sx={{ width: "100%", height: "100%", overflow: "auto", p: { xs: 2, sm: 3 } }}>
 
       {/* ── Hero ── */}
-      <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 60%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, mb: 3, position: "relative", overflow: "hidden", color: "common.white" }}>
+      <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, mb: 3, position: "relative", overflow: "hidden", color: "common.white" }}>
         <Box sx={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)", top: -120, insetInlineEnd: -80, pointerEvents: "none" }} />
         <Box sx={{ position: "absolute", width: 150, height: 150, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.05)", bottom: -60, insetInlineStart: 40, pointerEvents: "none" }} />
         <Grid container spacing={2.5} alignItems="center" sx={{ position: "relative" }}>
