@@ -17,6 +17,21 @@ const getAllComplaints = async (
 };
 
 /**
+ * GET api/usercomplaints/GetComplaintsByChargingPointId/{id}
+ * Complaints for one station.
+ */
+const getComplaintsByChargingPointId = async (
+  chargingPointId: number,
+  signal?: AbortSignal
+): Promise<UserComplaintDto[]> => {
+  const { data } = await server.get<UserComplaintDto[]>(
+    `api/usercomplaints/GetComplaintsByChargingPointId/${chargingPointId}`,
+    { signal }
+  );
+  return Array.isArray(data) ? data : [];
+};
+
+/**
  * DELETE api/usercomplaints/DeleteUserComplaint/{id}
  * Complaint ID in URL. No body.
  */
@@ -40,4 +55,4 @@ const updateComplaintStatus = async (
   await server.patch(`api/usercomplaints/UpdateUserComplaintStatus/${id}`, { status });
 };
 
-export { getAllComplaints, deleteComplaint, updateComplaintStatus };
+export { getAllComplaints, getComplaintsByChargingPointId, deleteComplaint, updateComplaintStatus };

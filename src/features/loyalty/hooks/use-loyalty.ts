@@ -9,6 +9,16 @@ import {
   updateReward,
   getAllRedemptions,
   getProviderRedemptions,
+  getLeaderboard,
+  getUserLoyaltyAccount,
+  getUserPointsHistory,
+  getLoyaltySummary,
+  getAllPointsTransactions,
+  getAllTiers,
+  getRewardPerformance,
+  getProviderActivity,
+  getTransactionDetail,
+  getAdjustmentReasons,
   fulfillRedemption,
   cancelRedemption,
   adjustPoints,
@@ -16,6 +26,11 @@ import {
   unblockUser,
   blockProvider,
   unblockProvider,
+  getBlockedUsers,
+  getBlockedProviders,
+  bulkAwardPoints,
+  reverseTransaction,
+  getFlaggedActivity,
 } from "../services/loyalty-service";
 import type {
   SeasonDto,
@@ -25,6 +40,8 @@ import type {
   UpdateRewardRequest,
   RedemptionDto,
   AdjustPointsRequest,
+  BulkAwardRequest,
+  ReverseTransactionRequest,
   RewardType,
   RedemptionStatus,
   BlockUserRequest,
@@ -232,6 +249,122 @@ export function useRedemptions(statusFilter?: number) {
   };
 }
 
+/** A1 — a specific user's loyalty account (admin). */
+export function useUserLoyaltyAccount(userId: number | null | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ["loyalty", "user-account", userId],
+    queryFn: () => getUserLoyaltyAccount(userId!),
+    enabled: enabled && userId != null && userId > 0,
+    retry: false,
+  });
+}
+
+/** A2 — a specific user's points history (admin, paged). */
+export function useUserPointsHistory(
+  userId: number | null | undefined,
+  params: { transactionType?: number; from?: string; to?: string; page?: number; pageSize?: number },
+  enabled = true
+) {
+  return useQuery({
+    queryKey: ["loyalty", "user-history", userId, params],
+    queryFn: () => getUserPointsHistory(userId!, params),
+    enabled: enabled && userId != null && userId > 0,
+  });
+}
+
+/** C1 — global points ledger (all users), paged + filtered. */
+export function useAllPointsTransactions(params: {
+  transactionType?: number;
+  userId?: number;
+  seasonId?: number;
+  providerType?: "ChargingPoint" | "ServiceProvider";
+  providerId?: number;
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  return useQuery({
+    queryKey: ["loyalty", "all-transactions", params],
+    queryFn: () => getAllPointsTransactions(params),
+    staleTime: 60 * 1000,
+  });
+}
+
+/** I1 — loyalty program-health summary (admin). */
+export function useLoyaltySummary(params?: { seasonId?: number; from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ["loyalty", "summary", params],
+    queryFn: () => getLoyaltySummary(params),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+/** B1 — unified activity feed at a provider (admin, paged). */
+export function useProviderActivity(
+  providerType: string | undefined,
+  providerId: number | null | undefined,
+  params: { activityType?: string; from?: string; to?: string; page?: number; pageSize?: number },
+  enabled = true
+) {
+  return useQuery({
+    queryKey: ["loyalty", "provider-activity", providerType, providerId, params],
+    queryFn: () => getProviderActivity({ providerType: providerType!, providerId: providerId!, ...params }),
+    enabled: enabled && !!providerType && providerId != null && providerId > 0,
+  });
+}
+
+/** B3 — single transaction detail (admin). */
+export function useTransactionDetail(activityType: string | null, id: number | null, enabled = true) {
+  return useQuery({
+    queryKey: ["loyalty", "transaction-detail", activityType, id],
+    queryFn: () => getTransactionDetail(activityType!, id!),
+    enabled: enabled && !!activityType && id != null,
+    retry: false,
+  });
+}
+
+/** H1 — tier ladder (admin, read-only). */
+export function useAllTiers() {
+  return useQuery({
+    queryKey: ["loyalty", "tiers"],
+    queryFn: () => getAllTiers(),
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+/** I2 — reward performance (admin). */
+export function useRewardPerformance(params?: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ["loyalty", "reward-performance", params],
+    queryFn: () => getRewardPerformance(params),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+/** Current-season leaderboard — top N users by points. */
+export function useLeaderboard(top: number) {
+  return useQuery({
+    queryKey: ["loyalty", "leaderboard", top],
+    queryFn: () => getLeaderboard(top),
+    staleTime: 60 * 1000,
+  });
+}
+
+/** Reward redemptions at a specific provider (charging point or service provider). */
+export function useProviderRedemptions(
+  providerType: string | undefined,
+  providerId: number | undefined,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: ["loyalty", "provider-redemptions", providerType, providerId],
+    queryFn: () => getProviderRedemptions({ providerType, providerId }),
+    enabled: enabled && !!providerType && providerId != null && providerId > 0,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useFulfillRedemption() {
   const queryClient = useQueryClient();
 
@@ -264,29 +397,91 @@ export function useAdjustPoints() {
   });
 }
 
+/** J1 — award points to a whole segment. */
+export function useBulkAwardPoints() {
+  return useMutation({
+    mutationFn: (data: BulkAwardRequest) => bulkAwardPoints(data),
+  });
+}
+
+/** K1 — reverse (undo) a transaction. Invalidates loyalty caches on success. */
+export function useReverseTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ReverseTransactionRequest) => reverseTransaction(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["loyalty"] }),
+  });
+}
+
+/** L1 — heuristic fraud-review queue. */
+export function useFlaggedActivity(windowHours: number) {
+  return useQuery({
+    queryKey: ["loyalty", "flagged-activity", windowHours],
+    queryFn: () => getFlaggedActivity({ windowHours }),
+    staleTime: 60 * 1000,
+  });
+}
+
+/** K2 — adjustment reason catalog (static, cached long). */
+export function useAdjustmentReasons() {
+  return useQuery({
+    queryKey: ["loyalty", "adjustment-reasons"],
+    queryFn: () => getAdjustmentReasons(),
+    staleTime: 30 * 60 * 1000,
+  });
+}
+
 // ============================================
 // Block / Unblock (Admin) — 2026-02-26
 // ============================================
 
+export const BLOCKED_USERS_QUERY_KEY = ["loyalty", "blocked-users"];
+export const BLOCKED_PROVIDERS_QUERY_KEY = ["loyalty", "blocked-providers"];
+
+/** F1 — currently blocked users. */
+export function useBlockedUsers() {
+  return useQuery({
+    queryKey: BLOCKED_USERS_QUERY_KEY,
+    queryFn: () => getBlockedUsers(),
+    staleTime: 60 * 1000,
+  });
+}
+
+/** F2 — currently blocked providers. */
+export function useBlockedProviders() {
+  return useQuery({
+    queryKey: BLOCKED_PROVIDERS_QUERY_KEY,
+    queryFn: () => getBlockedProviders(),
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useBlockUser() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: BlockUserRequest) => blockUser(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BLOCKED_USERS_QUERY_KEY }),
   });
 }
 
 export function useUnblockUser() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (userId: number) => unblockUser(userId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BLOCKED_USERS_QUERY_KEY }),
   });
 }
 
 export function useBlockProvider() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: BlockProviderRequest) => blockProvider(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BLOCKED_PROVIDERS_QUERY_KEY }),
   });
 }
 
 export function useUnblockProvider() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       providerType,
@@ -295,5 +490,6 @@ export function useUnblockProvider() {
       providerType: "ChargingPoint" | "ServiceProvider";
       providerId: number;
     }) => unblockProvider(providerType, providerId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BLOCKED_PROVIDERS_QUERY_KEY }),
   });
 }

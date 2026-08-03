@@ -1,9 +1,27 @@
 {
   "title": "Stations Request",
+  "subtitle": "Review, approve or reject provider station-update requests",
   "filterByStatus": "Filter by Status",
   "filterPlaceholder": "e.g. pending, approved, rejected",
+  "empty": "No requests found",
+  "requestedBy": "Requested by",
+  "phone": "Phone",
+  "reviewedBy": "Reviewed by",
+  "viewData": "View data",
+  "currentData": "Current station data",
+  "requestedChanges": "Requested changes",
+  "noChanges": "The API does not return the requested changes yet — showing the current station data below.",
+  "status": {
+    "all": "All",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
   "approved": "Request approved",
   "rejected": "Request rejected",
+  "rejectReason": "Rejection reason",
+  "rejectReasonHint": "Optionally tell the provider why this request was rejected.",
+  "rejectReasonPlaceholder": "e.g., Location coordinates are incorrect",
   "columns": {
     "requestId": "Request ID",
     "stationName": "Station Name",
@@ -16,5 +34,41 @@
     "reject": "Reject",
     "edit": "Edit station",
     "media": "Station media"
+  },
+  "attachments": "Attachments",
+  "diff": {
+    "none": "No field changes in this request.",
+    "noImage": "no image",
+    "removed": "removed"
+  },
+  "fields": {
+    "name": "Name",
+    "phone": "Phone",
+    "ownerPhone": "Contact phone",
+    "fromTime": "Opens",
+    "toTime": "Closes",
+    "status": "Status",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "address": "Address",
+    "service": "Services",
+    "offerDescription": "Offer description",
+    "note": "Note",
+    "methodPayment": "Payment methods",
+    "chargerSpeed": "Charger speed",
+    "chargersCount": "Chargers count",
+    "plugTypes": "Plug types",
+    "price": "Price",
+    "cityName": "City",
+    "countryName": "Country",
+    "images": "Images",
+    "icon": "Icon"
+  },
+  "risk": {
+    "title": "Flags",
+    "name_changed": "Name changed",
+    "contact_phone_changed": "Contact phone changed",
+    "owner_contact_changed": "Owner contact changed",
+    "location_moved": "Location moved"
   }
 }

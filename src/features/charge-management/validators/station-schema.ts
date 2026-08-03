@@ -23,6 +23,7 @@ export const stationFormSchema = z.object({
   statusId: z.number({ required_error: "Status is required" }),
   chargerPointTypeId: z.number({ required_error: "Charger point type is required" }),
   stationTypeId: z.number().optional().nullable(),
+  chargerBrandId: optionalNumber,
 
   plugTypeIds: z.array(z.number()).min(1, "At least one plug type is required"),
   paymentMethods: z.array(z.string()),

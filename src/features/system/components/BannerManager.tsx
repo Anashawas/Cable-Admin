@@ -15,12 +15,17 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  MenuItem,
+  Divider,
   Stack,
   CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import InsightsIcon from "@mui/icons-material/Insights";
+import AnalyticsDialog from "../../analytics/components/AnalyticsDialog";
+import LocationPicker from "../../charge-management/components/LocationPicker";
 import {
   getAllBanners,
   addBanner,
@@ -30,6 +35,12 @@ import {
 import type { BannerDto, AddBannerRequest } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 
+/** The 12 canonical Jordan cities (must match the mobile app's whitelist). */
+const JORDAN_CITIES = [
+  "Amman", "Zarqa", "Irbid", "Salt", "Mafraq", "Madaba",
+  "Jerash", "Ajloun", "Karak", "Tafilah", "Maan", "Aqaba",
+];
+
 const defaultForm: AddBannerRequest = {
   name: "",
   phone: "",
@@ -38,7 +49,31 @@ const defaultForm: AddBannerRequest = {
   endDate: "",
   actionType: null,
   actionUrl: null,
+  targetType: "national",
+  targetCity: null,
+  centerLat: null,
+  centerLng: null,
+  radiusKm: 15,
+  priority: 0,
 };
+
+/** Strips targeting fields that don't apply to the chosen target type. */
+function buildBannerPayload(form: AddBannerRequest): AddBannerRequest {
+  const payload: AddBannerRequest = { ...form };
+  if (form.targetType === "national") {
+    payload.targetCity = null;
+    payload.centerLat = null;
+    payload.centerLng = null;
+    payload.radiusKm = null;
+  } else if (form.targetType === "city") {
+    payload.centerLat = null;
+    payload.centerLng = null;
+    payload.radiusKm = null;
+  } else if (form.targetType === "radius") {
+    payload.targetCity = null;
+  }
+  return payload;
+}
 
 export default function BannerManager() {
   const { t } = useTranslation();
@@ -53,6 +88,7 @@ export default function BannerManager() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [bannerToDelete, setBannerToDelete] = useState<BannerDto | null>(null);
+  const [analyticsBanner, setAnalyticsBanner] = useState<BannerDto | null>(null);
 
   const { data: banners = [], isLoading, error, refetch } = useQuery({
     queryKey: ["banners"],
@@ -120,7 +156,19 @@ export default function BannerManager() {
       openErrorSnackbar({ message: t("platform@banners.requiredFields") });
       return;
     }
-    addMutation.mutate(form);
+    // Targeting validation.
+    if (form.targetType === "city" && !form.targetCity) {
+      openErrorSnackbar({ message: t("platform@banners.targetCityRequired") });
+      return;
+    }
+    if (
+      form.targetType === "radius" &&
+      (form.centerLat == null || form.centerLng == null || !form.radiusKm || form.radiusKm <= 0)
+    ) {
+      openErrorSnackbar({ message: t("platform@banners.targetRadiusRequired") });
+      return;
+    }
+    addMutation.mutate(buildBannerPayload(form));
   }, [form, addMutation, openErrorSnackbar, t]);
 
   const handleUploadImage = useCallback(() => {
@@ -212,7 +260,15 @@ export default function BannerManager() {
                     </Typography>
                   )}
                 </CardContent>
-                <CardActions disableSpacing sx={{ justifyContent: "flex-end" }}>
+                <CardActions disableSpacing sx={{ justifyContent: "space-between" }}>
+                  <Button
+                    size="small"
+                    color="success"
+                    startIcon={<InsightsIcon />}
+                    onClick={() => setAnalyticsBanner(b)}
+                  >
+                    {t("analytics@manage")}
+                  </Button>
                   <Button
                     size="small"
                     color="error"
@@ -278,11 +334,110 @@ export default function BannerManager() {
                 onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
               />
               <TextField
+                select
+                label={t("platform@banners.actionType")}
+                fullWidth
+                value={form.actionType ?? 0}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    actionType: Number(e.target.value) || null,
+                  }))
+                }
+              >
+                <MenuItem value={0}>{t("platform@banners.actionNone")}</MenuItem>
+                <MenuItem value={1}>{t("platform@banners.action1")}</MenuItem>
+                <MenuItem value={2}>{t("platform@banners.action2")}</MenuItem>
+                <MenuItem value={3}>{t("platform@banners.action3")}</MenuItem>
+                <MenuItem value={4}>{t("platform@banners.action4")}</MenuItem>
+                <MenuItem value={5}>{t("platform@banners.action5")}</MenuItem>
+              </TextField>
+              <TextField
                 label={t("platform@banners.actionUrl")}
                 fullWidth
                 placeholder="https://..."
                 value={form.actionUrl ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, actionUrl: e.target.value || null }))}
+              />
+
+              <Divider textAlign="left">
+                {t("platform@banners.targetingSection")}
+              </Divider>
+
+              <TextField
+                select
+                label={t("platform@banners.targetType")}
+                fullWidth
+                value={form.targetType ?? "national"}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    targetType: e.target.value as AddBannerRequest["targetType"],
+                  }))
+                }
+              >
+                <MenuItem value="national">{t("platform@banners.targetNational")}</MenuItem>
+                <MenuItem value="city">{t("platform@banners.targetCityOpt")}</MenuItem>
+                <MenuItem value="radius">{t("platform@banners.targetRadius")}</MenuItem>
+              </TextField>
+
+              {form.targetType === "city" && (
+                <TextField
+                  select
+                  label={t("platform@banners.targetCity")}
+                  fullWidth
+                  value={form.targetCity ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, targetCity: e.target.value || null }))
+                  }
+                >
+                  {JORDAN_CITIES.map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {c}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
+
+              {form.targetType === "radius" && (
+                <>
+                  <Typography variant="caption" color="text.secondary">
+                    {t("platform@banners.pickCenterHint")}
+                  </Typography>
+                  <Box sx={{ height: 300, borderRadius: 1, overflow: "hidden" }}>
+                    <LocationPicker
+                      latitude={form.centerLat ?? 0}
+                      longitude={form.centerLng ?? 0}
+                      radiusMeters={(form.radiusKm ?? 0) * 1000}
+                      onLocationSelect={(lat, lng) =>
+                        setForm((f) => ({ ...f, centerLat: lat, centerLng: lng }))
+                      }
+                    />
+                  </Box>
+                  <TextField
+                    label={t("platform@banners.radiusKm")}
+                    type="number"
+                    fullWidth
+                    value={form.radiusKm ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        radiusKm: e.target.value === "" ? null : Number(e.target.value),
+                      }))
+                    }
+                  />
+                </>
+              )}
+
+              <TextField
+                label={t("platform@banners.priority")}
+                type="number"
+                fullWidth
+                helperText={t("platform@banners.priorityHint")}
+                value={form.priority ?? 0}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, priority: Number(e.target.value) || 0 }))
+                }
               />
             </Stack>
           ) : (
@@ -370,6 +525,14 @@ export default function BannerManager() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <AnalyticsDialog
+        open={analyticsBanner != null}
+        entityType="Banner"
+        entityId={analyticsBanner?.id ?? null}
+        entityName={analyticsBanner?.name ?? undefined}
+        onClose={() => setAnalyticsBanner(null)}
+      />
     </Box>
   );
 }

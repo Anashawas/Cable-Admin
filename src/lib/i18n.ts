@@ -56,6 +56,16 @@ i18n
       "serviceProviders",
       "stationStats",
       "receipts",
+      "socialMedia",
+      "workers",
+      "chargerBrands",
+      "analytics",
+      "terms",
+      "welcome",
+      "campaigns",
+      "viewImageReview",
+      "nearestPreview",
+      "templates",
     ],
   });
 

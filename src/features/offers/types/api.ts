@@ -52,6 +52,8 @@ export interface OfferDto {
   proposedByUserName: string;
   approvalStatus: ApprovalStatus;
   pointsCost: number;
+  /** Cash value the offer's points represent, via the conversion rate (e.g. 100 pts / 50 = 2 JOD). NEW — pending BE. */
+  pointsPriceValue?: number | null;
   monetaryValue: number;
   currencyCode: string;
   maxUsesPerUser: number | null;
@@ -73,6 +75,8 @@ export interface ProposeOfferRequest {
   providerType: ProviderType;
   providerId: number;
   pointsCost: number;
+  /** Cash value the offer's points represent, via the conversion rate. NEW — pending BE. */
+  pointsPriceValue?: number | null;
   monetaryValue: number;
   currencyCode: string;
   maxUsesPerUser?: number | null;
@@ -91,6 +95,8 @@ export interface UpdateOfferRequest {
   providerType: ProviderType;
   providerId: number;
   pointsCost: number;
+  /** Cash value the offer's points represent, via the conversion rate. NEW — pending BE. */
+  pointsPriceValue?: number | null;
   monetaryValue: number;
   currencyCode: string;
   maxUsesPerUser?: number | null;
@@ -183,11 +189,30 @@ export interface ProviderSettlementDto {
   paidAt: string | null;
   adminNote: string | null;
   createdAt: string;
+  /** Provider's current wallet balance, batched server-side (C6) — avoids the per-row fetch. */
+  currentWalletBalance?: number | null;
 }
 
 export interface UpdateSettlementStatusRequest {
   status: SettlementStatus;
   note?: string | null;
+}
+
+/** One line-item behind a settlement — GET /api/offers/GetSettlementTransactions?settlementId={id}. */
+export interface SettlementTransactionDto {
+  activityType: "Partner" | "Offer" | "Redemption";
+  transactionId: number;
+  userId: number;
+  userName: string | null;
+  code: string | null;
+  status: number;
+  statusName: string | null;
+  /** Signed: Partner = +awarded, Offer/Redemption = −spent. */
+  points: number;
+  amount: number | null;
+  currencyCode: string | null;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 export interface SettlementSummaryDto {
@@ -204,6 +229,9 @@ export interface SettlementSummaryDto {
   pendingCount: number;
   paidCount: number;
   disputedCount: number;
+  /** C2 — real server-side totals (fall back to client-derived when absent). */
+  totalOutstandingAmount?: number;
+  totalDisputedAmount?: number;
 }
 
 // ============================================
@@ -248,7 +276,16 @@ export interface WalletTransactionDto {
   transactionType: WalletTransactionType;
   settlementId: number | null;
   note: string | null;
+  /** The admin/system actor that created this wallet entry. */
   createdByUserId: number;
   createdByUserName: string;
   createdAt: string;
+  // --- NEW (pending BE) — the END user + underlying transaction behind this entry ---
+  /** The customer whose offer/partner transaction produced this wallet entry. */
+  relatedUserId?: number | null;
+  relatedUserName?: string | null;
+  /** The underlying offer/partner transaction(s) this wallet entry settled. */
+  relatedTransactionIds?: number[] | null;
+  /** Whether this underlying transaction can still be refunded to the user. */
+  canRefund?: boolean;
 }

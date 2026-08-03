@@ -57,9 +57,14 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import LockIcon from "@mui/icons-material/Lock";
 import PublicIcon from "@mui/icons-material/Public";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
+import LoyaltyIcon from "@mui/icons-material/Loyalty";
+import RedeemIcon from "@mui/icons-material/Redeem";
+import BlockIcon from "@mui/icons-material/Block";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import { useLoyaltySummary } from "../../loyalty/hooks/use-loyalty";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
-import { getUsersList, deleteUserById, updateUserProfile, getUserById, createUser, restoreUsers } from "../services/user-service";
+import { getUsersPaged, getUsersSummary, deleteUserById, updateUserProfile, getUserById, createUser, restoreUsers } from "../services/user-service";
 import type { UserSummaryDto, CreateUserRequest } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 import { useCarTypeStats } from "../hooks/use-user-stats";
@@ -93,6 +98,7 @@ export default function UserListScreen() {
   const [dateTo, setDateTo] = useState<Date | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [selectedCity, setSelectedCity] = useState<string>("");
+  const [sort, setSort] = useState("createdAt_desc");
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 20 });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserSummaryDto | null>(null);
@@ -113,9 +119,29 @@ export default function UserListScreen() {
     city: "",
   });
 
-  const { data = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["users", "list", showDeleted],
-    queryFn: ({ signal }) => getUsersList(signal, showDeleted ? { deletedOnly: true } : undefined),
+  const roleId = activeTab === "users" ? 3 : activeTab === "admins" ? 2 : activeTab === "providers" ? PROVIDER_ROLE_ID : undefined;
+  const usersParams = useMemo(() => ({
+    search: search.trim() || undefined,
+    roleId,
+    city: selectedCity || undefined,
+    isDeleted: showDeleted,
+    sort,
+    page: paginationModel.page + 1, // server is 1-based
+    pageSize: paginationModel.pageSize,
+  }), [search, roleId, selectedCity, showDeleted, sort, paginationModel.page, paginationModel.pageSize]);
+
+  const { data: pageData, isLoading, error, refetch } = useQuery({
+    queryKey: ["users", "paged", usersParams],
+    queryFn: ({ signal }) => getUsersPaged(usersParams, signal),
+    placeholderData: (prev) => prev,
+  });
+  const items = pageData?.items ?? [];
+  const total = pageData?.totalCount ?? 0;
+
+  const { data: usersSummary } = useQuery({
+    queryKey: ["users", "summary"],
+    queryFn: ({ signal }) => getUsersSummary(signal),
+    staleTime: 60 * 1000,
   });
 
   const { data: allServiceProviders = [] } = useQuery({
@@ -132,26 +158,24 @@ export default function UserListScreen() {
     return map;
   }, [allServiceProviders]);
 
-  const carStats = useCarTypeStats(data);
-  const brandOptions = useMemo(() => carStats.map((s) => s.name), [carStats]);
+  const { data: loyaltySummary } = useLoyaltySummary();
 
-  const cityOptions = useMemo(() => {
-    const set = new Set<string>();
-    data.forEach((u) => { const c = u.city?.trim(); if (c) set.add(c); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [data]);
+  const cityOptions = useMemo(
+    () => (usersSummary?.byCity ?? []).map((c) => c.city),
+    [usersSummary]
+  );
 
   const roleCounts = useMemo(() => ({
-    all:       data.length,
-    users:     data.filter(isUser).length,
-    admins:    data.filter(isAdmin).length,
-    providers: data.filter(isProvider).length,
-  }), [data]);
+    all:       usersSummary?.totalUsers ?? 0,
+    users:     usersSummary?.byRole.find((r) => r.roleId === 3)?.count ?? 0,
+    admins:    usersSummary?.byRole.find((r) => r.roleId === 2)?.count ?? 0,
+    providers: usersSummary?.byRole.find((r) => r.roleId === PROVIDER_ROLE_ID)?.count ?? 0,
+  }), [usersSummary]);
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteUserById(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       openSuccessSnackbar({ message: t("userManagement@deleted") });
       setDeleteDialogOpen(false);
       setUserToDelete(null);
@@ -172,7 +196,7 @@ export default function UserListScreen() {
       });
     },
     onSuccess: (_, user) => {
-      queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["users", "detail", user.id] });
       openSuccessSnackbar({ message: t("userManagement@roleChangedToProvider") });
       setChangeRoleDialogOpen(false);
@@ -184,7 +208,7 @@ export default function UserListScreen() {
   const restoreMutation = useMutation({
     mutationFn: (ids: number[]) => restoreUsers(ids),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       openSuccessSnackbar({ message: t("userManagement@restored") });
       setRowSelectionModel([]);
     },
@@ -194,7 +218,7 @@ export default function UserListScreen() {
   const createUserMutation = useMutation({
     mutationFn: (data: CreateUserRequest) => createUser(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       openSuccessSnackbar({ message: t("userManagement@userCreated") });
       setAddUserDialogOpen(false);
       setNewUserForm({ name: "", email: "", password: "", roleId: 3, country: "", city: "" });
@@ -226,43 +250,10 @@ export default function UserListScreen() {
     });
   }, [newUserForm, createUserMutation, openErrorSnackbar, t]);
 
-  const filteredData = useMemo(() => {
-    let result = data;
-    if (activeTab === "users")     result = result.filter(isUser);
-    else if (activeTab === "admins")    result = result.filter(isAdmin);
-    else if (activeTab === "providers") result = result.filter(isProvider);
-    const q = search.trim().toLowerCase();
-    if (q) result = result.filter((row) =>
-      String(row.id ?? "").includes(q) ||
-      (row.name ?? "").toLowerCase().includes(q) ||
-      (row.email ?? "").toLowerCase().includes(q) ||
-      (row.phone ?? "").includes(q)
-    );
-    if (dateFrom || dateTo) {
-      const from = dateFrom ? dateFrom.getTime() : 0;
-      const to = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59, 999).getTime() : Infinity;
-      result = result.filter((row) => {
-        if (!row.createdAt) return false;
-        const ms = new Date(row.createdAt).getTime();
-        return ms >= from && ms <= to;
-      });
-    }
-    const phoneQ = phoneSearch.replace(/\D/g, "");
-    if (phoneQ) result = result.filter((row) => (row.phone ?? "").replace(/\D/g, "").includes(phoneQ));
-    if (selectedBrand) result = result.filter((row) => row.userCars?.some((c) => c.carTypeName?.trim() === selectedBrand));
-    if (selectedCity) result = result.filter((row) => (row.city?.trim() ?? "") === selectedCity);
-    return result;
-  }, [data, activeTab, search, phoneSearch, dateFrom, dateTo, selectedBrand, selectedCity]);
-
-  const paginatedData = useMemo(() => {
-    const start = paginationModel.page * paginationModel.pageSize;
-    return filteredData.slice(start, start + paginationModel.pageSize);
-  }, [filteredData, paginationModel.page, paginationModel.pageSize]);
-
-  const hasActiveFilters = search || phoneSearch || dateFrom || dateTo || selectedBrand || selectedCity;
+  const hasActiveFilters = !!(search || selectedCity);
 
   const clearFilters = useCallback(() => {
-    setSearch(""); setPhoneSearch(""); setDateFrom(null); setDateTo(null); setSelectedBrand(""); setSelectedCity("");
+    setSearch(""); setSelectedCity("");
     setPaginationModel((p) => ({ ...p, page: 0 }));
   }, []);
 
@@ -278,6 +269,12 @@ export default function UserListScreen() {
     if (id > 0) navigate(`/users/${id}/edit`);
   }, [navigate]);
 
+  const handleViewProfile = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
+    e.stopPropagation();
+    const id = row.id ?? 0;
+    if (id > 0) navigate(`/users/${id}`);
+  }, [navigate]);
+
   const handleDeleteClick = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
     e.stopPropagation(); setUserToDelete(row); setDeleteDialogOpen(true);
   }, []);
@@ -286,7 +283,10 @@ export default function UserListScreen() {
     e.stopPropagation(); setUserToChangeRole(row); setChangeRoleDialogOpen(true);
   }, []);
 
-  const handleRowClick = useCallback((row: UserSummaryDto) => { setDrawerUser(row); }, []);
+  const handleRowClick = useCallback((row: UserSummaryDto) => {
+    const id = row.id ?? 0;
+    if (id > 0) navigate(`/users/${id}`);
+  }, [navigate]);
 
   const handleCloseDeleteDialog = useCallback(() => {
     if (!deleteMutation.isPending) { setDeleteDialogOpen(false); setUserToDelete(null); }
@@ -299,7 +299,7 @@ export default function UserListScreen() {
   const selectedIds = useMemo(() => (rowSelectionModel as number[]).filter((id) => id != null), [rowSelectionModel]);
 
   const handleBulkExport = useCallback(() => {
-    const rows = filteredData.filter((r) => selectedIds.includes(r.id ?? -1));
+    const rows = items.filter((r) => selectedIds.includes(r.id ?? -1));
     if (rows.length === 0) return;
     const headers = ["id", "name", "email", "phone", "city", "role"];
     const csv = [
@@ -316,7 +316,7 @@ export default function UserListScreen() {
     const a = document.createElement("a");
     a.href = url; a.download = `users-export-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
-  }, [filteredData, selectedIds]);
+  }, [items, selectedIds]);
 
   const handleBulkDeleteClick = useCallback(() => {
     if (selectedIds.length > 0) setBulkDeleteDialogOpen(true);
@@ -326,7 +326,7 @@ export default function UserListScreen() {
     for (const id of selectedIds) {
       try { await deleteMutation.mutateAsync(id); } catch { /* shown by mutation */ }
     }
-    queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+    queryClient.invalidateQueries({ queryKey: ["users"] });
     setBulkDeleteDialogOpen(false); setRowSelectionModel([]);
     if (selectedIds.length > 0) openSuccessSnackbar({ message: t("userManagement@bulkDeleted", { count: selectedIds.length }) });
   }, [selectedIds, deleteMutation, queryClient, openSuccessSnackbar, t]);
@@ -434,6 +434,9 @@ export default function UserListScreen() {
               </Tooltip>
             ) : (
               <>
+                <Tooltip title={t("userManagement@actions.viewProfile")}>
+                  <IconButton size="small" color="primary" onClick={(e) => handleViewProfile(e, row)}><VisibilityIcon fontSize="small" /></IconButton>
+                </Tooltip>
                 <Tooltip title={t("userManagement@actions.edit")}>
                   <IconButton size="small" onClick={(e) => handleEdit(e, row)}><EditIcon fontSize="small" /></IconButton>
                 </Tooltip>
@@ -451,7 +454,7 @@ export default function UserListScreen() {
         ),
       },
     ],
-    [t, roleChip, handleEdit, handleDeleteClick, handleChangeRoleClick, providersByOwner, showDeleted, restoreMutation]
+    [t, roleChip, handleEdit, handleViewProfile, handleDeleteClick, handleChangeRoleClick, providersByOwner, showDeleted, restoreMutation]
   );
 
   const tabConfig = ROLE_TAB_CONFIG[activeTab];
@@ -516,7 +519,7 @@ export default function UserListScreen() {
                 <Button
                   variant={showDeleted ? "contained" : "outlined"}
                   startIcon={<DeleteIcon />}
-                  onClick={() => { setShowDeleted((v) => !v); setRowSelectionModel([]); }}
+                  onClick={() => { setShowDeleted((v) => !v); setRowSelectionModel([]); setPaginationModel((p) => ({ ...p, page: 0 })); }}
                   size="small"
                   sx={{
                     bgcolor: showDeleted ? "rgba(244,67,54,0.85)" : "transparent",
@@ -572,6 +575,29 @@ export default function UserListScreen() {
               })}
             </Stack>}
           </Box>
+
+          {/* ── Loyalty summary strip ── */}
+          {!showDeleted && loyaltySummary && (
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", md: "repeat(5, 1fr)" }, gap: 1.5 }}>
+              {[
+                { icon: <LoyaltyIcon />, label: t("loyalty@netInCirculation"), value: loyaltySummary.outstandingLiabilityPoints.toLocaleString(), color: "primary" as const },
+                { icon: <PeopleAltIcon />, label: t("loyalty@activeMembers"), value: loyaltySummary.activeMembers.toLocaleString(), color: "success" as const },
+                { icon: <RedeemIcon />, label: t("loyalty@redemptionRate"), value: `${Math.round(loyaltySummary.redemptionRatePct)}%`, color: "warning" as const },
+                { icon: <LoyaltyIcon />, label: t("loyalty@totalPointsIssued"), value: loyaltySummary.totalPointsIssued.toLocaleString(), color: "info" as const },
+                { icon: <BlockIcon />, label: t("loyalty@blockedUsers"), value: loyaltySummary.blockedUsers.toLocaleString(), color: "error" as const },
+              ].map((s) => (
+                <Paper key={s.label} elevation={0} sx={{ p: 1.75, borderRadius: 2.5, border: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", gap: 1.25 }}>
+                  <Box sx={{ width: 38, height: 38, borderRadius: 2, bgcolor: `${s.color}.50`, color: `${s.color}.main`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {s.icon}
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h6" fontWeight={800} lineHeight={1.1} noWrap>{s.value}</Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600} noWrap>{s.label}</Typography>
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          )}
 
           {/* ── Main Table Card ── */}
           <Paper elevation={2} sx={{ borderRadius: 3, overflow: "hidden" }}>
@@ -657,49 +683,17 @@ export default function UserListScreen() {
                   }}
                 />
                 <TextField
-                  size="small"
-                  type="tel"
-                  placeholder={t("userManagement@searchByPhone")}
-                  value={phoneSearch}
-                  onChange={(e) => { setPhoneSearch(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                  sx={{ minWidth: 190 }}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" color="action" /></InputAdornment>,
-                    endAdornment: phoneSearch ? (
-                      <InputAdornment position="end">
-                        <IconButton size="small" onClick={() => setPhoneSearch("")}><ClearIcon fontSize="small" /></IconButton>
-                      </InputAdornment>
-                    ) : undefined,
-                  }}
-                />
-                <DatePicker
-                  label={t("userManagement@insights_dateFrom")}
-                  value={dateFrom}
-                  onChange={(d) => { setDateFrom(d); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                  maxDate={dateTo ?? undefined}
-                  slotProps={{ textField: { size: "small", sx: { minWidth: 155 } } }}
-                />
-                <DatePicker
-                  label={t("userManagement@insights_dateTo")}
-                  value={dateTo}
-                  onChange={(d) => { setDateTo(d); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                  minDate={dateFrom ?? undefined}
-                  slotProps={{ textField: { size: "small", sx: { minWidth: 155 } } }}
-                />
-                {brandOptions.length > 0 && (
-                  <TextField
-                    select size="small"
-                    label={t("userManagement@insights_carTypeStats")}
-                    value={selectedBrand}
-                    onChange={(e) => { setSelectedBrand(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                    sx={{ minWidth: 175 }}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><DirectionsCarIcon fontSize="small" color="action" /></InputAdornment> }}
-                  >
-                    <MenuItem value="">{t("userManagement@allBrands")}</MenuItem>
-                    <Divider />
-                    {brandOptions.map((brand) => <MenuItem key={brand} value={brand}>{brand}</MenuItem>)}
-                  </TextField>
-                )}
+                  select size="small"
+                  label={t("userManagement@sortBy")}
+                  value={sort}
+                  onChange={(e) => { setSort(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
+                  sx={{ minWidth: 175 }}
+                >
+                  <MenuItem value="createdAt_desc">{t("userManagement@sortNewest")}</MenuItem>
+                  <MenuItem value="createdAt_asc">{t("userManagement@sortOldest")}</MenuItem>
+                  <MenuItem value="name_asc">{t("userManagement@sortNameAz")}</MenuItem>
+                  <MenuItem value="name_desc">{t("userManagement@sortNameZa")}</MenuItem>
+                </TextField>
                 {cityOptions.length > 0 && (
                   <TextField
                     select size="small"
@@ -724,19 +718,19 @@ export default function UserListScreen() {
                 )}
                 <Box sx={{ flex: 1 }} />
                 {hasActiveFilters && (
-                  <Chip label={`${filteredData.length} / ${roleCounts[activeTab]}`} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700 }} />
+                  <Chip label={`${total} / ${roleCounts[activeTab]}`} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700 }} />
                 )}
               </Stack>
 
               <AppDataGrid<UserSummaryDto>
-                data={paginatedData}
+                data={items}
                 columns={columns}
                 loading={isLoading}
                 getRowId={(row) => row.id ?? row.name + row.email}
                 disablePagination={false}
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}
-                total={filteredData.length}
+                total={total}
                 minHeight="60vh"
                 enableColumnFilter
                 enableToolbar

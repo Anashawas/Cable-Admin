@@ -1,0 +1,19 @@
+{
+  "title": "Notification Templates",
+  "subtitle": "Suggested message bodies partners can pick from when sending a notification, per type.",
+  "add": "Add Template",
+  "edit": "Edit Template",
+  "save": "Save",
+  "saved": "Template saved",
+  "deleted": "Template deleted",
+  "delete": "Delete",
+  "deleteConfirm": "Delete this template?",
+  "empty": "No templates yet.",
+  "filterType": "Filter by type",
+  "allTypes": "All types",
+  "type": "Notification type",
+  "typeRequired": "Please choose a notification type.",
+  "body": "Suggested body",
+  "bodyRequired": "Please write the suggested body.",
+  "bodyHint": "This text appears as a suggestion chip in the partner's compose screen."
+}

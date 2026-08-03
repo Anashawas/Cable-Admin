@@ -27,4 +27,7 @@ export interface UserComplaintDto {
   status: ComplaintStatus;
   userAccount?: ComplaintUserDto | null;
   chargingPoint?: ComplaintStationDto | null;
+  /** Audit timestamps — when it was submitted, and when it last changed. */
+  createdAt?: string | null;
+  modifiedAt?: string | null;
 }

@@ -14,11 +14,17 @@
     "visitorsHighToLow": "الأكثر زيارة",
     "visitorsLowToHigh": "الأقل زيارة",
     "ratingHighToLow": "الأعلى تقييماً",
-    "nameAtoZ": "الاسم (أ–ي)"
+    "nameAtoZ": "الاسم (أ–ي)",
+    "joinedNewest": "الأحدث انضماماً",
+    "joinedOldest": "الأقدم انضماماً",
+    "editedNewest": "الأحدث تعديلاً",
+    "editedOldest": "الأقدم تعديلاً"
   },
   "columns": {
     "id": "المعرف",
     "stationName": "اسم المحطة",
+    "joined": "تاريخ الانضمام",
+    "lastEdit": "آخر تعديل",
     "city": "المدينة",
     "address": "العنوان",
     "phone": "الهاتف",
@@ -38,7 +44,54 @@
   "detail": {
     "title": "تفاصيل المحطة",
     "services": "الخدمات",
-    "images": "الصور"
+    "images": "الصور",
+    "contact": "التواصل وساعات العمل",
+    "charging": "الشحن",
+    "pricing": "التسعير والدفع",
+    "offer": "العرض",
+    "hours": "ساعات العمل",
+    "country": "الدولة",
+    "coordinates": "الإحداثيات",
+    "viewOnMap": "عرض على الخريطة",
+    "brand": "ماركة الشاحن"
+  },
+  "premium": {
+    "title": "الاشتراك المميز",
+    "manage": "مميز",
+    "recordPayment": "تسجيل دفعة",
+    "record": "تسجيل",
+    "renew": "تجديد",
+    "paymentDate": "تاريخ الدفع",
+    "expiresAt": "تاريخ الانتهاء",
+    "amount": "المبلغ",
+    "note": "ملاحظة",
+    "history": "سجل الدفعات",
+    "noHistory": "لا توجد دفعات مميزة مسجلة بعد.",
+    "active": "مميز نشط",
+    "inactive": "غير مميز",
+    "expired": "انتهى الاشتراك المميز",
+    "paidOn": "دُفع في",
+    "expiresOn": "ينتهي في",
+    "saved": "تم تسجيل الدفعة المميزة",
+    "paymentDateRequired": "تاريخ الدفع مطلوب",
+    "expiresAtRequired": "تاريخ الانتهاء مطلوب",
+    "expiryAfterPayment": "يجب أن يكون تاريخ الانتهاء بعد تاريخ الدفع",
+    "amountInvalid": "يجب أن يكون المبلغ 0 أو أكثر",
+    "noteTooLong": "يجب ألا تتجاوز الملاحظة 500 حرف"
+  },
+  "partner": "شريك",
+  "profile": {
+    "overview": "نظرة عامة"
+  },
+  "complaints": {
+    "title": "الشكاوى",
+    "empty": "لا توجد شكاوى لهذه المحطة"
+  },
+  "reviews": {
+    "title": "التقييمات",
+    "basedOn": "بناءً على {{count}} تقييم",
+    "noComment": "بدون تعليق",
+    "noReviews": "لا توجد تقييمات بعد"
   },
   "filters": {
     "title": "الفلاتر",
@@ -47,6 +100,12 @@
     "city": "المدينة",
     "status": "الحالة",
     "verified": "موثق",
+    "joined": "تاريخ الانضمام",
+    "lastEdit": "آخر تعديل",
+    "last7Days": "آخر ٧ أيام",
+    "last30Days": "آخر ٣٠ يوماً",
+    "last90Days": "آخر ٩٠ يوماً",
+    "lastYear": "آخر سنة",
     "stationType": "نوع المحطة",
     "plugType": "نوع القابس",
     "plugTypeCount": "{{count}} محددة",
@@ -69,6 +128,16 @@
     "searchPlaceholder": "بحث بالاسم أو البريد أو المعرف",
     "noProviders": "لا يوجد مزودون"
   },
+  "owner": {
+    "title": "المالك",
+    "current": "المالك الحالي",
+    "unassigned": "غير مُعيّن",
+    "none": "لا يوجد مالك مُعيّن",
+    "email": "بريد المالك",
+    "phone": "هاتف المالك",
+    "unassign": "إلغاء تعيين المالك",
+    "unassignedSuccess": "تم إلغاء تعيين المحطة بنجاح"
+  },
   "form": {
     "addTitle": "إضافة نقطة شحن",
     "editTitle": "تعديل نقطة الشحن",
@@ -86,6 +155,7 @@
     "status": "الحالة",
     "chargerPointType": "نوع نقطة الشحن",
     "stationType": "نوع المحطة",
+    "chargerBrand": "ماركة الشاحن",
     "chargerSpeed": "سرعة الشحن (كيلوواط)",
     "price": "السعر",
     "chargersCount": "عدد الشواحن",

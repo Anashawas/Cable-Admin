@@ -1,0 +1,20 @@
+{
+  "title": "Nearest Stations (live preview)",
+  "subtitle": "What the app's GetNearest returns for a location — the true live premium / viewImage / distance state.",
+  "lat": "Latitude",
+  "lng": "Longitude",
+  "premium": "Filter",
+  "all": "All",
+  "onlyPremium": "Premium only",
+  "onlyNormal": "Normal only",
+  "load": "Load",
+  "empty": "No stations returned.",
+  "image": "Image",
+  "name": "Name",
+  "distance": "Distance",
+  "isPremium": "Premium",
+  "viewImageStatus": "Ad image",
+  "stationType": "Type id",
+  "yes": "Yes",
+  "no": "No"
+}

@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -a .env*)",
+      "Bash(ls public/config/)",
+      "Bash(npm run *)",
+      "Read(//c/Users/iHR/AppData/Local/Temp/claude/c--Users-iHR-Desktop-caasd-web-Cable-Admin/fcbaacff-dda0-44cd-929e-60d43806dec5/tasks/**)",
+      "Bash(break)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:3000/)",
+      "Bash(grep -nA20 \"interface UserSummaryDto\" src/features/users/types/api.ts)",
+      "Read(//c/Users/iHR/Desktop/caasd/mob/**)",
+      "Bash(ls package.json pubspec.yaml)",
+      "Bash(grep -iA3 \"fonts\\\\|font_family\\\\|cairo\\\\|roboto\" pubspec.yaml)",
+      "Bash(grep -nA12 \"interface CreateUserRequest\" src/features/users/types/api.ts)",
+      "Bash(grep -nA6 \"interface ServiceProviderDto\" src/features/service-providers/types/api.ts)",
+      "Bash(grep -nE \"</Dialog>|</AppScreenContainer>|^\\\\s*\\\\\\);\\\\s*$|^}\" src/features/service-providers/components/ServiceProvidersScreen.tsx)",
+      "Bash(git stash *)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('public/locales/en/chargeManagement.json',encoding='utf-8'\\)\\); print\\('TOP:', list\\(d.keys\\(\\)\\)\\); [print\\(k+':', list\\(v.keys\\(\\)\\)\\) for k,v in d.items\\(\\) if isinstance\\(v,dict\\)]\")",
+      "Bash(node -e \"const d=require\\('./public/locales/en/chargeManagement.json'\\); for\\(const k in d\\){ if\\(d[k]&&typeof d[k]==='object'&&!Array.isArray\\(d[k]\\)\\) console.log\\(k+': '+Object.keys\\(d[k]\\).join\\(', '\\)\\); else console.log\\('\\('+k+'\\)'\\); }\")",
+      "Bash(grep -l '\"more\"' public/locales/en/common.json public/locales/ar/common.json)",
+      "Bash(grep '\"more\"' public/locales/en/common.json public/locales/ar/common.json)",
+      "Bash(python -c \"import json;d=json.load\\(open\\('public/locales/en/userManagement.json',encoding='utf-8'\\)\\);print\\('\\\\n'.join\\(sorted\\(d.keys\\(\\)\\)\\)\\);print\\('--- columns:', list\\(d.get\\('columns',{}\\).keys\\(\\)\\)\\);print\\('--- actions:', list\\(d.get\\('actions',{}\\).keys\\(\\)\\)\\)\")",
+      "Bash(ls -1 *.md)",
+      "Bash(ls -1 *REQUIREMENT* *_BE_*)",
+      "Bash(xargs grep -l \"pointsCost\")",
+      "Bash(grep -v \"use-settlements.ts:.*//\")",
+      "Bash(cp src/features/offers/components/SettlementsScreen.tsx /tmp/settle.bak)",
+      "Bash(sed -i '388,634d' src/features/offers/components/SettlementsScreen.tsx)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('public/locales/en/offers.json','utf8'\\)\\);JSON.parse\\(require\\('fs'\\).readFileSync\\('public/locales/ar/offers.json','utf8'\\)\\);console.log\\('OK'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"server:%{http_code}\" http://127.0.0.1:3000/)"
+    ]
+  }
+}

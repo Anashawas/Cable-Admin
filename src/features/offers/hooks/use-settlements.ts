@@ -4,7 +4,9 @@ import {
   getSettlements,
   getProviderSettlements,
   getSettlementSummary,
+  getSettlementTransactions,
   updateSettlementStatus,
+  updateSettlementStatusBatch,
   addWalletDeposit,
   getWalletBalance,
   getWalletHistory,
@@ -68,6 +70,15 @@ export function useSettlements(filters?: {
   };
 }
 
+export function useSettlementTransactions(settlementId?: number, enabled = true) {
+  return useQuery({
+    queryKey: ["settlement-transactions", settlementId],
+    queryFn: () => getSettlementTransactions(settlementId!),
+    enabled: enabled && settlementId != null && settlementId > 0,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useSettlementSummary(year?: number) {
   return useQuery({
     queryKey: SETTLEMENT_SUMMARY_QUERY_KEY(year),
@@ -111,6 +122,20 @@ export function useUpdateSettlementStatus() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateSettlementStatusRequest }) =>
       updateSettlementStatus(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SETTLEMENTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["settlement-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
+    },
+  });
+}
+
+/** C3 — batch status update. */
+export function useUpdateSettlementStatusBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { settlementIds: number[]; status: number; note?: string | null }) =>
+      updateSettlementStatusBatch(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SETTLEMENTS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ["settlement-summary"] });

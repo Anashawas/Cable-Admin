@@ -31,6 +31,15 @@ import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import PersonIcon from "@mui/icons-material/Person";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import ReplyIcon from "@mui/icons-material/Reply";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import {
+  formatFullDateTime,
+  formatRelative,
+  formatShortDate,
+  matchesDateRange,
+  toTimestamp,
+  type DateRangePreset,
+} from "../../../utils/date-format";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SearchIcon from "@mui/icons-material/Search";
@@ -54,6 +63,21 @@ import {
 import type { SendNotificationRequest } from "../../notifications/types/api";
 
 type StatusFilter = "all" | ComplaintStatus;
+type ComplaintSort = "newest" | "oldest" | "recentlyUpdated";
+
+const COMPLAINT_SORTS: { value: ComplaintSort; labelKey: string }[] = [
+  { value: "newest", labelKey: "complaints@sort.newest" },
+  { value: "oldest", labelKey: "complaints@sort.oldest" },
+  { value: "recentlyUpdated", labelKey: "complaints@sort.recentlyUpdated" },
+];
+
+const COMPLAINT_DATE_RANGES: { value: DateRangePreset; labelKey: string }[] = [
+  { value: "all", labelKey: "complaints@filters.anyTime" },
+  { value: "7d", labelKey: "complaints@filters.last7Days" },
+  { value: "30d", labelKey: "complaints@filters.last30Days" },
+  { value: "90d", labelKey: "complaints@filters.last90Days" },
+  { value: "365d", labelKey: "complaints@filters.lastYear" },
+];
 type StatusKey = "new" | "notComplaint" | "solved" | "opened" | "followUp" | "unsolved" | "systemIssue";
 type ChipColor = "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning";
 
@@ -84,7 +108,8 @@ const STATUS_ORDER: ComplaintStatus[] = [
 ];
 
 export default function ComplaintsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || "en";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
@@ -95,6 +120,8 @@ export default function ComplaintsScreen() {
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [dateFilter, setDateFilter] = useState<DateRangePreset>("all");
+  const [sortOrder, setSortOrder] = useState<ComplaintSort>("newest");
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [complaintToDelete, setComplaintToDelete] = useState<UserComplaintDto | null>(null);
@@ -195,8 +222,21 @@ export default function ComplaintsScreen() {
         String(c.chargingPoint?.id ?? "").includes(q)
       );
     }
-    return list;
-  }, [data, statusFilter, search]);
+    if (dateFilter !== "all") {
+      list = list.filter((c) => matchesDateRange(c.createdAt, dateFilter));
+    }
+
+    // Undated rows sink to the bottom rather than masquerading as oldest.
+    const key = sortOrder === "recentlyUpdated" ? "modifiedAt" : "createdAt";
+    return [...list].sort((a, b) => {
+      const ta = toTimestamp(a[key]);
+      const tb = toTimestamp(b[key]);
+      if (ta == null && tb == null) return a.id - b.id;
+      if (ta == null) return 1;
+      if (tb == null) return -1;
+      return sortOrder === "oldest" ? ta - tb : tb - ta;
+    });
+  }, [data, statusFilter, search, dateFilter, sortOrder]);
 
   const paginated = useMemo(() => {
     const start = page * pageSize;
@@ -370,6 +410,34 @@ export default function ComplaintsScreen() {
 
       {/* ── Search bar ── */}
       <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mb: 1.5 }}>
+          <FormControl size="small" sx={{ minWidth: 190 }}>
+            <InputLabel>{t("complaints@sort.label")}</InputLabel>
+            <Select
+              value={sortOrder}
+              label={t("complaints@sort.label")}
+              onChange={(e) => { setSortOrder(e.target.value as ComplaintSort); setPage(0); }}
+              sx={{ borderRadius: 2 }}
+            >
+              {COMPLAINT_SORTS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>{t(o.labelKey)}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 190 }}>
+            <InputLabel>{t("complaints@filters.submitted")}</InputLabel>
+            <Select
+              value={dateFilter}
+              label={t("complaints@filters.submitted")}
+              onChange={(e) => { setDateFilter(e.target.value as DateRangePreset); setPage(0); }}
+              sx={{ borderRadius: 2 }}
+            >
+              {COMPLAINT_DATE_RANGES.map((o) => (
+                <MenuItem key={o.value} value={o.value}>{t(o.labelKey)}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
         <TextField
           fullWidth
           placeholder={t("complaints@searchPlaceholder")}
@@ -463,6 +531,20 @@ export default function ComplaintsScreen() {
                           sx={{ fontWeight: 700, height: 22 }}
                         />
                       </Stack>
+                      {c.createdAt && (
+                        <Tooltip title={formatFullDateTime(c.createdAt, lang)} arrow>
+                          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.4 }}>
+                            <AccessTimeIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+                            <Typography variant="caption" color="text.secondary">
+                              {t("complaints@submittedOn", {
+                                date: formatShortDate(c.createdAt, lang),
+                              })}
+                              {" · "}
+                              {formatRelative(c.createdAt, lang)}
+                            </Typography>
+                          </Stack>
+                        </Tooltip>
+                      )}
                     </Box>
                   </Stack>
                   {/* Quick status select */}

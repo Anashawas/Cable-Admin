@@ -1,0 +1,18 @@
+{
+  "title": "التحليلات",
+  "manage": "التحليلات",
+  "from": "من",
+  "to": "إلى",
+  "lastNDays": "آخر {{count}} يوم",
+  "uniqueUsers": "{{count}} مستخدم",
+  "dailyTrend": "النشاط اليومي",
+  "ctr": "معدل النقر",
+  "clicksPerView": "نقرات لكل مشاهدة",
+  "noData": "لا يوجد نشاط في هذه الفترة",
+  "rangeNote": "عرض {{from}} — {{to}}",
+  "entity": {
+    "ChargingPoint": "محطة",
+    "ServiceProvider": "مزود",
+    "Banner": "بانر"
+  }
+}

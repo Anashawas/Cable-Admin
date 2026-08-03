@@ -4,6 +4,8 @@ import type {
   UserDetailDto,
   UpdateUserRequestSpec,
   CreateUserRequest,
+  UsersPage,
+  UsersSummaryDto,
 } from "../types/api";
 
 /**
@@ -19,6 +21,32 @@ const getUsersList = async (
     { signal, params }
   );
   return Array.isArray(data) ? data : [];
+};
+
+/**
+ * A2a — GET api/users/GetAllUsers with paging params → paged envelope.
+ * search (name/email/phone/id), roleId, city, isDeleted, sort, page, pageSize.
+ */
+const getUsersPaged = async (
+  params: {
+    search?: string;
+    roleId?: number;
+    city?: string;
+    isDeleted?: boolean;
+    sort?: string;
+    page?: number;
+    pageSize?: number;
+  },
+  signal?: AbortSignal
+): Promise<UsersPage> => {
+  const { data } = await server.get<UsersPage>("api/users/GetAllUsers", { signal, params });
+  return data;
+};
+
+/** A1 — GET api/users/summary aggregate. */
+const getUsersSummary = async (signal?: AbortSignal): Promise<UsersSummaryDto> => {
+  const { data } = await server.get<UsersSummaryDto>("api/users/summary", { signal });
+  return data;
 };
 
 /**
@@ -120,6 +148,8 @@ const markUpdateNotesRead = async (
 
 export {
   getUsersList,
+  getUsersPaged,
+  getUsersSummary,
   getUserById,
   updateUserProfile,
   deleteUserById,

@@ -1,6 +1,8 @@
 import { server } from "../../../lib/@axios";
 import type {
   NotificationTypeDto,
+  NotificationTemplateDto,
+  NotificationTemplatePayload,
   SendNotificationRequest,
   SendByFilterRequest,
   NotificationBatchesResponse,
@@ -91,6 +93,48 @@ const getUserNotifications = async (
   return data;
 };
 
+// ── Notification templates (admin-managed body suggestions, F5) ──
+
+/** GET api/notification-templates?notificationTypeId= (omit for all). */
+const getNotificationTemplates = async (
+  notificationTypeId?: number,
+  signal?: AbortSignal
+): Promise<NotificationTemplateDto[]> => {
+  const { data } = await server.get<NotificationTemplateDto[]>(
+    "api/notification-templates",
+    {
+      params: notificationTypeId ? { notificationTypeId } : undefined,
+      signal,
+    }
+  );
+  return Array.isArray(data) ? data : [];
+};
+
+/** POST api/notification-templates → new id. */
+const createNotificationTemplate = async (
+  payload: NotificationTemplatePayload,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.post("api/notification-templates", payload, { signal });
+};
+
+/** PUT api/notification-templates/{id}. */
+const updateNotificationTemplate = async (
+  id: number,
+  payload: NotificationTemplatePayload,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.put(`api/notification-templates/${id}`, payload, { signal });
+};
+
+/** DELETE api/notification-templates/{id}. */
+const deleteNotificationTemplate = async (
+  id: number,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.delete(`api/notification-templates/${id}`, { signal });
+};
+
 export {
   getNotificationTypes,
   sendNotification,
@@ -98,4 +142,8 @@ export {
   getNotificationBatches,
   getNotificationBatchById,
   getUserNotifications,
+  getNotificationTemplates,
+  createNotificationTemplate,
+  updateNotificationTemplate,
+  deleteNotificationTemplate,
 };

@@ -5,7 +5,7 @@ import type {
 } from "../types/api";
 
 /**
- * POST api/charging-points/update-requests/pending
+ * POST api/provider/charging-points/update-requests/pending
  * Body: { status?: string | null }
  */
 const getPendingRequests = async (
@@ -14,7 +14,7 @@ const getPendingRequests = async (
 ): Promise<UpdateRequestDto[]> => {
   const body: GetPendingUpdateRequestsRequest = { status: status ?? null };
   const { data } = await server.post<UpdateRequestDto[]>(
-    "api/charging-points/update-requests/pending",
+    "api/provider/charging-points/update-requests/pending",
     body,
     { signal }
   );
@@ -22,7 +22,7 @@ const getPendingRequests = async (
 };
 
 /**
- * POST api/charging-points/update-requests/{requestId}/approve
+ * POST api/provider/charging-points/update-requests/{requestId}/approve
  * No body. Use request id (UpdateRequestDto.id), not chargingPointId.
  */
 const approveRequest = async (
@@ -30,23 +30,24 @@ const approveRequest = async (
   signal?: AbortSignal
 ): Promise<void> => {
   await server.post(
-    `api/charging-points/update-requests/${requestId}/approve`,
+    `api/provider/charging-points/update-requests/${requestId}/approve`,
     null,
     { signal }
   );
 };
 
 /**
- * POST api/charging-points/update-requests/{requestId}/reject
- * No body. Use request id (UpdateRequestDto.id).
+ * POST api/provider/charging-points/update-requests/{requestId}/reject
+ * Body: { rejectionReason: string }. Use request id (UpdateRequestDto.id).
  */
 const rejectRequest = async (
   requestId: number,
+  rejectionReason?: string | null,
   signal?: AbortSignal
 ): Promise<void> => {
   await server.post(
-    `api/charging-points/update-requests/${requestId}/reject`,
-    null,
+    `api/provider/charging-points/update-requests/${requestId}/reject`,
+    { rejectionReason: rejectionReason ?? "" },
     { signal }
   );
 };

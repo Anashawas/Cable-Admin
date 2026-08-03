@@ -3,9 +3,31 @@ export interface NotificationTypeDto {
   id: number;
   name: string;
   description: string;
+  /** routing hint: "charging-point" | "service-provider" | "complaint" | "none" | ... */
+  deepLinksTo?: string | null;
+  /** human display names (BE adds these; used for pickers + built titles). */
+  nameEn?: string | null;
+  nameAr?: string | null;
+}
+
+/** Notification body-suggestion template (admin-managed, partner-consumed). */
+export interface NotificationTemplateDto {
+  id: number;
+  notificationTypeId: number;
+  notificationTypeName?: string | null;
+  body: string;
+}
+
+/** Create/update body for a template. */
+export interface NotificationTemplatePayload {
+  notificationTypeId: number;
+  body: string;
 }
 
 export type AppType = "UserApp" | "StationApp";
+
+/** Structured deep-link target (R4) — backend builds the deepLink + FCM routing. */
+export type NotificationTargetType = "charging-point" | "service-provider" | "none";
 
 /** Payload for POST api/notifications (send to all or specific users). */
 export interface SendNotificationRequest {
@@ -14,6 +36,9 @@ export interface SendNotificationRequest {
   title: string;
   body: string;
   isForAll: boolean;
+  /** structured target — backend builds the deepLink + FCM data from these. */
+  targetType?: NotificationTargetType | null;
+  targetId?: number | null;
   deepLink?: string | null;
   data?: string | null;
   time?: string | null;
@@ -28,6 +53,8 @@ export interface SendByFilterRequest {
   carModelId: number | null;
   city: string | null;
   appType: AppType;
+  targetType?: NotificationTargetType | null;
+  targetId?: number | null;
   deepLink?: string | null;
   data?: string | null;
 }
