@@ -109,8 +109,8 @@ const Login = () => {
         height: "100vh",
         overflow: "hidden",
         background: isDark
-          ? `linear-gradient(135deg, ${theme.palette.background.default} 0%, #0D1B2A 50%, #1B2838 100%)`
-          : `linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 30%, #E8EAF6 70%, #F3E5F5 100%)`,
+          ? `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${theme.palette.background.paper} 50%, ${alpha(theme.palette.primary.dark, 0.25)} 100%)`
+          : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.12)} 0%, ${alpha(theme.palette.primary.main, 0.18)} 30%, ${alpha(theme.palette.secondary.light, 0.12)} 70%, ${theme.palette.background.default} 100%)`,
       }}
     >
       {/* Decorative background circles */}
@@ -137,9 +137,7 @@ const Login = () => {
           width: "500px",
           height: "500px",
           borderRadius: "50%",
-          background: isDark
-            ? alpha(theme.palette.secondary.main, 0.05)
-            : alpha("#9C27B0", 0.05),
+          background: alpha(theme.palette.secondary.main, 0.05),
           filter: "blur(2px)",
           pointerEvents: "none",
         }}
@@ -157,8 +155,8 @@ const Login = () => {
             position: "relative",
             p: 6,
             background: isDark
-              ? `linear-gradient(160deg, ${alpha(theme.palette.primary.dark, 0.9)} 0%, ${alpha("#1A237E", 0.85)} 100%)`
-              : `linear-gradient(160deg, ${theme.palette.primary.main} 0%, #1A237E 60%, #4A148C 100%)`,
+              ? `linear-gradient(160deg, ${alpha(theme.palette.primary.dark, 0.9)} 0%, ${alpha(theme.palette.secondary.dark, 0.85)} 100%)`
+              : `linear-gradient(160deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 60%, ${theme.palette.secondary.dark} 100%)`,
             borderRadius: "0 48px 48px 0",
             boxShadow: isDark
               ? `20px 0 60px ${alpha(theme.palette.primary.main, 0.15)}`
@@ -234,7 +232,7 @@ const Login = () => {
                 width: 100,
                 height: 100,
                 borderRadius: "50%",
-                background: "#fff",
+                background: theme.palette.common.white,
                 backdropFilter: "blur(10px)",
                 display: "flex",
                 alignItems: "center",
@@ -253,7 +251,7 @@ const Login = () => {
             <Typography
               variant="h3"
               sx={{
-                color: "#fff",
+                color: theme.palette.common.white,
                 fontWeight: 800,
                 mb: 1,
                 letterSpacing: "-0.5px",
@@ -315,7 +313,7 @@ const Login = () => {
                   borderRadius: "20px",
                   background: isDark
                     ? alpha(theme.palette.primary.main, 0.15)
-                    : `linear-gradient(135deg, ${theme.palette.primary.main}, #1A237E)`,
+                    : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -346,12 +344,12 @@ const Login = () => {
               borderRadius: "24px",
               background: isDark
                 ? alpha(theme.palette.background.paper, 0.6)
-                : alpha("#FFFFFF", 0.75),
+                : alpha(theme.palette.common.white, 0.75),
               backdropFilter: "blur(20px)",
-              border: `1px solid ${isDark ? alpha("#fff", 0.08) : alpha("#fff", 0.6)}`,
+              border: `1px solid ${isDark ? alpha(theme.palette.common.white, 0.08) : alpha(theme.palette.common.white, 0.6)}`,
               boxShadow: isDark
-                ? `0 20px 60px ${alpha("#000", 0.3)}, 0 0 0 1px ${alpha("#fff", 0.05)} inset`
-                : `0 20px 60px ${alpha(theme.palette.primary.main, 0.08)}, 0 0 0 1px rgba(255,255,255,0.8) inset`,
+                ? `0 20px 60px ${alpha(theme.palette.common.black, 0.3)}, 0 0 0 1px ${alpha(theme.palette.common.white, 0.05)} inset`
+                : `0 20px 60px ${alpha(theme.palette.primary.main, 0.08)}, 0 0 0 1px ${alpha(theme.palette.common.white, 0.8)} inset`,
             }}
           >
             <LoginForm

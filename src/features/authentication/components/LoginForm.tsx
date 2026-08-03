@@ -47,25 +47,29 @@ const LoginForm = ({
       borderRadius: "14px",
       backgroundColor: isDark
         ? alpha(theme.palette.background.default, 0.5)
-        : alpha("#F8FAFC", 0.8),
+        : alpha(theme.palette.background.default, 0.8),
       transition: "all 0.2s ease",
       "&:hover": {
         backgroundColor: isDark
           ? alpha(theme.palette.background.default, 0.7)
-          : "#F1F5F9",
+          : theme.palette.background.default,
       },
       "&.Mui-focused": {
         backgroundColor: isDark
           ? alpha(theme.palette.background.default, 0.8)
-          : "#fff",
+          : theme.palette.background.paper,
         boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.12)}`,
       },
       "& fieldset": {
-        borderColor: isDark ? alpha("#fff", 0.1) : alpha("#94A3B8", 0.3),
+        borderColor: isDark
+          ? alpha(theme.palette.common.white, 0.1)
+          : alpha(theme.palette.text.secondary, 0.3),
         transition: "border-color 0.2s ease",
       },
       "&:hover fieldset": {
-        borderColor: isDark ? alpha("#fff", 0.2) : alpha("#94A3B8", 0.5),
+        borderColor: isDark
+          ? alpha(theme.palette.common.white, 0.2)
+          : alpha(theme.palette.text.secondary, 0.5),
       },
     },
     "& .MuiInputAdornment-root .MuiSvgIcon-root": {
@@ -163,11 +167,11 @@ const LoginForm = ({
             fontWeight: 700,
             fontSize: "1rem",
             textTransform: "none",
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #1A237E 100%)`,
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
             boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.35)}`,
             transition: "all 0.2s ease",
             "&:hover": {
-              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, #0D1457 100%)`,
+              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
               boxShadow: `0 12px 32px ${alpha(theme.palette.primary.main, 0.45)}`,
               transform: "translateY(-1px)",
             },
