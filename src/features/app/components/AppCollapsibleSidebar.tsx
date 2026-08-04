@@ -12,7 +12,9 @@ import {
 	Divider,
 	Avatar,
 	Tooltip,
-	alpha
+	alpha,
+	Stack,
+	Chip
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -474,16 +476,23 @@ const AppCollapsibleSidebar = () => {
 			</Box>
 
 			{/* ── Footer ── */}
-			<Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-				{sidebarExpanded && (
-					<>
-						<Typography variant="caption" display="block" sx={{ color: "text.disabled" }}>
-							© {new Date().getFullYear()} {t("kmCamping")}
+			<Box sx={{ px: sidebarExpanded ? 2 : 1, py: 1.25, borderTop: `1px solid ${theme.palette.divider}` }}>
+				{sidebarExpanded ? (
+					<Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+						<Typography variant="caption" noWrap sx={{ color: "text.disabled" }}>
+							© {new Date().getFullYear()} {t("app@appTitle")}
 						</Typography>
-						<Typography variant="caption" display="block" sx={{ color: "text.disabled" }}>
-							{t("version")}: {import.meta.env.VITE_APP_VERSION || "1.0.0"}
-						</Typography>
-					</>
+						<Chip
+							label={`v${import.meta.env.VITE_APP_VERSION || "1.0.0"}`}
+							size="small"
+							variant="outlined"
+							sx={{ height: 20, fontSize: "0.65rem", fontWeight: 700, color: "text.disabled", borderColor: "divider", flexShrink: 0 }}
+						/>
+					</Stack>
+				) : (
+					<Typography variant="caption" align="center" display="block" sx={{ color: "text.disabled", fontSize: "0.6rem" }}>
+						v{import.meta.env.VITE_APP_VERSION || "1.0.0"}
+					</Typography>
 				)}
 			</Box>
 		</Drawer>

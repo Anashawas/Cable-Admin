@@ -70,5 +70,6 @@
   "actions": {
     "delete": "حذف",
     "changeStatus": "تغيير الحالة"
-  }
+  },
+  "selectPrompt": "اختر شكوى لمراجعتها"
 }

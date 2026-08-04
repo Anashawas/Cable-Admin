@@ -70,5 +70,7 @@
     "contact_phone_changed": "تغيير هاتف التواصل",
     "owner_contact_changed": "تغيير بيانات تواصل المالك",
     "location_moved": "تغيير الموقع"
-  }
+  },
+  "selectPrompt": "اختر طلباً للمراجعة",
+  "changes": "تغييرات"
 }

@@ -33,7 +33,6 @@ import {
   InputAdornment,
   useTheme,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import BlockIcon from "@mui/icons-material/Block";
@@ -102,56 +101,49 @@ const INITIAL_FORM_DATA: ProposeOfferRequest = {
 };
 
 // ── Stat Card ───────────────────────────────────────────────────────────────
+// Frosted-glass tile that sits INSIDE the gradient banner — same treatment
+// as the dashboard hero tiles, so all three stats read consistently.
 function StatCard({
   icon,
   label,
   value,
-  color,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
-  color: "primary" | "warning" | "success" | "info";
+  color?: "primary" | "warning" | "success" | "info";
 }) {
-  const theme = useTheme();
-  const colorMap = {
-    primary: { bg: "#e8f4fd", icon: theme.palette.primary.main, text: theme.palette.primary.dark },
-    warning: { bg: "#fff8e1", icon: "#f59e0b", text: "#92400e" },
-    success: { bg: alpha(theme.palette.success.main, 0.12), icon: theme.palette.success.main, text: theme.palette.success.dark },
-    info:    { bg: alpha(theme.palette.primary.main, 0.08), icon: theme.palette.secondary.main, text: theme.palette.secondary.dark },
-  };
-  const c = colorMap[color];
   return (
     <Paper
       elevation={0}
       sx={{
-        p: 2.5,
-        borderRadius: 3,
-        bgcolor: c.bg,
-        border: "1px solid",
-        borderColor: `${color}.100`,
+        p: 2,
+        borderRadius: 2.5,
+        bgcolor: "rgba(255,255,255,0.14)",
+        border: "1px solid rgba(255,255,255,0.25)",
+        backdropFilter: "blur(4px)",
         flex: 1,
         minWidth: 140,
       }}
     >
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack direction="row" spacing={1.75} alignItems="center">
         <Box
           sx={{
-            p: 1.2,
+            p: 1.1,
             borderRadius: 2,
-            bgcolor: c.icon,
+            bgcolor: "rgba(255,255,255,0.2)",
             display: "flex",
             alignItems: "center",
-            color: "white",
+            color: "common.white",
           }}
         >
           {icon}
         </Box>
         <Box>
-          <Typography variant="h5" fontWeight={800} color={c.text}>
+          <Typography variant="h5" fontWeight={800} sx={{ color: "common.white", lineHeight: 1.15 }}>
             {value}
           </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)" }} fontWeight={600}>
             {label}
           </Typography>
         </Box>

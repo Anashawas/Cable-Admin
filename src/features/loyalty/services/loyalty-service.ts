@@ -163,7 +163,9 @@ export const updateReward = async (id: number, data: UpdateRewardRequest): Promi
 
 export const getAllRedemptions = async (params?: {
   status?: number;
-}): Promise<RedemptionDto[]> => {
+  page?: number;
+  pageSize?: number;
+}): Promise<Paged<RedemptionDto>> => {
   const response = await server.get("/api/loyalty/admin/GetAllRedemptions", { params });
   return response.data;
 };
@@ -171,8 +173,7 @@ export const getAllRedemptions = async (params?: {
 export const getProviderRedemptions = async (params?: {
   providerType?: string;
   providerId?: number;
-  status?: number;
-}): Promise<ProviderRedemptionDto[]> => {
+}): Promise<Paged<ProviderRedemptionDto>> => {
   const response = await server.get("/api/loyalty/admin/GetProviderRedemptions", { params });
   return response.data;
 };

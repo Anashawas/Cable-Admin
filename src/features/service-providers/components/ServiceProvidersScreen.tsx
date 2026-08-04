@@ -38,7 +38,11 @@ import {
   ListItemButton,
   ListItemAvatar,
   ListItemText,
+  Menu,
+  ListItemIcon,
+  alpha,
 } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VerifiedIcon from "@mui/icons-material/Verified";
@@ -211,6 +215,9 @@ export default function ServiceProvidersScreen() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [blockProviderDialogOpen, setBlockProviderDialogOpen] = useState(false);
   const [blockProviderTarget, setBlockProviderTarget] = useState<ServiceProviderDto | null>(null);
+  // Overflow "more actions" menu for the grid rows
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<HTMLElement | null>(null);
+  const [actionMenuRow, setActionMenuRow] = useState<ServiceProviderDto | null>(null);
   const [blockProviderReason, setBlockProviderReason] = useState("");
   const [blockProviderUntil, setBlockProviderUntil] = useState("");
   const [isUnblockMode, setIsUnblockMode] = useState(false);
@@ -694,58 +701,82 @@ export default function ServiceProvidersScreen() {
       headerAlign: "center",
     },
     {
-      field: "icon",
-      headerName: t("icon"),
-      width: 80,
-      align: "center",
-      headerAlign: "center",
-      sortable: false,
-      renderCell: (params) => (
-        <Avatar src={params.value || undefined} sx={{ width: 40, height: 40 }}>
-          <StoreIcon />
-        </Avatar>
-      ),
-    },
-    {
       field: "name",
       headerName: t("name"),
       flex: 1,
-      minWidth: 200,
+      minWidth: 230,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", height: "100%", lineHeight: "normal" }}>
+          <Avatar
+            src={params.row.icon || undefined}
+            variant="rounded"
+            sx={{
+              width: 40, height: 40, borderRadius: 2,
+              bgcolor: alpha(theme.palette.primary.main, 0.08),
+              color: "primary.main",
+              border: "1px solid", borderColor: alpha(theme.palette.primary.main, 0.2),
+              "& img": { objectFit: "cover" },
+            }}
+          >
+            <StoreIcon fontSize="small" />
+          </Avatar>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="body2" fontWeight={700} noWrap sx={{ lineHeight: 1.35 }}>{params.row.name || "—"}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", lineHeight: 1.35 }}>
+              {params.row.serviceCategoryName || "—"}
+            </Typography>
+          </Box>
+        </Stack>
+      ),
     },
     {
       field: "ownerName",
       headerName: t("owner"),
-      width: 150,
-    },
-    {
-      field: "serviceCategoryName",
-      headerName: t("category"),
-      width: 150,
+      width: 160,
+      renderCell: (params) => (
+        <Typography variant="body2" color={params.value ? "text.primary" : "text.disabled"} noWrap>
+          {params.value || "—"}
+        </Typography>
+      ),
     },
     {
       field: "cityName",
       headerName: t("city"),
-      width: 120,
+      width: 130,
+      renderCell: (params) => (
+        <Typography variant="body2" color={params.value ? "text.primary" : "text.disabled"} noWrap>
+          {params.value || "—"}
+        </Typography>
+      ),
     },
     {
       field: "avgRating",
       headerName: t("rating"),
-      width: 150,
+      width: 160,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Rating value={params.value || 0} precision={0.5} size="small" readOnly />
-          <Chip label={`(${params.row.rateCount})`} size="small" />
-        </Stack>
+        params.row.rateCount > 0 ? (
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Rating value={params.value || 0} precision={0.5} size="small" readOnly />
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>({params.row.rateCount})</Typography>
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.disabled">—</Typography>
+        )
       ),
     },
     {
       field: "visitorsCount",
       headerName: t("visitors"),
-      width: 100,
+      width: 96,
       align: "center",
       headerAlign: "center",
+      renderCell: (params) => (
+        <Typography variant="body2" fontWeight={700} color={params.value ? "text.primary" : "text.disabled"}>
+          {(params.value ?? 0).toLocaleString()}
+        </Typography>
+      ),
     },
     {
       field: "isVerified",
@@ -755,80 +786,31 @@ export default function ServiceProvidersScreen() {
       headerAlign: "center",
       renderCell: (params) => (
         <Chip
-          icon={params.value ? <VerifiedIcon /> : undefined}
+          icon={params.value ? <VerifiedIcon sx={{ fontSize: "0.9rem !important" }} /> : undefined}
           label={params.value ? t("verified") : t("unverified")}
           color={params.value ? "success" : "warning"}
+          variant="outlined"
           size="small"
+          sx={{ fontWeight: 700 }}
         />
       ),
     },
     {
       field: "actions",
       headerName: t("actions"),
-      width: 310,
+      width: 70,
       align: "center",
       headerAlign: "center",
       sortable: false,
       renderCell: (params) => (
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title={t("viewDetails")}>
-            <IconButton size="small" onClick={(e) => handleViewDetails(e, params.row)}>
-              <VisibilityIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("viewOffers")}>
-            <IconButton size="small" color="warning" onClick={(e) => handleViewOffers(e, params.row)}>
-              <LocalOfferIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("analytics@manage")}>
-            <IconButton size="small" color="success" onClick={(e) => handleAnalyticsClick(e, params.row)}>
-              <InsightsIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("loyalty@redemptions")}>
-            <IconButton size="small" color="secondary" onClick={(e) => handleRedemptionsClick(e, params.row)}>
-              <RedeemIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("serviceProviders@changeOwner")}>
-            <IconButton size="small" color="info" onClick={(e) => handleChangeOwnerClick(e, params.row)}>
-              <SwapHorizIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("workers@manageWorker")}>
-            <IconButton size="small" color="primary" onClick={(e) => handleManageWorkerClick(e, params.row)}>
-              <BadgeIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("loyalty@blockProvider")}>
-            <IconButton size="small" color="error" onClick={(e) => handleBlockProviderClick(e, params.row)}>
-              <BlockIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("edit")}>
-            <IconButton size="small" color="primary" onClick={(e) => handleEditClick(e, params.row)}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("delete")}>
-            <IconButton size="small" color="error" onClick={(e) => handleDeleteClick(e, params.row)}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          {!params.row.isVerified && (
-            <Tooltip title={t("verify")}>
-              <IconButton
-                size="small"
-                color="success"
-                onClick={(e) => handleVerify(e, params.row)}
-                disabled={verifyMutation.isPending}
-              >
-                <VerifiedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Stack>
+        <Tooltip title={t("actions")}>
+          <IconButton
+            size="small"
+            onClick={(e) => { e.stopPropagation(); setActionMenuAnchor(e.currentTarget); setActionMenuRow(params.row); }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       ),
     },
   ];
@@ -840,85 +822,74 @@ export default function ServiceProvidersScreen() {
         sx={{
           background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
-          p: { xs: 2.5, md: 4 },
+          p: { xs: 2, md: 2.5 },
           mb: 3,
           position: "relative",
           overflow: "hidden",
-          color: "white",
+          color: "common.white",
         }}
       >
-        {/* Decorative circles */}
-        <Box sx={{ position: "absolute", top: -50, right: -50, width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <Box sx={{ position: "absolute", bottom: -60, right: 100, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <Box sx={{ position: "absolute", top: -40, insetInlineEnd: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
 
-        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} spacing={3}>
-          {/* Left: icon + title + KPIs */}
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ xs: "flex-start", sm: "center" }}>
-            <Box sx={{ width: 64, height: 64, borderRadius: 2, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <StoreIcon sx={{ fontSize: 36, color: "white" }} />
-            </Box>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ xs: "flex-start", md: "center" }} sx={{ position: "relative" }}>
+          {/* Title */}
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48, borderRadius: 2.5 }}>
+              <StoreIcon />
+            </Avatar>
             <Box>
-              <Typography variant="h5" fontWeight={700} color="white">{t("serviceProviders")}</Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)", mt: 0.5 }}>{t("serviceProviders@subtitle")}</Typography>
-              <Stack direction="row" spacing={2} sx={{ mt: 2 }} flexWrap="wrap">
-                <Box sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
-                  {isLoading ? (
-                    <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
-                  ) : (
-                    <Typography variant="h5" fontWeight={700} color="white">{data.length}</Typography>
-                  )}
-                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("kpi_total")}</Typography>
-                </Box>
-                <Box sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
-                  {isLoading ? (
-                    <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
-                  ) : (
-                    <Typography variant="h5" fontWeight={700} color="white">{verifiedCount}</Typography>
-                  )}
-                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("kpi_verified")}</Typography>
-                </Box>
-                <Box sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
-                  {isLoading ? (
-                    <Skeleton variant="rounded" width={56} height={36} sx={{ bgcolor: "rgba(255,255,255,0.2)" }} />
-                  ) : (
-                    <Typography variant="h5" fontWeight={700} color="white">{withOffersCount}</Typography>
-                  )}
-                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("kpi_withOffers")}</Typography>
-                </Box>
-              </Stack>
+              <Typography variant="h5" fontWeight={800}>{t("serviceProviders")}</Typography>
+              <Typography variant="body2" sx={{ opacity: 0.8 }}>{t("serviceProviders@subtitle")}</Typography>
             </Box>
           </Stack>
 
-          {/* Right: action buttons */}
-          <Stack direction="row" spacing={1.5} flexShrink={0}>
+          {/* Frosted stat tiles — one consistent style */}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {[
+              { label: t("kpi_total"), value: data.length },
+              { label: t("kpi_verified"), value: verifiedCount },
+              { label: t("kpi_withOffers"), value: withOffersCount },
+            ].map(({ label, value }) => (
+              <Box
+                key={label}
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.14)",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 2,
+                  px: 2,
+                  py: 0.75,
+                  minWidth: 76,
+                  textAlign: "center",
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                {isLoading
+                  ? <Skeleton variant="rounded" width={36} height={26} sx={{ bgcolor: "rgba(255,255,255,0.2)", mx: "auto" }} />
+                  : <Typography variant="h6" fontWeight={800} sx={{ color: "common.white" }} lineHeight={1.1}>{value}</Typography>}
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)", fontSize: "0.68rem" }}>{label}</Typography>
+              </Box>
+            ))}
+          </Stack>
+
+          {/* Actions */}
+          <Stack direction="row" spacing={1} flexShrink={0}>
+            <Tooltip title={t("refresh")}>
+              <IconButton onClick={handleRefresh} sx={{ color: "#fff", bgcolor: "rgba(255,255,255,0.15)", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}>
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => navigate("/service-providers/add")}
               sx={{
-                background: "rgba(255,255,255,0.2)",
-                backdropFilter: "blur(10px)",
-                color: "white",
-                border: "1px solid rgba(255,255,255,0.3)",
-                fontWeight: 600,
-                "&:hover": { background: "rgba(255,255,255,0.3)" },
+                bgcolor: "white", color: "primary.dark", fontWeight: 700,
+                "&:hover": { bgcolor: "grey.100" },
+                whiteSpace: "nowrap",
               }}
             >
               {t("addProvider")}
             </Button>
-            <Tooltip title={t("refresh")}>
-              <IconButton
-                onClick={handleRefresh}
-                sx={{
-                  background: "rgba(255,255,255,0.15)",
-                  color: "white",
-                  border: "1px solid rgba(255,255,255,0.25)",
-                  "&:hover": { background: "rgba(255,255,255,0.25)" },
-                }}
-              >
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
           </Stack>
         </Stack>
       </Box>
@@ -2664,6 +2635,53 @@ export default function ServiceProvidersScreen() {
         providerName={redemptionsProvider?.name ?? undefined}
         onClose={() => setRedemptionsProvider(null)}
       />
+
+      {/* ── Row overflow menu (secondary actions) ── */}
+      <Menu
+        anchorEl={actionMenuAnchor}
+        open={actionMenuAnchor != null && actionMenuRow != null}
+        onClose={() => { setActionMenuAnchor(null); setActionMenuRow(null); }}
+        slotProps={{ paper: { sx: { borderRadius: 2.5, minWidth: 220 } } }}
+      >
+        {[
+          { label: t("viewDetails"), icon: <VisibilityIcon fontSize="small" />, fn: handleViewDetails },
+          { label: t("edit"), icon: <EditIcon fontSize="small" color="primary" />, fn: handleEditClick },
+          ...(actionMenuRow && !actionMenuRow.isVerified
+            ? [{ label: t("verify"), icon: <VerifiedIcon fontSize="small" color="success" />, fn: handleVerify, disabled: verifyMutation.isPending }]
+            : []),
+          { label: t("viewOffers"), icon: <LocalOfferIcon fontSize="small" color="warning" />, fn: handleViewOffers },
+          { label: t("analytics@manage"), icon: <InsightsIcon fontSize="small" color="success" />, fn: handleAnalyticsClick },
+          { label: t("loyalty@redemptions"), icon: <RedeemIcon fontSize="small" color="secondary" />, fn: handleRedemptionsClick },
+          { label: t("serviceProviders@changeOwner"), icon: <SwapHorizIcon fontSize="small" color="info" />, fn: handleChangeOwnerClick },
+          { label: t("workers@manageWorker"), icon: <BadgeIcon fontSize="small" color="primary" />, fn: handleManageWorkerClick },
+          { label: t("loyalty@blockProvider"), icon: <BlockIcon fontSize="small" color="error" />, fn: handleBlockProviderClick },
+        ].map((item) => (
+          <MenuItem
+            key={item.label}
+            disabled={"disabled" in item ? item.disabled : false}
+            onClick={(e) => {
+              const row = actionMenuRow;
+              setActionMenuAnchor(null); setActionMenuRow(null);
+              if (row) item.fn(e, row);
+            }}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primaryTypographyProps={{ fontWeight: 600, fontSize: "0.875rem" }}>{item.label}</ListItemText>
+          </MenuItem>
+        ))}
+        <Divider />
+        <MenuItem
+          onClick={(e) => {
+            const row = actionMenuRow;
+            setActionMenuAnchor(null); setActionMenuRow(null);
+            if (row) handleDeleteClick(e, row);
+          }}
+          sx={{ color: "error.main" }}
+        >
+          <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+          <ListItemText primaryTypographyProps={{ fontWeight: 700, fontSize: "0.875rem" }}>{t("delete")}</ListItemText>
+        </MenuItem>
+      </Menu>
     </AppScreenContainer>
   );
 }

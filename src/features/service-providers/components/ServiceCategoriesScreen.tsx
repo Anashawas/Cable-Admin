@@ -22,6 +22,7 @@ import {
   Pagination,
   Grid,
   useTheme,
+  alpha,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -215,66 +216,58 @@ export default function ServiceCategoriesScreen() {
         sx={{
           background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
           borderRadius: 3,
-          p: { xs: 2.5, md: 4 },
+          p: { xs: 2, md: 2.5 },
           mb: 3,
           position: "relative",
           overflow: "hidden",
           color: "white",
         }}
       >
-        {/* Decorative circles */}
-        <Box sx={{ position: "absolute", top: -60, right: -60, width: 240, height: 240, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <Box sx={{ position: "absolute", bottom: -70, right: 120, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
-        <Box sx={{ position: "absolute", top: -30, left: 200, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
+        <Box sx={{ position: "absolute", top: -40, insetInlineEnd: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ xs: "flex-start", sm: "center" }} justifyContent="space-between">
-          <Stack direction="row" spacing={2.5} alignItems="center">
-            {/* Icon box */}
-            <Box sx={{
-              width: 72, height: 72, borderRadius: 3,
-              background: "rgba(255,255,255,0.15)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              <CategoryIcon sx={{ fontSize: 40, color: "white" }} />
-            </Box>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }} sx={{ position: "relative" }}>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+            <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48, borderRadius: 2.5 }}>
+              <CategoryIcon />
+            </Avatar>
             <Box>
-              <Typography variant="h5" fontWeight={700} color="white">{t("serviceCategories")}</Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)", mt: 0.5 }}>{t("serviceCategories_subtitle")}</Typography>
-              {/* KPI chips */}
-              <Stack direction="row" spacing={1.5} sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}>
-                {[
-                  { label: t("serviceCategories_total"), value: data.length, bg: "rgba(255,255,255,0.15)" },
-                  { label: t("active"), value: activeCount, bg: "rgba(76,175,80,0.35)" },
-                  { label: t("inactive"), value: inactiveCount, bg: "rgba(255,255,255,0.08)" },
-                ].map(({ label, value, bg }) => (
-                  <Box
-                    key={label}
-                    sx={{
-                      background: bg,
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      borderRadius: 2,
-                      px: 2,
-                      py: 0.75,
-                      minWidth: 80,
-                      textAlign: "center",
-                      backdropFilter: "blur(4px)",
-                    }}
-                  >
-                    {isLoading
-                      ? <Skeleton variant="rounded" width={36} height={26} sx={{ bgcolor: "rgba(255,255,255,0.2)", mx: "auto" }} />
-                      : <Typography variant="h6" fontWeight={800} color="white" lineHeight={1.1}>{value}</Typography>}
-                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)", fontSize: "0.68rem" }}>{label}</Typography>
-                  </Box>
-                ))}
-              </Stack>
+              <Typography variant="h5" fontWeight={800}>{t("serviceCategories")}</Typography>
+              <Typography variant="body2" sx={{ opacity: 0.8 }}>{t("serviceCategories_subtitle")}</Typography>
             </Box>
           </Stack>
 
+          {/* Frosted stat tiles — one consistent style */}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {[
+              { label: t("serviceCategories_total"), value: data.length },
+              { label: t("active"), value: activeCount },
+              { label: t("inactive"), value: inactiveCount },
+            ].map(({ label, value }) => (
+              <Box
+                key={label}
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.14)",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 2,
+                  px: 2,
+                  py: 0.75,
+                  minWidth: 76,
+                  textAlign: "center",
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                {isLoading
+                  ? <Skeleton variant="rounded" width={36} height={26} sx={{ bgcolor: "rgba(255,255,255,0.2)", mx: "auto" }} />
+                  : <Typography variant="h6" fontWeight={800} sx={{ color: "common.white" }} lineHeight={1.1}>{value}</Typography>}
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)", fontSize: "0.68rem" }}>{label}</Typography>
+              </Box>
+            ))}
+          </Stack>
+
           {/* Header actions */}
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} flexShrink={0}>
             <Tooltip title={t("refresh")}>
-              <IconButton onClick={handleRefresh} sx={{ color: "rgba(255,255,255,0.8)", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
+              <IconButton onClick={handleRefresh} sx={{ color: "#fff", bgcolor: "rgba(255,255,255,0.15)", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
@@ -283,10 +276,8 @@ export default function ServiceCategoriesScreen() {
               startIcon={<AddIcon />}
               onClick={handleAddNew}
               sx={{
-                bgcolor: "rgba(255,255,255,0.2)", color: "white", fontWeight: 600,
-                backdropFilter: "blur(4px)",
-                border: "1px solid rgba(255,255,255,0.3)",
-                "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                bgcolor: "white", color: "primary.dark", fontWeight: 700,
+                "&:hover": { bgcolor: "grey.100" },
                 whiteSpace: "nowrap",
               }}
             >
@@ -584,162 +575,112 @@ interface CategoryCardProps {
 }
 
 function CategoryCard({ cat, t, isUploadingThis, onEdit, onDelete, onUpload }: CategoryCardProps) {
+  const theme = useTheme();
   return (
     <Paper
-      elevation={1}
+      elevation={0}
       sx={{
         borderRadius: 3,
+        border: "1px solid",
+        borderColor: "divider",
         overflow: "hidden",
-        position: "relative",
-        transition: "transform 0.18s ease, box-shadow 0.18s ease",
-        "&:hover": { transform: "translateY(-3px)", boxShadow: 6 },
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.12)}`,
+          borderColor: alpha(theme.palette.primary.main, 0.4),
+        },
       }}
     >
-      {/* Sort order badge */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          zIndex: 1,
-          bgcolor: "rgba(0,0,0,0.45)",
-          color: "white",
-          borderRadius: 1.5,
-          px: 1,
-          py: 0.25,
-          fontSize: "0.68rem",
-          fontWeight: 700,
-          lineHeight: 1.6,
-          backdropFilter: "blur(4px)",
-        }}
-      >
-        #{cat.sortOrder}
-      </Box>
-
-      {/* Icon area */}
-      <Box
-        sx={{
-          background: cat.isActive
-            ? "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)"
-            : "linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%)",
-          p: 3,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: 130,
-        }}
-      >
+      {/* Main row: icon + names */}
+      <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ p: 2, flex: 1, minWidth: 0 }}>
         <Avatar
           src={cat.iconUrl ?? undefined}
           variant="rounded"
           sx={{
-            width: 80,
-            height: 80,
-            bgcolor: "white",
-            boxShadow: 3,
-            border: "3px solid",
-            borderColor: cat.isActive ? "primary.100" : "grey.200",
+            width: 56,
+            height: 56,
+            borderRadius: 2.5,
+            bgcolor: cat.isActive ? alpha(theme.palette.primary.main, 0.08) : "action.hover",
+            border: "1px solid",
+            borderColor: cat.isActive ? alpha(theme.palette.primary.main, 0.25) : "divider",
             "& img": { objectFit: "contain" },
           }}
         >
-          <CategoryIcon sx={{ fontSize: 40, color: cat.isActive ? "primary.main" : "text.disabled" }} />
+          <CategoryIcon sx={{ fontSize: 28, color: cat.isActive ? "primary.main" : "text.disabled" }} />
         </Avatar>
-      </Box>
-
-      {/* Content */}
-      <Box sx={{ p: 2, flex: 1 }}>
-        {/* Status chip */}
-        <Chip
-          icon={cat.isActive ? <CheckCircleIcon sx={{ fontSize: "0.9rem !important" }} /> : <CancelIcon sx={{ fontSize: "0.9rem !important" }} />}
-          label={cat.isActive ? t("active") : t("inactive")}
-          color={cat.isActive ? "success" : "default"}
-          size="small"
-          sx={{ mb: 1.5, fontWeight: 600, fontSize: "0.7rem" }}
-        />
-
-        <Typography variant="subtitle1" fontWeight={700} noWrap title={cat.name}>
-          {cat.name}
-        </Typography>
-
-        {cat.nameAr && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            dir="rtl"
-            noWrap
-            title={cat.nameAr}
-            sx={{ mt: 0.25, fontFamily: "inherit" }}
-          >
-            {cat.nameAr}
-          </Typography>
-        )}
-
-        {cat.description ? (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{
-              mt: 1,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              lineHeight: 1.5,
-            }}
-          >
-            {cat.description}
-          </Typography>
-        ) : (
-          <Typography variant="caption" color="text.disabled" sx={{ mt: 1, display: "block", fontStyle: "italic" }}>
-            No description
-          </Typography>
-        )}
-      </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+            <Typography variant="subtitle2" fontWeight={800} noWrap title={cat.name} sx={{ minWidth: 0 }}>
+              {cat.name}
+            </Typography>
+            <Chip
+              icon={cat.isActive ? <CheckCircleIcon sx={{ fontSize: "0.85rem !important" }} /> : <CancelIcon sx={{ fontSize: "0.85rem !important" }} />}
+              label={cat.isActive ? t("active") : t("inactive")}
+              color={cat.isActive ? "success" : "default"}
+              size="small"
+              sx={{ height: 22, fontWeight: 700, fontSize: "0.68rem", flexShrink: 0 }}
+            />
+          </Stack>
+          {cat.nameAr && (
+            <Typography variant="body2" color="text.secondary" dir="rtl" noWrap title={cat.nameAr} sx={{ mt: 0.25, textAlign: "start" }}>
+              {cat.nameAr}
+            </Typography>
+          )}
+          {cat.description ? (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                mt: 0.5,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                lineHeight: 1.45,
+              }}
+            >
+              {cat.description}
+            </Typography>
+          ) : (
+            <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: "block", fontStyle: "italic" }}>
+              {t("serviceCategories_noDescription")}
+            </Typography>
+          )}
+        </Box>
+      </Stack>
 
       <Divider />
 
-      {/* Actions */}
+      {/* Footer: id + sort order + actions */}
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ px: 1.5, py: 1, bgcolor: "grey.50" }}
+        sx={{ px: 1.5, py: 0.75, bgcolor: "background.default" }}
       >
-        <Typography variant="caption" color="text.disabled" fontWeight={500}>
-          ID: {cat.id}
-        </Typography>
+        <Stack direction="row" spacing={0.75} alignItems="center">
+          <Typography variant="caption" color="text.disabled" fontWeight={600}>
+            ID: {cat.id}
+          </Typography>
+          <Chip label={`#${cat.sortOrder}`} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem", fontWeight: 700, color: "text.secondary" }} />
+        </Stack>
         <Stack direction="row" spacing={0.5}>
           <Tooltip title={t("serviceCategories_uploadIcon")}>
-            <IconButton
-              size="small"
-              color="info"
-              onClick={(e) => onUpload(e)}
-              disabled={isUploadingThis}
-              sx={{ "&:hover": { bgcolor: "info.50" } }}
-            >
+            <IconButton size="small" color="info" onClick={(e) => onUpload(e)} disabled={isUploadingThis}>
               {isUploadingThis ? <CircularProgress size={16} /> : <CloudUploadIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
           <Tooltip title={t("edit")}>
-            <IconButton
-              size="small"
-              color="warning"
-              onClick={(e) => onEdit(e, cat)}
-              sx={{ "&:hover": { bgcolor: "warning.50" } }}
-            >
+            <IconButton size="small" color="warning" onClick={(e) => onEdit(e, cat)}>
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title={t("delete")}>
-            <IconButton
-              size="small"
-              color="error"
-              onClick={(e) => onDelete(e)}
-              sx={{ "&:hover": { bgcolor: "error.50" } }}
-            >
+            <IconButton size="small" color="error" onClick={(e) => onDelete(e)}>
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>

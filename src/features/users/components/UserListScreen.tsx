@@ -23,7 +23,6 @@ import {
   Avatar,
   Tab,
   Tabs,
-  Badge,
   Grid,
   Select,
   FormControl,
@@ -32,6 +31,7 @@ import {
   Checkbox,
   DialogTitle,
   useTheme,
+  alpha,
   type Theme,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -73,7 +73,6 @@ import { useCarTypeStats } from "../hooks/use-user-stats";
 import { PROVIDER_ROLE_ID, DEFAULT_ROLES } from "../constants/roles";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
 
-const isAdmin    = (u: { role?: { id?: number } }) => u.role?.id === 2;
 const isUser     = (u: { role?: { id?: number } }) => u.role?.id === 3;
 const isProvider = (u: { role?: { id?: number } }) => u.role?.id === 4;
 
@@ -335,36 +334,52 @@ export default function UserListScreen() {
     if (selectedIds.length > 0) openSuccessSnackbar({ message: t("userManagement@bulkDeleted", { count: selectedIds.length }) });
   }, [selectedIds, deleteMutation, queryClient, openSuccessSnackbar, t]);
 
+  // One color per role, shared by chip and avatar so rows read consistently.
+  const roleColor = useCallback((roleName?: string | null) => {
+    const n = (roleName ?? "").toLowerCase();
+    if (n === "admin") return "secondary" as const;
+    if (n === "provider") return "warning" as const;
+    if (n === "worker") return "info" as const;
+    return "success" as const; // user
+  }, []);
+
   const roleChip = useCallback((roleName: string) => {
     const n = roleName.toLowerCase();
-    const cfg =
-      n === "admin"    ? { color: "secondary" as const, icon: <AdminPanelSettingsIcon sx={{ fontSize: "13px !important" }} /> } :
-      n === "provider" ? { color: "warning"   as const, icon: <StoreIcon sx={{ fontSize: "13px !important" }} /> } :
-                         { color: "success"   as const, icon: <PersonIcon sx={{ fontSize: "13px !important" }} /> };
-    return <Chip label={roleName} size="small" color={cfg.color} icon={cfg.icon} variant="filled" sx={{ fontWeight: 600 }} />;
-  }, []);
+    const icon =
+      n === "admin"    ? <AdminPanelSettingsIcon sx={{ fontSize: "13px !important" }} /> :
+      n === "provider" ? <StoreIcon sx={{ fontSize: "13px !important" }} /> :
+      n === "worker"   ? <BusinessCenterIcon sx={{ fontSize: "13px !important" }} /> :
+                         <PersonIcon sx={{ fontSize: "13px !important" }} />;
+    return <Chip label={roleName} size="small" color={roleColor(roleName)} icon={icon} variant="filled" sx={{ fontWeight: 600 }} />;
+  }, [roleColor]);
 
   const columns: GridColDef<UserSummaryDto>[] = useMemo(
     () => [
       { field: "id", headerName: t("userManagement@columns.id"), width: 72, align: "center", headerAlign: "center", filterable: false },
       {
         field: "name", headerName: t("userManagement@columns.name"), minWidth: 200, flex: 0.7, filterable: false, sortable: false,
-        renderCell: ({ row }) => (
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", py: 0.5 }}>
-            <Avatar
-              sx={{
-                width: 34, height: 34, fontSize: 14, fontWeight: 700,
-                bgcolor: isAdmin(row) ? "secondary.main" : isProvider(row) ? "warning.main" : "success.main",
-              }}
-            >
-              {(row.name ?? "?").charAt(0).toUpperCase()}
-            </Avatar>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={600} noWrap>{row.name}</Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>{row.email}</Typography>
-            </Box>
-          </Stack>
-        ),
+        renderCell: ({ row }) => {
+          // Phone-only registrations have no name/email — fall back gracefully.
+          const primary = row.name?.trim() || row.email?.trim() || (row.phone ? `#${row.id}` : "—");
+          const secondary = row.name?.trim() ? row.email : row.phone;
+          const initialSource = row.name?.trim() || row.email?.trim();
+          return (
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", height: "100%", lineHeight: "normal" }}>
+              <Avatar
+                sx={{
+                  width: 34, height: 34, fontSize: 14, fontWeight: 700,
+                  bgcolor: `${roleColor(row.role?.name)}.main`,
+                }}
+              >
+                {initialSource ? initialSource.charAt(0).toUpperCase() : <PersonIcon sx={{ fontSize: 18 }} />}
+              </Avatar>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="body2" fontWeight={600} noWrap sx={{ lineHeight: 1.35 }}>{primary}</Typography>
+                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", lineHeight: 1.35 }}>{secondary ?? ""}</Typography>
+              </Box>
+            </Stack>
+          );
+        },
       },
       {
         field: "phone", headerName: t("userManagement@columns.phone"), minWidth: 130, flex: 0.4, filterable: false, sortable: false,
@@ -386,7 +401,8 @@ export default function UserListScreen() {
           )
           : <Typography variant="body2" color="text.disabled">—</Typography>,
       },
-      {
+      // Only meaningful on the Providers tab — a dash column for 14k users is noise.
+      ...(activeTab === "providers" ? [{
         field: "providers", headerName: t("userManagement@columns.providers"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
         renderCell: ({ row }) => {
           const count = providersByOwner.get(row.id!) ?? 0;
@@ -403,7 +419,7 @@ export default function UserListScreen() {
             <Typography variant="body2" color="text.disabled">—</Typography>
           );
         },
-      },
+      } satisfies GridColDef<UserSummaryDto>] : []),
       {
         field: "isActive", headerName: t("userManagement@columns.status"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
         renderCell: ({ row }) => {
@@ -458,7 +474,7 @@ export default function UserListScreen() {
         ),
       },
     ],
-    [t, roleChip, handleEdit, handleViewProfile, handleDeleteClick, handleChangeRoleClick, providersByOwner, showDeleted, restoreMutation]
+    [t, roleChip, roleColor, activeTab, handleEdit, handleViewProfile, handleDeleteClick, handleChangeRoleClick, providersByOwner, showDeleted, restoreMutation]
   );
 
   const tabConfig = ROLE_TAB_CONFIG[activeTab];
@@ -547,37 +563,6 @@ export default function UserListScreen() {
               </Stack>
             </Stack>
 
-            {/* Clickable KPI cards — hidden in deleted mode */}
-            {!showDeleted && <Stack direction="row" spacing={1.5} sx={{ mt: 3 }} flexWrap="wrap">
-              {(Object.keys(ROLE_TAB_CONFIG) as RoleTab[]).map((key) => {
-                const cfg = ROLE_TAB_CONFIG[key];
-                const count = roleCounts[key];
-                const isSelected = activeTab === key;
-                return (
-                  <Paper
-                    key={key} elevation={0}
-                    onClick={() => { setActiveTab(key); setPaginationModel((p) => ({ ...p, page: 0 })); setRowSelectionModel([]); }}
-                    sx={{
-                      px: 2, py: 1.5, borderRadius: 2.5, cursor: "pointer", minWidth: 110,
-                      bgcolor: isSelected ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)",
-                      border: "1px solid",
-                      borderColor: isSelected ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.15)",
-                      transition: "all 0.2s",
-                      "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-                      backdropFilter: "blur(4px)",
-                    }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Box sx={{ color: "common.white", display: "flex" }}>{cfg.icon}</Box>
-                      <Box>
-                        <Typography variant="h6" fontWeight={800} color="common.white" lineHeight={1}>{count}</Typography>
-                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{cfg.label}</Typography>
-                      </Box>
-                    </Stack>
-                  </Paper>
-                );
-              })}
-            </Stack>}
           </Box>
 
           {/* ── Loyalty summary strip ── */}
@@ -589,17 +574,20 @@ export default function UserListScreen() {
                 { icon: <RedeemIcon />, label: t("loyalty@redemptionRate"), value: `${Math.round(loyaltySummary.redemptionRatePct)}%`, color: "warning" as const },
                 { icon: <LoyaltyIcon />, label: t("loyalty@totalPointsIssued"), value: loyaltySummary.totalPointsIssued.toLocaleString(), color: "info" as const },
                 { icon: <BlockIcon />, label: t("loyalty@blockedUsers"), value: loyaltySummary.blockedUsers.toLocaleString(), color: "error" as const },
-              ].map((s) => (
-                <Paper key={s.label} elevation={0} sx={{ p: 1.75, borderRadius: 2.5, border: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", gap: 1.25 }}>
-                  <Box sx={{ width: 38, height: 38, borderRadius: 2, bgcolor: `${s.color}.50`, color: `${s.color}.main`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    {s.icon}
-                  </Box>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="h6" fontWeight={800} lineHeight={1.1} noWrap>{s.value}</Typography>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600} noWrap>{s.label}</Typography>
-                  </Box>
-                </Paper>
-              ))}
+              ].map((s) => {
+                const c = theme.palette[s.color].main;
+                return (
+                  <Paper key={s.label} elevation={0} sx={{ p: 1.75, borderRadius: 2.5, bgcolor: alpha(c, 0.06), border: "1px solid", borderColor: alpha(c, 0.25), borderInlineStart: `4px solid ${c}`, display: "flex", alignItems: "center", gap: 1.25 }}>
+                    <Box sx={{ width: 38, height: 38, borderRadius: 2, bgcolor: alpha(c, 0.15), color: c, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {s.icon}
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h6" fontWeight={800} lineHeight={1.1} noWrap sx={{ color: theme.palette[s.color].dark }}>{s.value}</Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600} noWrap>{s.label}</Typography>
+                    </Box>
+                  </Paper>
+                );
+              })}
             </Box>
           )}
 
@@ -611,16 +599,23 @@ export default function UserListScreen() {
               <Tabs value={activeTab} onChange={handleTabChange} sx={{ "& .MuiTab-root": { fontWeight: 600, minHeight: 52 } }}>
                 {(Object.keys(ROLE_TAB_CONFIG) as RoleTab[]).map((key) => {
                   const cfg = ROLE_TAB_CONFIG[key];
-                  const badgeColor = key === "admins" ? "secondary" : key === "providers" ? "warning" : key === "users" ? "success" : "primary";
+                  const isSelected = activeTab === key;
                   return (
                     <Tab
                       key={key} value={key}
                       label={
                         <Stack direction="row" spacing={1} alignItems="center">
-                          <Badge badgeContent={roleCounts[key]} color={badgeColor as "secondary" | "warning" | "success" | "primary"} max={999}>
-                            <Box sx={{ display: "flex" }}>{cfg.icon}</Box>
-                          </Badge>
+                          <Box sx={{ display: "flex" }}>{cfg.icon}</Box>
                           <span>{cfg.label}</span>
+                          <Chip
+                            size="small"
+                            label={(roleCounts[key] ?? 0).toLocaleString()}
+                            sx={{
+                              height: 20, fontWeight: 800, fontSize: "0.7rem",
+                              bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.12) : "action.hover",
+                              color: isSelected ? "primary.main" : "text.secondary",
+                            }}
+                          />
                         </Stack>
                       }
                     />

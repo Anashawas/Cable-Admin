@@ -246,6 +246,16 @@ const AppDataGrid = <T extends Record<string, any>>({
         minWidth: "max-content",
         cursor: onRowClick ? "pointer" : "default",
       },
+      // Rows auto-size to the tallest cell (e.g. a two-line identity cell);
+      // without this every other cell's content sticks to the top instead
+      // of centering in that taller row.
+      "& .MuiDataGrid-cell": {
+        display: "flex",
+        alignItems: "center",
+      },
+      "& .MuiDataGrid-cellContent": {
+        lineHeight: "normal",
+      },
       "& .MuiTablePagination-select": {
         display: "none",
       },

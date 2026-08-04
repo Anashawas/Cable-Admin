@@ -213,34 +213,41 @@ export function useUpdateReward() {
 // Redemptions
 // ============================================
 
-export function useRedemptions(statusFilter?: number) {
+export function useRedemptions(statusFilter?: number, page = 1, pageSize = 20) {
   const [search, setSearch] = useState("");
 
+  // Server-paginated (GetAllRedemptions always returns a PagedResult envelope,
+  // even for the "no params" case — never a bare array).
   const query = useQuery({
-    queryKey: [...REDEMPTIONS_QUERY_KEY, statusFilter],
-    queryFn: () => getAllRedemptions({ status: statusFilter }),
+    queryKey: [...REDEMPTIONS_QUERY_KEY, statusFilter, page, pageSize],
+    queryFn: () => getAllRedemptions({ status: statusFilter, page, pageSize }),
     staleTime: 2 * 60 * 1000,
     retry: 2,
+    placeholderData: (prev) => prev,
   });
 
+  const items = query.data?.items ?? [];
+
+  // Client-side text filter — scoped to the currently loaded page, since the
+  // backend has no search param for this endpoint.
   const filteredData = useMemo(() => {
-    const raw = query.data ?? [];
-    if (!search.trim()) return raw;
+    if (!search.trim()) return items;
 
     const q = search.trim().toLowerCase();
-    return raw.filter(
+    return items.filter(
       (redemption) =>
         (redemption.userName ?? "").toLowerCase().includes(q) ||
         (redemption.rewardName ?? "").toLowerCase().includes(q) ||
         (redemption.redemptionCode ?? "").toLowerCase().includes(q)
     );
-  }, [query.data, search]);
+  }, [items, search]);
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
   const handleRefresh = useCallback(() => query.refetch(), [query]);
 
   return {
     data: filteredData,
+    totalCount: query.data?.totalCount ?? 0,
     isLoading: query.isLoading,
     error: query.error,
     search,
@@ -360,6 +367,9 @@ export function useProviderRedemptions(
   return useQuery({
     queryKey: ["loyalty", "provider-redemptions", providerType, providerId],
     queryFn: () => getProviderRedemptions({ providerType, providerId }),
+    // GetProviderRedemptions also returns a PagedResult envelope — unwrap here
+    // so callers keep getting a plain array, unchanged.
+    select: (paged) => paged.items,
     enabled: enabled && !!providerType && providerId != null && providerId > 0,
     staleTime: 60 * 1000,
   });

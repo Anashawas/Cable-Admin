@@ -70,5 +70,7 @@
     "contact_phone_changed": "Contact phone changed",
     "owner_contact_changed": "Owner contact changed",
     "location_moved": "Location moved"
-  }
+  },
+  "selectPrompt": "Select a request to review",
+  "changes": "changes"
 }

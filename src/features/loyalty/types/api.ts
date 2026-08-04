@@ -99,7 +99,6 @@ export enum RedemptionStatus {
 
 export interface RedemptionDto {
   id: number;
-  rewardId: number;
   rewardName: string;
   userId: number;
   userName: string;
@@ -108,6 +107,7 @@ export interface RedemptionDto {
   redemptionCode: string;
   providerType: string | null;
   providerId: number | null;
+  providerName: string | null;
   redeemedAt: string;
   fulfilledAt: string | null;
 }

@@ -99,17 +99,14 @@ const AppHeader = () => {
               <MenuIcon />
             </IconButton>
           )}
-          <Box display="flex" alignItems="center" sx={{ mr: 2 }}>
-            {/* <img
+          <Box display="flex" alignItems="center" gap={1.5} sx={{ mr: 2 }}>
+            <Box
+              component="img"
               src={`${window.env.host.virtualPath}/images/Cable-Logo.png`}
-              alt="Cable Admin Logo"
-              style={{
-                height: "40px",
-                marginRight: "10px",
-                marginLeft: "10px",
-              }}
-            /> */}
-            <Typography variant="h6" component="div">
+              alt=""
+              sx={{ height: 36, width: 36, borderRadius: 1, bgcolor: "rgba(255,255,255,0.9)", p: 0.4, objectFit: "contain" }}
+            />
+            <Typography variant="h6" component="div" fontWeight={700}>
               {t("appTitle", "Cable Admin")}
             </Typography>
           </Box>

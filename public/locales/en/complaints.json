@@ -70,5 +70,6 @@
   "actions": {
     "delete": "Delete",
     "changeStatus": "Change Status"
-  }
+  },
+  "selectPrompt": "Select a complaint to review"
 }

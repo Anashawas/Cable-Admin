@@ -16,7 +16,6 @@
   "serviceCategories_sectionNames": "Category Name",
   "serviceCategories_sectionDetails": "Description & Icon",
   "serviceCategories_sectionSettings": "Settings",
-
   "serviceProviders": "Service Providers",
   "subtitle": "Manage and verify service providers",
   "kpi_total": "Total Providers",
@@ -30,7 +29,6 @@
   "deleted": "Service provider deleted successfully",
   "categoryRequired": "Category is required",
   "deleteConfirmation": "Are you sure you want to delete this service provider",
-
   "id": "ID",
   "name": "Name",
   "nameAr": "Name (Arabic)",
@@ -55,7 +53,6 @@
   "loading": "Loading...",
   "loadingFailed": "Failed to load",
   "close": "Close",
-
   "icon": "Icon",
   "owner": "Owner",
   "category": "Category",
@@ -118,7 +115,6 @@
   "leaveEmptyForUnlimited": "Leave empty for unlimited",
   "offerTitleRequired": "Offer title is required",
   "offerUpdated": "Offer updated successfully",
-
   "pointsCost": "Points Cost",
   "monetaryValue": "Monetary Value",
   "currencyCode": "Currency",
@@ -129,7 +125,6 @@
   "monetaryValueHelp": "Fixed amount Cable pays the provider",
   "maxUsesPerUser": "Max Uses Per User",
   "maxTotalUses": "Max Total Uses",
-
   "changeOwner": "Change Owner",
   "currentOwner": "Current Owner",
   "newOwnerId": "New Owner ID",
@@ -149,13 +144,11 @@
   "iconUrlLabel": "Icon URL",
   "iconUrlHint": "Direct URL to the provider's icon or logo image",
   "galleryImagesAfterCreate": "Gallery images can be uploaded after creating the provider. Use the edit dialog to add multiple images.",
-
   "basicInfo": "Basic Information",
   "contactInfo": "Contact & Location",
   "locationInfo": "GPS Location",
   "hoursAndPricing": "Business Hours & Pricing",
   "servicesAndOffers": "Services & Offers",
-
   "formInfoHint": "Name and Category are required. Fill in as many details as possible.",
   "formRequiredHint": "Fields marked with * are required. Providing complete information helps users find this provider.",
   "nameHint": "Full business or provider name",
@@ -177,5 +170,6 @@
   "servicesHint": "List the specific services offered by this provider",
   "servicesPlaceholder": "e.g. Towing, Battery jump-start, Tire change",
   "hasOfferHint": "Enable to display a special offer badge to users",
-  "offerDescPlaceholder": "Describe the special offer or promotion"
+  "offerDescPlaceholder": "Describe the special offer or promotion",
+  "serviceCategories_noDescription": "No description"
 }

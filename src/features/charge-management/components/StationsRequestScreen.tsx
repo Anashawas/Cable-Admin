@@ -1,11 +1,11 @@
-import { useState, useCallback, useMemo, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Box, Stack, Typography, Chip, IconButton, Tooltip, Button, Avatar, Paper, Link, Grid,
   Dialog, DialogContent, DialogTitle, DialogContentText, DialogActions, TextField, CircularProgress,
-  useTheme,
+  useTheme, useMediaQuery, alpha, Divider,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -21,18 +21,11 @@ import GavelIcon from "@mui/icons-material/Gavel";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { format } from "date-fns";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getPendingRequests, approveRequest, rejectRequest } from "../services/request-service";
-import type { UpdateRequestDto } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
-
-const STATUS_CFG: Record<string, { color: "warning" | "success" | "error"; hex: string; bg: string }> = {
-  pending:  { color: "warning", hex: "#e65100", bg: "#fff3e0" },
-  approved: { color: "success", hex: "#2e7d32", bg: "#e8f5e9" },
-  rejected: { color: "error",   hex: "#c62828", bg: "#ffebee" },
-};
-const cfgFor = (s?: string | null) => STATUS_CFG[(s ?? "").toLowerCase()] ?? { color: "warning" as const, hex: "#607d8b", bg: "#eceff1" };
 
 const FILTERS: { value: string; key: string }[] = [
   { value: "", key: "all" },
@@ -66,16 +59,38 @@ export default function StationsRequestScreen() {
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
   const isRtl = i18n.language === "ar";
+  const smallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [rejectTarget, setRejectTarget] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [detailReq, setDetailReq] = useState<UpdateRequestDto | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  // On phones the pane flips between list and detail.
+  const [mobileDetail, setMobileDetail] = useState(false);
 
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: ["stations-request", "pending", statusFilter || null],
     queryFn: ({ signal }) => getPendingRequests(statusFilter.trim() || null, signal),
   });
+
+  // Status → theme color mapping (single source for pill, bar and shadows).
+  const cfgFor = useCallback((s?: string | null) => {
+    const key = (s ?? "").toLowerCase();
+    if (key === "approved") return { main: theme.palette.success.main, bg: alpha(theme.palette.success.main, 0.12) };
+    if (key === "rejected") return { main: theme.palette.error.dark, bg: alpha(theme.palette.error.main, 0.12) };
+    if (key === "pending") return { main: theme.palette.warning.dark, bg: alpha(theme.palette.warning.main, 0.12) };
+    return { main: theme.palette.text.disabled, bg: theme.palette.action.hover };
+  }, [theme]);
+
+  const selected = useMemo(() => data.find((r) => r.id === selectedId) ?? null, [data, selectedId]);
+
+  // Keep a sensible selection: first pending item, else first item.
+  useEffect(() => {
+    if (data.length === 0) { setSelectedId(null); return; }
+    if (selectedId != null && data.some((r) => r.id === selectedId)) return;
+    const firstPending = data.find((r) => (r.requestStatus ?? "").toLowerCase() === "pending");
+    setSelectedId((firstPending ?? data[0]).id);
+  }, [data, selectedId]);
 
   const approveMutation = useMutation({
     mutationFn: (requestId: number) => approveRequest(requestId),
@@ -175,14 +190,14 @@ export default function StationsRequestScreen() {
 
   const RiskChips = ({ flags }: { flags?: string[] | null }) =>
     !flags?.length ? null : (
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {flags.map((flag, i) => {
           const { label, detail, red } = riskParts(flag);
-          const hex = red ? "#c62828" : "#e65100";
+          const clr = red ? theme.palette.error.dark : theme.palette.warning.dark;
           return (
             <Chip key={i} size="small" icon={<WarningAmberIcon sx={{ fontSize: 15 }} />}
               label={`${label}${detail ? ` ${detail}` : ""}`}
-              sx={{ bgcolor: `${hex}14`, color: hex, fontWeight: 700, "& .MuiChip-icon": { color: hex } }} />
+              sx={{ bgcolor: alpha(clr, 0.08), color: clr, fontWeight: 700, "& .MuiChip-icon": { color: clr } }} />
           );
         })}
       </Stack>
@@ -194,16 +209,26 @@ export default function StationsRequestScreen() {
     return c;
   }, [data]);
 
+  const paneMaxHeight = { md: "calc(100vh - 240px)" };
+
+  const showList = !smallScreen || !mobileDetail;
+  const showDetail = !smallScreen || mobileDetail;
+
+  const openRequest = (id: number) => {
+    setSelectedId(id);
+    if (smallScreen) setMobileDetail(true);
+  };
+
   return (
     <AppScreenContainer>
       <Box sx={{ p: { xs: 1, sm: 2 } }}>
-        <Stack spacing={2.5} sx={{ maxWidth: 1000, mx: "auto" }}>
+        <Stack spacing={2}>
 
           {/* Hero */}
-          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "#fff", position: "relative", overflow: "hidden" }}>
+          <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2, md: 2.5 }, color: "common.white", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -40, insetInlineEnd: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.07)" }} />
             <Stack direction="row" spacing={2} alignItems="center" sx={{ position: "relative" }}>
-              <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 52, height: 52, borderRadius: 2.5 }}><ListAltIcon /></Avatar>
+              <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48, borderRadius: 2.5 }}><ListAltIcon /></Avatar>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h5" fontWeight={800}>{t("stationsRequest@title")}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>{t("stationsRequest@subtitle")}</Typography>
@@ -214,169 +239,186 @@ export default function StationsRequestScreen() {
             </Stack>
           </Box>
 
-          {/* Status filter */}
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {FILTERS.map((f) => (
-              <Chip key={f.key}
-                label={f.value ? `${t(`stationsRequest@status.${f.key}`)}${counts[f.key] ? ` (${counts[f.key]})` : ""}` : `${t("all")}${data.length ? ` (${data.length})` : ""}`}
-                onClick={() => setStatusFilter(f.value)}
-                color={statusFilter === f.value ? "primary" : "default"}
-                variant={statusFilter === f.value ? "filled" : "outlined"}
-                sx={{ fontWeight: 700, cursor: "pointer" }} />
-            ))}
-          </Stack>
+          {/* Master–detail */}
+          <Grid container spacing={2}>
 
-          {/* List */}
-          {isLoading ? (
-            <Stack spacing={2}>{[0, 1, 2].map((i) => <Box key={i} sx={{ height: 120, borderRadius: 3, bgcolor: "action.hover" }} />)}</Stack>
-          ) : data.length === 0 ? (
-            <Box sx={{ py: 8, textAlign: "center" }}>
-              <ListAltIcon sx={{ fontSize: 48, color: "grey.300", mb: 1 }} />
-              <Typography variant="h6" color="text.disabled">{t("stationsRequest@empty")}</Typography>
-            </Box>
-          ) : (
-            <Stack spacing={2}>
-              {data.map((r) => {
-                const cfg = cfgFor(r.requestStatus);
-                const isPending = (r.requestStatus ?? "").toLowerCase() === "pending";
-                const isRejected = (r.requestStatus ?? "").toLowerCase() === "rejected";
-                const changeCount = r.changes?.length ?? 0;
-                return (
-                  <Paper key={r.id} elevation={0} sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid", borderColor: "divider", boxShadow: `0 2px 12px ${cfg.hex}12`, transition: "box-shadow .2s, transform .15s", "&:hover": { boxShadow: "0 8px 26px rgba(0,0,0,0.10)", transform: "translateY(-2px)" } }}>
-                    <Box sx={{ height: 5, background: `linear-gradient(90deg, ${cfg.hex}, ${cfg.hex}99)` }} />
-                    <Box sx={{ p: { xs: 2, sm: 2.5 } }}>
-                      {/* Row 1: station + status */}
-                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1} sx={{ mb: 1.5 }}>
-                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
-                          <Avatar sx={{ bgcolor: "primary.50", color: "primary.main", width: 44, height: 44, borderRadius: 2.5 }}><EvStationIcon /></Avatar>
-                          <Box sx={{ minWidth: 0 }}>
-                            <Link component="button" type="button" onClick={() => r.chargingPointId && navigate(`/charge-management/${r.chargingPointId}`)} variant="subtitle1" fontWeight={800} sx={{ textAlign: "start", display: "block" }} noWrap>
-                              {r.chargingPointName || `#${r.chargingPointId ?? "—"}`}
-                            </Link>
-                            <Typography variant="caption" color="text.disabled">{t("stationsRequest@columns.requestId")} #{r.id}</Typography>
+            {/* ── Request list ── */}
+            {showList && (
+              <Grid size={{ xs: 12, md: 4.5, lg: 4 }}>
+                <Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid", borderColor: "divider", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: paneMaxHeight }}>
+                  {/* Filters */}
+                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ p: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+                    {FILTERS.map((f) => (
+                      <Chip key={f.key} size="small"
+                        label={f.value ? `${t(`stationsRequest@status.${f.key}`)}${counts[f.key] ? ` (${counts[f.key]})` : ""}` : `${t("all")}${data.length ? ` (${data.length})` : ""}`}
+                        onClick={() => setStatusFilter(f.value)}
+                        color={statusFilter === f.value ? "primary" : "default"}
+                        variant={statusFilter === f.value ? "filled" : "outlined"}
+                        sx={{ fontWeight: 700, cursor: "pointer" }} />
+                    ))}
+                  </Stack>
+
+                  {/* Items */}
+                  <Box sx={{ overflow: "auto", flex: 1 }}>
+                    {isLoading ? (
+                      <Stack spacing={1} sx={{ p: 1.5 }}>{[0, 1, 2, 3].map((i) => <Box key={i} sx={{ height: 72, borderRadius: 2, bgcolor: "action.hover" }} />)}</Stack>
+                    ) : data.length === 0 ? (
+                      <Box sx={{ py: 6, textAlign: "center" }}>
+                        <ListAltIcon sx={{ fontSize: 40, color: "grey.300", mb: 1 }} />
+                        <Typography variant="body2" color="text.disabled">{t("stationsRequest@empty")}</Typography>
+                      </Box>
+                    ) : (
+                      data.map((r) => {
+                        const cfg = cfgFor(r.requestStatus);
+                        const isSelected = r.id === selectedId && !smallScreen;
+                        const changeCount = r.changes?.length ?? 0;
+                        const hasRisk = !!r.riskFlags?.length;
+                        return (
+                          <Box key={r.id} onClick={() => openRequest(r.id)}
+                            sx={{
+                              px: 1.75, py: 1.25, cursor: "pointer", display: "flex", alignItems: "center", gap: 1.25,
+                              borderBottom: "1px solid", borderColor: "divider",
+                              borderInlineStart: "3px solid", borderInlineStartColor: isSelected ? "primary.main" : "transparent",
+                              bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.06) : "transparent",
+                              "&:hover": { bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.08) : "action.hover" },
+                            }}>
+                            <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: cfg.main, flexShrink: 0 }} />
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                              <Typography variant="body2" fontWeight={700} noWrap>{r.chargingPointName || `#${r.chargingPointId ?? "—"}`}</Typography>
+                              <Typography variant="caption" color="text.secondary" noWrap display="block">
+                                {(r.requestedByUserName || "—")} · {fmtShort(r.createdAt)}
+                              </Typography>
+                            </Box>
+                            <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
+                              {hasRisk && <WarningAmberIcon sx={{ fontSize: 16, color: "warning.dark" }} />}
+                              {changeCount > 0 && (
+                                <Chip size="small" label={changeCount} sx={{ height: 20, fontWeight: 800, fontSize: "0.7rem", bgcolor: cfg.bg, color: cfg.main }} />
+                              )}
+                            </Stack>
                           </Box>
-                        </Stack>
-                        <Chip label={t(`stationsRequest@status.${(r.requestStatus ?? "").toLowerCase()}`, r.requestStatus ?? "—")} sx={{ bgcolor: cfg.bg, color: cfg.hex, fontWeight: 800 }} />
-                      </Stack>
+                        );
+                      })
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
+            )}
 
-                      {/* Requester + dates */}
-                      <Grid container spacing={1}>
-                        <InfoItem icon={<PersonIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@requestedBy")}
-                          value={r.requestedByUserId
-                            ? <Link component="button" type="button" onClick={() => navigate(`/users/${r.requestedByUserId}`)} fontWeight={700} sx={{ textAlign: "start" }}>{r.requestedByUserName || `#${r.requestedByUserId}`}</Link>
-                            : (r.requestedByUserName || "—")} />
-                        <InfoItem icon={<PhoneIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@phone")}
-                          value={r.requestedByUserPhone ? <Link href={`tel:${r.requestedByUserPhone}`} fontWeight={600}>{r.requestedByUserPhone}</Link> : "—"} />
-                        <InfoItem icon={<CalendarMonthIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@columns.requestedAt")} value={fmt(r.createdAt)} />
-                        {r.reviewedByUserName && (
-                          <InfoItem icon={<GavelIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@reviewedBy")} value={`${r.reviewedByUserName} · ${fmtShort(r.reviewedAt)}`} />
-                        )}
-                      </Grid>
-
-                      {/* Risk flags */}
-                      <RiskChips flags={r.riskFlags} />
-
-                      {/* Inline old → new diff */}
-                      {!!r.changes?.length && (
-                        <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "divider" }}>
-                          <Stack spacing={0.75}>
-                            {r.changes.map((c, i) => (
-                              <Stack key={i} direction="row" spacing={1} alignItems={isImageField(c.field) ? "center" : "baseline"} flexWrap="wrap" useFlexGap>
-                                <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ minWidth: 96 }}>{fieldLabel(c.field)}</Typography>
-                                <DiffPair c={c} size={56} />
-                              </Stack>
-                            ))}
+            {/* ── Detail pane ── */}
+            {showDetail && (
+              <Grid size={{ xs: 12, md: 7.5, lg: 8 }}>
+                <Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid", borderColor: "divider", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: paneMaxHeight, minHeight: { md: 420 } }}>
+                  {!selected ? (
+                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", py: 10 }}>
+                      <VisibilityIcon sx={{ fontSize: 44, color: "grey.300", mb: 1 }} />
+                      <Typography variant="body1" color="text.disabled">{t("stationsRequest@selectPrompt")}</Typography>
+                    </Box>
+                  ) : (() => {
+                    const cfg = cfgFor(selected.requestStatus);
+                    const isPending = (selected.requestStatus ?? "").toLowerCase() === "pending";
+                    const isRejected = (selected.requestStatus ?? "").toLowerCase() === "rejected";
+                    return (
+                      <>
+                        {/* Header */}
+                        <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+                          <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+                            {smallScreen && (
+                              <IconButton size="small" onClick={() => setMobileDetail(false)}>
+                                <ArrowBackIcon sx={{ transform: isRtl ? "scaleX(-1)" : "none" }} />
+                              </IconButton>
+                            )}
+                            <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: "primary.main", width: 44, height: 44, borderRadius: 2.5 }}><EvStationIcon /></Avatar>
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                              <Link component="button" type="button" onClick={() => selected.chargingPointId && navigate(`/charge-management/${selected.chargingPointId}`)} variant="subtitle1" fontWeight={800} sx={{ textAlign: "start", display: "block" }} noWrap>
+                                {selected.chargingPointName || `#${selected.chargingPointId ?? "—"}`}
+                              </Link>
+                              <Typography variant="caption" color="text.disabled">{t("stationsRequest@columns.requestId")} #{selected.id}</Typography>
+                            </Box>
+                            <Chip label={t(`stationsRequest@status.${(selected.requestStatus ?? "").toLowerCase()}`, selected.requestStatus ?? "—")} sx={{ bgcolor: cfg.bg, color: cfg.main, fontWeight: 800 }} />
+                            <Tooltip title={t("stationsRequest@actions.media")}>
+                              <IconButton size="small" onClick={() => selected.chargingPointId && navigate(`/charge-management/${selected.chargingPointId}/media`)}><PhotoLibraryIcon fontSize="small" /></IconButton>
+                            </Tooltip>
+                            <Tooltip title={t("stationsRequest@actions.edit")}>
+                              <IconButton size="small" onClick={() => selected.chargingPointId && navigate(`/charge-management/edit/${selected.chargingPointId}`)}><EditIcon fontSize="small" /></IconButton>
+                            </Tooltip>
                           </Stack>
                         </Box>
-                      )}
 
-                      {isRejected && r.rejectionReason && (
-                        <Paper elevation={0} sx={{ mt: 1.5, p: 1.5, borderRadius: 2, bgcolor: "error.50", borderInlineStart: "4px solid", borderColor: "error.main" }}>
-                          <Typography variant="caption" color="error.dark" fontWeight={800} display="block">{t("stationsRequest@rejectReason")}</Typography>
-                          <Typography variant="body2">{r.rejectionReason}</Typography>
-                        </Paper>
-                      )}
+                        {/* Scrollable body */}
+                        <Box sx={{ p: 2.5, overflow: "auto", flex: 1 }}>
+                          <Grid container spacing={1}>
+                            <InfoItem icon={<PersonIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@requestedBy")}
+                              value={selected.requestedByUserId
+                                ? <Link component="button" type="button" onClick={() => navigate(`/users/${selected.requestedByUserId}`)} fontWeight={700} sx={{ textAlign: "start" }}>{selected.requestedByUserName || `#${selected.requestedByUserId}`}</Link>
+                                : (selected.requestedByUserName || "—")} />
+                            <InfoItem icon={<PhoneIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@phone")}
+                              value={selected.requestedByUserPhone ? <Link href={`tel:${selected.requestedByUserPhone}`} fontWeight={600}>{selected.requestedByUserPhone}</Link> : "—"} />
+                            <InfoItem icon={<CalendarMonthIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@columns.requestedAt")} value={fmt(selected.createdAt)} />
+                            {selected.reviewedByUserName && (
+                              <InfoItem icon={<GavelIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@reviewedBy")} value={`${selected.reviewedByUserName} · ${fmtShort(selected.reviewedAt)}`} />
+                            )}
+                          </Grid>
 
-                      {/* Actions */}
-                      <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center" sx={{ mt: 2, pt: 1.5, borderTop: "1px solid", borderColor: "divider" }} flexWrap="wrap" useFlexGap>
-                        <Button size="small" startIcon={<VisibilityIcon />} onClick={() => setDetailReq(r)} sx={{ textTransform: "none", fontWeight: 700, borderRadius: 2 }}>
-                          {t("stationsRequest@viewData")}{changeCount ? ` (${changeCount})` : ""}
-                        </Button>
-                        <Tooltip title={t("stationsRequest@actions.media")}>
-                          <IconButton size="small" onClick={() => r.chargingPointId && navigate(`/charge-management/${r.chargingPointId}/media`)}><PhotoLibraryIcon fontSize="small" /></IconButton>
-                        </Tooltip>
-                        <Tooltip title={t("stationsRequest@actions.edit")}>
-                          <IconButton size="small" onClick={() => r.chargingPointId && navigate(`/charge-management/edit/${r.chargingPointId}`)}><EditIcon fontSize="small" /></IconButton>
-                        </Tooltip>
+                          {!!selected.riskFlags?.length && <Box sx={{ mt: 1.5 }}><RiskChips flags={selected.riskFlags} /></Box>}
+
+                          {isRejected && selected.rejectionReason && (
+                            <Paper elevation={0} sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.06), borderInlineStart: "4px solid", borderColor: "error.main" }}>
+                              <Typography variant="caption" color="error.dark" fontWeight={800} display="block">{t("stationsRequest@rejectReason")}</Typography>
+                              <Typography variant="body2">{selected.rejectionReason}</Typography>
+                            </Paper>
+                          )}
+
+                          <Divider sx={{ my: 2 }} />
+                          <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{t("stationsRequest@requestedChanges")}</Typography>
+                          {selected.changes?.length ? (
+                            <Stack spacing={1}>
+                              {selected.changes.map((c, i) => (
+                                <Box key={i} sx={{ p: 1.5, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "divider" }}>
+                                  <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: "block", mb: 0.5 }}>{fieldLabel(c.field)}</Typography>
+                                  <DiffPair c={c} size={72} />
+                                </Box>
+                              ))}
+                            </Stack>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>{t("stationsRequest@diff.none")}</Typography>
+                          )}
+
+                          {!!selected.attachments?.length && (
+                            <Box sx={{ mt: 2.5 }}>
+                              <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{t("stationsRequest@attachments")}</Typography>
+                              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                {selected.attachments.map((url, i) => (
+                                  <Link key={i} href={url} target="_blank" rel="noopener">
+                                    <Box component="img" src={url} alt="" sx={{ width: 72, height: 72, objectFit: "cover", borderRadius: 1.5, border: "1px solid", borderColor: "divider" }} />
+                                  </Link>
+                                ))}
+                              </Stack>
+                            </Box>
+                          )}
+                        </Box>
+
+                        {/* Action bar — always visible for pending requests */}
                         {isPending && (
-                          <>
-                            <Button size="small" variant="outlined" color="error" startIcon={<CancelIcon />} onClick={() => { setRejectTarget(r.id); setRejectReason(""); }} disabled={rejectMutation.isPending} sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none" }}>
-                              {t("stationsRequest@actions.reject")}
-                            </Button>
-                            <Button size="small" variant="contained" color="success" startIcon={<CheckCircleIcon />} onClick={() => approveMutation.mutate(r.id)} disabled={approveMutation.isPending} sx={{ borderRadius: 2, fontWeight: 800, textTransform: "none" }}>
-                              {t("stationsRequest@actions.approve")}
-                            </Button>
-                          </>
+                          <Box sx={{ p: 1.5, px: 2, borderTop: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              <Button variant="outlined" color="error" startIcon={<CancelIcon />} onClick={() => { setRejectTarget(selected.id); setRejectReason(""); }} disabled={rejectMutation.isPending} sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none" }}>
+                                {t("stationsRequest@actions.reject")}
+                              </Button>
+                              <Button variant="contained" color="success" startIcon={approveMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />} onClick={() => approveMutation.mutate(selected.id)} disabled={approveMutation.isPending} sx={{ borderRadius: 2, fontWeight: 800, textTransform: "none" }}>
+                                {t("stationsRequest@actions.approve")}
+                              </Button>
+                            </Stack>
+                          </Box>
                         )}
-                      </Stack>
-                    </Box>
-                  </Paper>
-                );
-              })}
-            </Stack>
-          )}
+                      </>
+                    );
+                  })()}
+                </Paper>
+              </Grid>
+            )}
+          </Grid>
         </Stack>
       </Box>
-
-      {/* ── Detail dialog: the requested changes (old → new) ── */}
-      <Dialog open={detailReq != null} onClose={() => setDetailReq(null)} maxWidth="sm" fullWidth slotProps={{ paper: { sx: { borderRadius: 3, overflow: "hidden" } } }}>
-        <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, p: 2.5, color: "#fff" }}>
-          <Typography variant="h6" fontWeight={800}>{detailReq?.chargingPointName || t("stationsRequest@viewData")}</Typography>
-          <Typography variant="caption" sx={{ opacity: 0.8 }}>{t("stationsRequest@columns.requestId")} #{detailReq?.id} · {t(`stationsRequest@status.${(detailReq?.requestStatus ?? "").toLowerCase()}`, detailReq?.requestStatus ?? "")}</Typography>
-        </Box>
-        <DialogContent sx={{ p: 2.5 }}>
-          {/* Risk flags */}
-          <RiskChips flags={detailReq?.riskFlags} />
-
-          {/* Requested changes diff */}
-          <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1, mt: detailReq?.riskFlags?.length ? 2 : 0 }}>{t("stationsRequest@requestedChanges")}</Typography>
-          {detailReq?.changes?.length ? (
-            <Stack spacing={1.25}>
-              {detailReq.changes.map((c, i) => (
-                <Box key={i} sx={{ p: 1.25, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "divider" }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: "block", mb: 0.5 }}>{fieldLabel(c.field)}</Typography>
-                  <DiffPair c={c} size={76} />
-                </Box>
-              ))}
-            </Stack>
-          ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>{t("stationsRequest@diff.none")}</Typography>
-          )}
-
-          {/* Attachments */}
-          {!!detailReq?.attachments?.length && (
-            <Box sx={{ mt: 2.5 }}>
-              <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{t("stationsRequest@attachments")}</Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {detailReq.attachments.map((url, i) => (
-                  <Link key={i} href={url} target="_blank" rel="noopener">
-                    <Box component="img" src={url} alt="" sx={{ width: 72, height: 72, objectFit: "cover", borderRadius: 1.5, border: "1px solid", borderColor: "divider" }} />
-                  </Link>
-                ))}
-              </Stack>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          {detailReq?.chargingPointId && (
-            <Button onClick={() => { navigate(`/charge-management/${detailReq.chargingPointId}`); setDetailReq(null); }} startIcon={<VisibilityIcon />} sx={{ textTransform: "none" }}>
-              {t("chargeManagement@detail.title")}
-            </Button>
-          )}
-          <Box sx={{ flex: 1 }} />
-          <Button variant="outlined" onClick={() => setDetailReq(null)}>{t("close")}</Button>
-        </DialogActions>
-      </Dialog>
 
       {/* ── Reject with reason ── */}
       <Dialog open={rejectTarget != null} onClose={() => { if (!rejectMutation.isPending) setRejectTarget(null); }} maxWidth="xs" fullWidth>

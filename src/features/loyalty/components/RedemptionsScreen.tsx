@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Box,
@@ -52,29 +52,31 @@ export default function RedemptionsScreen() {
 
   const [statusFilter, setStatusFilter] = useState<RedemptionStatus | undefined>(1); // Default to Pending
 
-  const {
-    data,
-    isLoading,
-    search,
-    handleSearchChange,
-    handleRefresh,
-  } = useRedemptions(statusFilter);
-
-  const fulfillMutation = useFulfillRedemption();
-  const cancelMutation = useCancelRedemption();
-
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 20,
   });
 
+  const {
+    data,
+    totalCount,
+    isLoading,
+    search,
+    handleSearchChange,
+    handleRefresh,
+  } = useRedemptions(statusFilter, paginationModel.page + 1, paginationModel.pageSize);
+
+  const fulfillMutation = useFulfillRedemption();
+  const cancelMutation = useCancelRedemption();
+
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedRedemption, setSelectedRedemption] = useState<RedemptionDto | null>(null);
 
-  const paginatedData = useMemo(() => {
-    const start = paginationModel.page * paginationModel.pageSize;
-    return data.slice(start, start + paginationModel.pageSize);
-  }, [data, paginationModel.page, paginationModel.pageSize]);
+  // A new status filter can leave the grid on a page that no longer exists.
+  const handleStatusFilterChange = useCallback((value: RedemptionStatus | undefined) => {
+    setStatusFilter(value);
+    setPaginationModel((p) => ({ ...p, page: 0 }));
+  }, []);
 
   const handleViewDetails = useCallback((e: React.MouseEvent, row: RedemptionDto) => {
     e.stopPropagation();
@@ -266,7 +268,7 @@ export default function RedemptionsScreen() {
         actions={headerActions}
       />
 
-      {data.length === 0 && !isLoading && (
+      {totalCount === 0 && !isLoading && (
         <Alert severity="info" sx={{ mt: 3 }}>
           {t("loyalty@noRedemptions")}
         </Alert>
@@ -285,7 +287,7 @@ export default function RedemptionsScreen() {
           <ToggleButtonGroup
             value={statusFilter}
             exclusive
-            onChange={(_, value) => setStatusFilter(value)}
+            onChange={(_, value) => handleStatusFilterChange(value)}
             size="small"
           >
             <ToggleButton value={undefined}>{t("all")}</ToggleButton>
@@ -294,17 +296,17 @@ export default function RedemptionsScreen() {
             <ToggleButton value={3}>{t("cancelled")}</ToggleButton>
           </ToggleButtonGroup>
 
-          <Chip label={`${data.length} ${t("redemptions")}`} color="primary" />
+          <Chip label={`${totalCount} ${t("redemptions")}`} color="primary" />
         </Stack>
 
         <AppDataGrid
-          data={paginatedData}
+          data={data}
           columns={columns}
           loading={isLoading}
           disablePagination={false}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          total={data.length}
+          total={totalCount}
         />
       </Box>
 
