@@ -32,6 +32,7 @@ const WelcomeMessagesScreen = lazy(() => import("../features/announcements/compo
 const ViewImageReviewScreen = lazy(() => import("../features/charge-management/components/ViewImageReviewScreen"));
 const NearestPreviewScreen = lazy(() => import("../features/charge-management/components/NearestPreviewScreen"));
 const CampaignsScreen = lazy(() => import("../features/campaigns/components/CampaignsScreen"));
+const LoyaltyBoostsScreen = lazy(() => import("../features/loyalty/components/LoyaltyBoostsScreen"));
 const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
 const CarDatabaseScreen = lazy(() => import("../features/system/components/CarDatabaseScreen"));
 const SendNotificationScreen = lazy(() => import("../features/notifications/components/SendNotificationScreen"));
@@ -294,6 +295,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <CampaignsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/loyalty-boosts"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <LoyaltyBoostsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

@@ -55,6 +55,21 @@ export interface AddBannerRequest {
   priority?: number | null;
 }
 
+/**
+ * Request body for PUT api/banners/UpdateBanner/{id}.
+ * Metadata only — no image and no location targeting (those aren't part of the
+ * update endpoint). Dates: yyyy-MM-dd or null.
+ */
+export interface UpdateBannerRequest {
+  name: string;
+  phone: string;
+  email: string;
+  actionType?: number | null;
+  actionUrl?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
 /** Version entry from GET api/systemversion/GetAllSystemVersions. */
 export interface SystemVersionDto {
   id: number;

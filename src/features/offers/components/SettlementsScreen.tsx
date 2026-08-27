@@ -79,6 +79,21 @@ const STATUS_CFG: Record<number, { label_key: string; color: "warning" | "succes
   4: { label_key: "disputed", color: "error" },
 };
 
+/** Pull the most descriptive message out of an axios error — the BE returns the real
+ *  reason (often localized) in the response body; the generic axios `message` hides it. */
+function errMessage(err: any, fallback: string): string {
+  const d = err?.response?.data;
+  if (typeof d === "string" && d.trim()) return d;
+  if (d && typeof d === "object") {
+    const fromErrors =
+      d.errors && typeof d.errors === "object"
+        ? Object.values(d.errors as Record<string, unknown>).flat().filter(Boolean).join(" · ")
+        : "";
+    return d.message || d.Message || d.detail || d.title || fromErrors || err?.message || fallback;
+  }
+  return err?.message || fallback;
+}
+
 // ── Wallet balance cell — fetches on mount, uses cache after dialog opens ─────
 function WalletBalanceCell({
   providerType,
@@ -270,14 +285,14 @@ export default function SettlementsScreen() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     batchMutation.mutate(
-      { settlementIds: ids, status: 3, note: batchNote || undefined },
+      { settlementIds: ids, status: 3, note: batchNote.trim() ? batchNote.trim() : null },
       {
         onSuccess: (res) => {
           const failed = res?.failed?.length ?? 0;
           openSuccessSnackbar({ message: t("offers@settlements_batchResult", { updated: res?.updated?.length ?? 0, failed }) });
           setBatchDialogOpen(false); setBatchNote(""); setSelectedIds(new Set());
         },
-        onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+        onError: (err: Error) => openErrorSnackbar({ message: errMessage(err, t("loadingFailed")) }),
       }
     );
   }, [selectedIds, batchNote, batchMutation, openSuccessSnackbar, openErrorSnackbar, t]);
@@ -328,7 +343,9 @@ export default function SettlementsScreen() {
         id: selectedSettlement.id,
         data: {
           status: newStatus,
-          note: adminNote || undefined,
+          // Send `null` (not undefined) so the key is always present — the BE
+          // requires `note` in the body and 400s if it's omitted.
+          note: adminNote.trim() ? adminNote.trim() : null,
         },
       },
       {
@@ -337,7 +354,7 @@ export default function SettlementsScreen() {
           setStatusDialogOpen(false);
           setSelectedSettlement(null);
         },
-        onError: (err: Error) => { openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }); },
+        onError: (err: Error) => { openErrorSnackbar({ message: errMessage(err, t("loadingFailed")) }); },
       }
     );
   }, [selectedSettlement, newStatus, adminNote, updateStatusMutation, openSuccessSnackbar, openErrorSnackbar, t]);
