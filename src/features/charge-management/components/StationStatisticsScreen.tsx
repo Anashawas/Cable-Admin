@@ -410,7 +410,7 @@ export default function StationStatisticsScreen() {
                 series={[{ data: stationsByCity.map(([, count]) => count), color: theme.palette.primary.main, label: t("stationStats@stations") }]}
                 height={Math.max(stationsByCity.length * 32 + 40, 180)}
                 margin={{ top: 5, right: 20, bottom: 30, left: 100 }}
-                slotProps={{ legend: { hidden: true } }}
+                hideLegend
               />
             ) : <EmptyChart hint={t("stationStats@noDataHint")} />}
           </ChartCard>
@@ -427,7 +427,7 @@ export default function StationStatisticsScreen() {
                 series={[{ data: stationsByType.map(([, count]) => count), color: theme.palette.secondary.main, label: t("stationStats@stations") }]}
                 height={Math.max(stationsByType.length * 36 + 40, 180)}
                 margin={{ top: 5, right: 20, bottom: 30, left: 110 }}
-                slotProps={{ legend: { hidden: true } }}
+                hideLegend
               />
             ) : <EmptyChart hint={t("stationStats@noDataHint")} />}
           </ChartCard>
@@ -445,7 +445,7 @@ export default function StationStatisticsScreen() {
                   series={[{ data: stationsByStatus.map(([, count]) => count), color: theme.palette.success.main, label: t("stationStats@stations") }]}
                   height={Math.max(stationsByStatus.length * 40 + 40, 160)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 100 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               )}
             </ChartCard>
@@ -464,7 +464,7 @@ export default function StationStatisticsScreen() {
                   series={[{ data: plugTypeDistribution.map(([, count]) => count), color: theme.palette.info.dark, label: t("stationStats@stations") }]}
                   height={Math.max(plugTypeDistribution.length * 36 + 40, 160)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 110 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               ) : <EmptyChart hint={t("stationStats@noDataHint")} />}
             </ChartCard>
@@ -483,7 +483,7 @@ export default function StationStatisticsScreen() {
                   series={[{ data: topByVisitors.map(s => s.count), color: theme.palette.warning.dark, label: t("stationStats@visitors") }]}
                   height={Math.max(topByVisitors.length * 32 + 40, 180)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 110 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               ) : <EmptyChart hint={t("stationStats@noDataHint")} />}
             </ChartCard>
@@ -502,7 +502,7 @@ export default function StationStatisticsScreen() {
                   series={[{ data: topByRating.map(s => s.rating), color: theme.palette.warning.main, label: t("stationStats@rating") }]}
                   height={Math.max(topByRating.length * 32 + 40, 180)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 110 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               ) : <EmptyChart hint={t("stationStats@noDataHint")} />}
             </ChartCard>
@@ -521,7 +521,7 @@ export default function StationStatisticsScreen() {
                   series={[{ data: chargerBrands.map(([, count]) => count), color: theme.palette.error.main, label: t("stationStats@stations") }]}
                   height={Math.max(chargerBrands.length * 36 + 40, 180)}
                   margin={{ top: 5, right: 20, bottom: 30, left: 120 }}
-                  slotProps={{ legend: { hidden: true } }}
+                  hideLegend
                 />
               ) : <EmptyChart hint={t("stationStats@noDataHint")} />}
             </ChartCard>

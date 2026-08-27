@@ -23,9 +23,19 @@
       "Bash(sudo sysctl -p)",
       "Bash(find /home/ihr/Cable-Admin/src -type d -name *provider* -o -type d -name *service*)",
       "Bash(npm -v)",
+      "mcp__MSSQL_MCP_Violation_DevServer__ListTables",
+      "mcp__MSSQL_MCP_Violation_DevServer__DescribeTable",
+      "Bash(powershell -Command \"Compress-Archive -Path * -DestinationPath '../Cable-Admin-deploy.zip' -Force\")",
+      "Read(//d/NewOpenware-Server/**)",
+      "Bash(npm run:*)",
+      "Bash(git fetch *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
       "PowerShell(npm run typecheck 2>&1)",
       "PowerShell($paths = @\\(\"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\",\"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\npm.cmd\",\"$env:APPDATA\\\\npm\\\\npm.cmd\",\"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\npm.cmd\",\"C:\\\\nodejs\\\\npm.cmd\"\\); foreach \\($p in $paths\\) { if \\(Test-Path $p\\) { Write-Output \"FOUND: $p\" } }; Write-Output \"---PATH---\"; $env:Path -split ';' | Select-String -Pattern 'node' -SimpleMatch)",
-      "PowerShell($paths = @\\(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\",\"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\node.exe\",\"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\node.exe\",\"$env:APPDATA\\\\npm\\\\node.exe\",\"$env:LOCALAPPDATA\\\\fnm_multishells\\\\node.exe\",\"$env:USERPROFILE\\\\.volta\\\\bin\\\\node.exe\",\"$env:USERPROFILE\\\\scoop\\\\apps\\\\nodejs\\\\current\\\\node.exe\",\"$env:USERPROFILE\\\\AppData\\\\Roaming\\\\nvm\\\\node.exe\"\\); foreach \\($p in $paths\\) { if \\(Test-Path $p\\) { Write-Output \"FOUND: $p\" } }; Write-Output \"---\"; Get-Command winget -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)"
+      "PowerShell($paths = @\\(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\",\"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\node.exe\",\"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\node.exe\",\"$env:APPDATA\\\\npm\\\\node.exe\",\"$env:LOCALAPPDATA\\\\fnm_multishells\\\\node.exe\",\"$env:USERPROFILE\\\\.volta\\\\bin\\\\node.exe\",\"$env:USERPROFILE\\\\scoop\\\\apps\\\\nodejs\\\\current\\\\node.exe\",\"$env:USERPROFILE\\\\AppData\\\\Roaming\\\\nvm\\\\node.exe\"\\); foreach \\($p in $paths\\) { if \\(Test-Path $p\\) { Write-Output \"FOUND: $p\" } }; Write-Output \"---\"; Get-Command winget -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)",
+      "Bash(Select-String -Pattern \"error TS\")",
+      "Bash(Measure-Object -Line)"
     ],
     "deny": [],
     "ask": []

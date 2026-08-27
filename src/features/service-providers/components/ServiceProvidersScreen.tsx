@@ -1263,7 +1263,7 @@ export default function ServiceProvidersScreen() {
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={7}>
+                  <Grid size={{ xs: 12, sm: 7 }}>
                     <TextField
                       label={`${t("name")} *`}
                       value={formData.name}
@@ -1276,7 +1276,7 @@ export default function ServiceProvidersScreen() {
                       InputProps={{ startAdornment: <InputAdornment position="start"><StoreIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={5}>
+                  <Grid size={{ xs: 12, sm: 5 }}>
                     <FormControl fullWidth required size="small">
                       <InputLabel>{t("category")} *</InputLabel>
                       <Select
@@ -1288,7 +1288,7 @@ export default function ServiceProvidersScreen() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <FormControl fullWidth size="small">
                       <InputLabel>{t("status")}</InputLabel>
                       <Select
@@ -1302,7 +1302,7 @@ export default function ServiceProvidersScreen() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} sm={8}>
+                  <Grid size={{ xs: 12, sm: 8 }}>
                     <TextField
                       label={t("description")}
                       value={formData.description}
@@ -1327,7 +1327,7 @@ export default function ServiceProvidersScreen() {
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       label={t("phone")}
                       value={formData.phone}
@@ -1338,7 +1338,7 @@ export default function ServiceProvidersScreen() {
                       InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       label={t("whatsApp")}
                       value={formData.whatsAppNumber}
@@ -1349,7 +1349,7 @@ export default function ServiceProvidersScreen() {
                       InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={4}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       label={t("ownerPhone")}
                       value={formData.ownerPhone}
@@ -1360,7 +1360,7 @@ export default function ServiceProvidersScreen() {
                       InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={3}>
+                  <Grid size={{ xs: 12, sm: 3 }}>
                     <TextField
                       label={t("cityName")}
                       value={formData.cityName}
@@ -1370,7 +1370,7 @@ export default function ServiceProvidersScreen() {
                       InputProps={{ startAdornment: <InputAdornment position="start"><LocationOnIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={3}>
+                  <Grid size={{ xs: 12, sm: 3 }}>
                     <TextField
                       label={t("countryName")}
                       value={formData.countryName}
@@ -1380,7 +1380,7 @@ export default function ServiceProvidersScreen() {
                       InputProps={{ startAdornment: <InputAdornment position="start"><PublicIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <TextField
                       label={t("websiteUrl")}
                       value={formData.websiteUrl}
@@ -1391,7 +1391,7 @@ export default function ServiceProvidersScreen() {
                       helperText={t("websiteHint")}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       label={t("address")}
                       value={formData.address}
@@ -1418,7 +1418,7 @@ export default function ServiceProvidersScreen() {
                   {t("coordinatesHint")}
                 </Alert>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField
                       label={t("latitude")}
                       value={formData.latitude}
@@ -1431,7 +1431,7 @@ export default function ServiceProvidersScreen() {
                       helperText={t("latitudeHint")}
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField
                       label={t("longitude")}
                       value={formData.longitude}
@@ -1457,7 +1457,7 @@ export default function ServiceProvidersScreen() {
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
                 <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ xs: 6, sm: 3 }}>
                     <TextField
                       label={t("fromTime")}
                       value={formData.fromTime}
@@ -1469,7 +1469,7 @@ export default function ServiceProvidersScreen() {
                       helperText={t("openingHoursHint")}
                     />
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ xs: 6, sm: 3 }}>
                     <TextField
                       label={t("toTime")}
                       value={formData.toTime}
@@ -1481,7 +1481,7 @@ export default function ServiceProvidersScreen() {
                       helperText={t("openingHoursHint")}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={3}>
+                  <Grid size={{ xs: 12, sm: 3 }}>
                     <TextField
                       label={t("price")}
                       value={formData.price}
@@ -1493,7 +1493,7 @@ export default function ServiceProvidersScreen() {
                       helperText={t("priceHint")}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={3}>
+                  <Grid size={{ xs: 12, sm: 3 }}>
                     <TextField
                       label={t("priceDescription")}
                       value={formData.priceDescription}
@@ -1503,7 +1503,7 @@ export default function ServiceProvidersScreen() {
                       placeholder={t("priceDescPlaceholder")}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       label={t("methodPayment")}
                       value={formData.methodPayment}
@@ -1528,7 +1528,7 @@ export default function ServiceProvidersScreen() {
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       label={t("service")}
                       value={formData.service}
@@ -1541,7 +1541,7 @@ export default function ServiceProvidersScreen() {
                       placeholder={t("servicesPlaceholder")}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Paper
                       variant="outlined"
                       sx={{
@@ -1841,7 +1841,7 @@ export default function ServiceProvidersScreen() {
           ) : (
             <Grid container spacing={3}>
               {providerOffers.map((offer) => (
-                <Grid item xs={12} key={offer.id}>
+                <Grid size={{ xs: 12 }} key={offer.id}>
                   <Card
                     elevation={2}
                     sx={{
@@ -1904,7 +1904,7 @@ export default function ServiceProvidersScreen() {
 
                           {/* Stats Grid */}
                           <Grid container spacing={2}>
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "success.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <LoyaltyIcon sx={{ fontSize: 18, color: "success.main" }} />
@@ -1918,7 +1918,7 @@ export default function ServiceProvidersScreen() {
                               </Paper>
                             </Grid>
 
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "info.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <AttachMoneyIcon sx={{ fontSize: 18, color: "info.main" }} />
@@ -1935,7 +1935,7 @@ export default function ServiceProvidersScreen() {
                               </Paper>
                             </Grid>
 
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "warning.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <CalendarTodayIcon sx={{ fontSize: 18, color: "warning.main" }} />
@@ -1952,7 +1952,7 @@ export default function ServiceProvidersScreen() {
                               </Paper>
                             </Grid>
 
-                            <Grid item xs={6} sm={3}>
+                            <Grid size={{ xs: 6, sm: 3 }}>
                               <Paper elevation={0} sx={{ p: 2, bgcolor: "primary.50", borderRadius: 2 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                                   <StarIcon sx={{ fontSize: 18, color: "primary.main" }} />
@@ -2043,7 +2043,7 @@ export default function ServiceProvidersScreen() {
         <form onSubmit={handleOfferFormSubmit}>
           <DialogContent sx={{ pt: 3 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offerTitle")}
                   value={offerFormData.title}
@@ -2052,7 +2052,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("offerTitleAr")}
                   value={offerFormData.titleAr}
@@ -2060,7 +2060,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("description")}
                   value={offerFormData.description}
@@ -2070,7 +2070,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label={t("descriptionAr")}
                   value={offerFormData.descriptionAr}
@@ -2080,7 +2080,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("pointsCost")}
                   type="number"
@@ -2093,7 +2093,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("offers@pointsCostHelp")}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("monetaryValue")}
                   type="number"
@@ -2106,7 +2106,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("offers@monetaryValueHelp")}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                   label={t("currencyCode")}
                   value={offerFormData.currencyCode}
@@ -2117,7 +2117,7 @@ export default function ServiceProvidersScreen() {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("codeExpiry")}
                   type="number"
@@ -2130,7 +2130,7 @@ export default function ServiceProvidersScreen() {
                   InputProps={{ endAdornment: t("offers@seconds") }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("maxUsesPerUser")}
                   type="number"
@@ -2145,7 +2145,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("leaveEmptyForUnlimited")}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("maxTotalUses")}
                   type="number"
@@ -2160,7 +2160,7 @@ export default function ServiceProvidersScreen() {
                   helperText={t("leaveEmptyForUnlimited")}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("validFrom")}
                   type="date"
@@ -2171,7 +2171,7 @@ export default function ServiceProvidersScreen() {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   label={t("validTo")}
                   type="date"
@@ -2182,7 +2182,7 @@ export default function ServiceProvidersScreen() {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Stack direction="row" spacing={2} alignItems="flex-start">
                   {/* Preview: show uploaded file or existing imageUrl */}
                   <Box
@@ -2247,7 +2247,7 @@ export default function ServiceProvidersScreen() {
                   </Stack>
                 </Stack>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <FormControlLabel
                   control={
                     <Checkbox

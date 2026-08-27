@@ -327,7 +327,7 @@ export default function PendingOffersScreen() {
             <Stack spacing={2.5}>
               {/* Provider + Proposed By row */}
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper
                     elevation={0}
                     sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, height: "100%" }}
@@ -374,7 +374,7 @@ export default function PendingOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Paper
                     elevation={0}
                     sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2, height: "100%" }}
@@ -401,7 +401,7 @@ export default function PendingOffersScreen() {
 
               {/* Stats Grid */}
               <Grid container spacing={1.5}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper
                     elevation={0}
                     sx={{
@@ -423,7 +423,7 @@ export default function PendingOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper
                     elevation={0}
                     sx={{
@@ -448,7 +448,7 @@ export default function PendingOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper
                     elevation={0}
                     sx={{
@@ -473,7 +473,7 @@ export default function PendingOffersScreen() {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Paper
                     elevation={0}
                     sx={{
