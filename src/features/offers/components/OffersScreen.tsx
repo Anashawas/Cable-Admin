@@ -225,6 +225,9 @@ export default function OffersScreen() {
   const [selectedActiveOffer, setSelectedActiveOffer] = useState<OfferDto | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<ProposeOfferRequest>(INITIAL_FORM_DATA);
+  // Raw string for the monetary-value input so decimals (e.g. "0.1") survive
+  // typing — a numeric-controlled value would drop the leading 0 / trailing dot.
+  const [monetaryStr, setMonetaryStr] = useState("");
   const [selectedProvider, setSelectedProvider] = useState<{
     id: number;
     name: string;
@@ -332,6 +335,7 @@ export default function OffersScreen() {
 
   const handleOpenCreate = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
+    setMonetaryStr("");
     setSelectedProvider(null);
     setProviderSearch("");
     setCreateDialogOpen(true);
@@ -1565,6 +1569,7 @@ export default function OffersScreen() {
                     onChange={(e) => handlePointsPriceChange(e.target.value)}
                     disabled={pointsPerUnit <= 0}
                     InputProps={{ endAdornment: <InputAdornment position="end">{formData.currencyCode}</InputAdornment> }}
+                    inputProps={{ step: "any", min: 0, inputMode: "decimal" }}
                     helperText={t("offers@pointsPriceHelp")}
                     fullWidth
                   />
@@ -1573,9 +1578,14 @@ export default function OffersScreen() {
                   <TextField
                     label={t("monetaryValue")}
                     type="number"
-                    value={formData.monetaryValue || ""}
-                    onChange={(e) => updateField("monetaryValue", parseFloat(e.target.value) || 0)}
+                    value={monetaryStr}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setMonetaryStr(raw);
+                      updateField("monetaryValue", parseFloat(raw) || 0);
+                    }}
                     InputProps={{ endAdornment: <InputAdornment position="end">{formData.currencyCode}</InputAdornment> }}
+                    inputProps={{ step: "any", min: 0, inputMode: "decimal" }}
                     helperText={t("offers@monetaryValueHelp")}
                     required fullWidth
                   />

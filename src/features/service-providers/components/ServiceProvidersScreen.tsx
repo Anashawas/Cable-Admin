@@ -477,6 +477,27 @@ export default function ServiceProvidersScreen() {
     );
   }, [changeOwnerProvider, selectedOwner, newOwnerId, changeOwnerMutation, openSuccessSnackbar, openErrorSnackbar, t]);
 
+  // Unassign the current owner — sends { newOwnerId: null } (BE PATCH ChangeOwner).
+  const handleUnassignOwner = useCallback(() => {
+    if (!changeOwnerProvider) return;
+    changeOwnerMutation.mutate(
+      { serviceProviderId: changeOwnerProvider.id, data: { newOwnerId: null } },
+      {
+        onSuccess: () => {
+          openSuccessSnackbar({ message: t("serviceProviders@ownerUnassigned") });
+          setChangeOwnerDialogOpen(false);
+          setChangeOwnerProvider(null);
+          setNewOwnerId("");
+          setSelectedOwner(null);
+          setOwnerSearch("");
+        },
+        onError: (err: Error) => {
+          openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+        },
+      }
+    );
+  }, [changeOwnerProvider, changeOwnerMutation, openSuccessSnackbar, openErrorSnackbar, t]);
+
   const handleOfferFormSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -2429,6 +2450,17 @@ export default function ServiceProvidersScreen() {
             <Button onClick={() => setChangeOwnerDialogOpen(false)} variant="outlined" sx={{ borderRadius: 2 }}>
               {t("cancel")}
             </Button>
+            {(changeOwnerProvider?.ownerId ?? 0) > 0 && (
+              <Button
+                onClick={handleUnassignOwner}
+                variant="outlined"
+                color="error"
+                disabled={changeOwnerMutation.isPending}
+                sx={{ borderRadius: 2 }}
+              >
+                {t("serviceProviders@removeOwner")}
+              </Button>
+            )}
             <Button
               onClick={handleChangeOwnerSubmit}
               variant="contained"

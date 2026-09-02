@@ -135,6 +135,8 @@
   "newOwnerId": "معرف المالك الجديد",
   "ownerIdRequired": "معرف المالك الجديد مطلوب",
   "ownerChanged": "تم تغيير مالك مقدم الخدمة بنجاح",
+  "removeOwner": "إزالة المالك",
+  "ownerUnassigned": "تمت إزالة المالك بنجاح",
   "uploadIcon": "رفع الأيقونة",
   "iconUploaded": "تم رفع الأيقونة بنجاح",
   "imagesGallery": "الصور والمعرض",

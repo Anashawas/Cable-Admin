@@ -135,6 +135,8 @@
   "newOwnerId": "New Owner ID",
   "ownerIdRequired": "New owner ID is required",
   "ownerChanged": "Service provider owner changed successfully",
+  "removeOwner": "Remove Owner",
+  "ownerUnassigned": "Owner removed successfully",
   "uploadIcon": "Upload Icon",
   "iconUploaded": "Icon uploaded successfully",
   "imagesGallery": "Images & Gallery",
