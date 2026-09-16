@@ -37,9 +37,26 @@
     "verification": "Verification",
     "rating": "Rating",
     "visitors": "Visitors",
+    "followers": "Followers",
     "payment": "Payment",
     "detail": "Detail",
     "actions": "Actions"
+  },
+  "engagement": {
+    "title": "Followers & Notifications",
+    "view": "Followers & notifications",
+    "followers": "Followers",
+    "notifications": "Notifications sent",
+    "noFollowers": "No followers yet",
+    "noNotifications": "No notifications sent",
+    "recipients": "{{count}} recipients",
+    "read": "{{count}} read",
+    "loadMore": "Load more",
+    "status": {
+      "sent": "Sent",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    }
   },
   "detail": {
     "title": "Station detail",
@@ -120,7 +137,8 @@
     "edit": "Edit",
     "media": "Media",
     "viewComplaints": "View Complaints",
-    "changeOwner": "Change Owner"
+    "changeOwner": "Change Owner",
+    "walletSettlements": "Wallet & Settlements"
   },
   "ownerChanged": "Station owner changed successfully",
   "changeOwner": {
@@ -161,7 +179,8 @@
     "chargersCount": "Chargers Count",
     "plugTypes": "Plug Types",
     "paymentMethods": "Payment Methods",
-    "services": "Services"
+    "services": "Services",
+    "verifiedHint": "Mark this station as verified"
   },
   "media": {
     "title": "Media",

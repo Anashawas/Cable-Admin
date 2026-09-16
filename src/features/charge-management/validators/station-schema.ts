@@ -32,6 +32,8 @@ export const stationFormSchema = z.object({
   price: optionalNumber,
   chargerSpeed: optionalNumber,
   chargersCount: optionalNumber,
+
+  isVerified: z.boolean(),
 });
 
 export type StationFormValues = z.infer<typeof stationFormSchema>;

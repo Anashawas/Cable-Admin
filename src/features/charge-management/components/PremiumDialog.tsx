@@ -195,6 +195,7 @@ export default function PremiumDialog({ open, station, onClose }: PremiumDialogP
             type="number"
             size="small"
             fullWidth
+            inputProps={{ min: 0, step: "any", inputMode: "decimal" }}
             InputProps={{
               startAdornment: <InputAdornment position="start"><PaymentsIcon fontSize="small" color="action" /></InputAdornment>,
               endAdornment: <InputAdornment position="end">JOD</InputAdornment>,

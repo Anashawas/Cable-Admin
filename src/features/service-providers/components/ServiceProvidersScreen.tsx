@@ -74,7 +74,7 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { AppDataGrid } from "../../../components";
+import { AppDataGrid, DecimalField } from "../../../components";
 import BadgeIcon from "@mui/icons-material/Badge";
 import InsightsIcon from "@mui/icons-material/Insights";
 import RedeemIcon from "@mui/icons-material/Redeem";
@@ -1510,6 +1510,7 @@ export default function ServiceProvidersScreen() {
                       type="number"
                       fullWidth
                       size="small"
+                      inputProps={{ step: "any", min: 0, inputMode: "decimal" }}
                       InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
                       helperText={t("priceHint")}
                     />
@@ -2115,13 +2116,13 @@ export default function ServiceProvidersScreen() {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
+                <DecimalField
                   label={t("monetaryValue")}
-                  type="number"
                   value={offerFormData.monetaryValue}
-                  onChange={(e) =>
-                    setOfferFormData({ ...offerFormData, monetaryValue: parseFloat(e.target.value) || 0 })
+                  onValueChange={(n) =>
+                    setOfferFormData({ ...offerFormData, monetaryValue: n ?? 0 })
                   }
+                  inputProps={{ min: 0, step: "any" }}
                   required
                   fullWidth
                   helperText={t("offers@monetaryValueHelp")}

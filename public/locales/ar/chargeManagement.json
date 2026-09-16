@@ -37,9 +37,26 @@
     "verification": "التحقق",
     "rating": "التقييم",
     "visitors": "الزوار",
+    "followers": "المتابعون",
     "payment": "الدفع",
     "detail": "التفاصيل",
     "actions": "إجراءات"
+  },
+  "engagement": {
+    "title": "المتابعون والإشعارات",
+    "view": "المتابعون والإشعارات",
+    "followers": "المتابعون",
+    "notifications": "الإشعارات المُرسَلة",
+    "noFollowers": "لا يوجد متابعون بعد",
+    "noNotifications": "لم تُرسَل أي إشعارات",
+    "recipients": "{{count}} مستلم",
+    "read": "{{count}} مقروءة",
+    "loadMore": "تحميل المزيد",
+    "status": {
+      "sent": "أُرسلت",
+      "pending": "قيد الانتظار",
+      "rejected": "مرفوضة"
+    }
   },
   "detail": {
     "title": "تفاصيل المحطة",
@@ -120,7 +137,8 @@
     "edit": "تعديل",
     "media": "وسائط",
     "viewComplaints": "عرض الشكاوى",
-    "changeOwner": "تغيير المالك"
+    "changeOwner": "تغيير المالك",
+    "walletSettlements": "المحفظة والتسويات"
   },
   "ownerChanged": "تم تغيير مالك المحطة بنجاح",
   "changeOwner": {
@@ -161,7 +179,8 @@
     "chargersCount": "عدد الشواحن",
     "plugTypes": "أنواع القوابس",
     "paymentMethods": "طرق الدفع",
-    "services": "الخدمات"
+    "services": "الخدمات",
+    "verifiedHint": "وضع علامة على المحطة كموثّقة"
   },
   "media": {
     "title": "الوسائط",

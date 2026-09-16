@@ -31,7 +31,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { AppDataGrid } from "../../../components";
+import { AppDataGrid, DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import {
   useConversionRates,
@@ -389,16 +389,16 @@ export default function ConversionRatesScreen() {
               />
             </Stack>
 
-            <TextField
+            <DecimalField
               label={t("pointsPerUnit")}
-              type="number"
               value={formData.pointsPerUnit}
-              onChange={(e) =>
-                setFormData({ ...formData, pointsPerUnit: parseFloat(e.target.value) || 1 })
+              onValueChange={(n) =>
+                setFormData({ ...formData, pointsPerUnit: n ?? 0 })
               }
               required
               fullWidth
               size="small"
+              inputProps={{ min: 0, step: "any" }}
               InputProps={{
                 endAdornment: <InputAdornment position="end">{t("points")}</InputAdornment>,
               }}

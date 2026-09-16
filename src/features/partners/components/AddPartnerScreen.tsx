@@ -26,6 +26,7 @@ import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import StoreIcon from "@mui/icons-material/Store";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import { DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import {
   getAllChargingPoints,
@@ -370,18 +371,18 @@ export default function AddPartnerScreen() {
                 {t("partners@commissionAndRewards")}
               </Typography>
               <Stack direction="row" spacing={2}>
-                <TextField
-                  size="small" fullWidth label={t("partners@commission")} type="number"
+                <DecimalField
+                  size="small" fullWidth label={t("partners@commission")}
                   value={formData.commissionPercentage}
-                  onChange={(e) => setFormData({ ...formData, commissionPercentage: parseFloat(e.target.value) || 0 })}
-                  inputProps={{ min: 0, max: 100, step: 0.5 }}
+                  onValueChange={(n) => setFormData({ ...formData, commissionPercentage: n ?? 0 })}
+                  inputProps={{ min: 0, max: 100, step: "any" }}
                   InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 />
-                <TextField
-                  size="small" fullWidth label={t("partners@pointsReward")} type="number"
+                <DecimalField
+                  size="small" fullWidth label={t("partners@pointsReward")}
                   value={formData.pointsRewardPercentage}
-                  onChange={(e) => setFormData({ ...formData, pointsRewardPercentage: parseFloat(e.target.value) || 0 })}
-                  inputProps={{ min: 0, max: 100, step: 0.5 }}
+                  onValueChange={(n) => setFormData({ ...formData, pointsRewardPercentage: n ?? 0 })}
+                  inputProps={{ min: 0, max: 100, step: "any" }}
                   InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 />
               </Stack>
@@ -424,12 +425,12 @@ export default function AddPartnerScreen() {
                   onChange={(e) => setFormData({ ...formData, codeExpirySeconds: parseInt(e.target.value, 10) || 60 })}
                   InputProps={{ endAdornment: <InputAdornment position="end">{t("seconds")}</InputAdornment> }}
                 />
-                <TextField
-                  size="small" fullWidth label={t("partners@minimumAmount")} type="number"
+                <DecimalField
+                  size="small" fullWidth label={t("partners@minimumAmount")}
                   value={formData.minimumTransactionAmount ?? ""}
-                  onChange={(e) => setFormData({ ...formData, minimumTransactionAmount: e.target.value ? parseFloat(e.target.value) : null })}
+                  onValueChange={(n) => setFormData({ ...formData, minimumTransactionAmount: n })}
                   InputProps={{ endAdornment: <InputAdornment position="end">JOD</InputAdornment> }}
-                  inputProps={{ min: 0, step: 0.001 }}
+                  inputProps={{ min: 0, step: "any" }}
                   helperText={t("partners@minimumAmountHint")}
                 />
               </Stack>

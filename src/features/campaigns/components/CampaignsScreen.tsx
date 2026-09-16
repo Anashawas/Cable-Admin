@@ -24,7 +24,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import InsightsIcon from "@mui/icons-material/Insights";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { ScreenHeader } from "../../../components";
+import { ScreenHeader, DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import CampaignStatsDialog from "./CampaignStatsDialog";
 import {
@@ -252,8 +252,8 @@ function CampaignsPanel({ t, qc, ok, err }: PanelProps) {
               <TextField label={t("campaigns@endDate")} type="date" fullWidth InputLabelProps={{ shrink: true }}
                 value={form.endDate ?? ""} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value || null }))} />
             </Stack>
-            <TextField label={t("campaigns@price")} type="number" fullWidth value={form.price ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, price: e.target.value === "" ? null : Number(e.target.value) }))} />
+            <DecimalField label={t("campaigns@price")} fullWidth value={form.price ?? ""}
+              onValueChange={(n) => setForm((f) => ({ ...f, price: n }))} inputProps={{ min: 0, step: "any" }} />
             <TextField select label={t("campaigns@status")} fullWidth value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as CampaignStatus }))}>
               <MenuItem value="active">{t("campaigns@status_active")}</MenuItem>

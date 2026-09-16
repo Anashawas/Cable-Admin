@@ -29,7 +29,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
 import BoltIcon from "@mui/icons-material/Bolt";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { ScreenHeader } from "../../../components";
+import { ScreenHeader, DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import WelcomeBonusCard from "./WelcomeBonusCard";
 import {
@@ -412,14 +412,13 @@ export default function LoyaltyBoostsScreen() {
                 onChange={(e) => setForm((f) => ({ ...f, nameAr: e.target.value || null }))}
               />
             </Stack>
-            <TextField
-              type="number"
+            <DecimalField
               label={`${t("loyalty@boosts.multiplier")} *`}
               fullWidth
               value={form.multiplier}
-              inputProps={{ min: 1.1, max: 10, step: 0.5 }}
+              inputProps={{ min: 1.1, max: 10, step: "any" }}
               helperText={t("loyalty@boosts.multiplierHint")}
-              onChange={(e) => setForm((f) => ({ ...f, multiplier: Number(e.target.value) }))}
+              onValueChange={(n) => setForm((f) => ({ ...f, multiplier: n ?? 0 }))}
             />
             <Stack direction="row" spacing={1}>
               <TextField

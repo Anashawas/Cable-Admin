@@ -70,6 +70,8 @@ import { AppDataGrid, BulkActionsBar } from "../../../components";
 import SocialLinksDialog from "../../social-media/components/SocialLinksDialog";
 import PremiumDialog from "./PremiumDialog";
 import AnalyticsDialog from "../../analytics/components/AnalyticsDialog";
+import StationEngagementDialog from "./StationEngagementDialog";
+import PeopleIcon from "@mui/icons-material/People";
 import ProviderActivityDialog from "../../loyalty/components/ProviderActivityDialog";
 import InsightsIcon from "@mui/icons-material/Insights";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
@@ -78,6 +80,9 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TuneIcon from "@mui/icons-material/Tune";
 import WorkerDialog from "../../workers/components/WorkerDialog";
 import BadgeIcon from "@mui/icons-material/Badge";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import PersonIcon from "@mui/icons-material/Person";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import { useChargeManagement, type SortOption } from "../hooks/use-charge-management";
 import { getAllPlugTypes, changeStationOwner, deleteStation } from "../services/station-form-service";
 import { getUsersList } from "../../users/services/user-service";
@@ -126,6 +131,7 @@ export default function ChargeManagementScreen() {
   const [detailStation, setDetailStation] = useState<ChargingPointDto | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [changeOwnerStation, setChangeOwnerStation] = useState<ChargingPointDto | null>(null);
+  const [engagementStation, setEngagementStation] = useState<ChargingPointDto | null>(null);
   const [deleteStationTarget, setDeleteStationTarget] = useState<ChargingPointDto | null>(null);
   const [socialLinksStation, setSocialLinksStation] = useState<ChargingPointDto | null>(null);
   const [premiumStation, setPremiumStation] = useState<ChargingPointDto | null>(null);
@@ -404,6 +410,11 @@ export default function ChargeManagementScreen() {
     setOwnerSearch("");
     setChangeOwnerStation(row);
   }, []);
+
+  const handleOpenEngagement = useCallback((e: React.MouseEvent, row: ChargingPointDto) => {
+    e.stopPropagation();
+    setEngagementStation(row);
+  }, []);
   const handleCloseDetail = useCallback(() => {
     setDetailOpen(false);
     setDetailStation(null);
@@ -620,6 +631,28 @@ export default function ChargeManagementScreen() {
         ),
       },
       {
+        field: "favoritesCount",
+        headerName: t("chargeManagement@columns.followers"),
+        minWidth: 95,
+        width: 105,
+        filterable: false,
+        sortable: true,
+        renderCell: ({ row }) => (
+          <Tooltip title={t("chargeManagement@engagement.view")}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={0.5}
+              sx={{ cursor: "pointer" }}
+              onClick={(e) => handleOpenEngagement(e, row)}
+            >
+              <PeopleIcon sx={{ fontSize: 18, color: "primary.main" }} />
+              <Typography variant="body2">{row.favoritesCount ?? 0}</Typography>
+            </Stack>
+          </Tooltip>
+        ),
+      },
+      {
         field: "createdAt",
         headerName: t("chargeManagement@columns.joined"),
         minWidth: 120,
@@ -719,6 +752,11 @@ export default function ChargeManagementScreen() {
             <Tooltip title={t("analytics@manage")}>
               <IconButton size="small" onClick={(e) => handleAnalytics(e, row)} sx={{ color: "success.main" }}>
                 <InsightsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("chargeManagement@engagement.view")}>
+              <IconButton size="small" onClick={(e) => handleOpenEngagement(e, row)} sx={{ color: "info.main" }}>
+                <PeopleIcon fontSize="small" />
               </IconButton>
             </Tooltip>
             <Tooltip title={t("loyalty@activity")}>
@@ -1148,6 +1186,28 @@ export default function ChargeManagementScreen() {
                           )}
                         </Stack>
 
+                        {/* Owner + partner */}
+                        {(row.ownerName || row.isPartner) && (
+                          <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.75 }} flexWrap="wrap" useFlexGap>
+                            {row.ownerName ? (
+                              <Stack direction="row" alignItems="center" spacing={0.4} sx={{ minWidth: 0 }}>
+                                <PersonIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+                                <Typography variant="caption" color="text.secondary" noWrap>{row.ownerName}</Typography>
+                              </Stack>
+                            ) : null}
+                            {row.isPartner ? (
+                              <Chip
+                                icon={<HandshakeIcon sx={{ fontSize: "13px !important" }} />}
+                                label={t("chargeManagement@partner")}
+                                size="small"
+                                color="success"
+                                variant="outlined"
+                                sx={{ height: 18, "& .MuiChip-label": { px: 0.5, fontSize: "0.6rem", fontWeight: 700 } }}
+                              />
+                            ) : null}
+                          </Stack>
+                        )}
+
                         {/* Plug chips */}
                         {plugs.length > 0 && (
                           <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mt: 1 }}>
@@ -1244,12 +1304,78 @@ export default function ChargeManagementScreen() {
             onClose={closeCardMenu}
             anchorOrigin={{ vertical: "top", horizontal: "right" }}
             transformOrigin={{ vertical: "top", horizontal: "right" }}
-            slotProps={{ paper: { sx: { borderRadius: 2, minWidth: 210, boxShadow: "0 8px 28px rgba(0,0,0,0.16)" } } }}
+            slotProps={{ paper: { sx: { borderRadius: 2, minWidth: 240, maxHeight: "80vh", boxShadow: "0 8px 28px rgba(0,0,0,0.16)" } } }}
           >
+            {/* View & edit */}
+            <MenuItem onClick={runCardAction((_e, r) => navigate(`/charge-management/${r.id}`))}>
+              <ListItemIcon><OpenInNewIcon fontSize="small" sx={{ color: "primary.main" }} /></ListItemIcon>
+              <ListItemText>{t("chargeManagement@detail.title")}</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={runCardAction((_e, r) => handleEdit(_e, r.id))}>
+              <ListItemIcon><EditIcon fontSize="small" sx={{ color: "primary.main" }} /></ListItemIcon>
+              <ListItemText>{t("chargeManagement@actions.edit")}</ListItemText>
+            </MenuItem>
             <MenuItem onClick={runCardAction((_e, r) => handleMedia(_e, r.id))}>
               <ListItemIcon><PhotoLibraryIcon fontSize="small" sx={{ color: "secondary.main" }} /></ListItemIcon>
               <ListItemText>{t("chargeManagement@actions.media")}</ListItemText>
             </MenuItem>
+
+            <Divider />
+
+            {/* Owner */}
+            {cardMenuRow?.ownerId ? (
+              <MenuItem onClick={runCardAction((_e, r) => navigate(`/users/${r.ownerId}`))}>
+                <ListItemIcon><PersonIcon fontSize="small" sx={{ color: "primary.main" }} /></ListItemIcon>
+                <ListItemText
+                  primary={t("chargeManagement@owner.title")}
+                  secondary={cardMenuRow.ownerName ?? `#${cardMenuRow.ownerId}`}
+                />
+              </MenuItem>
+            ) : (
+              <MenuItem disabled>
+                <ListItemIcon><PersonOffIcon fontSize="small" /></ListItemIcon>
+                <ListItemText>{t("chargeManagement@owner.none")}</ListItemText>
+              </MenuItem>
+            )}
+            <MenuItem onClick={runCardAction(handleOpenChangeOwner)}>
+              <ListItemIcon><PersonSearchIcon fontSize="small" sx={{ color: "primary.main" }} /></ListItemIcon>
+              <ListItemText>{t("chargeManagement@actions.changeOwner")}</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={runCardAction(handleOpenEngagement)}>
+              <ListItemIcon><PeopleIcon fontSize="small" sx={{ color: "info.main" }} /></ListItemIcon>
+              <ListItemText>{t("chargeManagement@engagement.view")}</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={runCardAction(handleManageWorker)}>
+              <ListItemIcon><BadgeIcon fontSize="small" sx={{ color: "primary.main" }} /></ListItemIcon>
+              <ListItemText>{t("workers@manageWorker")}</ListItemText>
+            </MenuItem>
+
+            <Divider />
+
+            {/* Money & performance */}
+            <MenuItem
+              onClick={runCardAction((_e, r) =>
+                navigate(`/provider-settlements?providerType=ChargingPoint&providerId=${r.id}&name=${encodeURIComponent(r.name ?? "")}`)
+              )}
+            >
+              <ListItemIcon><AccountBalanceWalletIcon fontSize="small" sx={{ color: "success.main" }} /></ListItemIcon>
+              <ListItemText
+                primary={t("chargeManagement@actions.walletSettlements")}
+                secondary={cardMenuRow?.isPartner ? t("chargeManagement@partner") : undefined}
+              />
+            </MenuItem>
+            <MenuItem onClick={runCardAction(handleActivity)}>
+              <ListItemIcon><ReceiptLongIcon fontSize="small" sx={{ color: "secondary.main" }} /></ListItemIcon>
+              <ListItemText>{t("loyalty@activity")}</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={runCardAction(handleAnalytics)}>
+              <ListItemIcon><InsightsIcon fontSize="small" sx={{ color: "success.main" }} /></ListItemIcon>
+              <ListItemText>{t("analytics@manage")}</ListItemText>
+            </MenuItem>
+
+            <Divider />
+
+            {/* Content & config */}
             <MenuItem onClick={runCardAction(handleSocialLinks)}>
               <ListItemIcon><ShareIcon fontSize="small" sx={{ color: "info.main" }} /></ListItemIcon>
               <ListItemText>{t("socialMedia@manageLinks")}</ListItemText>
@@ -1258,19 +1384,9 @@ export default function ChargeManagementScreen() {
               <ListItemIcon><WorkspacePremiumIcon fontSize="small" sx={{ color: "warning.main" }} /></ListItemIcon>
               <ListItemText>{t("chargeManagement@premium.manage")}</ListItemText>
             </MenuItem>
-            <MenuItem onClick={runCardAction(handleAnalytics)}>
-              <ListItemIcon><InsightsIcon fontSize="small" sx={{ color: "success.main" }} /></ListItemIcon>
-              <ListItemText>{t("analytics@manage")}</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={runCardAction(handleManageWorker)}>
-              <ListItemIcon><BadgeIcon fontSize="small" sx={{ color: "primary.main" }} /></ListItemIcon>
-              <ListItemText>{t("workers@manageWorker")}</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={runCardAction(handleOpenChangeOwner)}>
-              <ListItemIcon><PersonSearchIcon fontSize="small" sx={{ color: "primary.main" }} /></ListItemIcon>
-              <ListItemText>{t("chargeManagement@actions.changeOwner")}</ListItemText>
-            </MenuItem>
+
             <Divider />
+
             <MenuItem onClick={runCardAction((_e, r) => setDeleteStationTarget(r))} sx={{ color: "error.main" }}>
               <ListItemIcon><DeleteOutlineIcon fontSize="small" sx={{ color: "error.main" }} /></ListItemIcon>
               <ListItemText>{t("delete")}</ListItemText>
@@ -1307,6 +1423,13 @@ export default function ChargeManagementScreen() {
             providerId={activityStation?.id ?? null}
             providerName={activityStation?.name ?? undefined}
             onClose={() => setActivityStation(null)}
+          />
+
+          <StationEngagementDialog
+            open={engagementStation != null}
+            stationId={engagementStation?.id ?? null}
+            stationName={engagementStation?.name}
+            onClose={() => setEngagementStation(null)}
           />
 
           {workerStation != null && (

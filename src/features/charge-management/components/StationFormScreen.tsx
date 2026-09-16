@@ -23,6 +23,8 @@ import {
   DialogActions,
   Tooltip,
   IconButton,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -35,7 +37,9 @@ import PowerIcon from "@mui/icons-material/Power";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import RoomServiceIcon from "@mui/icons-material/RoomService";
 import EvStationIcon from "@mui/icons-material/EvStation";
+import VerifiedIcon from "@mui/icons-material/Verified";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import { DecimalField } from "../../../components";
 import {
   CITIES,
   PAYMENT_METHODS,
@@ -199,6 +203,7 @@ const defaultValues: StationFormValues = {
   price: null,
   chargerSpeed: null,
   chargersCount: null,
+  isVerified: false,
 };
 
 function mapStationToFormValues(station: ChargingPointDto): Partial<StationFormValues> {
@@ -221,6 +226,7 @@ function mapStationToFormValues(station: ChargingPointDto): Partial<StationFormV
     price: station.price ?? null,
     chargerSpeed: station.chargerSpeed ?? null,
     chargersCount: station.chargersCount ?? null,
+    isVerified: station.isVerified ?? false,
   };
 }
 
@@ -325,6 +331,7 @@ export default function StationFormScreen() {
         price: values.price ?? null,
         chargerSpeed: values.chargerSpeed ?? null,
         chargersCount: values.chargersCount ?? null,
+        isVerified: values.isVerified,
       };
       if (isEditMode && stationId > 0) {
         updateMutation.mutate({ id: stationId, body });
@@ -532,6 +539,46 @@ export default function StationFormScreen() {
                         </TextField>
                       )}
                     />
+                    {/* Verified toggle */}
+                    <Controller
+                      name="isVerified"
+                      control={control}
+                      render={({ field }) => (
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            px: 2,
+                            py: 1,
+                            borderRadius: 2,
+                            border: "1px solid",
+                            borderColor: field.value ? "success.main" : "divider",
+                            bgcolor: field.value ? "success.50" : "transparent",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          <FormControlLabel
+                            sx={{ m: 0, width: "100%", justifyContent: "space-between" }}
+                            labelPlacement="start"
+                            control={
+                              <Switch
+                                color="success"
+                                checked={!!field.value}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                              />
+                            }
+                            label={
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <VerifiedIcon fontSize="small" sx={{ color: field.value ? "success.main" : "text.disabled" }} />
+                                <Box>
+                                  <Typography variant="body2" fontWeight={700}>{t("chargeManagement@columns.verified")}</Typography>
+                                  <Typography variant="caption" color="text.secondary">{t("chargeManagement@form.verifiedHint")}</Typography>
+                                </Box>
+                              </Stack>
+                            }
+                          />
+                        </Paper>
+                      )}
+                    />
                     <Controller
                       name="chargerPointTypeId"
                       control={control}
@@ -601,15 +648,15 @@ export default function StationFormScreen() {
                           name="chargerSpeed"
                           control={control}
                           render={({ field }) => (
-                            <TextField
-                              {...field}
-                              type="number"
+                            <DecimalField
+                              name={field.name}
+                              onBlur={field.onBlur}
+                              inputRef={field.ref}
                               label={t("chargeManagement@form.chargerSpeed")}
                               fullWidth
+                              inputProps={{ step: "any" }}
                               value={field.value ?? ""}
-                              onChange={(e) =>
-                                setValue("chargerSpeed", e.target.value === "" ? null : Number(e.target.value))
-                              }
+                              onValueChange={(n) => setValue("chargerSpeed", n)}
                             />
                           )}
                         />
@@ -619,16 +666,15 @@ export default function StationFormScreen() {
                           name="price"
                           control={control}
                           render={({ field }) => (
-                            <TextField
-                              {...field}
-                              type="number"
+                            <DecimalField
+                              name={field.name}
+                              onBlur={field.onBlur}
+                              inputRef={field.ref}
                               label={t("chargeManagement@form.price")}
                               fullWidth
                               inputProps={{ step: "any" }}
                               value={field.value ?? ""}
-                              onChange={(e) =>
-                                setValue("price", e.target.value === "" ? null : Number(e.target.value))
-                              }
+                              onValueChange={(n) => setValue("price", n)}
                             />
                           )}
                         />

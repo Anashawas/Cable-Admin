@@ -9,9 +9,9 @@ import {
 	IconButton,
 	Collapse,
 	Typography,
-	Divider,
 	Avatar,
-	Tooltip
+	Tooltip,
+	alpha,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -23,55 +23,12 @@ import {
 	ChevronRight as ChevronRightIcon,
 	ExpandLess,
 	ExpandMore,
-	EvStation as EvStationIcon,
-	People as PeopleIcon,
-	Settings as SettingsIcon,
-	ListAlt as ListAltIcon,
-	LocalHospital as LocalHospitalIcon,
-	NotificationsActive as NotificationsActiveIcon,
-	ReportProblem as ReportProblemIcon,
-	Store as StoreIcon,
-	Category as CategoryIcon,
-	LocalOffer as LocalOfferIcon,
-	MonetizationOn as MonetizationOnIcon,
-	PendingActions as PendingActionsIcon,
-	AccountBalance as AccountBalanceIcon,
-	Handshake as HandshakeIcon,
-	LocalOffer as ActiveOfferIcon,
-	ReceiptLong as ReceiptLongIcon,
-	CardGiftcard as CardGiftcardIcon,
-	ManageAccounts as ManageAccountsIcon,
-	Redeem as RedeemIcon,
-	AccountBalanceWallet as AccountBalanceWalletIcon,
-	QueryStats as QueryStatsIcon,
-	Insights as InsightsIcon,
-	Block as BlockIcon,
-	Share as ShareIcon,
-	PersonAddAlt1 as PersonAddAlt1Icon,
-	Bolt as BoltIcon,
-	EmojiEvents as EmojiEventsIcon,
-	Gavel as GavelIcon,
-	Campaign as CampaignIcon,
-	Image as ImageIcon,
 } from "@mui/icons-material";
-import { PRIVILEGES, PrivilegeCode } from "../../../constants/privileges-constants";
+import { PrivilegeCode } from "../../../constants/privileges-constants";
+import { getNavigationGroups, NavigationGroup, NavigationItem } from "./navigation-config";
 
 const EXPANDED_WIDTH = 300;
 const COLLAPSED_WIDTH = 64;
-
-interface NavigationGroup {
-	id: string;
-	label: string;
-	icon: React.ReactElement;
-	items: NavigationItem[];
-}
-
-interface NavigationItem {
-	label: string;
-	path: string;
-	icon: React.ReactElement;
-	requiredPrivileges?: PrivilegeCode[];
-}
 
 const AppCollapsibleSidebar = () => {
 	const { t, i18n } = useTranslation();
@@ -90,7 +47,7 @@ const AppCollapsibleSidebar = () => {
 		systemData: false,
 	});
 
-	const isRTL = i18n.language === 'ar';
+	const isRTL = i18n.language === "ar";
 
 	const drawerWidth = sidebarExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
 
@@ -99,98 +56,28 @@ const AppCollapsibleSidebar = () => {
 		return user.name.charAt(0).toUpperCase();
 	};
 
+	// ── Theme-aware palette ─────────────────────────────────────────────
+	// Dark mode keeps the navy gradient; light mode is a clean white sidebar.
+	const isDark = theme.palette.mode === "dark";
+	const c = {
+		bg: isDark
+			? "linear-gradient(180deg, #0d1f4e 0%, #0d3276 60%, #0a4a8f 100%)"
+			: theme.palette.background.paper,
+		headerBg: isDark ? "rgba(0,0,0,0.15)" : alpha(theme.palette.primary.main, 0.04),
+		border: isDark ? "rgba(255,255,255,0.10)" : theme.palette.divider,
+		text: isDark ? "#ffffff" : theme.palette.text.primary,
+		textMuted: isDark ? "rgba(255,255,255,0.6)" : theme.palette.text.secondary,
+		iconMuted: isDark ? "rgba(255,255,255,0.75)" : theme.palette.text.secondary,
+		activeBg: isDark ? "rgba(255,255,255,0.18)" : alpha(theme.palette.primary.main, 0.12),
+		hoverBg: isDark ? "rgba(255,255,255,0.08)" : alpha(theme.palette.primary.main, 0.06),
+		groupActiveBg: isDark ? "rgba(255,255,255,0.10)" : alpha(theme.palette.primary.main, 0.06),
+		accent: isDark ? "rgba(255,255,255,0.8)" : theme.palette.primary.main,
+		activeText: isDark ? "#ffffff" : theme.palette.primary.main,
+		activeIcon: isDark ? "#ffffff" : theme.palette.primary.main,
+		footerText: isDark ? "rgba(255,255,255,0.45)" : theme.palette.text.secondary,
+	};
 
-
-	const navigationGroups: NavigationGroup[] = [
-		{
-			id: "chargeManagement",
-			label: t("chargeManagement"),
-			icon: <EvStationIcon />,
-			items: [
-				{ label: t("chargeManagement"), path: "/charge-management", icon: <EvStationIcon /> },
-				{ label: t("chargerBrands"), path: "/charger-brands", icon: <BoltIcon /> },
-				{ label: t("stationStatistics"), path: "/station-statistics", icon: <QueryStatsIcon /> },
-				{ label: t("stationsRequest"), path: "/stations-request", icon: <ListAltIcon /> },
-				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },
-				{ label: t("nearestPreview"), path: "/nearest-preview", icon: <QueryStatsIcon /> },
-			],
-		},
-		{
-			id: "userManagement",
-			label: t("userManagement"),
-			icon: <PeopleIcon />,
-			items: [
-				{ label: t("userAnalytics"), path: "/user-analytics", icon: <InsightsIcon /> },
-				{ label: t("manageUsers"), path: "/users", icon: <PeopleIcon /> },
-			],
-		},
-		{
-			id: "providerManagement",
-			label: t("providerManagement"),
-			icon: <StoreIcon />,
-			items: [
-				{ label: t("serviceCategories"), path: "/service-categories", icon: <CategoryIcon /> },
-				{ label: t("serviceProviders"), path: "/service-providers", icon: <StoreIcon /> },
-				{ label: t("offersManagement"), path: "/offers", icon: <LocalOfferIcon /> },
-				{ label: t("offerTransactions"), path: "/transactions", icon: <ReceiptLongIcon /> },
-				{ label: t("settlements"), path: "/settlements", icon: <AccountBalanceIcon /> },
-			],
-		},
-		{
-			id: "partnerManagement",
-			label: t("partnerManagement"),
-			icon: <HandshakeIcon />,
-			items: [
-				{ label: t("partners"), path: "/partners", icon: <HandshakeIcon /> },
-				{ label: t("addNewPartner"), path: "/add-partner", icon: <PersonAddAlt1Icon /> },
-			],
-		},
-		{
-			id: "loyaltySystem",
-			label: t("loyaltySystem"),
-			icon: <CardGiftcardIcon />,
-			items: [
-				{ label: t("loyaltyDashboard"), path: "/loyalty-dashboard", icon: <AccountBalanceIcon /> },
-				{ label: t("conversionRates"), path: "/conversion-rates", icon: <MonetizationOnIcon /> },
-				{ label: t("loyaltyManagement"), path: "/loyalty-management", icon: <ManageAccountsIcon /> },
-				{ label: t("loyalty@boosts.navTitle"), path: "/loyalty-boosts", icon: <BoltIcon /> },
-				{ label: t("leaderboard"), path: "/loyalty-leaderboard", icon: <EmojiEventsIcon /> },
-				{ label: t("redemptions"), path: "/redemptions", icon: <RedeemIcon /> },
-				{ label: t("pointAdjustments"), path: "/point-adjustments", icon: <AccountBalanceWalletIcon /> },
-				{ label: t("pointsLedger"), path: "/loyalty-ledger", icon: <ReceiptLongIcon /> },
-				{ label: t("bulkAward"), path: "/loyalty-bulk-award", icon: <CardGiftcardIcon /> },
-				{ label: t("flaggedActivity"), path: "/loyalty-flagged", icon: <ReportProblemIcon /> },
-				{ label: t("blockUsers"), path: "/block-users", icon: <BlockIcon /> },
-			],
-		},
-		{
-			id: "ads",
-			label: t("ads"),
-			icon: <CampaignIcon />,
-			items: [
-				{ label: t("banners"), path: "/banners", icon: <CampaignIcon /> },
-				{ label: t("welcomeMessages"), path: "/welcome-messages", icon: <NotificationsActiveIcon /> },
-				{ label: t("stationAdImages"), path: "/view-image-review", icon: <ImageIcon /> },
-				{ label: t("campaigns"), path: "/campaigns", icon: <InsightsIcon /> },
-			],
-		},
-		{
-			id: "systemData",
-			label: t("systemData"),
-			icon: <SettingsIcon />,
-			items: [
-				{ label: t("carManagement"), path: "/car-management", icon: <SettingsIcon /> },
-				{ label: t("socialMediaPlatforms"), path: "/social-media-platforms", icon: <ShareIcon /> },
-				{ label: t("appVersions"), path: "/app-versions", icon: <SettingsIcon /> },
-				{ label: t("emergencyServices"), path: "/emergency-services", icon: <LocalHospitalIcon /> },
-				{ label: t("sendNotification"), path: "/send-notification", icon: <NotificationsActiveIcon /> },
-				{ label: t("notificationTemplates"), path: "/notification-templates", icon: <NotificationsActiveIcon /> },
-				{ label: t("generateReceipt"), path: "/receipts", icon: <ReceiptLongIcon /> },
-				{ label: t("termsConditions"), path: "/terms-conditions", icon: <GavelIcon /> },
-			],
-		},
-	];
-
+	const navigationGroups: NavigationGroup[] = getNavigationGroups(t);
 	const standaloneNavigationItems: NavigationItem[] = [];
 
 	const handleNavigate = (path: string) => {
@@ -252,30 +139,25 @@ const AppCollapsibleSidebar = () => {
 		})).filter(group => group.items.length > 0);
 	};
 
-	const SIDEBAR_BG = "linear-gradient(180deg, #0d1f4e 0%, #0d3276 60%, #0a4a8f 100%)";
-	const ACTIVE_BG = "rgba(255,255,255,0.18)";
-	const HOVER_BG = "rgba(255,255,255,0.08)";
-	const GROUP_ACTIVE_BG = "rgba(255,255,255,0.10)";
-
 	const navItemSx = (isActive: boolean) => ({
 		mx: 1,
 		mb: 0.5,
 		borderRadius: 2,
-		color: "white",
+		color: c.text,
 		justifyContent: sidebarExpanded ? "initial" : "center",
-		backgroundColor: isActive ? ACTIVE_BG : "transparent",
-		borderLeft: isActive && !isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
-		borderRight: isActive && isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
-		"&:hover": { backgroundColor: isActive ? ACTIVE_BG : HOVER_BG },
-		"& .MuiListItemIcon-root": { color: "rgba(255,255,255,0.9)" },
+		backgroundColor: isActive ? c.activeBg : "transparent",
+		borderLeft: isActive && !isRTL ? `3px solid ${c.accent}` : "3px solid transparent",
+		borderRight: isActive && isRTL ? `3px solid ${c.accent}` : "3px solid transparent",
+		"&:hover": { backgroundColor: isActive ? c.activeBg : c.hoverBg },
+		"& .MuiListItemIcon-root": { color: isActive ? c.activeIcon : c.iconMuted },
 		"& .MuiListItemText-primary": {
 			fontWeight: isActive ? 700 : 500,
 			fontSize: "0.875rem",
-			color: "white",
+			color: isActive ? c.activeText : c.text,
 		},
 		"&.Mui-selected": {
-			backgroundColor: ACTIVE_BG,
-			"&:hover": { backgroundColor: ACTIVE_BG },
+			backgroundColor: c.activeBg,
+			"&:hover": { backgroundColor: c.activeBg },
 		},
 	});
 
@@ -290,7 +172,10 @@ const AppCollapsibleSidebar = () => {
 					width: drawerWidth,
 					boxSizing: "border-box",
 					border: "none",
-					background: SIDEBAR_BG,
+					borderInlineEnd: isDark ? "none" : `1px solid ${theme.palette.divider}`,
+					background: c.bg,
+					color: c.text,
+					boxShadow: isDark ? "none" : "0 0 20px rgba(15,25,41,0.06)",
 					transition: theme.transitions.create("width", {
 						easing: theme.transitions.easing.sharp,
 						duration: theme.transitions.duration.enteringScreen,
@@ -314,8 +199,8 @@ const AppCollapsibleSidebar = () => {
 						px: 2,
 						py: 2,
 						minHeight: 72,
-						background: "rgba(0,0,0,0.15)",
-						borderBottom: "1px solid rgba(255,255,255,0.10)",
+						background: c.headerBg,
+						borderBottom: `1px solid ${c.border}`,
 					}}
 				>
 					<Box display="flex" alignItems="center" sx={{ minWidth: 0 }}>
@@ -328,30 +213,30 @@ const AppCollapsibleSidebar = () => {
 								fontSize: "1.1rem",
 								fontWeight: "bold",
 								color: "white",
-								boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+								boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
 							}}
 						>
 							{user ? getUserInitial() : "?"}
 						</Avatar>
 						<Box sx={{ minWidth: 0 }}>
-							<Typography variant="subtitle2" noWrap fontWeight={700} sx={{ color: "white", lineHeight: 1.2 }}>
+							<Typography variant="subtitle2" noWrap fontWeight={700} sx={{ color: c.text, lineHeight: 1.2 }}>
 								{user?.email ?? t("guest")}
 							</Typography>
-							<Typography variant="caption" noWrap sx={{ color: "rgba(255,255,255,0.6)", lineHeight: 1 }}>
+							<Typography variant="caption" noWrap sx={{ color: c.textMuted, lineHeight: 1 }}>
 								{user?.name ?? ""}
 							</Typography>
 						</Box>
 					</Box>
-					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white", bgcolor: HOVER_BG } }}>
+					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: c.iconMuted, "&:hover": { color: c.text, bgcolor: c.hoverBg } }}>
 						{isRTL ? <ChevronRightIcon /> : <ChevronLeftIcon />}
 					</IconButton>
 				</Box>
 			) : (
-				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2, minHeight: 72, gap: 1, background: "rgba(0,0,0,0.15)", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2, minHeight: 72, gap: 1, background: c.headerBg, borderBottom: `1px solid ${c.border}` }}>
 					<Avatar sx={{ width: 32, height: 32, background: "linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)", fontSize: "0.9rem", fontWeight: "bold", color: "white" }}>
 						{user ? getUserInitial() : "?"}
 					</Avatar>
-					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "white", bgcolor: HOVER_BG } }}>
+					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: c.iconMuted, "&:hover": { color: c.text, bgcolor: c.hoverBg } }}>
 						{isRTL ? <ChevronLeftIcon /> : <ChevronRightIcon />}
 					</IconButton>
 				</Box>
@@ -386,11 +271,11 @@ const AppCollapsibleSidebar = () => {
 											mx: 1,
 											mb: 0.5,
 											borderRadius: 2,
-											color: "white",
-											backgroundColor: groupActive && !groupOpen ? GROUP_ACTIVE_BG : "transparent",
-											"&:hover": { backgroundColor: HOVER_BG },
-											"& .MuiListItemIcon-root": { color: "rgba(255,255,255,0.75)" },
-											"& .MuiListItemText-primary": { fontWeight: 600, fontSize: "0.875rem", color: "white" },
+											color: c.text,
+											backgroundColor: groupActive && !groupOpen ? c.groupActiveBg : "transparent",
+											"&:hover": { backgroundColor: c.hoverBg },
+											"& .MuiListItemIcon-root": { color: c.iconMuted },
+											"& .MuiListItemText-primary": { fontWeight: 600, fontSize: "0.875rem", color: c.text },
 										}}
 									>
 										<ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: "center" }}>
@@ -398,8 +283,8 @@ const AppCollapsibleSidebar = () => {
 										</ListItemIcon>
 										<ListItemText primary={group.label} />
 										{groupOpen
-											? <ExpandLess sx={{ color: "rgba(255,255,255,0.6)" }} />
-											: <ExpandMore sx={{ color: "rgba(255,255,255,0.6)" }} />}
+											? <ExpandLess sx={{ color: c.textMuted }} />
+											: <ExpandMore sx={{ color: c.textMuted }} />}
 									</ListItemButton>
 
 									<Collapse in={groupOpen} timeout="auto" unmountOnExit>
@@ -417,14 +302,14 @@ const AppCollapsibleSidebar = () => {
 															mx: 1,
 															mb: 0.5,
 															borderRadius: 2,
-															color: "white",
-															backgroundColor: isActive ? ACTIVE_BG : "transparent",
-															borderLeft: isActive && !isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
-															borderRight: isActive && isRTL ? "3px solid rgba(255,255,255,0.8)" : "3px solid transparent",
-															"&:hover": { backgroundColor: isActive ? ACTIVE_BG : HOVER_BG },
-															"& .MuiListItemIcon-root": { color: isActive ? "white" : "rgba(255,255,255,0.6)" },
-															"& .MuiListItemText-primary": { fontWeight: isActive ? 700 : 400, fontSize: "0.85rem", color: "white" },
-															"&.Mui-selected": { backgroundColor: ACTIVE_BG, "&:hover": { backgroundColor: ACTIVE_BG } },
+															color: c.text,
+															backgroundColor: isActive ? c.activeBg : "transparent",
+															borderLeft: isActive && !isRTL ? `3px solid ${c.accent}` : "3px solid transparent",
+															borderRight: isActive && isRTL ? `3px solid ${c.accent}` : "3px solid transparent",
+															"&:hover": { backgroundColor: isActive ? c.activeBg : c.hoverBg },
+															"& .MuiListItemIcon-root": { color: isActive ? c.activeIcon : c.iconMuted },
+															"& .MuiListItemText-primary": { fontWeight: isActive ? 700 : 400, fontSize: "0.85rem", color: isActive ? c.activeText : c.text },
+															"&.Mui-selected": { backgroundColor: c.activeBg, "&:hover": { backgroundColor: c.activeBg } },
 														}}
 													>
 														<ListItemIcon sx={{ minWidth: 0, mr: 2 }}>
@@ -473,13 +358,13 @@ const AppCollapsibleSidebar = () => {
 			</Box>
 
 			{/* ── Footer ── */}
-			<Box sx={{ p: 2, borderTop: "1px solid rgba(255,255,255,0.10)" }}>
+			<Box sx={{ p: 2, borderTop: `1px solid ${c.border}` }}>
 				{sidebarExpanded && (
 					<>
-						<Typography variant="caption" display="block" sx={{ color: "rgba(255,255,255,0.45)" }}>
+						<Typography variant="caption" display="block" sx={{ color: c.footerText }}>
 							© {new Date().getFullYear()} {t("kmCamping")}
 						</Typography>
-						<Typography variant="caption" display="block" sx={{ color: "rgba(255,255,255,0.45)" }}>
+						<Typography variant="caption" display="block" sx={{ color: c.footerText }}>
 							{t("version")}: {import.meta.env.VITE_APP_VERSION || "1.0.0"}
 						</Typography>
 					</>

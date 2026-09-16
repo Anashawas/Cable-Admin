@@ -89,7 +89,7 @@ export default function WelcomeBonusCard() {
             helperText={
               willDisable ? t("loyalty@boosts.welcomeOffHint") : t("loyalty@boosts.welcomeRangeHint")
             }
-            inputProps={{ min: 1, max: 10, step: 0.5 }}
+            inputProps={{ min: 1, max: 10, step: "any", inputMode: "decimal" }}
             sx={{ maxWidth: 220 }}
           />
           <Button

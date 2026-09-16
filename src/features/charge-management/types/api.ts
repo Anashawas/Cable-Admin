@@ -40,6 +40,9 @@ export interface ChargingPointDto {
   chargerSpeed?: number | null;
   chargersCount?: number | null;
   visitorsCount?: number | null;
+  /** Number of users who follow (favorited) the station. Requires BE to add it
+   *  to GetAllChargingPoints (already returned on partner GetMyChargingPoints). */
+  favoritesCount?: number | null;
   note?: string | null;
   statusSummary?: { id: number; name?: string | null } | null;
   chargingPointType?: { id: number; name?: string | null } | null;

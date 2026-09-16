@@ -329,7 +329,7 @@ export default function AddServiceProviderScreen() {
                 <TextField label={t("toTime")} value={formData.toTime} onChange={(e) => setFormData({ ...formData, toTime: e.target.value })} type="time" fullWidth InputLabelProps={{ shrink: true }} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
               </Grid>
               <Grid size={{ xs: 12, sm: 3 }}>
-                <TextField label={t("price")} value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} type="number" fullWidth InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }} helperText={t("priceHint")} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
+                <TextField label={t("price")} value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} type="number" fullWidth inputProps={{ step: "any", min: 0, inputMode: "decimal" }} InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }} helperText={t("priceHint")} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
               </Grid>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <TextField label={t("priceDescription")} value={formData.priceDescription} onChange={(e) => setFormData({ ...formData, priceDescription: e.target.value })} fullWidth placeholder={t("priceDescPlaceholder")} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />

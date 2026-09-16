@@ -9,6 +9,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import StarIcon from "@mui/icons-material/Star";
@@ -35,6 +36,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import EmailIcon from "@mui/icons-material/Email";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import PeopleIcon from "@mui/icons-material/People";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getStationById } from "../services/station-form-service";
 import { getComplaintsByChargingPointId } from "../../complaints/services/complaints-service";
@@ -44,6 +47,7 @@ import StationViewImageSection from "./StationViewImageSection";
 import SocialLinksDisplay from "../../social-media/components/SocialLinksDisplay";
 import ProviderActivityFeed from "../../loyalty/components/ProviderActivityFeed";
 import AnalyticsPanel from "../../analytics/components/AnalyticsPanel";
+import { StationFollowersPanel, StationNotificationsPanel } from "./StationEngagementPanels";
 import type { ChargingPointDto } from "../types/api";
 
 function parseList(v?: string | null): string[] {
@@ -170,6 +174,10 @@ export default function StationProfileScreen() {
                 </Box>
               </Stack>
               <Stack direction="row" spacing={1}>
+                <Button variant="contained" startIcon={<AccountBalanceWalletIcon />} onClick={() => navigate(`/provider-settlements?providerType=ChargingPoint&providerId=${s.id}&name=${encodeURIComponent(s.name ?? "")}`)}
+                  sx={{ bgcolor: "rgba(255,255,255,0.18)", color: "#fff", fontWeight: 600, textTransform: "none", border: "1px solid rgba(255,255,255,0.3)", "&:hover": { bgcolor: "rgba(255,255,255,0.28)" } }}>
+                  {t("chargeManagement@actions.walletSettlements")}
+                </Button>
                 <Button variant="contained" startIcon={<PhotoLibraryIcon />} onClick={() => navigate(`/charge-management/${s.id}/media`)}
                   sx={{ bgcolor: "rgba(255,255,255,0.18)", color: "#fff", fontWeight: 600, textTransform: "none", border: "1px solid rgba(255,255,255,0.3)", "&:hover": { bgcolor: "rgba(255,255,255,0.28)" } }}>
                   {t("chargeManagement@actions.media")}
@@ -210,6 +218,8 @@ export default function StationProfileScreen() {
                 { icon: <RateReviewIcon fontSize="small" />, label: t("chargeManagement@reviews.title") },
                 { icon: <InsightsIcon fontSize="small" />, label: t("analytics@title") },
                 { icon: <ReportProblemIcon fontSize="small" />, label: t("chargeManagement@complaints.title") },
+                { icon: <PeopleIcon fontSize="small" />, label: t("chargeManagement@engagement.followers") },
+                { icon: <CampaignIcon fontSize="small" />, label: t("chargeManagement@engagement.notifications") },
               ].map((tb, i) => (
                 <Tab
                   key={i}
@@ -398,6 +408,12 @@ export default function StationProfileScreen() {
                   </Stack>
                 )
               )}
+
+              {/* Followers */}
+              {tab === 5 && <StationFollowersPanel stationId={s.id} enabled />}
+
+              {/* Notifications sent */}
+              {tab === 6 && <StationNotificationsPanel stationId={s.id} enabled />}
             </Box>
           </Paper>
         </Stack>

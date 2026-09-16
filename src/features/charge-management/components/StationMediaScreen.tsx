@@ -34,7 +34,7 @@ import { deleteAttachment, UploadFileFolders } from "../../../services/file-serv
 import { useSnackbarStore } from "../../../stores";
 
 function getPhotoUrl(photo: StationAttachmentDto): string | null {
-  return photo.url ?? photo.attachmentUrl ?? null;
+  return photo.filePath ?? photo.url ?? photo.attachmentUrl ?? null;
 }
 
 export default function StationMediaScreen() {
@@ -86,7 +86,7 @@ export default function StationMediaScreen() {
   });
 
   const deletePhotoMutation = useMutation({
-    mutationFn: (attachmentId: number) =>
+    mutationFn: (attachmentId: string | number) =>
       deleteAttachment(UploadFileFolders.CableAttachments, attachmentId),
     onSuccess: () => {
       refetchPhotos();
@@ -98,7 +98,7 @@ export default function StationMediaScreen() {
   });
 
   const deleteAllPhotosMutation = useMutation({
-    mutationFn: async (attachmentIds: number[]) => {
+    mutationFn: async (attachmentIds: (string | number)[]) => {
       for (const aid of attachmentIds) {
         await deleteAttachment(UploadFileFolders.CableAttachments, aid);
       }
@@ -113,7 +113,7 @@ export default function StationMediaScreen() {
   });
 
   const handleDeleteOnePhoto = useCallback(
-    (attachmentId: number) => {
+    (attachmentId: string | number) => {
       if (!window.confirm(t("chargeManagement@media.confirmDelete") as string)) return;
       deletePhotoMutation.mutate(attachmentId);
     },
@@ -124,7 +124,7 @@ export default function StationMediaScreen() {
     if (!stationId || photos.length === 0) return;
     const ids = photos
       .map((p) => getStationAttachmentId(p))
-      .filter((x): x is number => x != null);
+      .filter((x): x is string | number => x != null);
     if (ids.length === 0) {
       openErrorSnackbar({ message: t("chargeManagement@media.deleteUnavailable") });
       return;
