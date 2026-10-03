@@ -1,0 +1,118 @@
+{
+  "title": "الاشتراكات والتجديدات",
+  "navTitle": "الاشتراكات والدفعات",
+  "window": "نافذة التجديد",
+  "windowDays": "خلال {{count}} يوم",
+
+  "currentExpiry": "تاريخ الانتهاء الحالي",
+  "expiresOn": "ينتهي في",
+  "daysLeft": "متبقٍ {{count}} يوم",
+  "overdueBy": "متأخر {{count}} يوم",
+  "neverPaid": "لا توجد دفعات مسجّلة",
+  "history": "سجل الدفعات",
+  "noPayments": "لا توجد دفعات مسجّلة لهذا البند بعد.",
+
+  "switchOn": "تشغيل",
+  "switchOff": "إيقاف",
+  "switchedOn": "تم التشغيل",
+  "switchedOff": "تم الإيقاف",
+  "inGraceHint": "انتهى اشتراكه لكنه ما زال يعمل — أي أنه ظاهر بدون دفع.",
+  "autoOffAt": "سيتوقف تلقائيًا في {{date}}.",
+
+  "void": "إلغاء",
+  "voidPayment": "إلغاء الدفعة",
+  "voidReason": "السبب",
+  "voidHint": "تبقى الدفعة محفوظة في السجل، ويرجع تاريخ الانتهاء إلى آخر فترة متبقية. إلغاء الدفعة الوحيدة يوقف البند.",
+  "voided": "تم إلغاء الدفعة",
+  "viewProof": "عرض صورة الحوالة",
+  "downloadReceipt": "تنزيل الإيصال (PDF)",
+
+  "collected": "المحصّل",
+  "collectedThisMonth": "المحصّل هذا الشهر",
+  "collectedHint": "آخر شهر في السلسلة",
+  "monthlyCollections": "التحصيل خلال آخر ١٢ شهرًا",
+  "noCollections": "لا يوجد تحصيل بعد.",
+
+  "buckets": {
+    "expiringSoon": "قارب على الانتهاء",
+    "expiringSoonEmpty": "لا شيء ينتهي خلال هذه الفترة.",
+    "lapsedStillOn": "منتهٍ وما زال يعمل",
+    "lapsedStillOnHint": "ظاهر بدون دفع",
+    "lapsedStillOnEmpty": "لا يوجد اشتراك يعمل بعد انتهائه.",
+    "expired": "منتهٍ",
+    "expiredHint": "متوقف أصلًا",
+    "expiredEmpty": "لا توجد اشتراكات منتهية."
+  },
+
+  "columns": {
+    "entity": "البند",
+    "type": "النوع",
+    "expiresAt": "ينتهي",
+    "daysLeft": "المتبقي",
+    "payer": "آخر دافع",
+    "actions": "إجراءات"
+  },
+
+  "entityType": {
+    "StationPremium": "محطة مميزة",
+    "Banner": "بانر إعلاني",
+    "ServiceProviderPremium": "مزوّد خدمة مميز"
+  },
+
+  "status": {
+    "Active": "نشط",
+    "ExpiringSoon": "قارب على الانتهاء",
+    "InGrace": "منتهٍ وما زال يعمل",
+    "Expired": "منتهٍ",
+    "SwitchedOff": "متوقف"
+  },
+
+  "method": {
+    "cliq": "كليك",
+    "cash": "نقدًا"
+  },
+
+  "grace": {
+    "mode": "عند الانتهاء",
+    "manual": "يبقى شغّالًا حتى أوقفه يدويًا",
+    "afterDays": "يتوقف بعد عدد من الأيام",
+    "days": "أيام السماح",
+    "saved": "تم حفظ قاعدة السماح"
+  },
+
+  "record": {
+    "title": "تسجيل دفعة",
+    "renewTitle": "تجديد الاشتراك",
+    "plan": "مدة الاشتراك",
+    "months": "{{count}} أشهر",
+    "customMonths": "أخرى",
+    "previewNew": "تغطي من {{start}} إلى {{end}}.",
+    "previewExtend": "تمدّد الفترة الحالية: من {{start}} إلى {{end}}. لا تضيع أي أيام مدفوعة.",
+    "amount": "المبلغ",
+    "paidDate": "تاريخ الدفع",
+    "method": "طريقة الدفع",
+    "note": "ملاحظة",
+    "attachProof": "إرفاق صورة الحوالة",
+    "record": "تسجيل الدفعة",
+    "renew": "تجديد",
+    "saved": "تم تسجيل الدفعة — {{ref}}",
+    "savedNoReceipt": "تم تسجيل الدفعة، لكن تعذّر إنشاء الإيصال: {{error}}",
+    "proofFailed": "تم حفظ الدفعة لكن لم تُرفع صورة الحوالة."
+  },
+
+  "payer": {
+    "title": "من دفع",
+    "owner": "المالك",
+    "existing": "دافع سابق",
+    "new": "شخص آخر",
+    "ownerHint": "الاسم والهاتف والإيميل تُقرأ من حسابه، فتبقى محدّثة دائمًا.",
+    "search": "بحث عن دافع",
+    "searchPlaceholder": "الاسم أو رقم الهاتف",
+    "name": "الاسم",
+    "phone": "رقم الهاتف",
+    "email": "الإيميل",
+    "dedupeHint": "إذا تطابق رقم الهاتف يُستخدم الدافع الموجود بدل إنشاء نسخة مكررة.",
+    "hasWhatsApp": "هذا الرقم على واتساب",
+    "selected": "الدفع باسم"
+  }
+}

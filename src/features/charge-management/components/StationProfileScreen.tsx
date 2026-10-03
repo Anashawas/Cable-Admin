@@ -9,6 +9,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import StarIcon from "@mui/icons-material/Star";
@@ -35,6 +36,9 @@ import PersonIcon from "@mui/icons-material/Person";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import EmailIcon from "@mui/icons-material/Email";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import PeopleIcon from "@mui/icons-material/People";
+import CampaignIcon from "@mui/icons-material/Campaign";
+import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import CableIcon from "@mui/icons-material/Cable";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import StationChargersSection from "../../ocpp/components/StationChargersSection";
@@ -42,17 +46,19 @@ import { getStationById } from "../services/station-form-service";
 import { getComplaintsByChargingPointId } from "../../complaints/services/complaints-service";
 import StationReviewsSection from "./StationReviewsSection";
 import StationPremiumSection from "./StationPremiumSection";
+import SubscriptionPanel from "../../subscriptions/components/SubscriptionPanel";
 import StationViewImageSection from "./StationViewImageSection";
 import SocialLinksDisplay from "../../social-media/components/SocialLinksDisplay";
 import ProviderActivityFeed from "../../loyalty/components/ProviderActivityFeed";
 import AnalyticsPanel from "../../analytics/components/AnalyticsPanel";
+import { StationFollowersPanel, StationNotificationsPanel } from "./StationEngagementPanels";
 import type { ChargingPointDto } from "../types/api";
+import { formatOpeningHours } from "../../../utils/opening-hours";
 
 function parseList(v?: string | null): string[] {
   if (!v || typeof v !== "string") return [];
   return v.replace(/^\[|\]$/g, "").split(/[,;|]/).map((s) => s.trim()).filter(Boolean);
 }
-function fmtTime(v?: string | null) { const m = v ? /^(\d{1,2}:\d{2})/.exec(v.trim()) : null; return m ? m[1] : (v ?? ""); }
 
 function Section({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -138,7 +144,7 @@ export default function StationProfileScreen() {
   const payments = parseList(s.methodPayment);
   const plugs = (s.plugTypeSummary ?? []).map((p) => p?.name).filter(Boolean) as string[];
   const imageUrls = (s.images ?? []).map((e: any) => (typeof e === "string" ? e : e?.url)).filter(Boolean) as string[];
-  const hours = s.fromTime || s.toTime ? `${fmtTime(s.fromTime)} - ${fmtTime(s.toTime)}` : "";
+  const hours = formatOpeningHours(s.fromTime, s.toTime, t("chargeManagement@form.open24h"));
   const hasCoords = s.latitude != null && s.longitude != null;
   const rating = s.avgChargingPointRate != null ? `${s.avgChargingPointRate.toFixed(1)}${s.rateCount != null ? ` (${s.rateCount})` : ""}` : "";
   const isPremium = s.stationType?.id === 2;
@@ -173,6 +179,10 @@ export default function StationProfileScreen() {
                 </Box>
               </Stack>
               <Stack direction="row" spacing={1}>
+                <Button variant="contained" startIcon={<AccountBalanceWalletIcon />} onClick={() => navigate(`/provider-settlements?providerType=ChargingPoint&providerId=${s.id}&name=${encodeURIComponent(s.name ?? "")}`)}
+                  sx={{ bgcolor: "rgba(255,255,255,0.18)", color: "#fff", fontWeight: 600, textTransform: "none", border: "1px solid rgba(255,255,255,0.3)", "&:hover": { bgcolor: "rgba(255,255,255,0.28)" } }}>
+                  {t("chargeManagement@actions.walletSettlements")}
+                </Button>
                 <Button variant="contained" startIcon={<PhotoLibraryIcon />} onClick={() => navigate(`/charge-management/${s.id}/media`)}
                   sx={{ bgcolor: "rgba(255,255,255,0.18)", color: "#fff", fontWeight: 600, textTransform: "none", border: "1px solid rgba(255,255,255,0.3)", "&:hover": { bgcolor: "rgba(255,255,255,0.28)" } }}>
                   {t("chargeManagement@actions.media")}
@@ -213,6 +223,9 @@ export default function StationProfileScreen() {
                 { icon: <RateReviewIcon fontSize="small" />, label: t("chargeManagement@reviews.title") },
                 { icon: <InsightsIcon fontSize="small" />, label: t("analytics@title") },
                 { icon: <ReportProblemIcon fontSize="small" />, label: t("chargeManagement@complaints.title") },
+                { icon: <PeopleIcon fontSize="small" />, label: t("chargeManagement@engagement.followers") },
+                { icon: <CampaignIcon fontSize="small" />, label: t("chargeManagement@engagement.notifications") },
+                { icon: <EventRepeatIcon fontSize="small" />, label: t("subscriptions@navTitle") },
                 { icon: <CableIcon fontSize="small" />, label: t("ocpp@station.title") },
               ].map((tb, i) => (
                 <Tab
@@ -403,8 +416,26 @@ export default function StationProfileScreen() {
                 )
               )}
 
+              {/* Followers */}
+              {tab === 5 && <StationFollowersPanel providerId={s.id} enabled />}
+
+              {/* Notifications sent */}
+              {tab === 6 && <StationNotificationsPanel providerId={s.id} enabled />}
+
+              {/* Subscription + payment history */}
+              {tab === 7 && (
+                <SubscriptionPanel
+                  entityType="StationPremium"
+                  entityId={s.id}
+                  entityName={s.name}
+                  ownerUserAccountId={s.ownerId}
+                  ownerName={s.ownerName}
+                  enabled
+                />
+              )}
+
               {/* Cable Connect (OCPP): live chargers, subscription, allowed cards */}
-              {tab === 5 && <StationChargersSection chargingPointId={s.id} />}
+              {tab === 8 && <StationChargersSection chargingPointId={s.id} />}
             </Box>
           </Paper>
         </Stack>

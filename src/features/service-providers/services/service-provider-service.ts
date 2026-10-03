@@ -160,5 +160,6 @@ export const changeServiceProviderOwner = async (
   serviceProviderId: number,
   data: ChangeOwnerRequest
 ): Promise<void> => {
-  await server.put(`/api/service-providers/ChangeOwner/${serviceProviderId}`, data);
+  // BE exposes ChangeOwner as PATCH — a PUT here 404s (no matching route).
+  await server.patch(`/api/service-providers/ChangeOwner/${serviceProviderId}`, data);
 };

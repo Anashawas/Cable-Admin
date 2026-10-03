@@ -37,9 +37,26 @@
     "verification": "Verification",
     "rating": "Rating",
     "visitors": "Visitors",
+    "followers": "Followers",
     "payment": "Payment",
     "detail": "Detail",
     "actions": "Actions"
+  },
+  "engagement": {
+    "title": "Followers & Notifications",
+    "view": "Followers & notifications",
+    "followers": "Followers",
+    "notifications": "Notifications sent",
+    "noFollowers": "No followers yet",
+    "noNotifications": "No notifications sent",
+    "recipients": "{{count}} recipients",
+    "read": "{{count}} read",
+    "loadMore": "Load more",
+    "status": {
+      "sent": "Sent",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    }
   },
   "detail": {
     "title": "Station detail",
@@ -72,6 +89,8 @@
     "expired": "Premium Expired",
     "paidOn": "Paid on",
     "expiresOn": "Expires on",
+    "daysLeft": "{{count}} days left",
+    "expiresToday": "Expires today",
     "saved": "Premium payment recorded",
     "paymentDateRequired": "Payment date is required",
     "expiresAtRequired": "Expiry date is required",
@@ -120,7 +139,8 @@
     "edit": "Edit",
     "media": "Media",
     "viewComplaints": "View Complaints",
-    "changeOwner": "Change Owner"
+    "changeOwner": "Change Owner",
+    "walletSettlements": "Wallet & Settlements"
   },
   "ownerChanged": "Station owner changed successfully",
   "changeOwner": {
@@ -161,7 +181,11 @@
     "chargersCount": "Chargers Count",
     "plugTypes": "Plug Types",
     "paymentMethods": "Payment Methods",
-    "services": "Services"
+    "services": "Services",
+    "verifiedHint": "Mark this station as verified",
+    "open24h": "Open 24 hours",
+    "fromTime": "Opens",
+    "toTime": "Closes"
   },
   "media": {
     "title": "Media",
@@ -175,6 +199,7 @@
     "deleteUnavailable": "Delete unavailable (No ID from server)",
     "iconHint": "PNG, JPG or SVG — recommended 256×256px",
     "photoDeleted": "Photo deleted successfully",
+    "someDeleteFailed": "Deleted {{ok}}, {{failed}} failed",
     "confirmDelete": "Are you sure you want to delete this photo?",
     "deleteAll": "Delete All Photos",
     "allPhotosDeleted": "All photos deleted successfully",

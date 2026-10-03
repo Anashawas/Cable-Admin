@@ -53,7 +53,7 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { ScreenHeader, ScreenHeaderAction } from "../../../components";
-import { AppDataGrid } from "../../../components";
+import { AppDataGrid, DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
@@ -1035,13 +1035,13 @@ export default function ActiveOffersScreen() {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
+                <DecimalField
                   label={t("monetaryValue")}
-                  type="number"
                   value={formData.monetaryValue || ""}
-                  onChange={(e) =>
-                    updateField("monetaryValue", parseFloat(e.target.value) || 0)
+                  onValueChange={(n) =>
+                    updateField("monetaryValue", n ?? 0)
                   }
+                  inputProps={{ min: 0, step: "any" }}
                   InputProps={{
                     endAdornment: <InputAdornment position="end">{formData.currencyCode}</InputAdornment>,
                   }}
@@ -1372,11 +1372,11 @@ export default function ActiveOffersScreen() {
                   />
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
-                  <TextField
+                  <DecimalField
                     label={t("offers@monetaryValue")}
-                    type="number"
                     value={editFormData.monetaryValue}
-                    onChange={(e) => setEditFormData({ ...editFormData, monetaryValue: Number(e.target.value) })}
+                    onValueChange={(n) => setEditFormData({ ...editFormData, monetaryValue: n ?? 0 })}
+                    inputProps={{ min: 0, step: "any" }}
                     fullWidth
                     size="small"
                     InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}

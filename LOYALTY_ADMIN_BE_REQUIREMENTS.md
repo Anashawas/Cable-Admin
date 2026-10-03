@@ -312,7 +312,40 @@ _As the admin reviews each screen, new backend needs are logged here with a date
 <what's missing / needed> · <proposed endpoint or field> · <why>
 -->
 
-_(none yet — awaiting review)_
+### 4.1 🟢 Welcome bonus + Loyalty boosts admin UI — built (2026-08-20) — **confirm DTO shapes**
+New admin screen **Loyalty Boosts** (`/loyalty-boosts`, under Loyalty System) built against the
+2026-08-19 API changes. It consumes the documented endpoints; below is the **exact request/response
+shape the UI now assumes** — BE please confirm field names or correct here so we can adjust.
+
+**A. Welcome bonus** — `GET/PUT api/settings/welcome-bonus`
+- GET response consumed: `{ "multiplier": number, "isEnabled"?: bool, "isDefault"?: bool }`
+  (only `multiplier` is required; `isEnabled`/`isDefault` are used for badges — safe to omit).
+- PUT body sent: `{ "multiplier": number }` (1–10; 1 disables). UI already blocks <1 / >10 before sending.
+
+**B. Loyalty boosts** — `api/loyalty/boosts`
+- `GET api/loyalty/boosts` → array of:
+  ```json
+  { "id": 1, "name": "Weekend x2", "multiplier": 2.0,
+    "startsAt": "2026-08-22T00:00:00Z", "endsAt": "2026-08-31T21:00:00Z",
+    "dailyStartMinute": 1080, "dailyEndMinute": 1380,
+    "daysOfWeekMask": 65, "isActive": true }
+  ```
+  - `startsAt`/`endsAt`: **UTC ISO**, nullable (null = unbounded). UI sends them as UTC (`toISOString()`).
+  - `dailyStartMinute`/`dailyEndMinute`: minutes from midnight **Jordan local**, nullable (null = all-day).
+  - `daysOfWeekMask`: bitmask, **bit 0 = Sunday** … bit 6 = Saturday. UI sends `0` to mean *every day*
+    (no day restriction) — **please confirm 0 = every day** (vs. "no days / never"); if BE treats 0 as
+    "never", tell us and we'll send 127 instead.
+  - `isActive`: read-only in UI (toggled off only via the deactivate endpoint).
+- `POST api/loyalty/boosts` body = the object above **without** `id`/`isActive`.
+- `PUT api/loyalty/boosts/{id}` = same body (UI blocks editing a *running* boost client-side; BE should
+  still reject it authoritatively).
+- `PUT api/loyalty/boosts/{id}/deactivate` (no body).
+- **RESOLVED 2026-08-20 from the 08-19 doc's create body** — earlier the UI omitted the scoping/caps
+  fields and the BE 400'd. The full body is now sent: `name`, `nameAr`, `multiplier`, `startsAt`, `endsAt`,
+  `dailyStartMinute`, `dailyEndMinute`, `daysOfWeekMask`, `appliesToAllProviders`,
+  `providers: [{ providerType, providerId }]`, `priority`, `maxBonusPointsPerUser`, `maxTotalBonusPoints`.
+  A boost must declare scope (`appliesToAllProviders: true` OR a non-empty `providers` list) — the UI enforces this.
+  Only lingering behavioral check: mask `0` = every day (UI sends 0 for "no day restriction").
 
 ---
 

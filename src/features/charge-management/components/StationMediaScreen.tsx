@@ -35,7 +35,7 @@ import { deleteAttachment, UploadFileFolders } from "../../../services/file-serv
 import { useSnackbarStore } from "../../../stores";
 
 function getPhotoUrl(photo: StationAttachmentDto): string | null {
-  return photo.url ?? photo.attachmentUrl ?? null;
+  return photo.filePath ?? photo.url ?? photo.attachmentUrl ?? null;
 }
 
 export default function StationMediaScreen() {
@@ -88,7 +88,7 @@ export default function StationMediaScreen() {
   });
 
   const deletePhotoMutation = useMutation({
-    mutationFn: (attachmentId: number) =>
+    mutationFn: (attachmentId: string | number) =>
       deleteAttachment(UploadFileFolders.CableAttachments, attachmentId),
     onSuccess: () => {
       refetchPhotos();
@@ -100,22 +100,36 @@ export default function StationMediaScreen() {
   });
 
   const deleteAllPhotosMutation = useMutation({
-    mutationFn: async (attachmentIds: number[]) => {
+    // Continue past individual failures so one bad file doesn't strand the rest.
+    mutationFn: async (attachmentIds: (string | number)[]) => {
+      let ok = 0;
+      let failed = 0;
       for (const aid of attachmentIds) {
-        await deleteAttachment(UploadFileFolders.CableAttachments, aid);
+        try {
+          await deleteAttachment(UploadFileFolders.CableAttachments, aid);
+          ok += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      return { ok, failed };
+    },
+    onSuccess: ({ ok, failed }) => {
+      refetchPhotos();
+      if (failed === 0) {
+        openSuccessSnackbar({ message: t("chargeManagement@media.allPhotosDeleted") });
+      } else {
+        openErrorSnackbar({ message: t("chargeManagement@media.someDeleteFailed", { ok, failed }) });
       }
     },
-    onSuccess: () => {
-      refetchPhotos();
-      openSuccessSnackbar({ message: t("chargeManagement@media.allPhotosDeleted") });
-    },
     onError: (err: Error) => {
+      refetchPhotos();
       openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
     },
   });
 
   const handleDeleteOnePhoto = useCallback(
-    (attachmentId: number) => {
+    (attachmentId: string | number) => {
       if (!window.confirm(t("chargeManagement@media.confirmDelete") as string)) return;
       deletePhotoMutation.mutate(attachmentId);
     },
@@ -126,7 +140,7 @@ export default function StationMediaScreen() {
     if (!stationId || photos.length === 0) return;
     const ids = photos
       .map((p) => getStationAttachmentId(p))
-      .filter((x): x is number => x != null);
+      .filter((x): x is string | number => x != null);
     if (ids.length === 0) {
       openErrorSnackbar({ message: t("chargeManagement@media.deleteUnavailable") });
       return;

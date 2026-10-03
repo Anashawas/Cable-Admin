@@ -47,7 +47,11 @@
     "deleted": "Banner deleted",
     "requiredFields": "Please fill required fields (name, phone, email, dates).",
     "deleteConfirmTitle": "Delete banner",
-    "deleteConfirmMessage": "Are you sure you want to delete"
+    "deleteConfirmMessage": "Are you sure you want to delete",
+    "editBanner": "Edit Banner",
+    "updated": "Banner updated",
+    "editNote": "Updates the banner details. Image and location targeting can't be changed here.",
+    "emailReenterHint": "Re-enter the contact email (not returned by the list)."
   },
   "carManagement": {
     "title": "Global Car Management",

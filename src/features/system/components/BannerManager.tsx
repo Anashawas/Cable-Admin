@@ -21,6 +21,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import InsightsIcon from "@mui/icons-material/Insights";
@@ -30,9 +31,10 @@ import {
   getAllBanners,
   addBanner,
   uploadBannerImage,
+  updateBanner,
   deleteBanner,
 } from "../services/banner-service";
-import type { BannerDto, AddBannerRequest } from "../types/api";
+import type { BannerDto, AddBannerRequest, UpdateBannerRequest } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
 
 /** The 12 canonical Jordan cities (must match the mobile app's whitelist). */
@@ -89,6 +91,17 @@ export default function BannerManager() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [bannerToDelete, setBannerToDelete] = useState<BannerDto | null>(null);
   const [analyticsBanner, setAnalyticsBanner] = useState<BannerDto | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editBannerId, setEditBannerId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<UpdateBannerRequest>({
+    name: "",
+    phone: "",
+    email: "",
+    actionType: null,
+    actionUrl: null,
+    startDate: "",
+    endDate: "",
+  });
 
   const { data: banners = [], isLoading, error, refetch } = useQuery({
     queryKey: ["banners"],
@@ -126,6 +139,20 @@ export default function BannerManager() {
       openSuccessSnackbar({ message: t("platform@banners.deleted") });
       setDeleteOpen(false);
       setBannerToDelete(null);
+    },
+    onError: (err: Error) => {
+      openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, body }: { id: number; body: UpdateBannerRequest }) =>
+      updateBanner(id, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["banners"] });
+      openSuccessSnackbar({ message: t("platform@banners.updated") });
+      setEditOpen(false);
+      setEditBannerId(null);
     },
     onError: (err: Error) => {
       openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
@@ -196,6 +223,48 @@ export default function BannerManager() {
   const handleConfirmDelete = useCallback(() => {
     if (bannerToDelete) deleteMutation.mutate(bannerToDelete.id);
   }, [bannerToDelete, deleteMutation]);
+
+  const handleEditClick = useCallback((banner: BannerDto) => {
+    const dur = banner.bannerDurations?.[0];
+    setEditBannerId(banner.id);
+    setEditForm({
+      name: banner.name ?? "",
+      phone: banner.phone ?? "",
+      // GetAllBanners doesn't return the email, so it can't be prefilled.
+      email: "",
+      actionType: banner.actionType ?? null,
+      actionUrl: banner.actionUrl ?? null,
+      startDate: dur?.startDate ? dur.startDate.slice(0, 10) : "",
+      endDate: dur?.endDate ? dur.endDate.slice(0, 10) : "",
+    });
+    setEditOpen(true);
+  }, []);
+
+  const handleSubmitEdit = useCallback(() => {
+    if (editBannerId == null) return;
+    if (
+      !editForm.name.trim() ||
+      !editForm.phone.trim() ||
+      !editForm.email.trim() ||
+      !editForm.startDate ||
+      !editForm.endDate
+    ) {
+      openErrorSnackbar({ message: t("platform@banners.requiredFields") });
+      return;
+    }
+    updateMutation.mutate({
+      id: editBannerId,
+      body: {
+        name: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+        email: editForm.email.trim(),
+        actionType: editForm.actionType ?? null,
+        actionUrl: editForm.actionUrl?.trim() ? editForm.actionUrl.trim() : null,
+        startDate: editForm.startDate || null,
+        endDate: editForm.endDate || null,
+      },
+    });
+  }, [editBannerId, editForm, updateMutation, openErrorSnackbar, t]);
 
   const firstImage = (b: BannerDto) =>
     b.bannerAttachments?.[0]?.filePath ?? null;
@@ -269,15 +338,24 @@ export default function BannerManager() {
                   >
                     {t("analytics@manage")}
                   </Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    startIcon={<DeleteIcon />}
-                    onClick={() => handleDeleteClick(b)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    {t("delete")}
-                  </Button>
+                  <Stack direction="row" spacing={0.5}>
+                    <Button
+                      size="small"
+                      startIcon={<EditIcon />}
+                      onClick={() => handleEditClick(b)}
+                    >
+                      {t("edit")}
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      startIcon={<DeleteIcon />}
+                      onClick={() => handleDeleteClick(b)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      {t("delete")}
+                    </Button>
+                  </Stack>
                 </CardActions>
               </Card>
             </Grid>
@@ -521,6 +599,112 @@ export default function BannerManager() {
               <CircularProgress size={20} color="inherit" />
             ) : (
               t("delete")
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Banner Modal — metadata only (image + targeting not editable here) */}
+      <Dialog
+        open={editOpen}
+        onClose={() => !updateMutation.isPending && setEditOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{t("platform@banners.editBanner")}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              {t("platform@banners.editNote")}
+            </Typography>
+            <TextField
+              label={t("name")}
+              required
+              fullWidth
+              value={editForm.name}
+              onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+            />
+            <TextField
+              label={t("platform@banners.phone")}
+              required
+              fullWidth
+              value={editForm.phone}
+              onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+            />
+            <TextField
+              label={t("platform@banners.email")}
+              required
+              fullWidth
+              type="email"
+              helperText={t("platform@banners.emailReenterHint")}
+              value={editForm.email}
+              onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+            />
+            <TextField
+              label={t("platform@banners.startDate")}
+              required
+              fullWidth
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={editForm.startDate ?? ""}
+              onChange={(e) => setEditForm((f) => ({ ...f, startDate: e.target.value }))}
+            />
+            <TextField
+              label={t("platform@banners.endDate")}
+              required
+              fullWidth
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={editForm.endDate ?? ""}
+              onChange={(e) => setEditForm((f) => ({ ...f, endDate: e.target.value }))}
+            />
+            <TextField
+              select
+              label={t("platform@banners.actionType")}
+              fullWidth
+              value={editForm.actionType ?? 0}
+              onChange={(e) =>
+                setEditForm((f) => ({
+                  ...f,
+                  actionType: Number(e.target.value) || null,
+                }))
+              }
+            >
+              <MenuItem value={0}>{t("platform@banners.actionNone")}</MenuItem>
+              <MenuItem value={1}>{t("platform@banners.action1")}</MenuItem>
+              <MenuItem value={2}>{t("platform@banners.action2")}</MenuItem>
+              <MenuItem value={3}>{t("platform@banners.action3")}</MenuItem>
+              <MenuItem value={4}>{t("platform@banners.action4")}</MenuItem>
+              <MenuItem value={5}>{t("platform@banners.action5")}</MenuItem>
+            </TextField>
+            <TextField
+              label={t("platform@banners.actionUrl")}
+              fullWidth
+              placeholder="https://..."
+              value={editForm.actionUrl ?? ""}
+              onChange={(e) =>
+                setEditForm((f) => ({ ...f, actionUrl: e.target.value || null }))
+              }
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setEditOpen(false)}
+            color="inherit"
+            disabled={updateMutation.isPending}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmitEdit}
+            disabled={updateMutation.isPending}
+          >
+            {updateMutation.isPending ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              t("save")
             )}
           </Button>
         </DialogActions>

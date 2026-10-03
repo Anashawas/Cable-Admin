@@ -38,6 +38,7 @@ import type { ChargingPointDto } from "../types/api";
 import SocialLinksDisplay from "../../social-media/components/SocialLinksDisplay";
 import StationReviewsSection from "./StationReviewsSection";
 import StationPremiumSection from "./StationPremiumSection";
+import { formatOpeningHours } from "../../../utils/opening-hours";
 
 /** Parse a delimited string (e.g. comma-separated) into list of labels. */
 function parseList(value: string | null | undefined): string[] {
@@ -51,12 +52,6 @@ function getImageUrl(entry: string | { url?: string }): string {
   return entry?.url ?? "";
 }
 
-/** Trim trailing seconds from a "HH:mm:ss" time string. */
-function fmtTime(v?: string | null): string {
-  if (!v) return "";
-  const m = /^(\d{1,2}:\d{2})(:\d{2})?$/.exec(v.trim());
-  return m ? m[1] : v;
-}
 
 interface StationRowDetailDialogProps {
   open: boolean;
@@ -103,8 +98,8 @@ export default function StationRowDetailDialog({ open, onClose, station }: Stati
   const plugs = (station?.plugTypeSummary ?? []).map((p) => p?.name).filter(Boolean) as string[];
   const imageUrls = (station?.images ?? []).map(getImageUrl).filter(Boolean) as string[];
 
-  const hours = station && (station.fromTime || station.toTime)
-    ? `${fmtTime(station.fromTime)} - ${fmtTime(station.toTime)}`
+  const hours = station
+    ? formatOpeningHours(station.fromTime, station.toTime, t("chargeManagement@form.open24h"))
     : "";
   const hasCoords = station?.latitude != null && station?.longitude != null;
   const rating = station?.avgChargingPointRate != null

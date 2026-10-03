@@ -1,6 +1,6 @@
 import { server } from "../../../lib/@axios";
 import { compressImage } from "../../../lib/image-compress";
-import type { BannerDto, AddBannerRequest } from "../types/api";
+import type { BannerDto, AddBannerRequest, UpdateBannerRequest } from "../types/api";
 
 /**
  * GET api/banners/GetAllBanners
@@ -55,6 +55,23 @@ const uploadBannerImage = async (
 };
 
 /**
+ * PUT api/banners/UpdateBanner/{bannerId}
+ * Updates banner metadata (name, phone, email, action, dates). Does NOT change
+ * the image or location targeting — those are not part of this endpoint.
+ */
+const updateBanner = async (
+  bannerId: number,
+  body: UpdateBannerRequest,
+  signal?: AbortSignal
+): Promise<void> => {
+  await server.put(
+    `api/banners/UpdateBanner/${bannerId}`,
+    body,
+    { signal }
+  );
+};
+
+/**
  * DELETE api/banners/DeleteBanner/{bannerId}
  */
 const deleteBanner = async (
@@ -67,4 +84,4 @@ const deleteBanner = async (
   );
 };
 
-export { getAllBanners, addBanner, uploadBannerImage, deleteBanner };
+export { getAllBanners, addBanner, uploadBannerImage, updateBanner, deleteBanner };

@@ -49,7 +49,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import HistoryIcon from "@mui/icons-material/History";
 import { useQuery } from "@tanstack/react-query";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { AppDataGrid } from "../../../components";
+import { AppDataGrid, DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import {
   usePartnerAgreements,
@@ -714,28 +714,26 @@ export default function PartnersScreen() {
               </Typography>
               <Stack spacing={2}>
                 <Stack direction="row" spacing={2}>
-                  <TextField
+                  <DecimalField
                     size="small"
                     fullWidth
                     label={t("partners@commission")}
-                    type="number"
                     value={formData.commissionPercentage}
-                    onChange={(e) =>
-                      setFormData({ ...formData, commissionPercentage: parseFloat(e.target.value) || 0 })
+                    onValueChange={(n) =>
+                      setFormData({ ...formData, commissionPercentage: n ?? 0 })
                     }
-                    inputProps={{ min: 0, max: 100, step: 0.5 }}
+                    inputProps={{ min: 0, max: 100, step: "any" }}
                     InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                   />
-                  <TextField
+                  <DecimalField
                     size="small"
                     fullWidth
                     label={t("partners@pointsReward")}
-                    type="number"
                     value={formData.pointsRewardPercentage}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pointsRewardPercentage: parseFloat(e.target.value) || 0 })
+                    onValueChange={(n) =>
+                      setFormData({ ...formData, pointsRewardPercentage: n ?? 0 })
                     }
-                    inputProps={{ min: 0, max: 100, step: 0.5 }}
+                    inputProps={{ min: 0, max: 100, step: "any" }}
                     InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                   />
                 </Stack>
@@ -782,17 +780,16 @@ export default function PartnersScreen() {
                   }
                   InputProps={{ endAdornment: <InputAdornment position="end">{t("seconds")}</InputAdornment> }}
                 />
-                <TextField
+                <DecimalField
                   size="small"
                   fullWidth
                   label={t("partners@minimumAmount")}
-                  type="number"
                   value={formData.minimumTransactionAmount ?? ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, minimumTransactionAmount: e.target.value ? parseFloat(e.target.value) : null })
+                  onValueChange={(n) =>
+                    setFormData({ ...formData, minimumTransactionAmount: n })
                   }
                   InputProps={{ endAdornment: <InputAdornment position="end">JOD</InputAdornment> }}
-                  inputProps={{ min: 0, step: 0.001 }}
+                  inputProps={{ min: 0, step: "any" }}
                   helperText={t("partners@minimumAmountHint")}
                 />
               </Stack>
@@ -951,7 +948,7 @@ export default function PartnersScreen() {
                     onChange={(e) => setCreditLimitValue(e.target.value)}
                     disabled={creditLimitUnlimited}
                     sx={{ flex: 1 }}
-                    inputProps={{ min: 0, step: 0.001 }}
+                    inputProps={{ min: 0, step: "any", inputMode: "decimal" }}
                     helperText="JOD"
                   />
                   <FormControlLabel
@@ -1008,7 +1005,7 @@ export default function PartnersScreen() {
                       value={walletAmount}
                       onChange={(e) => setWalletAmount(e.target.value)}
                       sx={{ flex: 1 }}
-                      inputProps={{ min: 0.001, step: 0.001 }}
+                      inputProps={{ min: 0.001, step: "any", inputMode: "decimal" }}
                       helperText="JOD"
                     />
                     <Button

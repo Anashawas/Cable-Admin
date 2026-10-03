@@ -60,7 +60,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { AppDataGrid } from "../../../components";
+import { AppDataGrid, DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import {
   useAllOffers,
@@ -221,6 +221,10 @@ export default function OffersScreen() {
   const [selectedActiveOffer, setSelectedActiveOffer] = useState<OfferDto | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<ProposeOfferRequest>(INITIAL_FORM_DATA);
+  // Raw string for the monetary-value input so decimals (e.g. "0.1") survive
+  // typing — a numeric-controlled value would drop the leading 0 / trailing dot.
+  const [monetaryStr, setMonetaryStr] = useState("");
+  const [pointsPriceStr, setPointsPriceStr] = useState("");
   const [selectedProvider, setSelectedProvider] = useState<{
     id: number;
     name: string;
@@ -309,15 +313,19 @@ export default function OffersScreen() {
   /** Points cost changed → recompute the linked cash price. */
   const handlePointsCostChange = (raw: string) => {
     const pc = parseInt(raw) || 0;
+    const price = pointsPerUnit > 0 ? Number((pc / pointsPerUnit).toFixed(2)) : null;
+    if (price != null) setPointsPriceStr(String(price));
     setFormData((prev) => ({
       ...prev,
       pointsCost: pc,
-      pointsPriceValue: pointsPerUnit > 0 ? Number((pc / pointsPerUnit).toFixed(2)) : prev.pointsPriceValue,
+      pointsPriceValue: price ?? prev.pointsPriceValue,
     }));
   };
 
-  /** Cash price changed → recompute the linked points cost. */
+  /** Cash price changed → recompute the linked points cost. Keeps the raw typed
+   *  string so decimals like "0.2" survive (a numeric value would drop them). */
   const handlePointsPriceChange = (raw: string) => {
+    setPointsPriceStr(raw);
     const price = parseFloat(raw) || 0;
     setFormData((prev) => ({
       ...prev,
@@ -328,6 +336,8 @@ export default function OffersScreen() {
 
   const handleOpenCreate = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
+    setMonetaryStr("");
+    setPointsPriceStr("");
     setSelectedProvider(null);
     setProviderSearch("");
     setCreateDialogOpen(true);
@@ -1557,10 +1567,11 @@ export default function OffersScreen() {
                   <TextField
                     label={t("offers@pointsPrice")}
                     type="number"
-                    value={formData.pointsPriceValue || ""}
+                    value={pointsPriceStr}
                     onChange={(e) => handlePointsPriceChange(e.target.value)}
                     disabled={pointsPerUnit <= 0}
                     InputProps={{ endAdornment: <InputAdornment position="end">{formData.currencyCode}</InputAdornment> }}
+                    inputProps={{ step: "any", min: 0, inputMode: "decimal" }}
                     helperText={t("offers@pointsPriceHelp")}
                     fullWidth
                   />
@@ -1569,9 +1580,14 @@ export default function OffersScreen() {
                   <TextField
                     label={t("monetaryValue")}
                     type="number"
-                    value={formData.monetaryValue || ""}
-                    onChange={(e) => updateField("monetaryValue", parseFloat(e.target.value) || 0)}
+                    value={monetaryStr}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setMonetaryStr(raw);
+                      updateField("monetaryValue", parseFloat(raw) || 0);
+                    }}
                     InputProps={{ endAdornment: <InputAdornment position="end">{formData.currencyCode}</InputAdornment> }}
+                    inputProps={{ step: "any", min: 0, inputMode: "decimal" }}
                     helperText={t("offers@monetaryValueHelp")}
                     required fullWidth
                   />
@@ -1865,18 +1881,18 @@ export default function OffersScreen() {
                     fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><StarsIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
-                  <TextField
-                    label={t("offers@pointsPrice")} type="number" value={editFormData.pointsPriceValue ?? ""}
+                  <DecimalField
+                    label={t("offers@pointsPrice")} inputProps={{ step: "any", min: 0 }} value={editFormData.pointsPriceValue ?? ""}
                     disabled={resolveRate(editFormData.currencyCode) <= 0}
-                    onChange={(e) => {
-                      const price = parseFloat(e.target.value) || 0;
+                    onValueChange={(n) => {
+                      const price = n ?? 0;
                       const rate = resolveRate(editFormData.currencyCode);
                       setEditFormData({ ...editFormData, pointsPriceValue: price, pointsCost: rate > 0 ? Math.round(price * rate) : editFormData.pointsCost });
                     }}
                     fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><SwapHorizIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment>, endAdornment: <InputAdornment position="end">{editFormData.currencyCode}</InputAdornment> }} />
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
-                  <TextField label={t("offers@monetaryValue")} type="number" value={editFormData.monetaryValue} onChange={(e) => setEditFormData({ ...editFormData, monetaryValue: Number(e.target.value) })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
+                  <DecimalField label={t("offers@monetaryValue")} inputProps={{ step: "any", min: 0 }} value={editFormData.monetaryValue} onValueChange={(n) => setEditFormData({ ...editFormData, monetaryValue: n ?? 0 })} fullWidth size="small" InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <TextField label={t("offers@codeExpiry")} type="number" value={editFormData.offerCodeExpirySeconds ?? ""} onChange={(e) => setEditFormData({ ...editFormData, offerCodeExpirySeconds: e.target.value ? Number(e.target.value) : null })} fullWidth size="small" helperText={t("offers@minExpiry60")} InputProps={{ startAdornment: <InputAdornment position="start"><TimerIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }} />

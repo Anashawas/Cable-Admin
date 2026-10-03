@@ -6,13 +6,27 @@ export interface StationAttachmentDto {
   attachmentId?: number;
   url?: string | null;
   attachmentUrl?: string | null;
+  // The API actually returns each photo by fileName + filePath (no numeric id).
+  fileName?: string | null;
+  filePath?: string | null;
+  contentType?: string | null;
+  fileExtension?: string | null;
+  fileSize?: number;
   [key: string]: unknown;
 }
 
-/** Stable attachment PK for DELETE /api/files/attachment/CableAttachments/{id} */
+/**
+ * Identifier for DELETE /api/files/attachment/CableAttachments/{id}.
+ * The API returns each attachment by fileName (e.g. "01a0…-….jpg") stored at
+ * /CableAttachments/{fileName}, so the fileName IS the delete key. Falls back
+ * to a numeric id/attachmentId if the BE ever returns one.
+ */
 export function getStationAttachmentId(
   photo: StationAttachmentDto
-): number | undefined {
+): string | number | undefined {
+  if (typeof photo.fileName === "string" && photo.fileName.trim().length > 0) {
+    return photo.fileName;
+  }
   if (typeof photo.id === "number" && photo.id > 0) return photo.id;
   if (typeof photo.attachmentId === "number" && photo.attachmentId > 0) {
     return photo.attachmentId;

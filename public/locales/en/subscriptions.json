@@ -1,0 +1,118 @@
+{
+  "title": "Subscriptions & Renewals",
+  "navTitle": "Subscriptions & Payments",
+  "window": "Renewal window",
+  "windowDays": "Next {{count}} days",
+
+  "currentExpiry": "Current expiry",
+  "expiresOn": "Expires on",
+  "daysLeft": "{{count}} days left",
+  "overdueBy": "{{count}} days overdue",
+  "neverPaid": "No payment recorded",
+  "history": "Payment history",
+  "noPayments": "No payments recorded for this item yet.",
+
+  "switchOn": "Switch on",
+  "switchOff": "Switch off",
+  "switchedOn": "Switched on",
+  "switchedOff": "Switched off",
+  "inGraceHint": "Past its expiry date but still switched on — it is live without being paid for.",
+  "autoOffAt": "It switches off automatically on {{date}}.",
+
+  "void": "Void",
+  "voidPayment": "Void payment",
+  "voidReason": "Reason",
+  "voidHint": "The payment is kept for the audit trail, and the expiry rolls back to the last remaining period. Voiding the only payment switches the item off.",
+  "voided": "Payment voided",
+  "viewProof": "View the transfer screenshot",
+  "downloadReceipt": "Download receipt (PDF)",
+
+  "collected": "Collected",
+  "collectedThisMonth": "Collected this month",
+  "collectedHint": "Latest month in the series",
+  "monthlyCollections": "Collections, last 12 months",
+  "noCollections": "Nothing collected yet.",
+
+  "buckets": {
+    "expiringSoon": "Expiring soon",
+    "expiringSoonEmpty": "Nothing expires in this window.",
+    "lapsedStillOn": "Lapsed but still on",
+    "lapsedStillOnHint": "Live without being paid for",
+    "lapsedStillOnEmpty": "Nothing is running past its expiry.",
+    "expired": "Expired",
+    "expiredHint": "Already switched off",
+    "expiredEmpty": "No expired subscriptions."
+  },
+
+  "columns": {
+    "entity": "Item",
+    "type": "Type",
+    "expiresAt": "Expires",
+    "daysLeft": "Remaining",
+    "payer": "Last payer",
+    "actions": "Actions"
+  },
+
+  "entityType": {
+    "StationPremium": "Station premium",
+    "Banner": "Banner",
+    "ServiceProviderPremium": "Provider premium"
+  },
+
+  "status": {
+    "Active": "Active",
+    "ExpiringSoon": "Expiring soon",
+    "InGrace": "Lapsed, still on",
+    "Expired": "Expired",
+    "SwitchedOff": "Switched off"
+  },
+
+  "method": {
+    "cliq": "CliQ",
+    "cash": "Cash"
+  },
+
+  "grace": {
+    "mode": "When it expires",
+    "manual": "Keep on until I switch it off",
+    "afterDays": "Switch off after N days",
+    "days": "Grace days",
+    "saved": "Grace rule saved"
+  },
+
+  "record": {
+    "title": "Record a payment",
+    "renewTitle": "Renew subscription",
+    "plan": "Plan length",
+    "months": "{{count}} months",
+    "customMonths": "Other",
+    "previewNew": "Covers {{start}} → {{end}}.",
+    "previewExtend": "Extends the current period: {{start}} → {{end}}. No paid days are lost.",
+    "amount": "Amount",
+    "paidDate": "Paid on",
+    "method": "Paid by",
+    "note": "Note",
+    "attachProof": "Attach transfer screenshot",
+    "record": "Record payment",
+    "renew": "Renew",
+    "saved": "Payment recorded — {{ref}}",
+    "savedNoReceipt": "Payment recorded, but the receipt could not be generated: {{error}}",
+    "proofFailed": "The payment was saved but the screenshot did not upload."
+  },
+
+  "payer": {
+    "title": "Who paid",
+    "owner": "The owner",
+    "existing": "Previous payer",
+    "new": "Someone else",
+    "ownerHint": "Name, phone and email are read from their account, so they stay current.",
+    "search": "Search payers",
+    "searchPlaceholder": "Name or phone",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "dedupeHint": "A matching phone number reuses the existing payer instead of creating a duplicate.",
+    "hasWhatsApp": "This number is on WhatsApp",
+    "selected": "Paying as"
+  }
+}

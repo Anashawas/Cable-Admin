@@ -389,7 +389,7 @@ export default function ReceiptGeneratorScreen() {
                   onChange={(e) => setField("totalAmount", e.target.value)}
                   fullWidth
                   required
-                  inputProps={{ step: "0.01", min: 0 }}
+                  inputProps={{ step: "any", min: 0, inputMode: "decimal" }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

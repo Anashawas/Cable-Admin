@@ -159,5 +159,6 @@ export interface UploadFile {
 // ============================================
 
 export interface ChangeOwnerRequest {
-  newOwnerId: number;
+  /** Assign a new owner by user id, or null to unassign the current owner. */
+  newOwnerId: number | null;
 }

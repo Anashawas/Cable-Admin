@@ -81,6 +81,21 @@ const STATUS_CFG: Record<number, { label_key: string; color: "warning" | "succes
   4: { label_key: "disputed", color: "error" },
 };
 
+/** Pull the most descriptive message out of an axios error — the BE returns the real
+ *  reason (often localized) in the response body; the generic axios `message` hides it. */
+function errMessage(err: any, fallback: string): string {
+  const d = err?.response?.data;
+  if (typeof d === "string" && d.trim()) return d;
+  if (d && typeof d === "object") {
+    const fromErrors =
+      d.errors && typeof d.errors === "object"
+        ? Object.values(d.errors as Record<string, unknown>).flat().filter(Boolean).join(" · ")
+        : "";
+    return d.message || d.Message || d.detail || d.title || fromErrors || err?.message || fallback;
+  }
+  return err?.message || fallback;
+}
+
 // ── Wallet balance cell — fetches on mount, uses cache after dialog opens ─────
 function WalletBalanceCell({
   providerType,
@@ -273,14 +288,14 @@ export default function SettlementsScreen() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     batchMutation.mutate(
-      { settlementIds: ids, status: 3, note: batchNote || undefined },
+      { settlementIds: ids, status: 3, note: batchNote.trim() ? batchNote.trim() : null },
       {
         onSuccess: (res) => {
           const failed = res?.failed?.length ?? 0;
           openSuccessSnackbar({ message: t("offers@settlements_batchResult", { updated: res?.updated?.length ?? 0, failed }) });
           setBatchDialogOpen(false); setBatchNote(""); setSelectedIds(new Set());
         },
-        onError: (err: Error) => openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+        onError: (err: Error) => openErrorSnackbar({ message: errMessage(err, t("loadingFailed")) }),
       }
     );
   }, [selectedIds, batchNote, batchMutation, openSuccessSnackbar, openErrorSnackbar, t]);
@@ -331,7 +346,9 @@ export default function SettlementsScreen() {
         id: selectedSettlement.id,
         data: {
           status: newStatus,
-          note: adminNote || undefined,
+          // Send `null` (not undefined) so the key is always present — the BE
+          // requires `note` in the body and 400s if it's omitted.
+          note: adminNote.trim() ? adminNote.trim() : null,
         },
       },
       {
@@ -340,7 +357,7 @@ export default function SettlementsScreen() {
           setStatusDialogOpen(false);
           setSelectedSettlement(null);
         },
-        onError: (err: Error) => { openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }); },
+        onError: (err: Error) => { openErrorSnackbar({ message: errMessage(err, t("loadingFailed")) }); },
       }
     );
   }, [selectedSettlement, newStatus, adminNote, updateStatusMutation, openSuccessSnackbar, openErrorSnackbar, t]);
@@ -1897,52 +1914,88 @@ export default function SettlementsScreen() {
                     })}
                   </Stack>
 
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems="flex-start">
-                    <TextField
-                      label={t("offers@settlements_walletAmount")}
-                      type="number"
-                      value={walletDepositAmount}
-                      onChange={(e) => setWalletDepositAmount(e.target.value)}
-                      fullWidth
-                      size="small"
-                      InputProps={{ endAdornment: <InputAdornment position="end"><Typography variant="caption" fontWeight={700}>JOD</Typography></InputAdornment> }}
-                      inputProps={{ min: 0.001, step: 0.001 }}
-                    />
-                    <TextField
-                      label={t("offers@note")}
-                      value={walletDepositNote}
-                      onChange={(e) => setWalletDepositNote(e.target.value)}
-                      fullWidth
-                      size="small"
-                      placeholder={t("offers@settlements_walletNotePlaceholder")}
-                    />
-                  </Stack>
+                  {/* Amount — prominent, decimal-friendly (accepts 1, 0.1, 0.01; normalizes , and ٫ to .) */}
+                  <TextField
+                    label={t("offers@settlements_walletAmount")}
+                    value={walletDepositAmount}
+                    onChange={(e) =>
+                      setWalletDepositAmount(
+                        e.target.value.replace(/[٫،,]/g, ".").replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1")
+                      )
+                    }
+                    fullWidth
+                    autoFocus
+                    placeholder="0.00"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AccountBalanceWalletIcon fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Typography variant="subtitle2" fontWeight={800} color="text.secondary">JOD</Typography>
+                        </InputAdornment>
+                      ),
+                      sx: { borderRadius: 2 },
+                    }}
+                    inputProps={{ inputMode: "decimal", step: "any", min: 0, style: { fontSize: "1.4rem", fontWeight: 800 } }}
+                  />
 
-                  {walletDepositType === 1 && walletMgmtBalance && parseFloat(walletDepositAmount) > 0 && (
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1, borderRadius: 2, bgcolor: "success.50", border: "1px solid", borderColor: "success.100" }}>
-                      <Typography variant="caption" fontWeight={700} color="success.dark">{t("offers@settlements_walletNewBalance")}</Typography>
-                      <Typography variant="subtitle2" fontWeight={800} color="success.dark">
-                        {(walletMgmtBalance.walletBalance + parseFloat(walletDepositAmount)).toFixed(3)} JOD
-                      </Typography>
-                    </Stack>
-                  )}
+                  <TextField
+                    label={t("offers@note")}
+                    value={walletDepositNote}
+                    onChange={(e) => setWalletDepositNote(e.target.value)}
+                    fullWidth
+                    size="small"
+                    multiline
+                    minRows={1}
+                    placeholder={t("offers@settlements_walletNotePlaceholder")}
+                  />
 
-                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      variant="contained"
-                      onClick={handleAddWalletDeposit}
-                      disabled={addWalletDepositMutation.isPending || !walletDepositAmount || parseFloat(walletDepositAmount) <= 0}
-                      startIcon={addWalletDepositMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <AddCircleOutlineIcon />}
-                      sx={{
-                        background: `linear-gradient(135deg, ${theme.palette.secondary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
-                        fontWeight: 700,
-                        borderRadius: 2,
-                        px: 3,
-                      }}
-                    >
-                      {addWalletDepositMutation.isPending ? t("updating") : t("offers@settlements_walletAddNew")}
-                    </Button>
-                  </Box>
+                  {/* Balance-after preview (deposit adds, refund subtracts) */}
+                  {walletMgmtBalance && parseFloat(walletDepositAmount) > 0 && (walletDepositType === 1 || walletDepositType === 3) && (() => {
+                    const amt = parseFloat(walletDepositAmount);
+                    const isDeposit = walletDepositType === 1;
+                    const newBal = isDeposit ? walletMgmtBalance.walletBalance + amt : walletMgmtBalance.walletBalance - amt;
+                    const good = newBal >= 0;
+                    return (
+                      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1.25, borderRadius: 2, bgcolor: good ? "success.50" : "warning.50", border: "1px solid", borderColor: good ? "success.100" : "warning.100" }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <AccountBalanceWalletIcon fontSize="small" sx={{ color: good ? "success.main" : "warning.main" }} />
+                          <Typography variant="caption" fontWeight={700} color={good ? "success.dark" : "warning.dark"}>
+                            {t("offers@settlements_walletNewBalance")}
+                          </Typography>
+                        </Stack>
+                        <Typography variant="h6" fontWeight={900} color={good ? "success.dark" : "warning.dark"}>
+                          {newBal.toFixed(3)} <Typography component="span" variant="caption" color="text.secondary">JOD</Typography>
+                        </Typography>
+                      </Stack>
+                    );
+                  })()}
+
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    onClick={handleAddWalletDeposit}
+                    disabled={addWalletDepositMutation.isPending || !walletDepositAmount || parseFloat(walletDepositAmount) <= 0}
+                    startIcon={addWalletDepositMutation.isPending ? <CircularProgress size={18} color="inherit" /> : <AddCircleOutlineIcon />}
+                    sx={{
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                      fontWeight: 800,
+                      borderRadius: 2,
+                      py: 1.25,
+                    }}
+                  >
+                    {addWalletDepositMutation.isPending
+                      ? t("updating")
+                      : walletDepositType === 1
+                        ? t("offers@settlements_walletDeposit")
+                        : walletDepositType === 3
+                          ? t("offers@settlements_walletRefund")
+                          : t("offers@settlements_walletAdjustment")}
+                  </Button>
                 </Stack>
               </Box>
             </Paper>

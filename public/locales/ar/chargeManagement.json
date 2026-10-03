@@ -37,9 +37,26 @@
     "verification": "التحقق",
     "rating": "التقييم",
     "visitors": "الزوار",
+    "followers": "المتابعون",
     "payment": "الدفع",
     "detail": "التفاصيل",
     "actions": "إجراءات"
+  },
+  "engagement": {
+    "title": "المتابعون والإشعارات",
+    "view": "المتابعون والإشعارات",
+    "followers": "المتابعون",
+    "notifications": "الإشعارات المُرسَلة",
+    "noFollowers": "لا يوجد متابعون بعد",
+    "noNotifications": "لم تُرسَل أي إشعارات",
+    "recipients": "{{count}} مستلم",
+    "read": "{{count}} مقروءة",
+    "loadMore": "تحميل المزيد",
+    "status": {
+      "sent": "أُرسلت",
+      "pending": "قيد الانتظار",
+      "rejected": "مرفوضة"
+    }
   },
   "detail": {
     "title": "تفاصيل المحطة",
@@ -72,6 +89,8 @@
     "expired": "انتهى الاشتراك المميز",
     "paidOn": "دُفع في",
     "expiresOn": "ينتهي في",
+    "daysLeft": "متبقٍ {{count}} يوم",
+    "expiresToday": "ينتهي اليوم",
     "saved": "تم تسجيل الدفعة المميزة",
     "paymentDateRequired": "تاريخ الدفع مطلوب",
     "expiresAtRequired": "تاريخ الانتهاء مطلوب",
@@ -120,7 +139,8 @@
     "edit": "تعديل",
     "media": "وسائط",
     "viewComplaints": "عرض الشكاوى",
-    "changeOwner": "تغيير المالك"
+    "changeOwner": "تغيير المالك",
+    "walletSettlements": "المحفظة والتسويات"
   },
   "ownerChanged": "تم تغيير مالك المحطة بنجاح",
   "changeOwner": {
@@ -161,7 +181,11 @@
     "chargersCount": "عدد الشواحن",
     "plugTypes": "أنواع القوابس",
     "paymentMethods": "طرق الدفع",
-    "services": "الخدمات"
+    "services": "الخدمات",
+    "verifiedHint": "وضع علامة على المحطة كموثّقة",
+    "open24h": "مفتوح ٢٤ ساعة",
+    "fromTime": "من الساعة",
+    "toTime": "إلى الساعة"
   },
   "media": {
     "title": "الوسائط",
@@ -175,6 +199,7 @@
     "deleteUnavailable": "الحذف غير متاح (لا يوجد معرف من الخادم)",
     "iconHint": "PNG أو JPG أو SVG — يُنصح بحجم 256×256 بكسل",
     "photoDeleted": "تم حذف الصورة بنجاح",
+    "someDeleteFailed": "تم حذف {{ok}}، وفشل {{failed}}",
     "confirmDelete": "هل أنت متأكد من حذف هذه الصورة؟",
     "deleteAll": "حذف جميع الصور",
     "allPhotosDeleted": "تم حذف جميع الصور بنجاح",

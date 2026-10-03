@@ -13,6 +13,7 @@ const optionalNumber = z
 export const stationFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().optional().nullable(),
+  ownerPhone: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
 
   cityName: z.string().optional().nullable(),
@@ -32,6 +33,12 @@ export const stationFormSchema = z.object({
   price: optionalNumber,
   chargerSpeed: optionalNumber,
   chargersCount: optionalNumber,
+
+  isVerified: z.boolean(),
+
+  // Working hours. "0:00"/"0:00" (or empty) means open 24 hours.
+  fromTime: z.string().optional().nullable(),
+  toTime: z.string().optional().nullable(),
 });
 
 export type StationFormValues = z.infer<typeof stationFormSchema>;
