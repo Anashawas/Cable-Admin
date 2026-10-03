@@ -28,6 +28,8 @@ import {
 	Gavel as GavelIcon,
 	Campaign as CampaignIcon,
 	Image as ImageIcon,
+	EventRepeat as EventRepeatIcon,
+	PhoneIphone as PhoneIphoneIcon,
 } from "@mui/icons-material";
 import { PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -60,6 +62,7 @@ export function getNavigationGroups(t: TFunction): NavigationGroup[] {
 				{ label: t("stationsRequest"), path: "/stations-request", icon: <ListAltIcon /> },
 				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },
 				{ label: t("nearestPreview"), path: "/nearest-preview", icon: <QueryStatsIcon /> },
+				{ label: t("subscriptions@navTitle"), path: "/subscriptions", icon: <EventRepeatIcon /> },
 			],
 		},
 		{
@@ -90,6 +93,11 @@ export function getNavigationGroups(t: TFunction): NavigationGroup[] {
 			items: [
 				{ label: t("partners"), path: "/partners", icon: <HandshakeIcon /> },
 				{ label: t("addNewPartner"), path: "/add-partner", icon: <PersonAddAlt1Icon /> },
+				{
+					label: t("partnerAdoption@navTitle"),
+					path: "/partner-adoption",
+					icon: <PhoneIphoneIcon />,
+				},
 			],
 		},
 		{

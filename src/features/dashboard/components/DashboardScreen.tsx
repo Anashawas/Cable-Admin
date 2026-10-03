@@ -238,7 +238,7 @@ export default function DashboardScreen() {
         { show: attention.pendingOffers > 0, label: t("dashboard@pendingOffers"), value: attention.pendingOffers, Icon: LocalOfferIcon, accent: "#6a1b9a", path: "/pending-offers" },
         { show: attention.settlementsPending > 0, label: t("dashboard@settlementsPending"), value: attention.settlementsPending, Icon: PaymentsIcon, accent: "#1565c0", path: "/settlements" },
         { show: attention.settlementsDisputed > 0, label: t("dashboard@settlementsDisputed"), value: attention.settlementsDisputed, Icon: PaymentsIcon, accent: "#c62828", path: "/settlements" },
-        { show: attention.premiumExpiringSoon > 0, label: t("dashboard@premiumExpiringSoon"), value: attention.premiumExpiringSoon, Icon: WorkspacePremiumIcon, accent: "#e65100", path: "/charge-management" },
+        // premiumExpiringSoon is promoted to a prominent banner above (see below).
         { show: attention.premiumExpired > 0, label: t("dashboard@premiumExpired"), value: attention.premiumExpired, Icon: WorkspacePremiumIcon, accent: "#c62828", path: "/charge-management" },
         { show: attention.campaignsEndingSoon > 0, label: t("dashboard@campaignsEndingSoon"), value: attention.campaignsEndingSoon, Icon: CampaignIcon, accent: "#e65100", path: "/campaigns" },
         { show: attention.announcementsExpiringSoon > 0, label: t("dashboard@announcementsExpiringSoon"), value: attention.announcementsExpiringSoon, Icon: CampaignIcon, accent: "#e65100", path: "/welcome-messages" },
@@ -277,6 +277,39 @@ export default function DashboardScreen() {
           </Grid>
         </Grid>
       </Box>
+
+      {/* ── Premium expiring-soon reminder (prominent) ── */}
+      {attention && attention.premiumExpiringSoon > 0 && (
+        <Box
+          onClick={() => navigate("/charge-management")}
+          sx={{
+            display: "flex", alignItems: "center", gap: 2, mb: 3, p: { xs: 2, sm: 2.5 },
+            borderRadius: 3, cursor: "pointer",
+            background: `linear-gradient(120deg, ${alpha("#e65100", 0.12)}, ${alpha("#e65100", 0.04)})`,
+            border: "1px solid", borderColor: alpha("#e65100", 0.4),
+            transition: "box-shadow .2s", "&:hover": { boxShadow: `0 4px 16px ${alpha("#e65100", 0.22)}` },
+          }}
+        >
+          <Box sx={{ width: 48, height: 48, borderRadius: 2.5, bgcolor: alpha("#e65100", 0.15), color: "#e65100", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <WorkspacePremiumIcon />
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="subtitle1" fontWeight={800} sx={{ color: "#e65100", lineHeight: 1.25 }}>
+              {t("dashboard@premiumExpiringBannerTitle", { count: attention.premiumExpiringSoon })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+              {t("dashboard@premiumExpiringBannerSubtitle")}
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            onClick={(e) => { e.stopPropagation(); navigate("/charge-management"); }}
+            sx={{ bgcolor: "#e65100", borderRadius: 2, fontWeight: 700, textTransform: "none", flexShrink: 0, "&:hover": { bgcolor: "#e65100", filter: "brightness(0.92)" } }}
+          >
+            {t("dashboard@review")}
+          </Button>
+        </Box>
+      )}
 
       {/* ── Action Required ── */}
       <Box sx={{ mb: 3 }}>

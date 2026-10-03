@@ -1,0 +1,49 @@
+{
+  "title": "Partner App Adoption",
+  "navTitle": "Partner App Adoption",
+  "subtitle": "How much of the station catalogue has moved onto the partner app — and exactly which stations are holding it back.",
+
+  "window": "Active window",
+  "windowDays": "Last {{count}} days",
+  "search": "Search station, city, owner",
+  "allStages": "All stages",
+  "exportCsv": "Export {{count}} rows",
+
+  "funnel": "Adoption funnel",
+  "funnelSteps": {
+    "all": "All stations",
+    "realOwner": "Has a real owner",
+    "realOwnerHint": "{{count}} distinct owners",
+    "usedApp": "Owner signed into a partner client",
+    "active": "Active in the window"
+  },
+
+  "gaps": {
+    "defaultOwner": "Owned by an admin account — find the real partner",
+    "noOwner": "No owner at all — assign one",
+    "neverUsedApp": "Real owner who has never opened the app — onboard them"
+  },
+
+  "stage": {
+    "NoOwner": "No owner",
+    "DefaultOwner": "Default owner",
+    "NeverUsedApp": "Never used the app",
+    "Inactive": "Inactive",
+    "Active": "Active"
+  },
+
+  "columns": {
+    "station": "Station",
+    "owner": "Owner",
+    "contact": "Contact",
+    "stage": "Stage",
+    "client": "Client",
+    "lastLogin": "Last partner login",
+    "lastActivity": "Last activity"
+  },
+
+  "noOwnerCell": "Unassigned",
+  "defaultOwnerTag": "Admin account",
+  "app": "App",
+  "web": "Web"
+}

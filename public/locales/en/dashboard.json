@@ -28,6 +28,8 @@
   "settlementsDisputed": "Settlements disputed",
   "premiumExpiringSoon": "Premium expiring soon",
   "premiumExpired": "Premium expired",
+  "premiumExpiringBannerTitle": "{{count}} station(s) — premium ends within a week",
+  "premiumExpiringBannerSubtitle": "Follow up to renew their subscription before it expires.",
   "campaignsEndingSoon": "Campaigns ending soon",
   "announcementsExpiringSoon": "Welcome messages expiring",
   "allClear": "All clear — nothing needs your attention right now",

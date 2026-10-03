@@ -25,6 +25,7 @@ import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getPendingRequests, approveRequest, rejectRequest } from "../services/request-service";
 import type { UpdateRequestDto } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
+import { is24Hours, timeLabel } from "../../../utils/opening-hours";
 
 const STATUS_CFG: Record<string, { color: "warning" | "success" | "error"; hex: string; bg: string }> = {
   pending:  { color: "warning", hex: "#e65100", bg: "#fff3e0" },
@@ -95,8 +96,14 @@ export default function StationsRequestScreen() {
   const fmtShort = (v?: string | null) => (v ? format(new Date(v), "dd MMM yyyy") : "—");
 
   // Render any diff value (string / number / bool / array / lookup object) as text.
-  const fmtVal = (v: unknown): string => {
+  // `field` lets the hours fields read as hours: without it a partner switching
+  // a station to 24h is reviewed as "Opens: 09:00 → 0:00", i.e. the stored
+  // marker leaking straight onto the admin's screen.
+  const fmtVal = (v: unknown, field?: string): string => {
     if (v == null || v === "") return "—";
+    if (typeof v === "string" && (field === "fromTime" || field === "toTime")) {
+      return is24Hours(v, v) ? t("chargeManagement@form.open24h") : timeLabel(v);
+    }
     if (Array.isArray(v)) {
       if (!v.length) return "—";
       return v.map((x) => (x && typeof x === "object" && "name" in (x as object) ? String((x as { name?: unknown }).name) : String(x))).join(", ");
@@ -156,9 +163,9 @@ export default function StationsRequestScreen() {
     }
     return (
       <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap" useFlexGap>
-        <Typography variant="body2" sx={{ color: "text.disabled", textDecoration: "line-through" }}>{fmtVal(c.oldValue)}</Typography>
+        <Typography variant="body2" sx={{ color: "text.disabled", textDecoration: "line-through" }}>{fmtVal(c.oldValue, c.field)}</Typography>
         <ArrowRightAltIcon sx={{ fontSize: 16, color: "text.disabled", transform: isRtl ? "scaleX(-1)" : "none" }} />
-        <Typography variant="body2" fontWeight={800} sx={{ color: "success.dark" }}>{fmtVal(c.newValue)}</Typography>
+        <Typography variant="body2" fontWeight={800} sx={{ color: "success.dark" }}>{fmtVal(c.newValue, c.field)}</Typography>
       </Stack>
     );
   };

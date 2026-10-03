@@ -75,9 +75,9 @@ export default function StationEngagementDialog({
 
       <DialogContent sx={{ p: 0, minHeight: 320 }}>
         {tab === 0 ? (
-          <StationFollowersPanel stationId={stationId} enabled={open} />
+          <StationFollowersPanel providerId={stationId} enabled={open} />
         ) : (
-          <StationNotificationsPanel stationId={stationId} enabled={open} />
+          <StationNotificationsPanel providerId={stationId} enabled={open} />
         )}
       </DialogContent>
     </Dialog>

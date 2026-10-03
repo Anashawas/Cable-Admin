@@ -26,12 +26,16 @@ import PersonIcon from "@mui/icons-material/Person";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RateReviewIcon from "@mui/icons-material/RateReview";
 import InsightsIcon from "@mui/icons-material/Insights";
+import PeopleIcon from "@mui/icons-material/People";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getServiceProviderById, getServiceProviderRatings } from "../services/service-provider-service";
 import type { ServiceProviderDto } from "../types/api";
 import SocialLinksDisplay from "../../social-media/components/SocialLinksDisplay";
 import ProviderActivityFeed from "../../loyalty/components/ProviderActivityFeed";
 import AnalyticsPanel from "../../analytics/components/AnalyticsPanel";
+import { StationFollowersPanel, StationNotificationsPanel } from "../../charge-management/components/StationEngagementPanels";
+import { formatOpeningHours } from "../../../utils/opening-hours";
 
 function Section({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -89,7 +93,8 @@ export default function ServiceProviderProfileScreen() {
 
   const s = provider as ServiceProviderDto;
   const hasCoords = s.latitude != null && s.longitude != null;
-  const hours = s.fromTime && s.toTime ? `${s.fromTime} – ${s.toTime}` : null;
+  const hours =
+    formatOpeningHours(s.fromTime, s.toTime, t("chargeManagement@form.open24h"), " – ") || null;
   const payments = (s.methodPayment ?? "").split(/[,،]/).map((p) => p.trim()).filter(Boolean);
   const fmtDate = (v: string) => new Date(v).toLocaleDateString(i18n.language === "ar" ? "ar-KW" : "en-US");
 
@@ -134,6 +139,8 @@ export default function ServiceProviderProfileScreen() {
                 { icon: <ReceiptLongIcon fontSize="small" />, label: t("loyalty@activity") },
                 { icon: <RateReviewIcon fontSize="small" />, label: t("chargeManagement@reviews.title") },
                 { icon: <InsightsIcon fontSize="small" />, label: t("analytics@title") },
+                { icon: <PeopleIcon fontSize="small" />, label: t("chargeManagement@engagement.followers") },
+                { icon: <CampaignIcon fontSize="small" />, label: t("chargeManagement@engagement.notifications") },
               ].map((tb, i) => (
                 <Tab key={i} icon={tb.icon} iconPosition="start" label={tb.label} disableRipple
                   sx={{ minHeight: 44, px: 2, borderRadius: 2.5, fontWeight: 700, textTransform: "none", color: "text.secondary", transition: "all .2s ease",
@@ -242,6 +249,12 @@ export default function ServiceProviderProfileScreen() {
 
               {/* Analytics */}
               {tab === 3 && <AnalyticsPanel entityType="ServiceProvider" entityId={s.id} enabled />}
+
+              {/* Followers */}
+              {tab === 4 && <StationFollowersPanel providerType="ServiceProvider" providerId={s.id} enabled />}
+
+              {/* Notifications sent */}
+              {tab === 5 && <StationNotificationsPanel providerType="ServiceProvider" providerId={s.id} enabled />}
             </Box>
           </Paper>
         </Stack>

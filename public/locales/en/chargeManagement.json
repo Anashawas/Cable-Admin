@@ -89,6 +89,8 @@
     "expired": "Premium Expired",
     "paidOn": "Paid on",
     "expiresOn": "Expires on",
+    "daysLeft": "{{count}} days left",
+    "expiresToday": "Expires today",
     "saved": "Premium payment recorded",
     "paymentDateRequired": "Payment date is required",
     "expiresAtRequired": "Expiry date is required",
@@ -180,7 +182,10 @@
     "plugTypes": "Plug Types",
     "paymentMethods": "Payment Methods",
     "services": "Services",
-    "verifiedHint": "Mark this station as verified"
+    "verifiedHint": "Mark this station as verified",
+    "open24h": "Open 24 hours",
+    "fromTime": "Opens",
+    "toTime": "Closes"
   },
   "media": {
     "title": "Media",
@@ -194,6 +199,7 @@
     "deleteUnavailable": "Delete unavailable (No ID from server)",
     "iconHint": "PNG, JPG or SVG — recommended 256×256px",
     "photoDeleted": "Photo deleted successfully",
+    "someDeleteFailed": "Deleted {{ok}}, {{failed}} failed",
     "confirmDelete": "Are you sure you want to delete this photo?",
     "deleteAll": "Delete All Photos",
     "allPhotosDeleted": "All photos deleted successfully",

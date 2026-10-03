@@ -38,23 +38,25 @@ import EmailIcon from "@mui/icons-material/Email";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import PeopleIcon from "@mui/icons-material/People";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getStationById } from "../services/station-form-service";
 import { getComplaintsByChargingPointId } from "../../complaints/services/complaints-service";
 import StationReviewsSection from "./StationReviewsSection";
 import StationPremiumSection from "./StationPremiumSection";
+import SubscriptionPanel from "../../subscriptions/components/SubscriptionPanel";
 import StationViewImageSection from "./StationViewImageSection";
 import SocialLinksDisplay from "../../social-media/components/SocialLinksDisplay";
 import ProviderActivityFeed from "../../loyalty/components/ProviderActivityFeed";
 import AnalyticsPanel from "../../analytics/components/AnalyticsPanel";
 import { StationFollowersPanel, StationNotificationsPanel } from "./StationEngagementPanels";
 import type { ChargingPointDto } from "../types/api";
+import { formatOpeningHours } from "../../../utils/opening-hours";
 
 function parseList(v?: string | null): string[] {
   if (!v || typeof v !== "string") return [];
   return v.replace(/^\[|\]$/g, "").split(/[,;|]/).map((s) => s.trim()).filter(Boolean);
 }
-function fmtTime(v?: string | null) { const m = v ? /^(\d{1,2}:\d{2})/.exec(v.trim()) : null; return m ? m[1] : (v ?? ""); }
 
 function Section({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -139,7 +141,7 @@ export default function StationProfileScreen() {
   const payments = parseList(s.methodPayment);
   const plugs = (s.plugTypeSummary ?? []).map((p) => p?.name).filter(Boolean) as string[];
   const imageUrls = (s.images ?? []).map((e: any) => (typeof e === "string" ? e : e?.url)).filter(Boolean) as string[];
-  const hours = s.fromTime || s.toTime ? `${fmtTime(s.fromTime)} - ${fmtTime(s.toTime)}` : "";
+  const hours = formatOpeningHours(s.fromTime, s.toTime, t("chargeManagement@form.open24h"));
   const hasCoords = s.latitude != null && s.longitude != null;
   const rating = s.avgChargingPointRate != null ? `${s.avgChargingPointRate.toFixed(1)}${s.rateCount != null ? ` (${s.rateCount})` : ""}` : "";
   const isPremium = s.stationType?.id === 2;
@@ -220,6 +222,7 @@ export default function StationProfileScreen() {
                 { icon: <ReportProblemIcon fontSize="small" />, label: t("chargeManagement@complaints.title") },
                 { icon: <PeopleIcon fontSize="small" />, label: t("chargeManagement@engagement.followers") },
                 { icon: <CampaignIcon fontSize="small" />, label: t("chargeManagement@engagement.notifications") },
+                { icon: <EventRepeatIcon fontSize="small" />, label: t("subscriptions@navTitle") },
               ].map((tb, i) => (
                 <Tab
                   key={i}
@@ -410,10 +413,22 @@ export default function StationProfileScreen() {
               )}
 
               {/* Followers */}
-              {tab === 5 && <StationFollowersPanel stationId={s.id} enabled />}
+              {tab === 5 && <StationFollowersPanel providerId={s.id} enabled />}
 
               {/* Notifications sent */}
-              {tab === 6 && <StationNotificationsPanel stationId={s.id} enabled />}
+              {tab === 6 && <StationNotificationsPanel providerId={s.id} enabled />}
+
+              {/* Subscription + payment history */}
+              {tab === 7 && (
+                <SubscriptionPanel
+                  entityType="StationPremium"
+                  entityId={s.id}
+                  entityName={s.name}
+                  ownerUserAccountId={s.ownerId}
+                  ownerName={s.ownerName}
+                  enabled
+                />
+              )}
             </Box>
           </Paper>
         </Stack>

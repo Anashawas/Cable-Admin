@@ -66,6 +66,8 @@ i18n
       "viewImageReview",
       "nearestPreview",
       "templates",
+      "subscriptions",
+      "partnerAdoption",
     ],
   });
 

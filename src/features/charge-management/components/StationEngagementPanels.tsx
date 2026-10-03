@@ -16,6 +16,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import {
   getStationFollowers,
   getStationSentNotifications,
+  type EngagementProviderType,
 } from "../services/station-engagement-service";
 
 const PAGE_SIZE = 50;
@@ -42,20 +43,25 @@ function statusColor(status: string): "success" | "warning" | "error" | "default
 }
 
 interface PanelProps {
-  stationId: number | null;
+  providerType?: EngagementProviderType;
+  providerId: number | null;
   enabled?: boolean;
 }
 
-/** The users who favorited (follow) the station. */
-export function StationFollowersPanel({ stationId, enabled = true }: PanelProps) {
+/** The users who favorited (follow) the station / service provider. */
+export function StationFollowersPanel({
+  providerType = "ChargingPoint",
+  providerId,
+  enabled = true,
+}: PanelProps) {
   const { t } = useTranslation();
   const query = useInfiniteQuery({
-    queryKey: ["station-followers", stationId],
+    queryKey: ["provider-followers", providerType, providerId],
     queryFn: ({ pageParam, signal }) =>
-      getStationFollowers(stationId as number, pageParam, PAGE_SIZE, signal),
+      getStationFollowers(providerType, providerId as number, pageParam, PAGE_SIZE, signal),
     initialPageParam: 1,
     getNextPageParam: (last) => (last.hasNextPage ? last.page + 1 : undefined),
-    enabled: enabled && stationId != null,
+    enabled: enabled && providerId != null,
   });
 
   const followers = query.data?.pages.flatMap((p) => p.items) ?? [];
@@ -95,16 +101,20 @@ export function StationFollowersPanel({ stationId, enabled = true }: PanelProps)
   );
 }
 
-/** The notifications the station owner sent to the station's followers. */
-export function StationNotificationsPanel({ stationId, enabled = true }: PanelProps) {
+/** The notifications the owner sent to their followers. */
+export function StationNotificationsPanel({
+  providerType = "ChargingPoint",
+  providerId,
+  enabled = true,
+}: PanelProps) {
   const { t } = useTranslation();
   const query = useInfiniteQuery({
-    queryKey: ["station-sent-notifications", stationId],
+    queryKey: ["provider-sent-notifications", providerType, providerId],
     queryFn: ({ pageParam, signal }) =>
-      getStationSentNotifications(stationId as number, pageParam, PAGE_SIZE, signal),
+      getStationSentNotifications(providerType, providerId as number, pageParam, PAGE_SIZE, signal),
     initialPageParam: 1,
     getNextPageParam: (last) => (last.hasNextPage ? last.page + 1 : undefined),
-    enabled: enabled && stationId != null,
+    enabled: enabled && providerId != null,
   });
 
   const notifications = query.data?.pages.flatMap((p) => p.items) ?? [];

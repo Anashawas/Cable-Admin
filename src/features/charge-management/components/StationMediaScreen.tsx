@@ -98,16 +98,30 @@ export default function StationMediaScreen() {
   });
 
   const deleteAllPhotosMutation = useMutation({
+    // Continue past individual failures so one bad file doesn't strand the rest.
     mutationFn: async (attachmentIds: (string | number)[]) => {
+      let ok = 0;
+      let failed = 0;
       for (const aid of attachmentIds) {
-        await deleteAttachment(UploadFileFolders.CableAttachments, aid);
+        try {
+          await deleteAttachment(UploadFileFolders.CableAttachments, aid);
+          ok += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      return { ok, failed };
+    },
+    onSuccess: ({ ok, failed }) => {
+      refetchPhotos();
+      if (failed === 0) {
+        openSuccessSnackbar({ message: t("chargeManagement@media.allPhotosDeleted") });
+      } else {
+        openErrorSnackbar({ message: t("chargeManagement@media.someDeleteFailed", { ok, failed }) });
       }
     },
-    onSuccess: () => {
-      refetchPhotos();
-      openSuccessSnackbar({ message: t("chargeManagement@media.allPhotosDeleted") });
-    },
     onError: (err: Error) => {
+      refetchPhotos();
       openErrorSnackbar({ message: err?.message ?? t("loadingFailed") });
     },
   });

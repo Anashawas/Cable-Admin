@@ -67,18 +67,22 @@ function pageMeta(data: unknown, items: unknown[], page: number): { totalCount: 
   };
 }
 
+/** The favorites API is type-generic: charging points or service providers. */
+export type EngagementProviderType = "ChargingPoint" | "ServiceProvider";
+
 /**
- * GET /api/provider/favorites/ChargingPoint/{id}?page=&pageSize=
- * The users who favorited (follow) the station. Admin/owner only.
+ * GET /api/provider/favorites/{providerType}/{id}?page=&pageSize=
+ * The users who favorited (follow) the station / service provider. Admin/owner only.
  */
 export const getStationFollowers = async (
+  providerType: EngagementProviderType,
   id: number,
   page = 1,
   pageSize = 50,
   signal?: AbortSignal
 ): Promise<Page<StationFollowerDto>> => {
   const { data } = await server.get(
-    `api/provider/favorites/ChargingPoint/${id}`,
+    `api/provider/favorites/${providerType}/${id}`,
     { params: { page, pageSize }, signal }
   );
   const rows = rowsOf(data);
@@ -96,17 +100,18 @@ export const getStationFollowers = async (
 };
 
 /**
- * GET /api/provider/favorites/ChargingPoint/{id}/notifications?page=&pageSize=
- * The notifications the station owner sent to the station's followers. Admin/owner only.
+ * GET /api/provider/favorites/{providerType}/{id}/notifications?page=&pageSize=
+ * The notifications the owner sent to their followers. Admin/owner only.
  */
 export const getStationSentNotifications = async (
+  providerType: EngagementProviderType,
   id: number,
   page = 1,
   pageSize = 50,
   signal?: AbortSignal
 ): Promise<Page<StationSentNotificationDto>> => {
   const { data } = await server.get(
-    `api/provider/favorites/ChargingPoint/${id}/notifications`,
+    `api/provider/favorites/${providerType}/${id}/notifications`,
     { params: { page, pageSize }, signal }
   );
   const rows = rowsOf(data);

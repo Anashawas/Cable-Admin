@@ -28,6 +28,8 @@
   "settlementsDisputed": "تسويات متنازع عليها",
   "premiumExpiringSoon": "اشتراكات مميّزة قربت تنتهي",
   "premiumExpired": "اشتراكات مميّزة منتهية",
+  "premiumExpiringBannerTitle": "{{count}} محطة — اشتراكها المميّز ينتهي خلال أسبوع",
+  "premiumExpiringBannerSubtitle": "تابِع لتجديد اشتراكها قبل انتهائه.",
   "campaignsEndingSoon": "حملات قربت تنتهي",
   "announcementsExpiringSoon": "رسائل ترحيب قربت تنتهي",
   "allClear": "كل شيء تمام — لا شيء يتطلب انتباهك الآن",

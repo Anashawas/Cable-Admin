@@ -25,6 +25,7 @@ import {
   IconButton,
   Switch,
   FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -60,6 +61,7 @@ import { useChargerBrands } from "../hooks/use-charger-brands";
 import LocationPicker from "./LocationPicker";
 import { useSnackbarStore } from "../../../stores";
 import type { ChargingPointDto } from "../types/api";
+import { is24Hours, normalizeTime } from "../../../utils/opening-hours";
 
 // ── Services chip categories (display only) ───────────────────────────────────
 const SERVICE_CATEGORIES: { label: string; items: string[] }[] = [
@@ -185,9 +187,33 @@ function formatPaymentString(arr: string[]): string {
   return arr.join(",");
 }
 
+/**
+ * Normalize to the "HH:mm" a native <input type="time"> needs.
+ *
+ * This goes through the shared parser rather than a strict regex: stored values
+ * carry seconds ("12:40:00") and typos ("0;00", "0:0]"), and a regex that
+ * rejects them rendered the picker *blank* while the bad value stayed in form
+ * state — so it looked cleared but saved the original junk straight back.
+ */
+const toHHmm = normalizeTime;
+
+/**
+ * Normalize a phone to the backend storage format "962…" — strips a leading
+ * "+", "00" and "962" prefixes and any leading zeros, matching what the partner
+ * app sends. Returns null when empty.
+ */
+function toStoragePhone(value: string | null | undefined): string | null {
+  let digits = (value ?? "").replace(/[^0-9]/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("962")) digits = digits.slice(3);
+  digits = digits.replace(/^0+/, "");
+  return digits === "" ? null : `962${digits}`;
+}
+
 const defaultValues: StationFormValues = {
   name: "",
   phone: "",
+  ownerPhone: "",
   note: "",
   cityName: "",
   address: "",
@@ -204,6 +230,8 @@ const defaultValues: StationFormValues = {
   chargerSpeed: null,
   chargersCount: null,
   isVerified: false,
+  fromTime: "",
+  toTime: "",
 };
 
 function mapStationToFormValues(station: ChargingPointDto): Partial<StationFormValues> {
@@ -211,6 +239,7 @@ function mapStationToFormValues(station: ChargingPointDto): Partial<StationFormV
   return {
     name: station.name ?? "",
     phone: station.phone ?? "",
+    ownerPhone: station.ownerPhone ?? station.ownerAccountPhone ?? "",
     note: station.note ?? "",
     cityName: station.cityName ?? "",
     address: station.address ?? "",
@@ -221,12 +250,14 @@ function mapStationToFormValues(station: ChargingPointDto): Partial<StationFormV
     stationTypeId: station.stationType?.id ?? null,
     chargerBrandId: station.chargerBrandId ?? null,
     plugTypeIds: station.plugTypeSummary?.map((p) => p.id) ?? [],
-    paymentMethods: [], // Extend when API returns methodPayment
+    paymentMethods: parsePaymentString(station.methodPayment),
     services,
     price: station.price ?? null,
     chargerSpeed: station.chargerSpeed ?? null,
     chargersCount: station.chargersCount ?? null,
     isVerified: station.isVerified ?? false,
+    fromTime: station.fromTime ?? "",
+    toTime: station.toTime ?? "",
   };
 }
 
@@ -316,6 +347,7 @@ export default function StationFormScreen() {
       const body: Record<string, unknown> = {
         name: values.name,
         phone: values.phone || null,
+        ownerPhone: toStoragePhone(values.ownerPhone),
         note: values.note || null,
         cityName: values.cityName || null,
         address: values.address || null,
@@ -332,6 +364,8 @@ export default function StationFormScreen() {
         chargerSpeed: values.chargerSpeed ?? null,
         chargersCount: values.chargersCount ?? null,
         isVerified: values.isVerified,
+        fromTime: values.fromTime || null,
+        toTime: values.toTime || null,
       };
       if (isEditMode && stationId > 0) {
         updateMutation.mutate({ id: stationId, body });
@@ -407,6 +441,19 @@ export default function StationFormScreen() {
                       control={control}
                       render={({ field }) => (
                         <TextField {...field} label={t("chargeManagement@form.phone")} fullWidth />
+                      )}
+                    />
+                    <Controller
+                      name="ownerPhone"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          value={field.value ?? ""}
+                          label={t("chargeManagement@owner.phone")}
+                          fullWidth
+                          slotProps={{ htmlInput: { dir: "ltr", inputMode: "tel" } }}
+                        />
                       )}
                     />
                     <Controller
@@ -579,6 +626,49 @@ export default function StationFormScreen() {
                         </Paper>
                       )}
                     />
+                    {/* Working hours — 24h checkbox + from/to time */}
+                    {(() => {
+                      const fromTime = watch("fromTime") ?? "";
+                      const toTime = watch("toTime") ?? "";
+                      const is24 = is24Hours(fromTime, toTime);
+                      return (
+                        <Box>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={is24}
+                                onChange={(e) => {
+                                  const on = e.target.checked;
+                                  setValue("fromTime", on ? "0:00" : "09:00", { shouldDirty: true });
+                                  setValue("toTime", on ? "0:00" : "22:00", { shouldDirty: true });
+                                }}
+                              />
+                            }
+                            label={t("chargeManagement@form.open24h")}
+                          />
+                          {!is24 && (
+                            <Stack direction="row" spacing={2}>
+                              <TextField
+                                type="time"
+                                label={t("chargeManagement@form.fromTime")}
+                                value={toHHmm(fromTime)}
+                                onChange={(e) => setValue("fromTime", e.target.value, { shouldDirty: true })}
+                                fullWidth
+                                slotProps={{ inputLabel: { shrink: true } }}
+                              />
+                              <TextField
+                                type="time"
+                                label={t("chargeManagement@form.toTime")}
+                                value={toHHmm(toTime)}
+                                onChange={(e) => setValue("toTime", e.target.value, { shouldDirty: true })}
+                                fullWidth
+                                slotProps={{ inputLabel: { shrink: true } }}
+                              />
+                            </Stack>
+                          )}
+                        </Box>
+                      );
+                    })()}
                     <Controller
                       name="chargerPointTypeId"
                       control={control}

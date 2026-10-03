@@ -89,6 +89,8 @@
     "expired": "انتهى الاشتراك المميز",
     "paidOn": "دُفع في",
     "expiresOn": "ينتهي في",
+    "daysLeft": "متبقٍ {{count}} يوم",
+    "expiresToday": "ينتهي اليوم",
     "saved": "تم تسجيل الدفعة المميزة",
     "paymentDateRequired": "تاريخ الدفع مطلوب",
     "expiresAtRequired": "تاريخ الانتهاء مطلوب",
@@ -180,7 +182,10 @@
     "plugTypes": "أنواع القوابس",
     "paymentMethods": "طرق الدفع",
     "services": "الخدمات",
-    "verifiedHint": "وضع علامة على المحطة كموثّقة"
+    "verifiedHint": "وضع علامة على المحطة كموثّقة",
+    "open24h": "مفتوح ٢٤ ساعة",
+    "fromTime": "من الساعة",
+    "toTime": "إلى الساعة"
   },
   "media": {
     "title": "الوسائط",
@@ -194,6 +199,7 @@
     "deleteUnavailable": "الحذف غير متاح (لا يوجد معرف من الخادم)",
     "iconHint": "PNG أو JPG أو SVG — يُنصح بحجم 256×256 بكسل",
     "photoDeleted": "تم حذف الصورة بنجاح",
+    "someDeleteFailed": "تم حذف {{ok}}، وفشل {{failed}}",
     "confirmDelete": "هل أنت متأكد من حذف هذه الصورة؟",
     "deleteAll": "حذف جميع الصور",
     "allPhotosDeleted": "تم حذف جميع الصور بنجاح",
