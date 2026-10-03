@@ -52,6 +52,7 @@ import {
 	Share as ShareIcon,
 	PersonAddAlt1 as PersonAddAlt1Icon,
 	Bolt as BoltIcon,
+	Cable as CableIcon,
 	EmojiEvents as EmojiEventsIcon,
 	Gavel as GavelIcon,
 	Campaign as CampaignIcon,
@@ -112,6 +113,7 @@ const AppCollapsibleSidebar = () => {
 			items: [
 				{ label: t("chargeManagement"), path: "/charge-management", icon: <EvStationIcon /> },
 				{ label: t("chargerBrands"), path: "/charger-brands", icon: <BoltIcon /> },
+				{ label: t("cableConnect"), path: "/cable-connect", icon: <CableIcon /> },
 				{ label: t("stationStatistics"), path: "/station-statistics", icon: <QueryStatsIcon /> },
 				{ label: t("stationsRequest"), path: "/stations-request", icon: <ListAltIcon /> },
 				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },

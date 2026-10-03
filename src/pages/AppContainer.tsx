@@ -26,6 +26,7 @@ const StationProfileScreen = lazy(() => import("../features/charge-management/co
 const StationsRequestScreen = lazy(() => import("../features/charge-management/components/StationsRequestScreen"));
 const StationStatisticsScreen = lazy(() => import("../features/charge-management/components/StationStatisticsScreen"));
 const ChargerBrandsScreen = lazy(() => import("../features/charge-management/components/ChargerBrandsScreen"));
+const CableConnectScreen = lazy(() => import("../features/ocpp/components/CableConnectScreen"));
 const ComplaintsScreen = lazy(() => import("../features/complaints/components/ComplaintsScreen"));
 const BannersScreen = lazy(() => import("../features/system/components/BannersScreen"));
 const WelcomeMessagesScreen = lazy(() => import("../features/announcements/components/WelcomeMessagesScreen"));
@@ -144,6 +145,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <StationProfileScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cable-connect"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <CableConnectScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

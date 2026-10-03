@@ -35,7 +35,9 @@ import PersonIcon from "@mui/icons-material/Person";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import EmailIcon from "@mui/icons-material/Email";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import CableIcon from "@mui/icons-material/Cable";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import StationChargersSection from "../../ocpp/components/StationChargersSection";
 import { getStationById } from "../services/station-form-service";
 import { getComplaintsByChargingPointId } from "../../complaints/services/complaints-service";
 import StationReviewsSection from "./StationReviewsSection";
@@ -211,6 +213,7 @@ export default function StationProfileScreen() {
                 { icon: <RateReviewIcon fontSize="small" />, label: t("chargeManagement@reviews.title") },
                 { icon: <InsightsIcon fontSize="small" />, label: t("analytics@title") },
                 { icon: <ReportProblemIcon fontSize="small" />, label: t("chargeManagement@complaints.title") },
+                { icon: <CableIcon fontSize="small" />, label: t("ocpp@station.title") },
               ].map((tb, i) => (
                 <Tab
                   key={i}
@@ -399,6 +402,9 @@ export default function StationProfileScreen() {
                   </Stack>
                 )
               )}
+
+              {/* Cable Connect (OCPP): live chargers, subscription, allowed cards */}
+              {tab === 5 && <StationChargersSection chargingPointId={s.id} />}
             </Box>
           </Paper>
         </Stack>

@@ -66,6 +66,7 @@ i18n
       "viewImageReview",
       "nearestPreview",
       "templates",
+      "ocpp",
     ],
   });
 

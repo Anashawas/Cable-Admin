@@ -22,6 +22,10 @@ window.env = {
   server: {
     url: "http://dev.cable-app.com/",
   },
+  // Cable Connect: the OCPP host chargers point at (shown on the credentials sheet).
+  ocpp: {
+    url: "wss://ocpp-dev.cable-app.com",
+  },
   search: {
     geocoderServiceUrl:
       "https://kuwaitportal.paci.gov.kw/arcgisportal/rest/services/Hosted/PACIGeocoder/FeatureServer/0",
