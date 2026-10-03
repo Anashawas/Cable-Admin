@@ -39,6 +39,7 @@ import SortIcon from "@mui/icons-material/Sort";
 import CategoryIcon from "@mui/icons-material/Category";
 import ImageIcon from "@mui/icons-material/Image";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import { toTelHref } from "../../../utils/phone";
 import {
   getAll,
   add,
@@ -432,9 +433,9 @@ export default function EmergencyServicesScreen() {
                 {/* Actions footer */}
                 <Divider />
                 <Stack direction="row" justifyContent="flex-end" spacing={0.5} sx={{ px: 1.5, py: 1 }}>
-                  {s.phoneNumber && (
+                  {toTelHref(s.phoneNumber) && (
                     <Tooltip title={t("platform@emergency.call")}>
-                      <IconButton component="a" href={`tel:${s.phoneNumber}`} size="small" color="primary">
+                      <IconButton component="a" href={toTelHref(s.phoneNumber)!} size="small" color="primary">
                         <PhoneIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>

@@ -24,6 +24,7 @@ import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { format } from "date-fns";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import { toTelHref } from "../../../utils/phone";
 import { getPendingRequests, approveRequest, rejectRequest } from "../services/request-service";
 import { useSnackbarStore } from "../../../stores";
 
@@ -352,7 +353,11 @@ export default function StationsRequestScreen() {
                                 ? <Link component="button" type="button" onClick={() => navigate(`/users/${selected.requestedByUserId}`)} fontWeight={700} sx={{ textAlign: "start" }}>{selected.requestedByUserName || `#${selected.requestedByUserId}`}</Link>
                                 : (selected.requestedByUserName || "—")} />
                             <InfoItem icon={<PhoneIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@phone")}
-                              value={selected.requestedByUserPhone ? <Link href={`tel:${selected.requestedByUserPhone}`} fontWeight={600}>{selected.requestedByUserPhone}</Link> : "—"} />
+                              value={selected.requestedByUserPhone
+                                ? (toTelHref(selected.requestedByUserPhone)
+                                    ? <Link href={toTelHref(selected.requestedByUserPhone)!} fontWeight={600}>{selected.requestedByUserPhone}</Link>
+                                    : <Typography variant="body2" fontWeight={600}>{selected.requestedByUserPhone}</Typography>)
+                                : "—"} />
                             <InfoItem icon={<CalendarMonthIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@columns.requestedAt")} value={fmt(selected.createdAt)} />
                             {selected.reviewedByUserName && (
                               <InfoItem icon={<GavelIcon sx={{ fontSize: 16 }} />} label={t("stationsRequest@reviewedBy")} value={`${selected.reviewedByUserName} · ${fmtShort(selected.reviewedAt)}`} />

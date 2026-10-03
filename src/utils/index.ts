@@ -1,4 +1,5 @@
 export * from "./map-utils";
+export * from "./phone";
 
 export const getDefaultSymbol = (_geometryType: string) => {
   return {
