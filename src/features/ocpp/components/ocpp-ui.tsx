@@ -15,9 +15,17 @@ export function errMessage(err: any, fallback: string): string {
   return err?.response?.data?.detail || err?.response?.data?.title || err?.response?.data?.message || err?.message || fallback;
 }
 
-/** The OCPP host chargers point at; configurable per environment, falls back to the dev host. */
+/**
+ * The OCPP host chargers point at. Explicit per-environment config wins; the
+ * embedded-under-API build shares one config between dev and prod, so it is
+ * derived from where the admin itself is served (dev.cable-app.com → ocpp-dev).
+ */
 export function ocppBaseUrl(): string {
-  return (window.env as any)?.ocpp?.url ?? "wss://ocpp-dev.cable-app.com";
+  const configured = (window.env as any)?.ocpp?.url as string | undefined;
+  if (configured) return configured;
+  const host = window.location.hostname.toLowerCase();
+  const isDev = host.startsWith("dev.") || host === "localhost" || host === "127.0.0.1";
+  return isDev ? "wss://ocpp-dev.cable-app.com" : "wss://ocpp.cable-app.com";
 }
 
 export function useDateFmt() {
