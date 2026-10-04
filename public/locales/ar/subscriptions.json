@@ -56,7 +56,8 @@
   "entityType": {
     "StationPremium": "محطة مميزة",
     "Banner": "بانر إعلاني",
-    "ServiceProviderPremium": "مزوّد خدمة مميز"
+    "ServiceProviderPremium": "مزوّد خدمة مميز",
+    "OcppConnect": "كيبل كونكت (الشواحن المباشرة)"
   },
 
   "status": {

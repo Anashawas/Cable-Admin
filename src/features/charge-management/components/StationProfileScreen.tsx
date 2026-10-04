@@ -435,7 +435,14 @@ export default function StationProfileScreen() {
               )}
 
               {/* Cable Connect (OCPP): live chargers, subscription, allowed cards */}
-              {tab === 8 && <StationChargersSection chargingPointId={s.id} />}
+              {tab === 8 && (
+                <StationChargersSection
+                  chargingPointId={s.id}
+                  stationName={s.name}
+                  ownerUserAccountId={s.ownerId}
+                  ownerName={s.ownerName}
+                />
+              )}
             </Box>
           </Paper>
         </Stack>

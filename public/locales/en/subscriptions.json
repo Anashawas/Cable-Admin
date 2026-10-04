@@ -56,7 +56,8 @@
   "entityType": {
     "StationPremium": "Station premium",
     "Banner": "Banner",
-    "ServiceProviderPremium": "Provider premium"
+    "ServiceProviderPremium": "Provider premium",
+    "OcppConnect": "Cable Connect (live chargers)"
   },
 
   "status": {

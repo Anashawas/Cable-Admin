@@ -10,7 +10,9 @@
 export type SubscriptionEntityType =
 	| "StationPremium"
 	| "Banner"
-	| "ServiceProviderPremium";
+	| "ServiceProviderPremium"
+	/** Cable Connect: live charger data for a station (OCPP). EntityId = station id. */
+	| "OcppConnect";
 
 /**
  * Computed server-side on every read from expiry + grace + the admin switch —

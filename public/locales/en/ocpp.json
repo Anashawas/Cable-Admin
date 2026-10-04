@@ -70,7 +70,7 @@
     "InGrace": "In grace",
     "Expired": "Expired",
     "SwitchedOff": "Switched off",
-    "hint": "Record a Cable Connect payment from the Subscriptions screen (entity type: OcppConnect). While it is off, the apps hide charger data but the charger keeps working.",
+    "hint": "Record or renew the station's Cable Connect payment here. While the subscription is off, the apps hide this station's charger data — the chargers themselves keep working.",
     "expiresOn": "Expires"
   },
   "detail": {
