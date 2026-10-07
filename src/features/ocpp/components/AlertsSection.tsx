@@ -5,6 +5,7 @@ import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import WifiOffIcon from "@mui/icons-material/WifiOff";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
+import EvStationIcon from "@mui/icons-material/EvStation";
 import { useOcppAlerts } from "../hooks/use-ocpp";
 import type { OcppAlertDto, OcppAlertType } from "../types/api";
 import { useDateFmt } from "./ocpp-ui";
@@ -13,11 +14,12 @@ const ICON: Record<OcppAlertType, React.ReactElement> = {
   ChargerOffline: <WifiOffIcon fontSize="small" />,
   ConnectorFaulted: <ReportProblemIcon fontSize="small" />,
   SessionTooLong: <HourglassBottomIcon fontSize="small" />,
+  ParkedAfterCharging: <EvStationIcon fontSize="small" />,
 };
 
 export function AlertTypeChip({ type, resolved }: { type: OcppAlertType; resolved?: boolean }) {
   const { t } = useTranslation();
-  const color = resolved ? "default" : type === "SessionTooLong" ? "warning" : "error";
+  const color = resolved ? "default" : type === "SessionTooLong" || type === "ParkedAfterCharging" ? "warning" : "error";
   return <Chip size="small" icon={ICON[type]} label={t(`ocpp@alerts.type.${type}`)} color={color} variant={resolved ? "outlined" : "filled"} sx={{ fontWeight: 700 }} />;
 }
 
@@ -65,6 +67,11 @@ export default function AlertsSection({ onOpenCharger }: { onOpenCharger: (id: n
                       <AlertTypeChip type={a.type} resolved={!!a.resolvedAt} />
                       {a.connectorId != null && a.connectorId > 0 && <Typography variant="caption">{t("ocpp@columns.connector")} {a.connectorId}</Typography>}
                       {a.details && <Typography variant="caption" color="text.secondary">{a.details}</Typography>}
+                      {a.type === "ParkedAfterCharging" && (
+                        <Typography variant="caption" color="text.secondary">
+                          · {a.driverUserId ? t("ocpp@alerts.driverTold") : t("ocpp@alerts.noDriver")}{a.escalatedAt ? ` · ${t("ocpp@alerts.stationTold")}` : ""}
+                        </Typography>
+                      )}
                     </Stack>
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>{a.displayName || a.chargePointId}</TableCell>

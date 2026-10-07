@@ -322,8 +322,12 @@
     "type": {
       "ChargerOffline": "شاحن غير متصل",
       "ConnectorFaulted": "مقبس معطّل",
-      "SessionTooLong": "جلسة طويلة"
-    }
+      "SessionTooLong": "جلسة طويلة",
+      "ParkedAfterCharging": "سيارة واقفة بعد الشحن"
+    },
+    "driverTold": "تم تنبيه السواق",
+    "noDriver": "البطاقة غير مرتبطة بمستخدم",
+    "stationTold": "تم تنبيه المحطة"
   },
   "onboarding": {
     "Waiting": "بانتظار الشاحن",

@@ -322,8 +322,12 @@
     "type": {
       "ChargerOffline": "Charger offline",
       "ConnectorFaulted": "Plug faulted",
-      "SessionTooLong": "Session too long"
-    }
+      "SessionTooLong": "Session too long",
+      "ParkedAfterCharging": "Parked after charging"
+    },
+    "driverTold": "driver told",
+    "noDriver": "card not linked to a user",
+    "stationTold": "station told"
   },
   "onboarding": {
     "Waiting": "Waiting for charger",

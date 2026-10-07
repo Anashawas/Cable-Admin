@@ -178,7 +178,7 @@ export interface OcppFleetHealthDto {
   openAlerts: number;
 }
 
-export type OcppAlertType = "ChargerOffline" | "ConnectorFaulted" | "SessionTooLong";
+export type OcppAlertType = "ChargerOffline" | "ConnectorFaulted" | "SessionTooLong" | "ParkedAfterCharging";
 
 /** An alert-job finding; resolvedAt null = still open. */
 export interface OcppAlertDto {
@@ -196,6 +196,10 @@ export interface OcppAlertDto {
   resolvedAt?: string | null;
   details?: string | null;
   recipients: number;
+  /** ParkedAfterCharging: the driver told first (null = card not linked to a user). */
+  driverUserId?: number | null;
+  /** ParkedAfterCharging: when the station was told. */
+  escalatedAt?: string | null;
 }
 
 export interface OcppAuthorizedTagDto {
