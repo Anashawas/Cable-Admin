@@ -22,7 +22,11 @@ import type { ChargerCredentials, OcppConnectorDto } from "../types/api";
 import { CredentialsDialog } from "./RegisterChargerDialog";
 import ChargerControlPanel from "./ChargerControlPanel";
 import ChargerConfigPanel from "./ChargerConfigPanel";
-import { ConnectionChip, ConnectorStatusChip, SubscriptionChip, errMessage, fmtDuration, fmtKwh, ocppBaseUrl, useDateFmt } from "./ocpp-ui";
+import { ConnectionChip, ConnectorStatusChip, OnboardingCard, SubscriptionChip, errMessage, fmtDuration, fmtKwh, ocppBaseUrl, useDateFmt } from "./ocpp-ui";
+import { useQuery } from "@tanstack/react-query";
+import { getAllPlugTypes } from "../../charge-management/services/station-form-service";
+import MenuItem from "@mui/material/MenuItem";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 function Info({ label, value, mono = false }: { label: string; value?: ReactNode; mono?: boolean }) {
   if (value == null || value === "" || value === "—") return null;
@@ -53,7 +57,7 @@ function Confirm({ open, title, body, danger, pending, onClose, onConfirm }: { o
   );
 }
 
-/** Per-connector plug type + rated power, editable inline. */
+/** Per-connector plug type + rated power, editable inline. The plug type is what the driver app shows next to "free". */
 function ConnectorRow({ c }: { c: OcppConnectorDto }) {
   const { t } = useTranslation();
   const fmt = useDateFmt();
@@ -62,10 +66,15 @@ function ConnectorRow({ c }: { c: OcppConnectorDto }) {
   const update = useUpdateConnector();
   const [editing, setEditing] = useState(false);
   const [power, setPower] = useState(c.powerKw != null ? String(c.powerKw) : "");
+  const [plugTypeId, setPlugTypeId] = useState<number | "">(c.plugTypeId ?? "");
+  const { data: plugTypes = [] } = useQuery({ queryKey: ["plug-types"], queryFn: ({ signal }) => getAllPlugTypes(signal), enabled: editing, staleTime: 5 * 60_000 });
+
+  const startEdit = () => { setPower(c.powerKw != null ? String(c.powerKw) : ""); setPlugTypeId(c.plugTypeId ?? ""); setEditing(true); };
+  const cancelEdit = () => setEditing(false);
 
   const save = async () => {
     try {
-      await update.mutateAsync({ id: c.id, body: { plugTypeId: c.plugTypeId ?? null, powerKw: power ? Number(power) : null } });
+      await update.mutateAsync({ id: c.id, body: { plugTypeId: plugTypeId === "" ? null : Number(plugTypeId), powerKw: power ? Number(power) : null } });
       openSuccessSnackbar({ message: t("ocpp@toast.connectorSaved") });
       setEditing(false);
     } catch (err) {
@@ -85,17 +94,27 @@ function ConnectorRow({ c }: { c: OcppConnectorDto }) {
           </Stack>
         ) : <Typography variant="caption" color="text.disabled">—</Typography>}
       </TableCell>
-      <TableCell>{c.plugTypeName ?? <Typography variant="caption" color="text.disabled">—</Typography>}</TableCell>
+      <TableCell>
+        {editing
+          ? <TextField select size="small" value={plugTypeId} onChange={(e) => setPlugTypeId(e.target.value === "" ? "" : Number(e.target.value))} sx={{ minWidth: 150 }}>
+              <MenuItem value="">{t("ocpp@detail.noPlugType")}</MenuItem>
+              {plugTypes.map((p) => <MenuItem key={p.id} value={p.id}>{p.name}{p.plugTypeFamily ? ` (${p.plugTypeFamily})` : ""}</MenuItem>)}
+            </TextField>
+          : c.plugTypeName ?? <Typography variant="caption" color="warning.main">{t("ocpp@detail.setPlugType")}</Typography>}
+      </TableCell>
       <TableCell>
         {editing
           ? <TextField size="small" type="number" value={power} onChange={(e) => setPower(e.target.value)} sx={{ width: 90 }} inputProps={{ step: 0.1, min: 0 }} />
           : c.powerKw != null ? `${c.powerKw} kW` : <Typography variant="caption" color="text.disabled">—</Typography>}
       </TableCell>
       <TableCell><Typography variant="caption">{fmt.relative(c.statusUpdatedAt ?? c.statusReceivedAt)}</Typography></TableCell>
-      <TableCell align="right">
+      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
         {editing
-          ? <Tooltip title={t("ocpp@actions.saveConnector")}><IconButton size="small" color="primary" onClick={save} disabled={update.isPending}><SaveIcon fontSize="small" /></IconButton></Tooltip>
-          : <Tooltip title={t("ocpp@actions.edit")}><IconButton size="small" onClick={() => setEditing(true)}><EditIcon fontSize="small" /></IconButton></Tooltip>}
+          ? (<>
+              <Tooltip title={t("ocpp@actions.saveConnector")}><span><IconButton size="small" color="primary" onClick={save} disabled={update.isPending}>{update.isPending ? <CircularProgress size={16} /> : <SaveIcon fontSize="small" />}</IconButton></span></Tooltip>
+              <IconButton size="small" onClick={cancelEdit} disabled={update.isPending}><CloseRoundedIcon fontSize="small" /></IconButton>
+            </>)
+          : <Tooltip title={t("ocpp@actions.edit")}><IconButton size="small" onClick={startEdit}><EditIcon fontSize="small" /></IconButton></Tooltip>}
       </TableCell>
     </TableRow>
   );
@@ -201,6 +220,11 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                 <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirm("delete")}>{t("ocpp@actions.delete")}</Button>
               </Stack>
 
+              {/* Commissioning: shown until the first BootNotification (and once more, green, right after it) */}
+              {(!cp.lastBootAt || cp.onboarding.state !== "Booted") && (
+                <OnboardingCard ob={cp.onboarding} vendor={cp.vendor} model={cp.model} firmware={cp.firmwareVersion} />
+              )}
+
               {/* Today + subscription */}
               <Paper variant="outlined" sx={{ borderRadius: 2, p: 2 }}>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
@@ -224,7 +248,6 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                 <Stack spacing={2} divider={<Divider />}>
                   <Box>
                     <SectionTitle>{t("ocpp@detail.info")}</SectionTitle>
-                    {!cp.lastBootAt && <Typography variant="body2" color="warning.main" sx={{ mt: 1 }}>{t("ocpp@detail.neverBooted")}</Typography>}
                     <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
                       <Info label={t("ocpp@detail.vendor")} value={cp.vendor} />
                       <Info label={t("ocpp@detail.model")} value={cp.model} />

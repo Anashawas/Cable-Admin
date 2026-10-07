@@ -56,7 +56,7 @@ export default function StationChargersSection({ chargingPointId, stationName, o
       <AuthorizedTagsSection chargingPointId={chargingPointId} />
 
       <ChargerDetailDialog id={viewId} onClose={() => setViewId(null)} />
-      <RegisterChargerDialog open={registerOpen} onClose={() => setRegisterOpen(false)} chargingPointId={chargingPointId} />
+      <RegisterChargerDialog open={registerOpen} onClose={() => setRegisterOpen(false)} chargingPointId={chargingPointId} onRegistered={setViewId} />
     </Stack>
   );
 }

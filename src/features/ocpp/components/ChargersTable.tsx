@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useSnackbarStore } from "../../../stores";
 import { useSetChargePointEnabled } from "../hooks/use-ocpp";
 import type { OcppChargePointListItemDto } from "../types/api";
-import { ConnectionChip, SubscriptionChip, errMessage, useDateFmt } from "./ocpp-ui";
+import { ConnectionChip, OnboardingChip, SubscriptionChip, errMessage, useDateFmt } from "./ocpp-ui";
 
 interface ChargersTableProps {
   items: OcppChargePointListItemDto[];
@@ -79,7 +79,11 @@ export default function ChargersTable({ items, loading, onView, hideStation, emp
                     <Typography variant="caption" color="text.secondary" display="block">#{row.chargingPointId}</Typography>
                   </TableCell>
                 )}
-                <TableCell><ConnectionChip state={row.connectionState} isEnabled={row.isEnabled} lockedUntil={row.lockedUntil} /></TableCell>
+                <TableCell>
+                  {row.onboardingState && row.isEnabled
+                    ? <Tooltip title={row.onboardingReason ?? ""}><span><OnboardingChip state={row.onboardingState} /></span></Tooltip>
+                    : <ConnectionChip state={row.connectionState} isEnabled={row.isEnabled} lockedUntil={row.lockedUntil} />}
+                </TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <Chip size="small" variant="outlined" color={row.freeConnectors > 0 ? "success" : "default"} label={`${row.freeConnectors}/${row.connectorCount}`} sx={{ fontWeight: 700 }} />

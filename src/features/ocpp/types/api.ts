@@ -44,6 +44,18 @@ export interface OcppChargePointListItemDto {
   openSessions: number;
   subscription: OcppSubscriptionStateDto;
   createdAt: string;
+  /** Only until the first BootNotification: Waiting | Connected | Refused. Null once booted. */
+  onboardingState?: "Waiting" | "Connected" | "Refused" | null;
+  onboardingReason?: string | null;
+}
+
+/** Did the unit reach us yet? Booted once vendor/model are in; before that Waiting / Connected / Refused. */
+export interface OcppOnboardingDto {
+  state: "Waiting" | "Connected" | "Refused" | "Booted";
+  reason?: string | null;
+  httpStatus?: number | null;
+  at?: string | null;
+  registeredAt: string;
 }
 
 export interface OcppConnectorDto {
@@ -121,6 +133,7 @@ export interface OcppChargePointDetailDto {
   recentTransactions: OcppTransactionDto[];
   today: OcppChargePointTodayDto;
   localList: OcppLocalListStateDto;
+  onboarding: OcppOnboardingDto;
   createdAt: string;
   modifiedAt?: string | null;
 }
@@ -280,6 +293,9 @@ export interface OcppCommandDto {
   requestedById?: number | null;
   requestedByName?: string | null;
   createdAt: string;
+  /** When the charger's follow-up message proved the command took effect; null = accepted, not yet confirmed. */
+  completedAt?: string | null;
+  confirmedAfterSec?: number | null;
 }
 
 export type OcppTriggerMessage =

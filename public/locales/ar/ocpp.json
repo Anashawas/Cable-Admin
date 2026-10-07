@@ -114,7 +114,9 @@
     "orphan": "يتيمة",
     "rejected": "مرفوضة",
     "sessionsCount": "{{count}} جلسة",
-    "faultsCount": "{{count}} عطل"
+    "faultsCount": "{{count}} عطل",
+    "noPlugType": "— بدون —",
+    "setPlugType": "حدّد نوع المقبس"
   },
   "connectorStatus": {
     "Available": "متاح",
@@ -275,7 +277,9 @@
       "unitOnTitle": "إعادة الوحدة كاملة للخدمة؟",
       "connectorOnTitle": "إعادة المقبس {{connector}} للخدمة؟",
       "onBody": "يصبح متاحاً من جديد فوراً."
-    }
+    },
+    "confirmedAfter": "تأكّد بعد {{seconds}} ث",
+    "notConfirmed": "لم يتأكّد بعد"
   },
   "config": {
     "title": "إعدادات الشاحن",
@@ -320,5 +324,26 @@
       "ConnectorFaulted": "مقبس معطّل",
       "SessionTooLong": "جلسة طويلة"
     }
+  },
+  "onboarding": {
+    "Waiting": "بانتظار الشاحن",
+    "Connected": "متصل، لم يرسل Boot بعد",
+    "Refused": "اتصال مرفوض",
+    "Booted": "متصل",
+    "title": {
+      "Waiting": "بانتظار أول اتصال…",
+      "Connected": "تم قبول الاتصال — بانتظار BootNotification",
+      "Refused": "حاول الشاحن الاتصال وتم رفضه",
+      "Booted": "الشاحن متصل"
+    },
+    "body": {
+      "Waiting": "لم يصل شيء من هذا المعرّف إلى السيرفر بعد. أدخل العنوان والمنفذ ومعرّف الشاحن في الوحدة، احفظ، ثم أعد تشغيلها. هذه البطاقة تتحدّث تلقائياً.",
+      "Connected": "فتحت الوحدة الاتصال لكنها لم ترسل BootNotification بعد. عادةً يصل خلال ثوانٍ؛ إن لم يصل أعد تشغيل الوحدة.",
+      "Refused": "تحقق من المعرّف المُدخل في الوحدة (حساس لحالة الأحرف)، ومن إعداد كلمة المرور، ومن أن الشاحن مفعّل هنا."
+    },
+    "bootedBody": "وصل Boot: {{vendor}} {{model}}، فيرموير {{firmware}}. الحالة المباشرة أعلاه تعكس الوحدة الآن.",
+    "lastEvent": "آخر حدث",
+    "registered": "سُجّل",
+    "autoRefresh": "يتحدّث كل 4 ثوانٍ"
   }
 }

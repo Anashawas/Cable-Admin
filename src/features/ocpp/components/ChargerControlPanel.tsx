@@ -47,6 +47,9 @@ function SectionTitle({ children }: { children: ReactNode }) {
   return <Typography variant="subtitle2" fontWeight={800} color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>{children}</Typography>;
 }
 
+/** Commands whose effect the charger later proves with its own message (Reset → BootNotification, …). */
+const CONFIRMABLE = new Set(["Reset", "ChangeAvailability", "UnlockConnector", "TriggerMessage"]);
+
 type PendingAction =
   | { kind: "reset"; type: "Soft" | "Hard" }
   | { kind: "unlock"; connectorId: number }
@@ -243,7 +246,14 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
                       </TableCell>
                       <TableCell>
                         <Stack spacing={0.25} alignItems="flex-start">
-                          <CommandOutcomeChip status={h.status} resultStatus={h.resultStatus} />
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <CommandOutcomeChip status={h.status} resultStatus={h.resultStatus} />
+                            {CONFIRMABLE.has(h.action) && h.status === "Answered" && h.resultStatus !== "Rejected" && (
+                              h.completedAt
+                                ? <Chip size="small" color="success" variant="outlined" label={t("ocpp@commands.confirmedAfter", { seconds: h.confirmedAfterSec ?? 0 })} sx={{ height: 20, fontSize: 11 }} />
+                                : <Chip size="small" color="warning" variant="outlined" label={t("ocpp@commands.notConfirmed")} sx={{ height: 20, fontSize: 11 }} />
+                            )}
+                          </Stack>
                           {h.errorDescription && <Typography variant="caption" color="error.main">{h.errorCode ? `${h.errorCode}: ` : ""}{h.errorDescription}</Typography>}
                         </Stack>
                       </TableCell>

@@ -87,9 +87,11 @@ interface RegisterChargerDialogProps {
   onClose: () => void;
   /** When embedded in a station page the station is fixed. */
   chargingPointId?: number;
+  /** Called when the credentials sheet is dismissed — the parent opens the charger so the admin watches it connect. */
+  onRegistered?: (id: number) => void;
 }
 
-export default function RegisterChargerDialog({ open, onClose, chargingPointId }: RegisterChargerDialogProps) {
+export default function RegisterChargerDialog({ open, onClose, chargingPointId, onRegistered }: RegisterChargerDialogProps) {
   const { t } = useTranslation();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -192,7 +194,7 @@ export default function RegisterChargerDialog({ open, onClose, chargingPointId }
         </DialogActions>
       </Dialog>
 
-      <CredentialsDialog open={!!credentials} credentials={credentials} onClose={() => setCredentials(null)} />
+      <CredentialsDialog open={!!credentials} credentials={credentials} onClose={() => { const id = credentials?.id; setCredentials(null); if (id) onRegistered?.(id); }} />
     </>
   );
 }

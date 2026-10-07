@@ -147,7 +147,7 @@ export default function CableConnectScreen() {
       </Box>
 
       <ChargerDetailDialog id={viewId} onClose={() => setViewId(null)} />
-      <RegisterChargerDialog open={registerOpen} onClose={() => setRegisterOpen(false)} />
+      <RegisterChargerDialog open={registerOpen} onClose={() => setRegisterOpen(false)} onRegistered={setViewId} />
     </AppScreenContainer>
   );
 }

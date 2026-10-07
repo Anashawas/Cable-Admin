@@ -64,7 +64,9 @@ export function useOcppChargePoint(id: number | null | undefined, live = true) {
     queryKey: [...OCPP_QUERY_KEY, "charge-point", id],
     queryFn: ({ signal }) => getChargePoint(id!, 10, signal),
     enabled: id != null && id > 0,
-    refetchInterval: live ? LIVE_REFETCH_MS : false,
+    // A unit that has not booted yet is being commissioned right now: poll every 4 s so the
+    // admin at the station sees "connected" the moment it happens.
+    refetchInterval: (q) => (!live ? false : q.state.data && !q.state.data.lastBootAt ? 4_000 : LIVE_REFETCH_MS),
   });
 }
 

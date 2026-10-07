@@ -114,7 +114,9 @@
     "orphan": "Orphan",
     "rejected": "Rejected",
     "sessionsCount": "{{count}} sessions",
-    "faultsCount": "{{count}} faults"
+    "faultsCount": "{{count}} faults",
+    "noPlugType": "— none —",
+    "setPlugType": "set plug type"
   },
   "connectorStatus": {
     "Available": "Available",
@@ -275,7 +277,9 @@
       "unitOnTitle": "Put the whole unit back in service?",
       "connectorOnTitle": "Put plug {{connector}} back in service?",
       "onBody": "It becomes Available again immediately."
-    }
+    },
+    "confirmedAfter": "confirmed after {{seconds}} s",
+    "notConfirmed": "not confirmed yet"
   },
   "config": {
     "title": "Charger settings",
@@ -320,5 +324,26 @@
       "ConnectorFaulted": "Plug faulted",
       "SessionTooLong": "Session too long"
     }
+  },
+  "onboarding": {
+    "Waiting": "Waiting for charger",
+    "Connected": "Connected, no boot yet",
+    "Refused": "Connection refused",
+    "Booted": "Connected",
+    "title": {
+      "Waiting": "Waiting for the first connection…",
+      "Connected": "Socket accepted — waiting for BootNotification",
+      "Refused": "The charger tried to connect and was refused",
+      "Booted": "The charger is connected"
+    },
+    "body": {
+      "Waiting": "Nothing has reached the server from this id yet. Type the URL, port and Charge Point ID into the unit, save, and reboot it. This card updates by itself.",
+      "Connected": "The unit opened the socket but has not sent BootNotification yet. It usually follows within seconds; if it does not, reboot the unit.",
+      "Refused": "Check the id typed into the unit (it is case-sensitive), the password setting, and that the charger is enabled here."
+    },
+    "bootedBody": "Boot received: {{vendor}} {{model}}, firmware {{firmware}}. The live state above now reflects the unit.",
+    "lastEvent": "Last event",
+    "registered": "Registered",
+    "autoRefresh": "refreshes every 4 s"
   }
 }
