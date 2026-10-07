@@ -112,12 +112,26 @@ export interface OcppChargePointDetailDto {
   failedAuthCount: number;
   lockedUntil?: string | null;
   urlPath: string;
+  /** wss://host/ocpp16/ from the server's own config; null when the API has no OcppServer:Url. */
+  webSocketBaseUrl?: string | null;
+  /** 443 / 80 — for units with a separate port field. */
+  port?: number | null;
   subscription: OcppSubscriptionStateDto;
   connectors: OcppConnectorDto[];
   recentTransactions: OcppTransactionDto[];
   today: OcppChargePointTodayDto;
+  localList: OcppLocalListStateDto;
   createdAt: string;
   modifiedAt?: string | null;
+}
+
+/** The card list pushed into the unit (SendLocalList). status null = never pushed. */
+export interface OcppLocalListStateDto {
+  status?: "Synced" | "Pending" | "Failed" | "NotSupported" | null;
+  version?: number | null;
+  syncedAt?: string | null;
+  cardsAtStation: number;
+  confirmed: boolean;
 }
 
 export interface OcppRawMessageDto {
@@ -148,6 +162,27 @@ export interface OcppFleetHealthDto {
   energyTodayKwh: number;
   stationsWithChargers: number;
   stationsWithoutActiveSubscription: number;
+  openAlerts: number;
+}
+
+export type OcppAlertType = "ChargerOffline" | "ConnectorFaulted" | "SessionTooLong";
+
+/** An alert-job finding; resolvedAt null = still open. */
+export interface OcppAlertDto {
+  id: number;
+  type: OcppAlertType;
+  ocppChargePointId: number;
+  chargePointId: string;
+  displayName?: string | null;
+  chargingPointId: number;
+  stationName: string;
+  connectorId?: number | null;
+  ocppTransactionId?: number | null;
+  conditionSince: string;
+  notifiedAt: string;
+  resolvedAt?: string | null;
+  details?: string | null;
+  recipients: number;
 }
 
 export interface OcppAuthorizedTagDto {
@@ -187,6 +222,10 @@ export interface ChargerCredentials {
   password?: string | null;
   urlPath?: string;
   heartbeatInterval?: number;
+  /** wss://host/ocpp16/ as the server itself reports it — preferred over the admin's own config. */
+  webSocketBaseUrl?: string | null;
+  /** 443 / 80 — shown so a technician changes a unit's separate port field (RH4 ships with 4435). */
+  port?: number | null;
 }
 
 export interface UpdateChargePointRequest {
@@ -205,4 +244,50 @@ export interface AddAuthorizedTagRequest {
   label?: string | null;
   /** Jordan local time. */
   expiresAt?: string | null;
+}
+
+// ============================================
+// Phase 2 — central-system commands (server → charger)
+// ============================================
+
+/** Transport outcome of a command; the unit's own verdict is `resultStatus`. */
+export type OcppCommandStatus = "Answered" | "CallError" | "NotConnected" | "Timeout" | "Disconnected" | "Invalid" | "Unreachable";
+
+export interface OcppCommandResultDto {
+  commandId: number;
+  action: string;
+  status: OcppCommandStatus;
+  /** Accepted | Rejected | Scheduled | Unlocked | UnlockFailed | NotSupported | RebootRequired … */
+  resultStatus?: string | null;
+  responsePayload?: string | null;
+  errorCode?: string | null;
+  errorDescription?: string | null;
+  elapsedMs: number;
+  /** status Answered and resultStatus positive (or absent, e.g. GetConfiguration). */
+  accepted: boolean;
+}
+
+export interface OcppCommandDto {
+  id: number;
+  action: string;
+  requestPayload: string;
+  status: OcppCommandStatus;
+  resultStatus?: string | null;
+  responsePayload?: string | null;
+  errorCode?: string | null;
+  errorDescription?: string | null;
+  durationMs?: number | null;
+  requestedById?: number | null;
+  requestedByName?: string | null;
+  createdAt: string;
+}
+
+export type OcppTriggerMessage =
+  | "BootNotification" | "DiagnosticsStatusNotification" | "FirmwareStatusNotification"
+  | "Heartbeat" | "MeterValues" | "StatusNotification";
+
+export interface OcppConfigurationKey {
+  key: string;
+  readonly: boolean;
+  value?: string | null;
 }

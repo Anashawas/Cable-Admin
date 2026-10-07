@@ -20,6 +20,8 @@ import {
 } from "../hooks/use-ocpp";
 import type { ChargerCredentials, OcppConnectorDto } from "../types/api";
 import { CredentialsDialog } from "./RegisterChargerDialog";
+import ChargerControlPanel from "./ChargerControlPanel";
+import ChargerConfigPanel from "./ChargerConfigPanel";
 import { ConnectionChip, ConnectorStatusChip, SubscriptionChip, errMessage, fmtDuration, fmtKwh, ocppBaseUrl, useDateFmt } from "./ocpp-ui";
 
 function Info({ label, value, mono = false }: { label: string; value?: ReactNode; mono?: boolean }) {
@@ -238,7 +240,8 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                   <Box>
                     <SectionTitle>{t("ocpp@detail.connection")}</SectionTitle>
                     <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
-                      <Info label={t("ocpp@detail.url")} value={`${ocppBaseUrl()}${cp.urlPath}`} mono />
+                      <Info label={t("ocpp@detail.url")} value={cp.webSocketBaseUrl ? `${cp.webSocketBaseUrl}${cp.chargePointId}` : `${ocppBaseUrl()}${cp.urlPath}`} mono />
+                      <Info label={t("ocpp@credentials.port")} value={cp.port ?? undefined} mono />
                       <Info label={t("ocpp@detail.lastBoot")} value={fmt.full(cp.lastBootAt)} />
                       <Info label={t("ocpp@detail.lastMessage")} value={cp.lastMessageAt ? `${fmt.relative(cp.lastMessageAt)} · ${fmt.full(cp.lastMessageAt)}` : "—"} />
                       <Info label={t("ocpp@detail.connectedSince")} value={cp.isConnected ? fmt.full(cp.connectedAt) : undefined} />
@@ -251,6 +254,10 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                   </Box>
                 </Stack>
               </Paper>
+
+              {/* Phase 2 — remote control + the unit's settings */}
+              <ChargerControlPanel cp={cp} />
+              <ChargerConfigPanel cp={cp} />
 
               {/* Connectors */}
               <Paper variant="outlined" sx={{ borderRadius: 2, p: 2 }}>

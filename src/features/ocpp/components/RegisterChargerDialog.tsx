@@ -52,7 +52,9 @@ function CopyField({ label, value, mono = true }: { label: string; value: string
 export function CredentialsDialog({ open, credentials, onClose }: { open: boolean; credentials: ChargerCredentials | null; onClose: () => void }) {
   const { t } = useTranslation();
   if (!credentials) return null;
-  const url = `${ocppBaseUrl()}/ocpp16/`;
+  // The server's own address wins; the admin config is only the fallback for an API without OcppServer:Url.
+  const url = credentials.webSocketBaseUrl ?? `${ocppBaseUrl()}/ocpp16/`;
+  const port = credentials.port ?? (url.startsWith("wss://") ? 443 : 80);
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
       <DialogTitle sx={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}>
@@ -62,6 +64,10 @@ export function CredentialsDialog({ open, credentials, onClose }: { open: boolea
         <Stack spacing={2}>
           <Alert severity="warning" sx={{ borderRadius: 2 }}>{t("ocpp@credentials.warning")}</Alert>
           <CopyField label={t("ocpp@credentials.url")} value={url} />
+          <Box>
+            <CopyField label={t("ocpp@credentials.port")} value={String(port)} />
+            <Typography variant="caption" color="warning.main" display="block" sx={{ mt: 0.5 }}>{t("ocpp@credentials.portHint", { port })}</Typography>
+          </Box>
           <CopyField label={t("ocpp@credentials.chargePointId")} value={credentials.chargePointId} />
           <CopyField label={t("ocpp@credentials.username")} value={credentials.username} />
           {credentials.password
@@ -105,7 +111,9 @@ export default function RegisterChargerDialog({ open, onClose, chargingPointId }
   );
   const [displayName, setDisplayName] = useState("");
   const [heartbeat, setHeartbeat] = useState("60");
-  const [requirePassword, setRequirePassword] = useState(true);
+  // Default OFF: the pilot hardware (RH4) runs OCPP Security Profile 0 and cannot send Basic auth —
+  // registering it with a password means 401 at the station. Turn on only for units that support it.
+  const [requirePassword, setRequirePassword] = useState(false);
   const [credentials, setCredentials] = useState<ChargerCredentials | null>(null);
 
   useEffect(() => {
@@ -114,7 +122,7 @@ export default function RegisterChargerDialog({ open, onClose, chargingPointId }
       setChargePointId("");
       setDisplayName("");
       setHeartbeat("60");
-      setRequirePassword(true);
+      setRequirePassword(false);
     }
   }, [open, chargingPointId]);
 
@@ -165,7 +173,7 @@ export default function RegisterChargerDialog({ open, onClose, chargingPointId }
             />
             <TextField
               label={t("ocpp@register.chargePointId")} value={chargePointId} onChange={(e) => setChargePointId(e.target.value)}
-              fullWidth helperText={t("ocpp@register.chargePointIdHint")} inputProps={{ maxLength: 40, style: { fontFamily: "monospace" } }}
+              fullWidth helperText={t("ocpp@register.chargePointIdHint")} inputProps={{ maxLength: 20, style: { fontFamily: "monospace" } }}
             />
             <TextField label={t("ocpp@register.displayName")} value={displayName} onChange={(e) => setDisplayName(e.target.value)} fullWidth inputProps={{ maxLength: 100 }} />
             <TextField label={t("ocpp@register.heartbeat")} value={heartbeat} onChange={(e) => setHeartbeat(e.target.value)} type="number" fullWidth inputProps={{ min: 10, max: 3600 }} />

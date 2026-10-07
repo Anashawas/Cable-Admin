@@ -1,7 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addAuthorizedTag,
+  changeAvailability,
+  changeConfiguration,
   deleteChargePoint,
+  getAlerts,
+  getCommands,
+  getConfiguration,
+  resetChargePoint,
+  syncLocalList,
+  triggerMessage,
+  unlockConnector,
   getAuthorizedTags,
   getChargePoint,
   getChargePoints,
@@ -18,6 +27,7 @@ import {
 import type {
   AddAuthorizedTagRequest,
   OcppChargePointsQuery,
+  OcppTriggerMessage,
   RegisterChargePointRequest,
   UpdateChargePointRequest,
   UpdateConnectorRequest,
@@ -64,6 +74,14 @@ export function useOcppRawMessages(id: number | null | undefined, take = 50, ena
     queryFn: ({ signal }) => getRawMessages(id!, { take }, signal),
     enabled: enabled && id != null && id > 0,
     refetchInterval: enabled ? LIVE_REFETCH_MS : false,
+  });
+}
+
+export function useOcppAlerts(params: { openOnly?: boolean; chargePointId?: number; take?: number } = {}, live = true) {
+  return useQuery({
+    queryKey: [...OCPP_QUERY_KEY, "alerts", params],
+    queryFn: ({ signal }) => getAlerts(params, signal),
+    refetchInterval: live ? LIVE_REFETCH_MS * 4 : false,
   });
 }
 
@@ -154,5 +172,76 @@ export function useRemoveAuthorizedTag() {
   return useMutation({
     mutationFn: (id: number) => removeAuthorizedTag(id),
     onSuccess: invalidate,
+  });
+}
+
+// ============================================
+// Phase 2 — commands. Each one waits for the unit's answer (≤ 30 s) and then
+// refreshes the charger, since most commands change connector state.
+// ============================================
+
+export function useOcppCommands(id: number | null | undefined, take = 30, enabled = true) {
+  return useQuery({
+    queryKey: [...OCPP_QUERY_KEY, "commands", id, take],
+    queryFn: ({ signal }) => getCommands(id!, take, signal),
+    enabled: enabled && id != null && id > 0,
+  });
+}
+
+export function useTriggerMessage() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, requestedMessage, connectorId }: { id: number; requestedMessage: OcppTriggerMessage; connectorId?: number | null }) =>
+      triggerMessage(id, requestedMessage, connectorId),
+    onSettled: invalidate,
+  });
+}
+
+export function useResetChargePoint() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, type }: { id: number; type: "Soft" | "Hard" }) => resetChargePoint(id, type),
+    onSettled: invalidate,
+  });
+}
+
+export function useUnlockConnector() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, connectorId }: { id: number; connectorId: number }) => unlockConnector(id, connectorId),
+    onSettled: invalidate,
+  });
+}
+
+export function useChangeAvailability() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, connectorId, type }: { id: number; connectorId: number; type: "Operative" | "Inoperative" }) =>
+      changeAvailability(id, connectorId, type),
+    onSettled: invalidate,
+  });
+}
+
+export function useGetConfiguration() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, keys }: { id: number; keys?: string[] }) => getConfiguration(id, keys),
+    onSettled: invalidate,
+  });
+}
+
+export function useChangeConfiguration() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, key, value }: { id: number; key: string; value: string }) => changeConfiguration(id, key, value),
+    onSettled: invalidate,
+  });
+}
+
+export function useSyncLocalList() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: (id: number) => syncLocalList(id),
+    onSettled: invalidate,
   });
 }

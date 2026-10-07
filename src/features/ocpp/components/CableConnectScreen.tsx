@@ -15,6 +15,8 @@ import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import BoltIcon from "@mui/icons-material/Bolt";
 import ElectricMeterIcon from "@mui/icons-material/ElectricMeter";
 import CreditCardOffIcon from "@mui/icons-material/CreditCardOff";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import AlertsSection from "./AlertsSection";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { useOcppChargePoints, useOcppFleetHealth } from "../hooks/use-ocpp";
 import type { OcppConnectionState } from "../types/api";
@@ -97,6 +99,7 @@ export default function CableConnectScreen() {
             <Kpi icon={<ReportProblemIcon />} label={t("ocpp@kpi.faulted")} value={h?.faultedConnectors ?? "—"} color={theme.palette.error.dark} />
             <Kpi icon={<BoltIcon />} label={t("ocpp@kpi.openSessions")} value={h?.openSessions ?? "—"} color={theme.palette.primary.main} />
             <Kpi icon={<ElectricMeterIcon />} label={t("ocpp@kpi.energyToday")} value={h ? Number(h.energyTodayKwh).toFixed(1) : "—"} color={theme.palette.info.main} />
+            <Kpi icon={<NotificationsActiveIcon />} label={t("ocpp@kpi.openAlerts")} value={h?.openAlerts ?? "—"} color={h && h.openAlerts > 0 ? theme.palette.error.main : theme.palette.text.disabled} />
           </Grid>
           {h && (h.stationsWithoutActiveSubscription > 0 || h.staleSessions > 0 || h.neverConnected > 0) && (
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -105,6 +108,9 @@ export default function CableConnectScreen() {
               {h.neverConnected > 0 && <Chip variant="outlined" label={`${t("ocpp@kpi.neverConnected")}: ${h.neverConnected}`} />}
             </Stack>
           )}
+
+          {/* Alerts */}
+          <AlertsSection onOpenCharger={setViewId} />
 
           {/* Filters */}
           <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>

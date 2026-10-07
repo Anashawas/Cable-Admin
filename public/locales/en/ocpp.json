@@ -18,7 +18,8 @@
     "sessionsToday": "Sessions today",
     "noSubscription": "Stations without subscription",
     "neverConnected": "Never connected",
-    "stale": "Stale sessions"
+    "stale": "Stale sessions",
+    "openAlerts": "Open alerts"
   },
   "state": {
     "Online": "Online",
@@ -144,11 +145,11 @@
     "station": "Station",
     "stationHint": "Search by name, city or ID — the Cable station this charger belongs to",
     "chargePointId": "Charge point ID",
-    "chargePointIdHint": "Leave empty to generate CBL-{station}-{nn}. Use the unit's existing id (e.g. RH4) to keep it.",
+    "chargePointIdHint": "Leave empty to generate CBL-{station}-{nn}. Use the unit's existing id (e.g. RH4) to keep it. Max 20 characters (OCPP limit).",
     "displayName": "Display name",
     "heartbeat": "Heartbeat interval (s)",
     "requirePassword": "Require password (HTTP Basic)",
-    "requirePasswordHint": "Turn off for units on OCPP Security Profile 0 that cannot send credentials.",
+    "requirePasswordHint": "Off by default: units on OCPP Security Profile 0 (e.g. RH4) cannot send a password and would be refused with 401. Turn on only for units that support HTTP Basic.",
     "submit": "Register",
     "success": "Charger registered"
   },
@@ -160,7 +161,9 @@
     "username": "Username",
     "password": "Password",
     "noPassword": "No password — the charger connects by id only.",
-    "done": "Done"
+    "done": "Done",
+    "port": "Port",
+    "portHint": "If the charger has a separate port field, set it to {{port}}. A unit coming from another platform usually still has that platform's port (RH4: 4435)."
   },
   "edit": {
     "title": "Edit charger",
@@ -211,5 +214,111 @@
     "CONNECT": "Connected",
     "DISCONNECT": "Disconnected",
     "REFUSED": "Refused"
+  },
+  "commands": {
+    "title": "Remote control",
+    "offlineHint": "Charger is offline — commands need a live connection",
+    "refresh": "Refresh now",
+    "trigger": {
+      "StatusNotification": "Plug states (StatusNotification)",
+      "Heartbeat": "Heartbeat",
+      "MeterValues": "Meter reading (MeterValues)",
+      "BootNotification": "Boot info (BootNotification)"
+    },
+    "softReset": "Soft reset",
+    "hardReset": "Hard reset",
+    "unitOff": "Unit out of service",
+    "unitOn": "Unit back in service",
+    "unlock": "Unlock cable",
+    "unlockHint": "Releases the cable lock; any running session is stopped first",
+    "connectorOff": "Out of service",
+    "connectorOn": "Back in service",
+    "showHistory": "Command history",
+    "hideHistory": "Hide history",
+    "noHistory": "No commands sent yet",
+    "command": "Command",
+    "result": "Result",
+    "by": "By",
+    "took": "Took",
+    "answered": "Answered",
+    "action": {
+      "TriggerMessage": "Refresh",
+      "Reset": "Reset",
+      "UnlockConnector": "Unlock cable",
+      "ChangeAvailability": "Availability",
+      "GetConfiguration": "Read settings",
+      "ChangeConfiguration": "Change setting",
+      "ClearCache": "Clear cache",
+      "SendLocalList": "Push card list",
+      "RemoteStartTransaction": "Remote start",
+      "RemoteStopTransaction": "Remote stop"
+    },
+    "status": {
+      "Answered": "Answered",
+      "CallError": "Charger refused the request",
+      "NotConnected": "Charger not connected",
+      "Timeout": "No answer within 30 s",
+      "Disconnected": "Connection dropped while waiting",
+      "Invalid": "Invalid request",
+      "Unreachable": "OCPP server unreachable"
+    },
+    "confirm": {
+      "resetSoftTitle": "Soft reset?",
+      "resetSoftBody": "The charger restarts its software after any running session ends, then reconnects by itself. Expect it Offline for about a minute.",
+      "resetHardTitle": "Hard reset?",
+      "resetHardBody": "The charger reboots immediately. A running session is cut. It reconnects by itself in one to two minutes.",
+      "unlockTitle": "Unlock the cable on plug {{connector}}?",
+      "unlockBody": "A running session on that plug is stopped first. Use it when a driver cannot remove the cable.",
+      "unitOffTitle": "Take the whole unit out of service?",
+      "connectorOffTitle": "Take plug {{connector}} out of service?",
+      "offBody": "It shows Unavailable in the apps and refuses new sessions. A running session finishes first (Scheduled). It stays out of service until you put it back.",
+      "unitOnTitle": "Put the whole unit back in service?",
+      "connectorOnTitle": "Put plug {{connector}} back in service?",
+      "onBody": "It becomes Available again immediately."
+    }
+  },
+  "config": {
+    "title": "Charger settings",
+    "hint": "Read the unit's own configuration keys. Nothing is cached — this asks the charger right now.",
+    "read": "Read settings",
+    "reread": "Read again",
+    "readAt": "Read at",
+    "profiles": "Supported profiles",
+    "key": "Key",
+    "value": "Value",
+    "readonly": "Read-only on the unit",
+    "saved": "saved on the unit",
+    "rebootRequired": "saved — takes effect after a reset",
+    "unknown": "Not on this unit"
+  },
+  "localList": {
+    "title": "Cards on the unit",
+    "never": "Not pushed yet",
+    "cards": "{{count}} cards",
+    "syncNow": "Sync cards now",
+    "hint": "Pushes the station's allowed cards into the charger so it keeps authorizing them when Cable is unreachable. Runs by itself after every card change.",
+    "synced": "Card list pushed — {{count}} cards on the unit",
+    "status": {
+      "Synced": "Synced",
+      "Pending": "Pending — pushed at next boot",
+      "Failed": "Push failed",
+      "NotSupported": "Unit has no local list"
+    }
+  },
+  "alerts": {
+    "title": "Alerts",
+    "what": "What",
+    "since": "Since",
+    "notified": "Notified",
+    "resolved": "Resolved",
+    "open": "still open",
+    "recipients": "{{count}} people",
+    "showResolved": "Show resolved",
+    "hideResolved": "Open only",
+    "type": {
+      "ChargerOffline": "Charger offline",
+      "ConnectorFaulted": "Plug faulted",
+      "SessionTooLong": "Session too long"
+    }
   }
 }

@@ -18,7 +18,8 @@
     "sessionsToday": "جلسات اليوم",
     "noSubscription": "محطات بدون اشتراك",
     "neverConnected": "لم يتصل أبداً",
-    "stale": "جلسات معلّقة"
+    "stale": "جلسات معلّقة",
+    "openAlerts": "تنبيهات مفتوحة"
   },
   "state": {
     "Online": "متصل",
@@ -144,11 +145,11 @@
     "station": "المحطة",
     "stationHint": "ابحث بالاسم أو المدينة أو الرقم — محطة كيبل التي يتبع لها هذا الشاحن",
     "chargePointId": "معرّف الشاحن (Charge Point ID)",
-    "chargePointIdHint": "اتركه فارغاً ليتم توليد CBL-{station}-{nn}. استخدم معرّف الجهاز الحالي (مثل RH4) للإبقاء عليه.",
+    "chargePointIdHint": "اتركه فارغاً ليتم توليد CBL-{station}-{nn}. استخدم معرّف الجهاز الحالي (مثل RH4) للإبقاء عليه. الحد الأقصى 20 حرفاً (حد OCPP).",
     "displayName": "اسم العرض",
     "heartbeat": "نبض الاتصال (ثانية)",
     "requirePassword": "يتطلب كلمة مرور (HTTP Basic)",
-    "requirePasswordHint": "أوقفه للأجهزة التي تعمل على OCPP Security Profile 0 ولا تستطيع إرسال بيانات دخول.",
+    "requirePasswordHint": "مطفأ افتراضياً: الوحدات على OCPP Security Profile 0 (مثل RH4) لا تستطيع إرسال كلمة مرور وستُرفض بـ 401. فعّله فقط للوحدات التي تدعم HTTP Basic.",
     "submit": "تسجيل",
     "success": "تم تسجيل الشاحن"
   },
@@ -160,7 +161,9 @@
     "username": "اسم المستخدم",
     "password": "كلمة المرور",
     "noPassword": "بدون كلمة مرور — يتصل الشاحن بالمعرّف فقط.",
-    "done": "تم"
+    "done": "تم",
+    "port": "المنفذ (Port)",
+    "portHint": "إذا كان للشاحن حقل منفذ منفصل، اضبطه على {{port}}. الوحدة القادمة من منصة أخرى تحتفظ عادةً بمنفذ تلك المنصة (RH4: 4435)."
   },
   "edit": {
     "title": "تعديل الشاحن",
@@ -211,5 +214,111 @@
     "CONNECT": "اتصل",
     "DISCONNECT": "انقطع",
     "REFUSED": "مرفوض"
+  },
+  "commands": {
+    "title": "التحكم عن بُعد",
+    "offlineHint": "الشاحن غير متصل — الأوامر تحتاج اتصالاً مباشراً",
+    "refresh": "تحديث الآن",
+    "trigger": {
+      "StatusNotification": "حالة المقابس (StatusNotification)",
+      "Heartbeat": "نبض الاتصال (Heartbeat)",
+      "MeterValues": "قراءة العدّاد (MeterValues)",
+      "BootNotification": "بيانات التشغيل (BootNotification)"
+    },
+    "softReset": "إعادة تشغيل ناعمة",
+    "hardReset": "إعادة تشغيل كاملة",
+    "unitOff": "إخراج الوحدة من الخدمة",
+    "unitOn": "إعادة الوحدة للخدمة",
+    "unlock": "فتح قفل الكابل",
+    "unlockHint": "يحرّر قفل الكابل؛ تُوقف أي جلسة جارية أولاً",
+    "connectorOff": "خارج الخدمة",
+    "connectorOn": "إعادة للخدمة",
+    "showHistory": "سجل الأوامر",
+    "hideHistory": "إخفاء السجل",
+    "noHistory": "لم تُرسل أوامر بعد",
+    "command": "الأمر",
+    "result": "النتيجة",
+    "by": "بواسطة",
+    "took": "المدة",
+    "answered": "تم الرد",
+    "action": {
+      "TriggerMessage": "تحديث",
+      "Reset": "إعادة تشغيل",
+      "UnlockConnector": "فتح قفل الكابل",
+      "ChangeAvailability": "الإتاحة",
+      "GetConfiguration": "قراءة الإعدادات",
+      "ChangeConfiguration": "تغيير إعداد",
+      "ClearCache": "مسح الذاكرة المؤقتة",
+      "SendLocalList": "إرسال قائمة البطاقات",
+      "RemoteStartTransaction": "بدء عن بُعد",
+      "RemoteStopTransaction": "إيقاف عن بُعد"
+    },
+    "status": {
+      "Answered": "تم الرد",
+      "CallError": "الشاحن رفض الطلب",
+      "NotConnected": "الشاحن غير متصل",
+      "Timeout": "لا رد خلال 30 ثانية",
+      "Disconnected": "انقطع الاتصال أثناء الانتظار",
+      "Invalid": "طلب غير صالح",
+      "Unreachable": "تعذّر الوصول لسيرفر OCPP"
+    },
+    "confirm": {
+      "resetSoftTitle": "إعادة تشغيل ناعمة؟",
+      "resetSoftBody": "يعيد الشاحن تشغيل برنامجه بعد انتهاء أي جلسة جارية ثم يعيد الاتصال بنفسه. توقّع أن يظهر غير متصل لحوالي دقيقة.",
+      "resetHardTitle": "إعادة تشغيل كاملة؟",
+      "resetHardBody": "يعيد الشاحن التشغيل فوراً وتُقطع أي جلسة جارية. يعيد الاتصال بنفسه خلال دقيقة إلى دقيقتين.",
+      "unlockTitle": "فتح قفل الكابل على المقبس {{connector}}؟",
+      "unlockBody": "تُوقف الجلسة الجارية على هذا المقبس أولاً. استخدمه عندما لا يستطيع السائق نزع الكابل.",
+      "unitOffTitle": "إخراج الوحدة كاملة من الخدمة؟",
+      "connectorOffTitle": "إخراج المقبس {{connector}} من الخدمة؟",
+      "offBody": "يظهر «غير متاح» في التطبيقات ويرفض الجلسات الجديدة. الجلسة الجارية تكتمل أولاً (Scheduled). يبقى خارج الخدمة حتى تعيده.",
+      "unitOnTitle": "إعادة الوحدة كاملة للخدمة؟",
+      "connectorOnTitle": "إعادة المقبس {{connector}} للخدمة؟",
+      "onBody": "يصبح متاحاً من جديد فوراً."
+    }
+  },
+  "config": {
+    "title": "إعدادات الشاحن",
+    "hint": "اقرأ مفاتيح الإعداد من الوحدة نفسها. لا شيء مخزّن — هذا يسأل الشاحن الآن.",
+    "read": "قراءة الإعدادات",
+    "reread": "إعادة القراءة",
+    "readAt": "قُرئت في",
+    "profiles": "الملفات المدعومة",
+    "key": "المفتاح",
+    "value": "القيمة",
+    "readonly": "للقراءة فقط على الوحدة",
+    "saved": "حُفظ على الوحدة",
+    "rebootRequired": "حُفظ — يسري بعد إعادة التشغيل",
+    "unknown": "غير موجود على هذه الوحدة"
+  },
+  "localList": {
+    "title": "البطاقات على الوحدة",
+    "never": "لم تُرسل بعد",
+    "cards": "{{count}} بطاقة",
+    "syncNow": "مزامنة البطاقات الآن",
+    "hint": "يرسل بطاقات المحطة المسموح بها إلى الشاحن ليستمر بقبولها عندما يتعذر الوصول إلى كيبل. يعمل تلقائياً بعد كل تغيير في البطاقات.",
+    "synced": "تم إرسال قائمة البطاقات — {{count}} بطاقة على الوحدة",
+    "status": {
+      "Synced": "متزامنة",
+      "Pending": "بالانتظار — تُرسل عند التشغيل التالي",
+      "Failed": "فشل الإرسال",
+      "NotSupported": "الوحدة لا تدعم القائمة المحلية"
+    }
+  },
+  "alerts": {
+    "title": "التنبيهات",
+    "what": "التنبيه",
+    "since": "منذ",
+    "notified": "تم الإبلاغ",
+    "resolved": "انتهى",
+    "open": "ما زال مفتوحاً",
+    "recipients": "{{count}} شخص",
+    "showResolved": "عرض المنتهية",
+    "hideResolved": "المفتوحة فقط",
+    "type": {
+      "ChargerOffline": "شاحن غير متصل",
+      "ConnectorFaulted": "مقبس معطّل",
+      "SessionTooLong": "جلسة طويلة"
+    }
   }
 }
