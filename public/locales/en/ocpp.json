@@ -61,7 +61,8 @@
     "action": "Action",
     "payload": "Payload",
     "label": "Label",
-    "expires": "Expires"
+    "expires": "Expires",
+    "reliability": "Reliability"
   },
   "subscription": {
     "title": "Cable Connect subscription",
@@ -376,5 +377,14 @@
     "blockTitle": "Hide this station's live data from drivers?",
     "blockBody": "Use for wrong data or a dispute. The owner sees the reason. The block never turns sharing on — only the owner can.",
     "reason": "Reason (shown to the owner)"
+  },
+  "reliability": {
+    "title": "Reliability, last {{days}} days",
+    "notYet": "no score yet",
+    "breakdown": "online {{online}}% · fault-free {{faultFree}}% · {{offline}} offline incidents · {{faults}} faults",
+    "computedAt": "Computed",
+    "recompute": "Recompute reliability",
+    "recomputeHint": "Recomputes every charger's 30-day score now (the job runs daily at 03:30 UTC)",
+    "recomputed": "Reliability recomputed for {{count}} chargers"
   }
 }

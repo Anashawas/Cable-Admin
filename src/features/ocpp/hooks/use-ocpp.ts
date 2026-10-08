@@ -8,6 +8,7 @@ import {
   getCommands,
   getConfiguration,
   getLiveVisibility,
+  recomputeReliability,
   remoteStop,
   setLiveStatusBlocked,
   setShareLiveStatus,
@@ -287,4 +288,9 @@ export function useSetShareLiveStatus() {
     mutationFn: ({ chargingPointId, share }: { chargingPointId: number; share: boolean }) => setShareLiveStatus(chargingPointId, share),
     onSuccess: invalidate,
   });
+}
+
+export function useRecomputeReliability() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({ mutationFn: () => recomputeReliability(), onSuccess: invalidate });
 }

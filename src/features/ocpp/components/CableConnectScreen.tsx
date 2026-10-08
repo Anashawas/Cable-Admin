@@ -18,7 +18,9 @@ import CreditCardOffIcon from "@mui/icons-material/CreditCardOff";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import AlertsSection from "./AlertsSection";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { useOcppChargePoints, useOcppFleetHealth } from "../hooks/use-ocpp";
+import { useOcppChargePoints, useOcppFleetHealth, useRecomputeReliability } from "../hooks/use-ocpp";
+import { useSnackbarStore } from "../../../stores";
+import SpeedIcon from "@mui/icons-material/Speed";
 import type { OcppConnectionState } from "../types/api";
 import ChargersTable from "./ChargersTable";
 import ChargerDetailDialog from "./ChargerDetailDialog";
@@ -57,6 +59,13 @@ export default function CableConnectScreen() {
   const [registerOpen, setRegisterOpen] = useState(false);
 
   const health = useOcppFleetHealth();
+  const recompute = useRecomputeReliability();
+  const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
+  const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
+  const doRecompute = async () => {
+    try { const n = await recompute.mutateAsync(); openSuccessSnackbar({ message: t("ocpp@reliability.recomputed", { count: n }) }); }
+    catch (err) { openErrorSnackbar({ message: String((err as any)?.response?.data?.detail ?? (err as any)?.message ?? t("ocpp@toast.error")) }); }
+  };
   const list = useOcppChargePoints({
     search: debouncedSearch.trim() || undefined,
     connectionState: state || undefined,
@@ -89,6 +98,7 @@ export default function CableConnectScreen() {
             </Stack>
             <Stack direction="row" spacing={1}>
               <Tooltip title={t("ocpp@refresh")}><IconButton onClick={() => { health.refetch(); list.refetch(); }}><RefreshIcon /></IconButton></Tooltip>
+              <Tooltip title={t("ocpp@reliability.recomputeHint")}><span><Button variant="outlined" startIcon={<SpeedIcon />} disabled={recompute.isPending} onClick={doRecompute} sx={{ textTransform: "none", fontWeight: 700 }}>{t("ocpp@reliability.recompute")}</Button></span></Tooltip>
               <Button variant="contained" startIcon={<AddIcon />} onClick={() => setRegisterOpen(true)} sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none" }}>{t("ocpp@addCharger")}</Button>
             </Stack>
           </Stack>

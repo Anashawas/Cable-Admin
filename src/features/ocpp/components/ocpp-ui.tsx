@@ -155,3 +155,11 @@ export function OnboardingCard({ ob, vendor, model, firmware }: { ob: OcppOnboar
     </Paper>
   );
 }
+
+/** N-6: the 30-day score. Green ≥ 95 (the public "reliable" threshold), amber ≥ 80, red below; grey when not computed yet. */
+export function ReliabilityChip({ pct, size = "small" }: { pct?: number | null; size?: ChipProps["size"] }) {
+  const { t } = useTranslation();
+  if (pct == null) return <Chip size={size} variant="outlined" label={t("ocpp@reliability.notYet")} sx={{ color: "text.disabled" }} />;
+  const color: ChipProps["color"] = pct >= 95 ? "success" : pct >= 80 ? "warning" : "error";
+  return <Chip size={size} color={color} variant={pct >= 95 ? "filled" : "outlined"} label={`${Number(pct).toFixed(1)}%`} sx={{ fontWeight: 700 }} />;
+}

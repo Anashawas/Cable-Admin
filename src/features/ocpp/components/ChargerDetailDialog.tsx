@@ -22,7 +22,7 @@ import type { ChargerCredentials, OcppConnectorDto } from "../types/api";
 import { CredentialsDialog } from "./RegisterChargerDialog";
 import ChargerControlPanel from "./ChargerControlPanel";
 import ChargerConfigPanel from "./ChargerConfigPanel";
-import { ConnectionChip, ConnectorStatusChip, OnboardingCard, SubscriptionChip, errMessage, fmtDuration, fmtKwh, ocppBaseUrl, useDateFmt } from "./ocpp-ui";
+import { ConnectionChip, ConnectorStatusChip, OnboardingCard, ReliabilityChip, SubscriptionChip, errMessage, fmtDuration, fmtKwh, ocppBaseUrl, useDateFmt } from "./ocpp-ui";
 import { useQuery } from "@tanstack/react-query";
 import { getAllPlugTypes } from "../../charge-management/services/station-form-service";
 import MenuItem from "@mui/material/MenuItem";
@@ -232,6 +232,19 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                     <Box><Typography variant="caption" color="text.secondary">{t("ocpp@detail.today")}</Typography><Typography variant="h6" fontWeight={800}>{fmtKwh(cp.today.energyKwh)}</Typography></Box>
                     <Box><Typography variant="caption" color="text.secondary">&nbsp;</Typography><Typography variant="h6" fontWeight={800}>{t("ocpp@detail.sessionsCount", { count: cp.today.sessions })}</Typography></Box>
                     <Box><Typography variant="caption" color="text.secondary">&nbsp;</Typography><Typography variant="h6" fontWeight={800} color={cp.today.faults > 0 ? "error.main" : undefined}>{t("ocpp@detail.faultsCount", { count: cp.today.faults })}</Typography></Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">{t("ocpp@reliability.title", { days: cp.reliability.windowDays })}</Typography>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <ReliabilityChip pct={cp.reliability.pct} size="medium" />
+                        {cp.reliability.pct != null && (
+                          <Tooltip title={`${t("ocpp@reliability.computedAt")} ${fmt.full(cp.reliability.computedAt)}`}>
+                            <Typography variant="caption" color="text.secondary">
+                              {t("ocpp@reliability.breakdown", { online: Number(cp.reliability.onlinePct ?? 0).toFixed(1), faultFree: Number(cp.reliability.faultFreePct ?? 0).toFixed(1), offline: cp.reliability.offlineIncidents ?? 0, faults: cp.reliability.faultIncidents ?? 0 })}
+                            </Typography>
+                          </Tooltip>
+                        )}
+                      </Stack>
+                    </Box>
                   </Stack>
                   <Stack spacing={0.5} alignItems={{ sm: "flex-end" }}>
                     <Typography variant="caption" color="text.secondary">{t("ocpp@subscription.title")}</Typography>

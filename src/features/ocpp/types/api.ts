@@ -47,6 +47,20 @@ export interface OcppChargePointListItemDto {
   /** Only until the first BootNotification: Waiting | Connected | Refused. Null once booted. */
   onboardingState?: "Waiting" | "Connected" | "Refused" | null;
   onboardingReason?: string | null;
+  /** N-6: % of the last 30 days reachable and fault-free; null until the daily job ran. */
+  reliabilityPct?: number | null;
+}
+
+/** N-6 breakdown for one charger. */
+export interface OcppReliabilityDto {
+  pct?: number | null;
+  onlinePct?: number | null;
+  faultFreePct?: number | null;
+  offlineIncidents?: number | null;
+  faultIncidents?: number | null;
+  computedAt?: string | null;
+  windowDays: number;
+  reliable: boolean;
 }
 
 /** Did the unit reach us yet? Booted once vendor/model are in; before that Waiting / Connected / Refused. */
@@ -134,6 +148,7 @@ export interface OcppChargePointDetailDto {
   today: OcppChargePointTodayDto;
   localList: OcppLocalListStateDto;
   onboarding: OcppOnboardingDto;
+  reliability: OcppReliabilityDto;
   createdAt: string;
   modifiedAt?: string | null;
 }

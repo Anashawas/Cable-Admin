@@ -184,3 +184,12 @@ export const setShareLiveStatus = async (chargingPointId: number, share: boolean
   const { data } = await server.put<OcppLiveVisibilityDto>(`${BASE}/stations/${chargingPointId}/live-visibility/share`, { share });
   return data;
 };
+
+// ============================================
+// N-6 — reliability
+// ============================================
+
+export const recomputeReliability = async (): Promise<number> => {
+  const { data } = await server.post<{ chargers: number }>(`${BASE}/reliability/recompute`);
+  return data.chargers;
+};

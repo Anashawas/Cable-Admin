@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useSnackbarStore } from "../../../stores";
 import { useSetChargePointEnabled } from "../hooks/use-ocpp";
 import type { OcppChargePointListItemDto } from "../types/api";
-import { ConnectionChip, OnboardingChip, SubscriptionChip, errMessage, useDateFmt } from "./ocpp-ui";
+import { ConnectionChip, OnboardingChip, ReliabilityChip, SubscriptionChip, errMessage, useDateFmt } from "./ocpp-ui";
 
 interface ChargersTableProps {
   items: OcppChargePointListItemDto[];
@@ -57,6 +57,7 @@ export default function ChargersTable({ items, loading, onView, hideStation, emp
               <TableCell>{t("ocpp@columns.plugs")}</TableCell>
               <TableCell>{t("ocpp@columns.sessions")}</TableCell>
               <TableCell>{t("ocpp@columns.subscription")}</TableCell>
+              <TableCell>{t("ocpp@columns.reliability")}</TableCell>
               <TableCell>{t("ocpp@columns.lastSeen")}</TableCell>
               <TableCell align="center">{t("ocpp@columns.enabled")}</TableCell>
               <TableCell align="right">{t("ocpp@columns.actions")}</TableCell>
@@ -98,6 +99,7 @@ export default function ChargersTable({ items, loading, onView, hideStation, emp
                     : <Typography variant="caption" color="text.disabled">—</Typography>}
                 </TableCell>
                 <TableCell><SubscriptionChip sub={row.subscription} /></TableCell>
+                <TableCell><ReliabilityChip pct={row.reliabilityPct} /></TableCell>
                 <TableCell>
                   <Tooltip title={fmt.full(row.lastMessageAt)}>
                     <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>{row.lastMessageAt ? fmt.relative(row.lastMessageAt) : "—"}</Typography>
