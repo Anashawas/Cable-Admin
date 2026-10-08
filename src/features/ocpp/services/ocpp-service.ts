@@ -10,6 +10,7 @@ import type {
   OcppCommandDto,
   OcppCommandResultDto,
   OcppFleetHealthDto,
+  OcppLiveVisibilityDto,
   OcppLocalListStateDto,
   OcppRawMessageDto,
   PagedResult,
@@ -162,5 +163,24 @@ export const syncLocalList = async (id: number): Promise<OcppLocalListStateDto> 
 
 export const getCommands = async (id: number, take = 30, signal?: AbortSignal): Promise<OcppCommandDto[]> => {
   const { data } = await server.get<OcppCommandDto[]>(`${BASE}/charge-points/${id}/commands`, { params: { take }, signal });
+  return data;
+};
+
+// ============================================
+// N-2 — live-data visibility (owner consent + admin veto)
+// ============================================
+
+export const getLiveVisibility = async (chargingPointId: number, signal?: AbortSignal): Promise<OcppLiveVisibilityDto> => {
+  const { data } = await server.get<OcppLiveVisibilityDto>(`${BASE}/stations/${chargingPointId}/live-visibility`, { signal });
+  return data;
+};
+
+export const setLiveStatusBlocked = async (chargingPointId: number, blocked: boolean, reason?: string | null): Promise<OcppLiveVisibilityDto> => {
+  const { data } = await server.put<OcppLiveVisibilityDto>(`${BASE}/stations/${chargingPointId}/live-visibility/block`, { blocked, reason: reason ?? null });
+  return data;
+};
+
+export const setShareLiveStatus = async (chargingPointId: number, share: boolean): Promise<OcppLiveVisibilityDto> => {
+  const { data } = await server.put<OcppLiveVisibilityDto>(`${BASE}/stations/${chargingPointId}/live-visibility/share`, { share });
   return data;
 };

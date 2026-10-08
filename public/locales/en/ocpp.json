@@ -353,5 +353,28 @@
     "lastEvent": "Last event",
     "registered": "Registered",
     "autoRefresh": "refreshes every 4 s"
+  },
+  "visibility": {
+    "title": "Live data for drivers",
+    "visible": "Visible in the Cable app",
+    "hidden": "Hidden from drivers",
+    "hint": "Drivers see free plugs, plug type, power — and faults — only when every gate below is open.",
+    "gateSubscription": "Cable Connect subscription active",
+    "gateOwner": "Owner shares live data",
+    "gateAdmin": "Not blocked by Cable",
+    "gateFresh": "Data fresh (checked per charger)",
+    "decided": "decided",
+    "notDecided": "turns on with the first subscription payment unless the owner decides",
+    "ownerSwitch": "Share live data (owner's switch)",
+    "ownerSwitchHint": "Belongs to the owner; use it here only on their request. Off = nothing is shown to drivers.",
+    "sharedOn": "Sharing turned on",
+    "sharedOff": "Sharing turned off",
+    "block": "Block (Cable veto)",
+    "unblock": "Remove block",
+    "blocked": "Live data blocked",
+    "unblocked": "Block removed",
+    "blockTitle": "Hide this station's live data from drivers?",
+    "blockBody": "Use for wrong data or a dispute. The owner sees the reason. The block never turns sharing on — only the owner can.",
+    "reason": "Reason (shown to the owner)"
   }
 }

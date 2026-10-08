@@ -311,3 +311,14 @@ export interface OcppConfigurationKey {
   readonly: boolean;
   value?: string | null;
 }
+
+/** N-2: the gates between a station's live charger data and the driver app. */
+export interface OcppLiveVisibilityDto {
+  visibleToDrivers: boolean;
+  subscriptionOn: boolean;
+  ownerSharing: boolean;
+  ownerDecidedAt?: string | null;
+  adminBlocked: boolean;
+  adminBlockedAt?: string | null;
+  adminBlockReason?: string | null;
+}

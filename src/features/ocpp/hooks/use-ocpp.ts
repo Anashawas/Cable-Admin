@@ -7,7 +7,10 @@ import {
   getAlerts,
   getCommands,
   getConfiguration,
+  getLiveVisibility,
   remoteStop,
+  setLiveStatusBlocked,
+  setShareLiveStatus,
   resetChargePoint,
   syncLocalList,
   triggerMessage,
@@ -254,5 +257,34 @@ export function useSyncLocalList() {
   return useMutation({
     mutationFn: (id: number) => syncLocalList(id),
     onSettled: invalidate,
+  });
+}
+
+// ============================================
+// N-2 — live-data visibility
+// ============================================
+
+export function useLiveVisibility(chargingPointId: number | null | undefined) {
+  return useQuery({
+    queryKey: [...OCPP_QUERY_KEY, "live-visibility", chargingPointId],
+    queryFn: ({ signal }) => getLiveVisibility(chargingPointId!, signal),
+    enabled: chargingPointId != null && chargingPointId > 0,
+  });
+}
+
+export function useSetLiveStatusBlocked() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ chargingPointId, blocked, reason }: { chargingPointId: number; blocked: boolean; reason?: string | null }) =>
+      setLiveStatusBlocked(chargingPointId, blocked, reason),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetShareLiveStatus() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ chargingPointId, share }: { chargingPointId: number; share: boolean }) => setShareLiveStatus(chargingPointId, share),
+    onSuccess: invalidate,
   });
 }

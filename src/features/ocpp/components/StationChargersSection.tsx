@@ -8,6 +8,7 @@ import ChargersTable from "./ChargersTable";
 import ChargerDetailDialog from "./ChargerDetailDialog";
 import RegisterChargerDialog from "./RegisterChargerDialog";
 import AuthorizedTagsSection from "./AuthorizedTagsSection";
+import LiveVisibilityPanel from "./LiveVisibilityPanel";
 
 interface StationChargersSectionProps {
   chargingPointId: number;
@@ -52,6 +53,9 @@ export default function StationChargersSection({ chargingPointId, stationName, o
           enabled
         />
       </Box>
+
+      {/* N-2: who decides whether drivers see this station's live plug states. */}
+      <LiveVisibilityPanel chargingPointId={chargingPointId} />
 
       <AuthorizedTagsSection chargingPointId={chargingPointId} />
 
