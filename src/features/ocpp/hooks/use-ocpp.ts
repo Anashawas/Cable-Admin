@@ -7,6 +7,7 @@ import {
   getAlerts,
   getCommands,
   getConfiguration,
+  remoteStop,
   resetChargePoint,
   syncLocalList,
   triggerMessage,
@@ -220,6 +221,14 @@ export function useChangeAvailability() {
   return useMutation({
     mutationFn: ({ id, connectorId, type }: { id: number; connectorId: number; type: "Operative" | "Inoperative" }) =>
       changeAvailability(id, connectorId, type),
+    onSettled: invalidate,
+  });
+}
+
+export function useRemoteStop() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, transactionId }: { id: number; transactionId: number }) => remoteStop(id, transactionId),
     onSettled: invalidate,
   });
 }

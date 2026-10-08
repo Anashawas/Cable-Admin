@@ -9,13 +9,15 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import PowerOffIcon from "@mui/icons-material/PowerOff";
 import PowerIcon from "@mui/icons-material/Power";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
+import StopCircleIcon from "@mui/icons-material/StopCircle";
 import HistoryIcon from "@mui/icons-material/History";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import SyncIcon from "@mui/icons-material/Sync";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSnackbarStore } from "../../../stores";
 import {
-  useChangeAvailability, useOcppCommands, useResetChargePoint, useSyncLocalList, useTriggerMessage, useUnlockConnector,
+  OCPP_QUERY_KEY, useChangeAvailability, useOcppCommands, useRemoteStop, useResetChargePoint, useSyncLocalList, useTriggerMessage, useUnlockConnector,
 } from "../hooks/use-ocpp";
 import type { OcppChargePointDetailDto, OcppCommandDto, OcppCommandResultDto, OcppTriggerMessage } from "../types/api";
 import { errMessage, useDateFmt } from "./ocpp-ui";
@@ -48,12 +50,13 @@ function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 /** Commands whose effect the charger later proves with its own message (Reset → BootNotification, …). */
-const CONFIRMABLE = new Set(["Reset", "ChangeAvailability", "UnlockConnector", "TriggerMessage"]);
+const CONFIRMABLE = new Set(["Reset", "ChangeAvailability", "UnlockConnector", "TriggerMessage", "RemoteStopTransaction"]);
 
 type PendingAction =
   | { kind: "reset"; type: "Soft" | "Hard" }
   | { kind: "unlock"; connectorId: number }
-  | { kind: "availability"; connectorId: number; type: "Operative" | "Inoperative" };
+  | { kind: "availability"; connectorId: number; type: "Operative" | "Inoperative" }
+  | { kind: "stop"; connectorId: number; transactionId: number };
 
 /**
  * Phase 2 — remote control. Every button sends one OCPP command through the API to
@@ -65,18 +68,27 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
   const fmt = useDateFmt();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
+  const qc = useQueryClient();
+
+  /**
+   * The unit answers a command within milliseconds, but its *effect* (StopTransaction, the new
+   * StatusNotification, the reboot) arrives a second or two later. The page polls every 15 s, so
+   * without this the admin would see the old state until the next poll.
+   */
+  const refetchSoon = () => [2_000, 5_000, 10_000].forEach((ms) => setTimeout(() => qc.invalidateQueries({ queryKey: OCPP_QUERY_KEY }), ms));
 
   const trigger = useTriggerMessage();
   const reset = useResetChargePoint();
   const unlock = useUnlockConnector();
   const availability = useChangeAvailability();
   const syncList = useSyncLocalList();
+  const stop = useRemoteStop();
   const [showHistory, setShowHistory] = useState(false);
   const { data: history = [], isFetching: historyLoading } = useOcppCommands(cp.id, 30, showHistory);
 
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [triggerMenu, setTriggerMenu] = useState<HTMLElement | null>(null);
-  const busy = trigger.isPending || reset.isPending || unlock.isPending || availability.isPending || syncList.isPending;
+  const busy = trigger.isPending || reset.isPending || unlock.isPending || availability.isPending || syncList.isPending || stop.isPending;
   const offline = !cp.isConnected;
 
   const report = (r: OcppCommandResultDto) => {
@@ -93,6 +105,7 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
   const run = async (action: () => Promise<OcppCommandResultDto>) => {
     try {
       report(await action());
+      refetchSoon();
     } catch (err) {
       openErrorSnackbar({ message: errMessage(err, t("ocpp@toast.error")) });
     } finally {
@@ -111,6 +124,7 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
       case "reset": return run(() => reset.mutateAsync({ id: cp.id, type: pendingAction.type }));
       case "unlock": return run(() => unlock.mutateAsync({ id: cp.id, connectorId: pendingAction.connectorId }));
       case "availability": return run(() => availability.mutateAsync({ id: cp.id, connectorId: pendingAction.connectorId, type: pendingAction.type }));
+      case "stop": return run(() => stop.mutateAsync({ id: cp.id, transactionId: pendingAction.transactionId }));
     }
   };
 
@@ -118,6 +132,7 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
     switch (a.kind) {
       case "reset": return { title: t(`ocpp@commands.confirm.reset${a.type}Title`), body: t(`ocpp@commands.confirm.reset${a.type}Body`), danger: a.type === "Hard" };
       case "unlock": return { title: t("ocpp@commands.confirm.unlockTitle", { connector: a.connectorId }), body: t("ocpp@commands.confirm.unlockBody"), danger: false };
+      case "stop": return { title: t("ocpp@commands.confirm.stopTitle", { connector: a.connectorId, session: a.transactionId }), body: t("ocpp@commands.confirm.stopBody"), danger: true };
       case "availability": return a.type === "Inoperative"
         ? { title: a.connectorId === 0 ? t("ocpp@commands.confirm.unitOffTitle") : t("ocpp@commands.confirm.connectorOffTitle", { connector: a.connectorId }), body: t("ocpp@commands.confirm.offBody"), danger: true }
         : { title: a.connectorId === 0 ? t("ocpp@commands.confirm.unitOnTitle") : t("ocpp@commands.confirm.connectorOnTitle", { connector: a.connectorId }), body: t("ocpp@commands.confirm.onBody"), danger: false };
@@ -127,6 +142,7 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
   const doSyncList = async () => {
     try {
       const r = await syncList.mutateAsync(cp.id);
+      refetchSoon();
       if (r.confirmed) openSuccessSnackbar({ message: t("ocpp@localList.synced", { count: r.cardsAtStation }) });
       else openErrorSnackbar({ message: t(`ocpp@localList.status.${r.status ?? "Failed"}`) });
     } catch (err) {
@@ -138,6 +154,8 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
   const llColor = ll.status === "Synced" ? "success" : ll.status === "Pending" ? "warning" : ll.status == null ? "default" : "error";
 
   const plugs = cp.connectors.filter((c) => c.connectorId > 0);
+  /** The open session per plug, from the recent-sessions list the detail already carries. */
+  const openSession = (connectorId: number) => cp.recentTransactions.find((x) => x.isOpen && !x.isStale && x.connectorId === connectorId);
   const unitUnavailable = cp.connectors.some((c) => c.connectorId === 0 && c.status === "Unavailable");
 
   return (
@@ -178,9 +196,16 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
         <Stack spacing={1} sx={{ mt: 2 }}>
           {plugs.map((c) => {
             const off = c.status === "Unavailable";
+            const session = openSession(c.connectorId);
             return (
               <Stack key={c.id} direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Typography variant="body2" fontWeight={700} sx={{ minWidth: 90 }}>{t("ocpp@columns.connector")} {c.connectorId}</Typography>
+                {session && (
+                  <Tooltip title={t("ocpp@commands.stopHint", { session: session.id })}>
+                    <span><Button size="small" variant="contained" color="error" startIcon={<StopCircleIcon />} disabled={busy || offline}
+                      onClick={() => setPendingAction({ kind: "stop", connectorId: c.connectorId, transactionId: session.id })}>{t("ocpp@commands.stop")}</Button></span>
+                  </Tooltip>
+                )}
                 <Tooltip title={t("ocpp@commands.unlockHint")}>
                   <span><Button size="small" variant="outlined" startIcon={<LockOpenIcon />} disabled={busy || offline} onClick={() => setPendingAction({ kind: "unlock", connectorId: c.connectorId })}>{t("ocpp@commands.unlock")}</Button></span>
                 </Tooltip>

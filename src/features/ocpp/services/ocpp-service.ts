@@ -148,6 +148,8 @@ export const unlockConnector = (id: number, connectorId: number) => cmd(id, "unl
 export const changeAvailability = (id: number, connectorId: number, type: "Operative" | "Inoperative") =>
   cmd(id, "change-availability", { connectorId, type });
 
+export const remoteStop = (id: number, transactionId: number) => cmd(id, "remote-stop", { transactionId });
+
 export const getConfiguration = (id: number, keys?: string[]) => cmd(id, "get-configuration", { keys: keys ?? null });
 
 export const changeConfiguration = (id: number, key: string, value: string) =>

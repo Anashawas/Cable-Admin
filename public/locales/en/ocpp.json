@@ -253,7 +253,7 @@
       "ClearCache": "Clear cache",
       "SendLocalList": "Push card list",
       "RemoteStartTransaction": "Remote start",
-      "RemoteStopTransaction": "Remote stop"
+      "RemoteStopTransaction": "Stop session"
     },
     "status": {
       "Answered": "Answered",
@@ -276,10 +276,14 @@
       "offBody": "It shows Unavailable in the apps and refuses new sessions. A running session finishes first (Scheduled). It stays out of service until you put it back.",
       "unitOnTitle": "Put the whole unit back in service?",
       "connectorOnTitle": "Put plug {{connector}} back in service?",
-      "onBody": "It becomes Available again immediately."
+      "onBody": "It becomes Available again immediately.",
+      "stopTitle": "Stop session #{{session}} on plug {{connector}}?",
+      "stopBody": "The charger ends the session now and reports the final meter reading. Use it for a stuck session or a car that must be released; the driver is not asked."
     },
     "confirmedAfter": "confirmed after {{seconds}} s",
-    "notConfirmed": "not confirmed yet"
+    "notConfirmed": "not confirmed yet",
+    "stop": "Stop session",
+    "stopHint": "Ends session #{{session}} on the charger (reason Remote). The driver can unplug afterwards."
   },
   "config": {
     "title": "Charger settings",
