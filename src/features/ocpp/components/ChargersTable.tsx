@@ -104,7 +104,7 @@ export default function ChargersTable({ items, loading, onView, hideStation, emp
                   </Tooltip>
                 </TableCell>
                 <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                  <Switch size="small" checked={row.isEnabled} disabled={setEnabled.isPending} onChange={(e) => toggle(row, e.target.checked)} />
+                  <Switch size="small" checked={row.isEnabled} disabled={setEnabled.isPending && setEnabled.variables?.id === row.id} onChange={(e) => toggle(row, e.target.checked)} />
                 </TableCell>
                 <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                   <Tooltip title={t("ocpp@actions.view")}><IconButton size="small" onClick={() => onView(row.id)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>

@@ -259,7 +259,7 @@ export interface AddAuthorizedTagRequest {
   chargingPointId: number;
   idTag: string;
   label?: string | null;
-  /** Jordan local time. */
+  /** ISO 8601 with offset / Z (absolute instant). A value without an offset is taken as Jordan local time by the API. */
   expiresAt?: string | null;
 }
 

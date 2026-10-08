@@ -51,7 +51,7 @@ export function fmtDuration(sec?: number | null): string {
 }
 
 export function fmtKwh(v?: number | null): string {
-  return v == null ? "—" : `${Number(v).toFixed(3)} kWh`;
+  return v == null ? "—" : `${Number(v).toFixed(2)} kWh`;
 }
 
 /** Online / Reconnecting / Offline, with disabled and locked overriding the colour. */

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Box, Button, Chip, Grid, IconButton, InputAdornment, MenuItem, Pagination, Paper, Stack, TextField, Tooltip, Typography, useTheme,
@@ -47,6 +47,9 @@ export default function CableConnectScreen() {
   const theme = useTheme();
 
   const [search, setSearch] = useState("");
+  // One request per pause in typing, not per keystroke.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => { const h = setTimeout(() => setDebouncedSearch(search), 350); return () => clearTimeout(h); }, [search]);
   const [state, setState] = useState<OcppConnectionState | "">("");
   const [enabled, setEnabled] = useState<"" | "true" | "false">("");
   const [page, setPage] = useState(1);
@@ -55,7 +58,7 @@ export default function CableConnectScreen() {
 
   const health = useOcppFleetHealth();
   const list = useOcppChargePoints({
-    search: search.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
     connectionState: state || undefined,
     isEnabled: enabled === "" ? undefined : enabled === "true",
     page,

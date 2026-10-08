@@ -33,7 +33,9 @@ export default function AuthorizedTagsSection({ chargingPointId }: { chargingPoi
   const submitAdd = async () => {
     if (!idTag.trim()) return;
     try {
-      await add.mutateAsync({ chargingPointId, idTag: idTag.trim(), label: label.trim() || null, expiresAt: expiresAt || null });
+      // datetime-local is the admin's wall clock; send the absolute instant (ISO/UTC) like every other screen.
+      const expiresAtUtc = expiresAt ? new Date(expiresAt).toISOString() : null;
+      await add.mutateAsync({ chargingPointId, idTag: idTag.trim(), label: label.trim() || null, expiresAt: expiresAtUtc });
       openSuccessSnackbar({ message: t("ocpp@toast.tagAdded") });
       setAddOpen(false);
       setIdTag(""); setLabel(""); setExpiresAt("");
@@ -100,7 +102,7 @@ export default function AuthorizedTagsSection({ chargingPointId }: { chargingPoi
                         ? <Chip size="small" variant="outlined" color={new Date(tag.expiresAt) < new Date() ? "error" : "default"} label={fmt.full(tag.expiresAt)} />
                         : <Typography variant="caption" color="text.disabled">—</Typography>}
                     </TableCell>
-                    <TableCell align="center"><Switch size="small" checked={tag.isEnabled} disabled={setEnabled.isPending} onChange={(e) => toggle(tag, e.target.checked)} /></TableCell>
+                    <TableCell align="center"><Switch size="small" checked={tag.isEnabled} disabled={setEnabled.isPending && setEnabled.variables?.id === tag.id} onChange={(e) => toggle(tag, e.target.checked)} /></TableCell>
                     <TableCell align="right">
                       <Tooltip title={t("delete")}><IconButton size="small" color="error" onClick={() => setRemoveTarget(tag)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
                     </TableCell>
