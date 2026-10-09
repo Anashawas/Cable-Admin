@@ -336,6 +336,8 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                           <TableCell>{t("ocpp@columns.started")}</TableCell>
                           <TableCell>{t("ocpp@columns.duration")}</TableCell>
                           <TableCell>{t("ocpp@columns.energy")}</TableCell>
+                          <TableCell>{t("ocpp@columns.price")}</TableCell>
+                          <TableCell>{t("ocpp@columns.source")}</TableCell>
                           <TableCell>{t("ocpp@columns.reason")}</TableCell>
                         </TableRow>
                       </TableHead>
@@ -356,7 +358,9 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                             <TableCell><Typography variant="caption">{fmt.full(tx.startedAt)}</Typography></TableCell>
                             <TableCell>{fmtDuration(tx.durationSec)}</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>{fmtKwh(tx.energyKwh)}</TableCell>
-                            <TableCell>{tx.stopReason ?? "—"}</TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>{tx.costJod != null ? `${tx.costJod.toFixed(3)} JOD` : "—"}</TableCell>
+                            <TableCell><Chip size="small" variant="outlined" label={t(`ocpp@source.${tx.startSource ?? "Card"}`, { defaultValue: tx.startSource ?? "Card" })} sx={{ height: 20, fontSize: 11 }} /></TableCell>
+                            <TableCell><Tooltip title={tx.stopReason ?? ""}><span>{tx.stopReasonText ?? tx.stopReason ?? "—"}</span></Tooltip></TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

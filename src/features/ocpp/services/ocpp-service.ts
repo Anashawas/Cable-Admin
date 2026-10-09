@@ -151,6 +151,8 @@ export const changeAvailability = (id: number, connectorId: number, type: "Opera
 
 export const remoteStop = (id: number, transactionId: number) => cmd(id, "remote-stop", { transactionId });
 
+export const remoteStart = (id: number, connectorId: number) => cmd(id, "remote-start", { connectorId });
+
 export const getConfiguration = (id: number, keys?: string[]) => cmd(id, "get-configuration", { keys: keys ?? null });
 
 export const changeConfiguration = (id: number, key: string, value: string) =>

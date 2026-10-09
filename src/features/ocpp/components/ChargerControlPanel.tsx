@@ -10,6 +10,7 @@ import PowerOffIcon from "@mui/icons-material/PowerOff";
 import PowerIcon from "@mui/icons-material/Power";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import StopCircleIcon from "@mui/icons-material/StopCircle";
+import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import HistoryIcon from "@mui/icons-material/History";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
@@ -17,7 +18,7 @@ import SyncIcon from "@mui/icons-material/Sync";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSnackbarStore } from "../../../stores";
 import {
-  OCPP_QUERY_KEY, useChangeAvailability, useOcppCommands, useRemoteStop, useResetChargePoint, useSyncLocalList, useTriggerMessage, useUnlockConnector,
+  OCPP_QUERY_KEY, useChangeAvailability, useOcppCommands, useRemoteStart, useRemoteStop, useResetChargePoint, useSyncLocalList, useTriggerMessage, useUnlockConnector,
 } from "../hooks/use-ocpp";
 import type { OcppChargePointDetailDto, OcppCommandDto, OcppCommandResultDto, OcppTriggerMessage } from "../types/api";
 import { errMessage, useDateFmt } from "./ocpp-ui";
@@ -50,13 +51,14 @@ function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 /** Commands whose effect the charger later proves with its own message (Reset → BootNotification, …). */
-const CONFIRMABLE = new Set(["Reset", "ChangeAvailability", "UnlockConnector", "TriggerMessage", "RemoteStopTransaction"]);
+const CONFIRMABLE = new Set(["Reset", "ChangeAvailability", "UnlockConnector", "TriggerMessage", "RemoteStopTransaction", "RemoteStartTransaction"]);
 
 type PendingAction =
   | { kind: "reset"; type: "Soft" | "Hard" }
   | { kind: "unlock"; connectorId: number }
   | { kind: "availability"; connectorId: number; type: "Operative" | "Inoperative" }
-  | { kind: "stop"; connectorId: number; transactionId: number };
+  | { kind: "stop"; connectorId: number; transactionId: number }
+  | { kind: "start"; connectorId: number };
 
 /**
  * Phase 2 — remote control. Every button sends one OCPP command through the API to
@@ -83,12 +85,13 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
   const availability = useChangeAvailability();
   const syncList = useSyncLocalList();
   const stop = useRemoteStop();
+  const start = useRemoteStart();
   const [showHistory, setShowHistory] = useState(false);
   const { data: history = [], isFetching: historyLoading } = useOcppCommands(cp.id, 30, showHistory);
 
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [triggerMenu, setTriggerMenu] = useState<HTMLElement | null>(null);
-  const busy = trigger.isPending || reset.isPending || unlock.isPending || availability.isPending || syncList.isPending || stop.isPending;
+  const busy = trigger.isPending || reset.isPending || unlock.isPending || availability.isPending || syncList.isPending || stop.isPending || start.isPending;
   const offline = !cp.isConnected;
 
   const report = (r: OcppCommandResultDto) => {
@@ -125,6 +128,7 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
       case "unlock": return run(() => unlock.mutateAsync({ id: cp.id, connectorId: pendingAction.connectorId }));
       case "availability": return run(() => availability.mutateAsync({ id: cp.id, connectorId: pendingAction.connectorId, type: pendingAction.type }));
       case "stop": return run(() => stop.mutateAsync({ id: cp.id, transactionId: pendingAction.transactionId }));
+      case "start": return run(() => start.mutateAsync({ id: cp.id, connectorId: pendingAction.connectorId }));
     }
   };
 
@@ -133,6 +137,7 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
       case "reset": return { title: t(`ocpp@commands.confirm.reset${a.type}Title`), body: t(`ocpp@commands.confirm.reset${a.type}Body`), danger: a.type === "Hard" };
       case "unlock": return { title: t("ocpp@commands.confirm.unlockTitle", { connector: a.connectorId }), body: t("ocpp@commands.confirm.unlockBody"), danger: false };
       case "stop": return { title: t("ocpp@commands.confirm.stopTitle", { connector: a.connectorId, session: a.transactionId }), body: t("ocpp@commands.confirm.stopBody"), danger: true };
+      case "start": return { title: t("ocpp@commands.confirm.startTitle", { connector: a.connectorId }), body: t("ocpp@commands.confirm.startBody"), danger: false };
       case "availability": return a.type === "Inoperative"
         ? { title: a.connectorId === 0 ? t("ocpp@commands.confirm.unitOffTitle") : t("ocpp@commands.confirm.connectorOffTitle", { connector: a.connectorId }), body: t("ocpp@commands.confirm.offBody"), danger: true }
         : { title: a.connectorId === 0 ? t("ocpp@commands.confirm.unitOnTitle") : t("ocpp@commands.confirm.connectorOnTitle", { connector: a.connectorId }), body: t("ocpp@commands.confirm.onBody"), danger: false };
@@ -197,9 +202,16 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
           {plugs.map((c) => {
             const off = c.status === "Unavailable";
             const session = openSession(c.connectorId);
+            const canStart = !session && !off && c.errorCode === "NoError" && (c.status === "Available" || c.status === "Preparing");
             return (
               <Stack key={c.id} direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Typography variant="body2" fontWeight={700} sx={{ minWidth: 90 }}>{t("ocpp@columns.connector")} {c.connectorId}</Typography>
+                {canStart && (
+                  <Tooltip title={t("ocpp@commands.startHint")}>
+                    <span><Button size="small" variant="contained" color="success" startIcon={<PlayCircleIcon />} disabled={busy || offline}
+                      onClick={() => setPendingAction({ kind: "start", connectorId: c.connectorId })}>{t("ocpp@commands.start")}</Button></span>
+                  </Tooltip>
+                )}
                 {session && (
                   <Tooltip title={t("ocpp@commands.stopHint", { session: session.id })}>
                     <span><Button size="small" variant="contained" color="error" startIcon={<StopCircleIcon />} disabled={busy || offline}

@@ -103,6 +103,14 @@ export interface OcppTransactionDto {
   isStale: boolean;
   isOrphan: boolean;
   wasRejected: boolean;
+  /** Card | App | Operator */
+  startSource?: string;
+  startedByUserId?: number | null;
+  stopReasonText?: string | null;
+  /** Price under the time-of-use tariff; null while open or when the energy is unknown. */
+  costFils?: number | null;
+  costJod?: number | null;
+  tariffVersion?: number | null;
 }
 
 export interface OcppChargePointTodayDto {

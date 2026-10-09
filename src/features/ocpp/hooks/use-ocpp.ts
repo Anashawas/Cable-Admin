@@ -10,6 +10,7 @@ import {
   getLiveVisibility,
   recomputeReliability,
   remoteStop,
+  remoteStart,
   setLiveStatusBlocked,
   setShareLiveStatus,
   resetChargePoint,
@@ -225,6 +226,14 @@ export function useChangeAvailability() {
   return useMutation({
     mutationFn: ({ id, connectorId, type }: { id: number; connectorId: number; type: "Operative" | "Inoperative" }) =>
       changeAvailability(id, connectorId, type),
+    onSettled: invalidate,
+  });
+}
+
+export function useRemoteStart() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ id, connectorId }: { id: number; connectorId: number }) => remoteStart(id, connectorId),
     onSettled: invalidate,
   });
 }
