@@ -67,6 +67,7 @@ i18n
       "nearestPreview",
       "templates",
       "ocpp",
+      "pricing",
       "subscriptions",
       "partnerAdoption",
     ],

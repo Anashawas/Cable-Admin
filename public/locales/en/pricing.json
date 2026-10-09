@@ -1,0 +1,70 @@
+{
+  "title": "Price alerts",
+  "subtitle": "The time-of-use tariff the apps show, and the push sent before a window starts",
+  "error": "Something went wrong",
+  "min": "min",
+  "kpi": {
+    "version": "Tariff version",
+    "enabledUsers": "Users with alerts on",
+    "quiet": "Quiet hours",
+    "sends14d": "Alerts sent, 14 days"
+  },
+  "tier": {
+    "offPeak": "Off-peak",
+    "partial": "Partial peak",
+    "peak": "Peak"
+  },
+  "tariff": {
+    "title": "Tariff (fils per kWh)",
+    "hint": "Source of truth for the apps. Saving creates a new version; the apps refresh on open. Keep the keys stable — user preferences point at them.",
+    "key": "Key",
+    "nameEn": "Name (EN)",
+    "nameAr": "Name (AR)",
+    "from": "From",
+    "to": "To",
+    "tier": "Tier",
+    "price": "Fils/kWh",
+    "nextDay": "next day",
+    "addWindow": "Add window",
+    "discard": "Discard changes",
+    "save": "Save as new version",
+    "saved": "Tariff saved as version {{version}}",
+    "coverage": "The windows cover {{minutes}} minutes; they must cover exactly 1440 (24 hours).",
+    "duplicateKeys": "Window keys must be unique.",
+    "effectiveFrom": "Effective from (optional)",
+    "note": "Note (optional)",
+    "versions": "Versions"
+  },
+  "quiet": {
+    "title": "Quiet hours",
+    "hint": "An alert that falls inside this span is cancelled, not delayed (Asia/Amman).",
+    "from": "From",
+    "to": "To",
+    "save": "Save",
+    "saved": "Quiet hours saved"
+  },
+  "subscribers": {
+    "title": "Subscribers per window and lead time",
+    "none": "Nobody has turned alerts on yet"
+  },
+  "preview": {
+    "title": "Dry run",
+    "hint": "Which alerts the job would send at a given Jordan time — nothing is sent. Leave empty for now.",
+    "run": "Run",
+    "nothing": "No alert is due within 10 minutes before that time.",
+    "window": "Window",
+    "at": "Alert time",
+    "lead": "Lead",
+    "recipients": "Recipients",
+    "recipientsHint": "{{sent}} already sent today · {{token}} with a device token",
+    "text": "Text",
+    "quietCancelled": "quiet hours — cancelled"
+  },
+  "sends": {
+    "title": "Sent in the last 14 days",
+    "none": "Nothing sent yet",
+    "date": "Date",
+    "users": "Users",
+    "sentAt": "Sent at"
+  }
+}

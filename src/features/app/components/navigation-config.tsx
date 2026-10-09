@@ -25,6 +25,7 @@ import {
 	PersonAddAlt1 as PersonAddAlt1Icon,
 	Bolt as BoltIcon,
 	Cable as CableIcon,
+	PriceChange as PriceChangeIcon,
 	EmojiEvents as EmojiEventsIcon,
 	Gavel as GavelIcon,
 	Campaign as CampaignIcon,
@@ -65,6 +66,7 @@ export function getNavigationGroups(t: TFunction): NavigationGroup[] {
 				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },
 				{ label: t("nearestPreview"), path: "/nearest-preview", icon: <QueryStatsIcon /> },
 				{ label: t("subscriptions@navTitle"), path: "/subscriptions", icon: <EventRepeatIcon /> },
+				{ label: t("priceAlerts"), path: "/price-alerts", icon: <PriceChangeIcon /> },
 			],
 		},
 		{

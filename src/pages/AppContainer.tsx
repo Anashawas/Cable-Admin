@@ -27,6 +27,7 @@ const StationsRequestScreen = lazy(() => import("../features/charge-management/c
 const StationStatisticsScreen = lazy(() => import("../features/charge-management/components/StationStatisticsScreen"));
 const ChargerBrandsScreen = lazy(() => import("../features/charge-management/components/ChargerBrandsScreen"));
 const CableConnectScreen = lazy(() => import("../features/ocpp/components/CableConnectScreen"));
+const PriceAlertsScreen = lazy(() => import("../features/pricing/components/PriceAlertsScreen"));
 const ComplaintsScreen = lazy(() => import("../features/complaints/components/ComplaintsScreen"));
 const BannersScreen = lazy(() => import("../features/system/components/BannersScreen"));
 const WelcomeMessagesScreen = lazy(() => import("../features/announcements/components/WelcomeMessagesScreen"));
@@ -160,6 +161,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <CableConnectScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/price-alerts"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PriceAlertsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }
