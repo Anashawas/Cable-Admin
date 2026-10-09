@@ -202,10 +202,17 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
           {plugs.map((c) => {
             const off = c.status === "Unavailable";
             const session = openSession(c.connectorId);
-            const canStart = !session && !off && c.errorCode === "NoError" && (c.status === "Available" || c.status === "Preparing");
+            const carConnected = c.status === "Preparing";
+            const canStart = !session && !off && c.errorCode === "NoError" && carConnected;
+            const plugInFirst = !session && !off && c.errorCode === "NoError" && c.status === "Available";
             return (
               <Stack key={c.id} direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Typography variant="body2" fontWeight={700} sx={{ minWidth: 90 }}>{t("ocpp@columns.connector")} {c.connectorId}</Typography>
+                {plugInFirst && (
+                  <Tooltip title={t("ocpp@commands.plugInFirstHint")}>
+                    <Chip size="small" variant="outlined" icon={<PlayCircleIcon />} label={t("ocpp@commands.plugInFirst")} sx={{ height: 24 }} />
+                  </Tooltip>
+                )}
                 {canStart && (
                   <Tooltip title={t("ocpp@commands.startHint")}>
                     <span><Button size="small" variant="contained" color="success" startIcon={<PlayCircleIcon />} disabled={busy || offline}

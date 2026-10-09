@@ -283,14 +283,16 @@
       "stopTitle": "Stop session #{{session}} on plug {{connector}}?",
       "stopBody": "The charger ends the session now and reports the final meter reading. Use it for a stuck session or a car that must be released; the driver is not asked.",
       "startTitle": "Start a session on plug {{connector}}?",
-      "startBody": "For a customer who has no card: the cable must be plugged into the car. The charger starts within a few seconds and the session is recorded as started by you. It is priced from the time-of-use tariff like any other session."
+      "startBody": "For the customer whose car is connected to this plug (no card needed). The charger starts within a few seconds and the session is recorded as started by you. It is priced from the time-of-use tariff like any other session."
     },
     "confirmedAfter": "confirmed after {{seconds}} s",
     "notConfirmed": "not confirmed yet",
     "stop": "Stop session",
     "stopHint": "Ends session #{{session}} on the charger (reason Remote). The driver can unplug afterwards.",
     "start": "Start session",
-    "startHint": "Starts a session on this plug for a customer without a card (the station’s virtual tag). The charger confirms with its StartTransaction."
+    "startHint": "Starts a session on this plug for the customer whose car is connected (no card needed). The charger confirms with its StartTransaction.",
+    "plugInFirst": "Plug in first",
+    "plugInFirstHint": "Start session appears once a car is connected to this plug (the charger reports Preparing). Starting into an empty plug would only wait 60 s and cancel."
   },
   "config": {
     "title": "Charger settings",
