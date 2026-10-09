@@ -336,6 +336,23 @@ export interface OcppConfigurationKey {
 }
 
 /** N-2: the gates between a station's live charger data and the driver app. */
+export interface OcppAlertThresholdDto {
+  /** The station's own value; null = default. */
+  minutes?: number | null;
+  defaultMinutes: number;
+  effectiveMinutes: number;
+  minMinutes: number;
+  maxMinutes: number;
+}
+
+export interface OcppAlertThresholdsDto {
+  chargingPointId: number;
+  offline: OcppAlertThresholdDto;
+  faulted: OcppAlertThresholdDto;
+  longSession: OcppAlertThresholdDto;
+  parked: OcppAlertThresholdDto;
+}
+
 export interface OcppLiveVisibilityDto {
   visibleToDrivers: boolean;
   subscriptionOn: boolean;

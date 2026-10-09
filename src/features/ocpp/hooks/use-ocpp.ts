@@ -8,6 +8,8 @@ import {
   getCommands,
   getConfiguration,
   getLiveVisibility,
+  getAlertThresholds,
+  setAlertThresholds,
   recomputeReliability,
   remoteStop,
   remoteStart,
@@ -279,6 +281,23 @@ export function useLiveVisibility(chargingPointId: number | null | undefined) {
     queryKey: [...OCPP_QUERY_KEY, "live-visibility", chargingPointId],
     queryFn: ({ signal }) => getLiveVisibility(chargingPointId!, signal),
     enabled: chargingPointId != null && chargingPointId > 0,
+  });
+}
+
+export function useOcppAlertThresholds(chargingPointId: number | null | undefined) {
+  return useQuery({
+    queryKey: [...OCPP_QUERY_KEY, "alert-thresholds", chargingPointId],
+    queryFn: ({ signal }) => getAlertThresholds(chargingPointId!, signal),
+    enabled: chargingPointId != null && chargingPointId > 0,
+  });
+}
+
+export function useSetOcppAlertThresholds() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ chargingPointId, ...body }: { chargingPointId: number; offlineMinutes: number | null; faultedMinutes: number | null; longSessionMinutes: number | null; parkedMinutes: number | null }) =>
+      setAlertThresholds(chargingPointId, body),
+    onSuccess: invalidate,
   });
 }
 

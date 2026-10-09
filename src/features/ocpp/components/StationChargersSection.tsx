@@ -9,6 +9,7 @@ import ChargerDetailDialog from "./ChargerDetailDialog";
 import RegisterChargerDialog from "./RegisterChargerDialog";
 import AuthorizedTagsSection from "./AuthorizedTagsSection";
 import LiveVisibilityPanel from "./LiveVisibilityPanel";
+import AlertThresholdsPanel from "./AlertThresholdsPanel";
 
 interface StationChargersSectionProps {
   chargingPointId: number;
@@ -56,6 +57,9 @@ export default function StationChargersSection({ chargingPointId, stationName, o
 
       {/* N-2: who decides whether drivers see this station's live plug states. */}
       <LiveVisibilityPanel chargingPointId={chargingPointId} />
+
+      {/* Alert thresholds for this station (minutes); blank = platform default. */}
+      <AlertThresholdsPanel chargingPointId={chargingPointId} />
 
       <AuthorizedTagsSection chargingPointId={chargingPointId} />
 

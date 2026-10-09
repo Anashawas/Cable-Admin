@@ -11,6 +11,7 @@ import type {
   OcppCommandResultDto,
   OcppFleetHealthDto,
   OcppLiveVisibilityDto,
+  OcppAlertThresholdsDto,
   OcppLocalListStateDto,
   OcppRawMessageDto,
   PagedResult,
@@ -184,6 +185,23 @@ export const setLiveStatusBlocked = async (chargingPointId: number, blocked: boo
 
 export const setShareLiveStatus = async (chargingPointId: number, share: boolean): Promise<OcppLiveVisibilityDto> => {
   const { data } = await server.put<OcppLiveVisibilityDto>(`${BASE}/stations/${chargingPointId}/live-visibility/share`, { share });
+  return data;
+};
+
+// ============================================
+// Alert thresholds per station
+// ============================================
+
+export const getAlertThresholds = async (chargingPointId: number, signal?: AbortSignal): Promise<OcppAlertThresholdsDto> => {
+  const { data } = await server.get<OcppAlertThresholdsDto>(`${BASE}/stations/${chargingPointId}/alert-thresholds`, { signal });
+  return data;
+};
+
+export const setAlertThresholds = async (
+  chargingPointId: number,
+  body: { offlineMinutes: number | null; faultedMinutes: number | null; longSessionMinutes: number | null; parkedMinutes: number | null },
+): Promise<OcppAlertThresholdsDto> => {
+  const { data } = await server.put<OcppAlertThresholdsDto>(`${BASE}/stations/${chargingPointId}/alert-thresholds`, body);
   return data;
 };
 

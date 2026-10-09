@@ -399,5 +399,21 @@
     "Card": "Card",
     "App": "Driver app",
     "Operator": "Operator"
+  },
+  "alertThresholds": {
+    "title": "Alert thresholds",
+    "hint": "When the alert job warns about this station. Blank = the platform default. Checked every 5 minutes, so a change applies within 5 minutes.",
+    "allDefault": "all defaults",
+    "customised": "{{count}} customised",
+    "offline": "Charger offline",
+    "faulted": "Plug faulted",
+    "longSession": "Session too long",
+    "parked": "Car parked after charging",
+    "min": "min",
+    "default": "Default {{minutes}} min",
+    "range": "Between {{min}} and {{max}} minutes",
+    "save": "Save",
+    "reset": "Back to defaults",
+    "saved": "Alert thresholds saved"
   }
 }
