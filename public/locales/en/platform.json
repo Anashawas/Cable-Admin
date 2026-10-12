@@ -51,7 +51,9 @@
     "editBanner": "Edit Banner",
     "updated": "Banner updated",
     "editNote": "Updates the banner details. Image and location targeting can't be changed here.",
-    "emailReenterHint": "Re-enter the contact email (not returned by the list)."
+    "emailReenterHint": "Re-enter the contact email (not returned by the list).",
+    "action6": "Phone call",
+    "actionPhoneHint": "Phone number — mobile, landline, short code or international. Empty = use the Phone field."
   },
   "carManagement": {
     "title": "Global Car Management",

@@ -429,11 +429,13 @@ export default function BannerManager() {
                 <MenuItem value={3}>{t("platform@banners.action3")}</MenuItem>
                 <MenuItem value={4}>{t("platform@banners.action4")}</MenuItem>
                 <MenuItem value={5}>{t("platform@banners.action5")}</MenuItem>
+                <MenuItem value={6}>{t("platform@banners.action6")}</MenuItem>
               </TextField>
               <TextField
                 label={t("platform@banners.actionUrl")}
                 fullWidth
-                placeholder="https://..."
+                placeholder={form.actionType === 2 || form.actionType === 6 ? "0791234567" : "https://..."}
+                helperText={form.actionType === 2 || form.actionType === 6 ? t("platform@banners.actionPhoneHint") : undefined}
                 value={form.actionUrl ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, actionUrl: e.target.value || null }))}
               />
@@ -676,11 +678,13 @@ export default function BannerManager() {
               <MenuItem value={3}>{t("platform@banners.action3")}</MenuItem>
               <MenuItem value={4}>{t("platform@banners.action4")}</MenuItem>
               <MenuItem value={5}>{t("platform@banners.action5")}</MenuItem>
+                <MenuItem value={6}>{t("platform@banners.action6")}</MenuItem>
             </TextField>
             <TextField
               label={t("platform@banners.actionUrl")}
               fullWidth
-              placeholder="https://..."
+              placeholder={editForm.actionType === 2 || editForm.actionType === 6 ? "0791234567" : "https://..."}
+              helperText={editForm.actionType === 2 || editForm.actionType === 6 ? t("platform@banners.actionPhoneHint") : undefined}
               value={editForm.actionUrl ?? ""}
               onChange={(e) =>
                 setEditForm((f) => ({ ...f, actionUrl: e.target.value || null }))
