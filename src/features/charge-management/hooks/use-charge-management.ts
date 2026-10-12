@@ -1,10 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
+import { useListState } from "../../../hooks";
 import { getAllChargingPoints } from "../services/charge-management-service";
 import type { ChargingPointDto } from "../types/api";
 import { toTimestamp } from "../../../utils/date-format";
+import { normalizePhoneDigits, normalizeSearchText } from "../../../utils/search-normalize";
+import { cityLabel } from "../../dashboard/utils/city-names";
 
 const REQUEST_BODY = { name: null, chargerPointTypeId: null, cityName: null };
+
+/** Debounce for the search box: the input stays instant, filtering waits for a pause. */
+const SEARCH_DEBOUNCE_MS = 300;
 
 export type SortOption =
   | "NONE"
@@ -35,14 +41,30 @@ function byDate(
   };
 }
 
+/**
+ * Client-side search over name, city (raw value plus its Arabic and English
+ * names, so «عمان» finds "Amman"), phone (with or without +962 / 0) and id.
+ * Arabic text is normalised (diacritics, alef/ta-marbuta/ya variants, digits).
+ */
 function applyFilter(items: ChargingPointDto[], search: string): ChargingPointDto[] {
-  if (!search.trim()) return items;
-  const q = search.trim().toLowerCase();
-  return items.filter(
-    (row) =>
-      (row.name ?? "").toLowerCase().includes(q) ||
-      (row.cityName ?? "").toLowerCase().includes(q)
-  );
+  const q = normalizeSearchText(search);
+  if (!q) return items;
+  const qPhone = /^[+\d\s()-]+$/.test(q) ? normalizePhoneDigits(q) : "";
+  const qId = q.replace(/^#/, "");
+  return items.filter((row) => {
+    if (normalizeSearchText(row.name).includes(q)) return true;
+    const c = row.cityName;
+    if (
+      c &&
+      (normalizeSearchText(c).includes(q) ||
+        normalizeSearchText(cityLabel(c, "ar")).includes(q) ||
+        normalizeSearchText(cityLabel(c, "en")).includes(q))
+    )
+      return true;
+    if (String(row.id) === qId) return true;
+    if (qPhone.length >= 3 && normalizePhoneDigits(row.phone).includes(qPhone)) return true;
+    return false;
+  });
 }
 
 function applySort(items: ChargingPointDto[], sort: SortOption): ChargingPointDto[] {
@@ -72,8 +94,19 @@ function applySort(items: ChargingPointDto[], sort: SortOption): ChargingPointDt
 }
 
 export function useChargeManagement() {
-  const [search, setSearch] = useState("");
-  const [sortOption, setSortOption] = useState<SortOption>("NONE");
+  const [search, setSearch] = useListState("search", "");
+  const [sortOption, setSortOption] = useListState<SortOption>("sort", "NONE");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  useEffect(() => {
+    // Clearing applies immediately; typing waits for a short pause.
+    if (!search.trim()) {
+      setDebouncedSearch(search);
+      return;
+    }
+    const id = window.setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(id);
+  }, [search]);
 
   const query = useQuery({
     queryKey: ["charge-management", "charging-points"],
@@ -85,19 +118,33 @@ export function useChargeManagement() {
 
   const filteredAndSortedData = useMemo(() => {
     const raw = query.data ?? [];
-    const filtered = applyFilter(raw, search);
+    const filtered = applyFilter(raw, debouncedSearch);
     return applySort(filtered, sortOption);
-  }, [query.data, search, sortOption]);
+  }, [query.data, debouncedSearch, sortOption]);
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
   const handleSortChange = useCallback((value: SortOption) => setSortOption(value), []);
-  const handleRefresh = useCallback(() => query.refetch(), [query]);
+  const { refetch } = query;
+  const handleRefresh = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return {
     data: filteredAndSortedData,
+    /** Every station, before search/filters (header stats). */
+    allData: query.data,
+    /** True only for the very first load (nothing to show yet). */
     isLoading: query.isLoading,
-    error: query.error,
+    /** Any fetch in flight, including background refreshes. */
+    isFetching: query.isFetching,
+    /** First load failed — nothing to show. */
+    error: query.data ? null : query.error,
+    /** A refresh failed while older data is still on screen. */
+    refreshError: query.data ? query.error : null,
+    dataUpdatedAt: query.dataUpdatedAt,
     search,
+    /** The search term actually applied to the list (debounced). */
+    debouncedSearch,
     sortOption,
     handleSearchChange,
     handleSortChange,

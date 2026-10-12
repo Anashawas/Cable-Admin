@@ -384,7 +384,12 @@
     "unblocked": "Block removed",
     "blockTitle": "Hide this station's live data from drivers?",
     "blockBody": "Use for wrong data or a dispute. The owner sees the reason. The block never turns sharing on — only the owner can.",
-    "reason": "Reason (shown to the owner)"
+    "reason": "Reason (shown to the owner)",
+    "shareOnTitle": "Share live data with drivers?",
+    "shareOnBody": "All Cable app users will see this station's live plug status — free, charging or faulted — on the map and the station page. Turn it on only at the owner's request.",
+    "shareOnGates": "Drivers see it only once the subscription is active and Cable has not blocked the station.",
+    "shareOffTitle": "Stop sharing live data?",
+    "shareOffBody": "Cable app users will no longer see this station's live plug status. The chargers keep working."
   },
   "reliability": {
     "title": "Reliability, last {{days}} days",
@@ -415,5 +420,76 @@
     "save": "Save",
     "reset": "Back to defaults",
     "saved": "Alert thresholds saved"
+  },
+  "summary": {
+    "onlineOf": "{{online}} of {{total}} online",
+    "freeOf": "{{free}} of {{total}} plugs free",
+    "barLabel": "Online {{online}}, reconnecting {{reconnecting}}, offline {{offline}}",
+    "noSubscriptionHint": "Stations with chargers but no active Cable Connect subscription",
+    "title": "Fleet summary"
+  },
+  "filters": {
+    "state": "Status",
+    "enabled": "Enabled",
+    "clear": "Clear filters",
+    "subscription": "Subscription"
+  },
+  "alertsUi": {
+    "showAll": "Show all ({{count}})",
+    "showLess": "Show less",
+    "statusOpen": "Open",
+    "statusResolved": "Resolved",
+    "empty": "No alerts",
+    "notifiedAt": "Notified: {{when}}",
+    "since": "Started: {{when}}",
+    "resolvedAt": "Resolved: {{when}}",
+    "details": {
+      "offlineMin": "Offline for {{n}} min",
+      "offlineHours": "Offline for {{h}} h",
+      "offlineHm": "Offline for {{h}} h {{m}} min",
+      "minutes": "{{n}} min"
+    }
+  },
+  "table": {
+    "plugsFree": "{{free}}/{{total}} free",
+    "plugsFaulted": "{{count}} faulted",
+    "charging": "{{count}} charging",
+    "viewCharger": "View {{name}}",
+    "toggleEnabled": "Enable {{name}}"
+  },
+  "subscriptionFilter": {
+    "all": "All subscriptions",
+    "on": "Active",
+    "off": "Expired / switched off",
+    "none": "No subscription"
+  },
+  "stations": {
+    "title": "Stations",
+    "count": "{{count}} stations",
+    "count_one": "{{count}} station",
+    "count_other": "{{count}} stations",
+    "countOf": "{{shown}} of {{total}}",
+    "chargers_one": "{{count}} charger",
+    "chargers_other": "{{count}} chargers",
+    "chargers": "{{count}} chargers",
+    "online": "{{online}}/{{total}} online",
+    "plugsFree": "{{free}}/{{total}} plugs free",
+    "alerts_one": "{{count}} open alert",
+    "alerts_other": "{{count}} open alerts",
+    "alerts": "{{count}} open alerts",
+    "open": "Open {{name}}",
+    "searchPlaceholder": "Search station, charger or ID…",
+    "none": "No stations with chargers yet",
+    "noMatch": "No stations match the filters",
+    "loadError": "Couldn't load the chargers",
+    "retry": "Retry",
+    "breadcrumb": "Breadcrumb",
+    "profile": "Station profile",
+    "summaryTitle": "Station summary",
+    "reliabilityHint": "Average 30-day reliability of this station's chargers",
+    "noAlerts": "No open alerts at this station",
+    "notFound": "Station not found",
+    "settings": "Station settings",
+    "openInCableConnect": "Open in Cable Connect"
   }
 }

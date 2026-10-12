@@ -88,3 +88,28 @@ export function matchesDateRange(
   const cutoff = Date.now() - PRESET_DAYS[preset] * 24 * 60 * 60 * 1000;
   return ts >= cutoff;
 }
+
+/** Levantine month names, as Jordanian admins read them (same as the OCPP screens / partner web). */
+export const AR_MONTHS_LEVANTINE = [
+  "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+  "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول",
+];
+
+/**
+ * Long date with weekday: "الاثنين، 12 تشرين الأول 2026" in Arabic (Western
+ * digits, Levantine month), "Monday, 12 October 2026" otherwise.
+ */
+export function formatLongDate(d: Date, lang = "en"): string {
+  if (!lang.startsWith("ar")) {
+    return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  }
+  const weekday = d.toLocaleDateString("ar-JO", { weekday: "long" });
+  return `${weekday}، ${d.getDate()} ${AR_MONTHS_LEVANTINE[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/** Naive local day bounds ("YYYY-MM-DDT00:00:00" / "…T23:59:59"), matching the API's naive local timestamps. */
+export function localDayBounds(d: Date): { from: string; to: string } {
+  const p = (n: number) => String(n).padStart(2, "0");
+  const day = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  return { from: `${day}T00:00:00`, to: `${day}T23:59:59` };
+}

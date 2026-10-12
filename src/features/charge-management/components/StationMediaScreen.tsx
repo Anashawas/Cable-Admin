@@ -18,7 +18,8 @@ import {
 } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackButton, { BackArrowIcon } from "../../../components/BackButton";
+import { useSmartBack } from "../../../hooks/use-smart-back";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import UploadIcon from "@mui/icons-material/Upload";
@@ -42,6 +43,7 @@ export default function StationMediaScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/charge-management");
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
@@ -184,7 +186,7 @@ export default function StationMediaScreen() {
       <AppScreenContainer>
         <Box p={2}>
           <Typography color="text.secondary">{t("notFound")}</Typography>
-          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/charge-management")} sx={{ mt: 2 }}>
+          <Button startIcon={<BackArrowIcon />} onClick={goBack} sx={{ mt: 2 }}>
             {t("back")}
           </Button>
         </Box>
@@ -223,15 +225,7 @@ export default function StationMediaScreen() {
           <Box sx={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
             <Stack direction="row" spacing={2} alignItems="center">
-              <Button
-                startIcon={<ArrowBackIcon />}
-                onClick={() => navigate("/charge-management")}
-                sx={{ color: "rgba(255,255,255,0.85)", borderColor: "rgba(255,255,255,0.3)", "&:hover": { bgcolor: "rgba(255,255,255,0.1)", borderColor: "white" }, flexShrink: 0 }}
-                variant="outlined"
-                size="small"
-              >
-                {t("back")}
-              </Button>
+              <BackButton fallback="/charge-management" variant="onDark" />
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <Box sx={{ width: 48, height: 48, borderRadius: 2, bgcolor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <EvStationIcon sx={{ fontSize: 26 }} />

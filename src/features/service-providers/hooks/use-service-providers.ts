@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
+import { useListState } from "../../../hooks";
 import {
   getAllServiceProviders,
   getServiceProviderById,
@@ -77,9 +78,9 @@ function applySort(
 // ============================================
 
 export function useServiceProviders(categoryId?: number) {
-  const [search, setSearch] = useState("");
-  const [sortOption, setSortOption] = useState<ServiceProviderSortOption>("NONE");
-  const [verifiedFilter, setVerifiedFilter] = useState<"all" | "verified" | "unverified">("all");
+  const [search, setSearch] = useListState("search", "");
+  const [sortOption, setSortOption] = useListState<ServiceProviderSortOption>("sort", "NONE");
+  const [verifiedFilter, setVerifiedFilter] = useListState<"all" | "verified" | "unverified">("verified", "all");
 
   const query = useQuery({
     queryKey: [...SERVICE_PROVIDERS_QUERY_KEY, categoryId],

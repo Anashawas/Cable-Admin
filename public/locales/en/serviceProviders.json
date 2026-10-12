@@ -1,4 +1,5 @@
 {
+  "nameAndCategoryRequired": "Name and category are required",
   "serviceCategories": "Service Categories",
   "serviceCategories_subtitle": "Manage service categories and classifications",
   "serviceCategories_created": "Service category created successfully",
@@ -89,6 +90,8 @@
   "priceDescription": "Price Description",
   "fromTime": "Opening Time",
   "toTime": "Closing Time",
+  "open24h": "Open 24 hours",
+  "hoursRequired": "Set both opening and closing times, or tick Open 24 hours",
   "methodPayment": "Payment Methods",
   "websiteUrl": "Website URL",
   "service": "Services Offered",

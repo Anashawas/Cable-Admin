@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
+import { useListState } from "../../../hooks";
 import {
   getSettlements,
   getProviderSettlements,
@@ -35,7 +36,7 @@ export function useSettlements(filters?: {
   status?: number;
   year?: number;
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useListState("settlementsSearch", "");
 
   const query = useQuery({
     queryKey: [...SETTLEMENTS_QUERY_KEY, filters],

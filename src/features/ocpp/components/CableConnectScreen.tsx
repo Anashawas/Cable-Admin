@@ -1,160 +1,221 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Box, Button, Chip, Grid, IconButton, InputAdornment, MenuItem, Pagination, Paper, Stack, TextField, Tooltip, Typography, useTheme,
+  Box, Button, Chip, IconButton, InputAdornment, MenuItem, Paper, Skeleton, Stack, TextField, Tooltip, Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
-import CableIcon from "@mui/icons-material/Cable";
-import WifiIcon from "@mui/icons-material/Wifi";
-import SyncIcon from "@mui/icons-material/Sync";
-import WifiOffIcon from "@mui/icons-material/WifiOff";
-import PowerIcon from "@mui/icons-material/Power";
-import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import BoltIcon from "@mui/icons-material/Bolt";
-import ElectricMeterIcon from "@mui/icons-material/ElectricMeter";
-import CreditCardOffIcon from "@mui/icons-material/CreditCardOff";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import SpeedIcon from "@mui/icons-material/Speed";
 import AlertsSection from "./AlertsSection";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
-import { useOcppChargePoints, useOcppFleetHealth, useRecomputeReliability } from "../hooks/use-ocpp";
-import { useSnackbarStore } from "../../../stores";
-import SpeedIcon from "@mui/icons-material/Speed";
-import type { OcppConnectionState } from "../types/api";
-import ChargersTable from "./ChargersTable";
+import { useOcppAlerts, useOcppAllChargePoints, useOcppFleetHealth, useRecomputeReliability } from "../hooks/use-ocpp";
+import { useAuthenticationStore, useSnackbarStore } from "../../../stores";
+
+/** Admin roles (Admin, SuperAdmin) — only they may recompute reliability. */
+const isAdminRole = (role?: { id: number; name: string } | null) =>
+  !!role && (role.id === 2 || /^(super)?admin$/i.test(role.name?.replace(/[s_-]/g, "") ?? ""));
+import type { OcppConnectionState, OcppFleetHealthDto } from "../types/api";
 import ChargerDetailDialog from "./ChargerDetailDialog";
 import RegisterChargerDialog from "./RegisterChargerDialog";
+import SummaryCard, { Figure } from "./SummaryCard";
+import StationCard from "./StationCard";
+import { groupByStation, stationMatches, type StationFilters, type SubscriptionFilter } from "./station-groups";
+import { useListState } from "../../../hooks";
 
-function Kpi({ icon, label, value, color }: { icon: ReactNode; label: string; value: ReactNode; color: string }) {
+/** Fleet at a glance: chargers online, free plugs, then the rest as small figures. */
+function FleetSummary({ h }: { h?: OcppFleetHealthDto }) {
+  const { t } = useTranslation();
+  const dash = "—";
   return (
-    <Grid size={{ xs: 6, sm: 4, md: 3, lg: 12 / 7 }}>
-      <Paper elevation={0} sx={{ borderRadius: 3, p: 1.75, border: 1, borderColor: "divider", height: "100%" }}>
-        <Stack direction="row" spacing={1.25} alignItems="center">
-          <Box sx={{ width: 36, height: 36, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: `${color}18`, color }}>{icon}</Box>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h6" fontWeight={800} lineHeight={1.1}>{value}</Typography>
-            <Typography variant="caption" color="text.secondary" noWrap display="block">{label}</Typography>
-          </Box>
-        </Stack>
-      </Paper>
-    </Grid>
+    <SummaryCard
+      label={t("ocpp@summary.title")}
+      c={h && { online: h.online, reconnecting: h.reconnecting, offline: h.offline, freeConnectors: h.freeConnectors, totalConnectors: h.totalConnectors }}
+    >
+      <Figure label={t("ocpp@kpi.openSessions")} value={h?.openSessions ?? dash} />
+      <Figure label={t("ocpp@kpi.faulted")} value={h?.faultedConnectors ?? dash} color={h && h.faultedConnectors > 0 ? "error.main" : undefined} />
+      <Figure label={t("ocpp@kpi.energyToday")} value={h ? Number(h.energyTodayKwh).toFixed(1) : dash} />
+      <Figure label={t("ocpp@kpi.openAlerts")} value={h?.openAlerts ?? dash} />
+      <Figure
+        label={t("ocpp@kpi.noSubscription")} value={h?.stationsWithoutActiveSubscription ?? dash}
+        color={h && h.stationsWithoutActiveSubscription > 0 ? "warning.main" : undefined}
+        hint={t("ocpp@summary.noSubscriptionHint")}
+      />
+      {h && h.staleSessions > 0 && <Figure label={t("ocpp@kpi.stale")} value={h.staleSessions} color="warning.main" />}
+      {h && h.neverConnected > 0 && <Figure label={t("ocpp@kpi.neverConnected")} value={h.neverConnected} />}
+    </SummaryCard>
   );
 }
 
-const PAGE_SIZE = 20;
+const NO_FILTERS: StationFilters = { search: "", state: "", enabled: "", subscription: "" };
 
 export default function CableConnectScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
 
-  const [search, setSearch] = useState("");
-  // One request per pause in typing, not per keystroke.
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  useEffect(() => { const h = setTimeout(() => setDebouncedSearch(search), 350); return () => clearTimeout(h); }, [search]);
-  const [state, setState] = useState<OcppConnectionState | "">("");
-  const [enabled, setEnabled] = useState<"" | "true" | "false">("");
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useListState<StationFilters>("filters", NO_FILTERS);
+  const set = <K extends keyof StationFilters>(k: K, v: StationFilters[K]) => setFilters((f) => ({ ...f, [k]: v }));
   const [viewId, setViewId] = useState<number | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
 
   const health = useOcppFleetHealth();
   const recompute = useRecomputeReliability();
+  const canRecompute = isAdminRole(useAuthenticationStore((s) => s.user?.role));
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
   const doRecompute = async () => {
     try { const n = await recompute.mutateAsync(); openSuccessSnackbar({ message: t("ocpp@reliability.recomputed", { count: n }) }); }
     catch (err) { openErrorSnackbar({ message: String((err as any)?.response?.data?.detail ?? (err as any)?.message ?? t("ocpp@toast.error")) }); }
   };
-  const list = useOcppChargePoints({
-    search: debouncedSearch.trim() || undefined,
-    connectionState: state || undefined,
-    isEnabled: enabled === "" ? undefined : enabled === "true",
-    page,
-    pageSize: PAGE_SIZE,
-  });
 
-  const h = health.data;
-  const items = list.data?.items ?? [];
-  const totalPages = list.data?.totalPages ?? 0;
+  // Every charger (the list is small), grouped by station on the client; filters run on the groups.
+  const list = useOcppAllChargePoints();
+  // Same query as the alerts card below, so it is shared, not fetched twice.
+  const alerts = useOcppAlerts({ openOnly: true, take: 50 });
+  const stations = useMemo(() => groupByStation(list.data ?? [], alerts.data ?? []), [list.data, alerts.data]);
+  const visible = useMemo(() => stations.filter((g) => stationMatches(g, filters)), [stations, filters]);
+
+  const filtersActive = filters.search !== "" || filters.state !== "" || filters.enabled !== "" || filters.subscription !== "";
+
+  let emptyText = t("ocpp@stations.none");
+  if (stations.length > 0) emptyText = filters.search ? t("ocpp@noResults", { query: filters.search }) : t("ocpp@stations.noMatch");
 
   return (
     <AppScreenContainer>
       <Box sx={{ p: { xs: 1, sm: 2 } }}>
-        <Stack spacing={2.5}>
+        <Stack spacing={2}>
           {/* Header */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} justifyContent="space-between" alignItems={{ sm: "center" }}>
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: "primary.main", color: "primary.contrastText", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(25,118,210,0.35)" }}>
-                <CableIcon />
-              </Box>
-              <Box>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="h5" fontWeight={800}>{t("ocpp@title")}</Typography>
-                  <Chip size="small" color="success" variant="outlined" label={t("ocpp@live")} sx={{ fontWeight: 700, "& .MuiChip-label": { px: 1 } }} />
-                </Stack>
-                <Typography variant="body2" color="text.secondary">{t("ocpp@subtitle")}</Typography>
-              </Box>
-            </Stack>
-            <Stack direction="row" spacing={1}>
-              <Tooltip title={t("ocpp@refresh")}><IconButton onClick={() => { health.refetch(); list.refetch(); }}><RefreshIcon /></IconButton></Tooltip>
-              <Tooltip title={t("ocpp@reliability.recomputeHint")}><span><Button variant="outlined" startIcon={<SpeedIcon />} disabled={recompute.isPending} onClick={doRecompute} sx={{ textTransform: "none", fontWeight: 700 }}>{t("ocpp@reliability.recompute")}</Button></span></Tooltip>
-              <Button variant="contained" startIcon={<AddIcon />} onClick={() => setRegisterOpen(true)} sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none" }}>{t("ocpp@addCharger")}</Button>
+            <Box sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h5" fontWeight={800} component="h1">{t("ocpp@title")}</Typography>
+                <Chip
+                  size="small" color="success" variant="outlined" label={t("ocpp@live")}
+                  icon={<Box component="span" sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "success.main" }} aria-hidden />}
+                  sx={{ fontWeight: 700, height: 22, "& .MuiChip-icon": { marginInlineStart: "8px", marginInlineEnd: "-2px" } }}
+                />
+              </Stack>
+              <Typography variant="body2" color="text.secondary">{t("ocpp@subtitle")}</Typography>
+            </Box>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Tooltip title={t("ocpp@refresh")}>
+                <IconButton onClick={() => { health.refetch(); list.refetch(); alerts.refetch(); }} aria-label={t("ocpp@refresh")}><RefreshIcon /></IconButton>
+              </Tooltip>
+              {canRecompute && (
+              <Tooltip title={t("ocpp@reliability.recomputeHint")}>
+                <span>
+                  <Button
+                    variant="outlined" color="inherit" size="small" startIcon={<SpeedIcon fontSize="small" />}
+                    disabled={recompute.isPending} onClick={doRecompute}
+                    sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2, borderColor: "divider", height: 36 }}
+                  >
+                    {t("ocpp@reliability.recompute")}
+                  </Button>
+                </span>
+              </Tooltip>
+              )}
+              <Button
+                variant="contained" startIcon={<AddIcon />} onClick={() => setRegisterOpen(true)}
+                sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none", height: 36 }}
+              >
+                {t("ocpp@addCharger")}
+              </Button>
             </Stack>
           </Stack>
 
-          {/* KPIs */}
-          <Grid container spacing={1.5}>
-            <Kpi icon={<WifiIcon />} label={t("ocpp@kpi.online")} value={h?.online ?? "—"} color={theme.palette.success.main} />
-            <Kpi icon={<SyncIcon />} label={t("ocpp@kpi.reconnecting")} value={h?.reconnecting ?? "—"} color={theme.palette.warning.main} />
-            <Kpi icon={<WifiOffIcon />} label={t("ocpp@kpi.offline")} value={h?.offline ?? "—"} color={theme.palette.error.main} />
-            <Kpi icon={<PowerIcon />} label={t("ocpp@kpi.freeConnectors")} value={h ? `${h.freeConnectors}/${h.totalConnectors}` : "—"} color={theme.palette.success.dark} />
-            <Kpi icon={<ReportProblemIcon />} label={t("ocpp@kpi.faulted")} value={h?.faultedConnectors ?? "—"} color={theme.palette.error.dark} />
-            <Kpi icon={<BoltIcon />} label={t("ocpp@kpi.openSessions")} value={h?.openSessions ?? "—"} color={theme.palette.primary.main} />
-            <Kpi icon={<ElectricMeterIcon />} label={t("ocpp@kpi.energyToday")} value={h ? Number(h.energyTodayKwh).toFixed(1) : "—"} color={theme.palette.info.main} />
-            <Kpi icon={<NotificationsActiveIcon />} label={t("ocpp@kpi.openAlerts")} value={h?.openAlerts ?? "—"} color={h && h.openAlerts > 0 ? theme.palette.error.main : theme.palette.text.disabled} />
-          </Grid>
-          {h && (h.stationsWithoutActiveSubscription > 0 || h.staleSessions > 0 || h.neverConnected > 0) && (
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {h.stationsWithoutActiveSubscription > 0 && <Chip icon={<CreditCardOffIcon />} color="warning" variant="outlined" label={`${t("ocpp@kpi.noSubscription")}: ${h.stationsWithoutActiveSubscription}`} />}
-              {h.staleSessions > 0 && <Chip color="warning" variant="outlined" label={`${t("ocpp@kpi.stale")}: ${h.staleSessions}`} />}
-              {h.neverConnected > 0 && <Chip variant="outlined" label={`${t("ocpp@kpi.neverConnected")}: ${h.neverConnected}`} />}
-            </Stack>
-          )}
+          <FleetSummary h={health.data} />
 
-          {/* Alerts */}
-          <AlertsSection onOpenCharger={setViewId} />
+          {/* Alerts (fleet-wide, compact) */}
+          <AlertsSection onOpenCharger={setViewId} compact />
+
+          {/* Stations */}
+          <Stack direction="row" spacing={1} alignItems="baseline">
+            <Typography variant="h6" fontWeight={800} component="h2">{t("ocpp@stations.title")}</Typography>
+            {list.data && (
+              <Typography variant="body2" color="text.secondary">
+                <bdi>{filtersActive ? t("ocpp@stations.countOf", { shown: visible.length, total: stations.length }) : t("ocpp@stations.count", { count: stations.length })}</bdi>
+              </Typography>
+            )}
+          </Stack>
 
           {/* Filters */}
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ md: "center" }}>
             <TextField
-              placeholder={t("ocpp@searchPlaceholder")} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              size="small" fullWidth InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+              placeholder={t("ocpp@stations.searchPlaceholder")} value={filters.search} onChange={(e) => set("search", e.target.value)}
+              size="small" fullWidth sx={{ flex: 1 }}
+              slotProps={{
+                input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> },
+                htmlInput: { "aria-label": t("ocpp@stations.searchPlaceholder") },
+              }}
             />
-            <TextField select size="small" value={state} onChange={(e) => { setState(e.target.value as OcppConnectionState | ""); setPage(1); }} sx={{ minWidth: 180 }}>
-              <MenuItem value="">{t("ocpp@state.all")}</MenuItem>
-              <MenuItem value="Online">{t("ocpp@state.Online")}</MenuItem>
-              <MenuItem value="Reconnecting">{t("ocpp@state.Reconnecting")}</MenuItem>
-              <MenuItem value="Offline">{t("ocpp@state.Offline")}</MenuItem>
-            </TextField>
-            <TextField select size="small" value={enabled} onChange={(e) => { setEnabled(e.target.value as "" | "true" | "false"); setPage(1); }} sx={{ minWidth: 180 }}>
-              <MenuItem value="">{t("ocpp@enabledFilter.all")}</MenuItem>
-              <MenuItem value="true">{t("ocpp@enabledFilter.enabled")}</MenuItem>
-              <MenuItem value="false">{t("ocpp@enabledFilter.disabled")}</MenuItem>
-            </TextField>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }} sx={{ flexShrink: 0 }}>
+              <TextField
+                select size="small" label={t("ocpp@filters.state")} value={filters.state}
+                onChange={(e) => set("state", e.target.value as OcppConnectionState | "")}
+                sx={{ minWidth: { xs: 0, md: 160 }, flex: { xs: 1, md: "none" } }}
+                slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+              >
+                <MenuItem value="">{t("ocpp@state.all")}</MenuItem>
+                <MenuItem value="Online">{t("ocpp@state.Online")}</MenuItem>
+                <MenuItem value="Reconnecting">{t("ocpp@state.Reconnecting")}</MenuItem>
+                <MenuItem value="Offline">{t("ocpp@state.Offline")}</MenuItem>
+              </TextField>
+              <TextField
+                select size="small" label={t("ocpp@filters.subscription")} value={filters.subscription}
+                onChange={(e) => set("subscription", e.target.value as SubscriptionFilter)}
+                sx={{ minWidth: { xs: 0, md: 160 }, flex: { xs: 1, md: "none" } }}
+                slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+              >
+                <MenuItem value="">{t("ocpp@subscriptionFilter.all")}</MenuItem>
+                <MenuItem value="on">{t("ocpp@subscriptionFilter.on")}</MenuItem>
+                <MenuItem value="off">{t("ocpp@subscriptionFilter.off")}</MenuItem>
+                <MenuItem value="none">{t("ocpp@subscriptionFilter.none")}</MenuItem>
+              </TextField>
+              <TextField
+                select size="small" label={t("ocpp@filters.enabled")} value={filters.enabled}
+                onChange={(e) => set("enabled", e.target.value as "" | "true" | "false")}
+                sx={{ minWidth: { xs: 0, md: 160 }, flex: { xs: 1, md: "none" } }}
+                slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+              >
+                <MenuItem value="">{t("ocpp@enabledFilter.all")}</MenuItem>
+                <MenuItem value="true">{t("ocpp@enabledFilter.enabled")}</MenuItem>
+                <MenuItem value="false">{t("ocpp@enabledFilter.disabled")}</MenuItem>
+              </TextField>
+            </Stack>
+            {filtersActive && (
+              <Button size="small" onClick={() => setFilters(NO_FILTERS)} sx={{ textTransform: "none", fontWeight: 600, flexShrink: 0, alignSelf: { xs: "flex-start", md: "center" } }}>
+                {t("ocpp@filters.clear")}
+              </Button>
+            )}
           </Stack>
 
-          <ChargersTable
-            items={items}
-            loading={list.isLoading}
-            onView={setViewId}
-            emptyText={search ? t("ocpp@noResults", { query: search }) : t("ocpp@noChargers")}
-          />
-
-          {totalPages > 1 && (
-            <Stack direction="row" justifyContent="center">
-              <Pagination count={totalPages} page={page} onChange={(_, p) => setPage(p)} color="primary" />
-            </Stack>
+          {list.isLoading ? (
+            <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" } }}>
+              {[0, 1, 2].map((i) => <Skeleton key={i} variant="rounded" height={190} sx={{ borderRadius: 3 }} />)}
+            </Box>
+          ) : list.isError && !list.data ? (
+            <Paper variant="outlined" sx={{ borderRadius: 3, p: 4, textAlign: "center" }}>
+              <Typography variant="body1" color="text.secondary" fontWeight={600}>{t("ocpp@stations.loadError")}</Typography>
+              <Button size="small" onClick={() => list.refetch()} sx={{ mt: 1, textTransform: "none", fontWeight: 600 }}>{t("ocpp@stations.retry")}</Button>
+            </Paper>
+          ) : visible.length === 0 ? (
+            <Paper variant="outlined" sx={{ borderRadius: 3, p: 5, textAlign: "center" }}>
+              <Typography variant="body1" color="text.secondary" fontWeight={600}>{emptyText}</Typography>
+            </Paper>
+          ) : (
+            <Box
+              component="ul"
+              aria-label={t("ocpp@stations.title")}
+              sx={{
+                listStyle: "none", m: 0, p: 0, display: "grid", gap: 2,
+                gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
+              }}
+            >
+              {visible.map((g) => (
+                <Box component="li" key={g.chargingPointId} sx={{ minWidth: 0 }}>
+                  <StationCard g={g} />
+                </Box>
+              ))}
+            </Box>
           )}
         </Stack>
       </Box>

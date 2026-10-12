@@ -17,12 +17,17 @@
  */
 export function normalizeTime(raw?: string | null): string {
 	if (raw == null) return "";
-	const digits = String(raw).trim().replace(/[^0-9]/g, "");
-	if (digits === "") return "";
+	const groups = String(raw).trim().match(/[0-9]+/g);
+	if (!groups || groups.length === 0) return "";
 
 	let h: number;
 	let m: number;
-	if (digits.length <= 2) {
+	const digits = groups[0];
+	if (groups.length >= 2) {
+		// Separated value: "9:30:00" -> 9 / 30, "0;00" -> 0 / 00, "0:0]" -> 0 / 0.
+		h = Number(groups[0]);
+		m = Number(groups[1]);
+	} else if (digits.length <= 2) {
 		h = Number(digits);
 		m = 0;
 	} else if (digits.length === 3) {

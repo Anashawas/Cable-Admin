@@ -170,5 +170,6 @@
   "generating": "Generating...",
   "uploading": "Uploading...",
   "status": "Status",
-  "priceAlerts": "Price alerts"
+  "priceAlerts": "Price alerts",
+  "appTabTitle": "Cable Admin"
 }

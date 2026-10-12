@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import { lazyRoute } from "../lib/lazy-route";
 import { Route, Routes } from "react-router-dom";
 import { Box, Portal, useMediaQuery } from "@mui/material";
 
@@ -13,62 +14,63 @@ import { LANGUAGE } from "../constants/language-constants";
 const Login = lazy(() => import("../features/authentication/components/Login"));
 const App = lazy(() => import("../features/app/components/App"));
 const AppLayout = lazy(() => import("../features/app/components/AppLayout"));
-const DashboardScreen = lazy(() => import("../features/dashboard/components/DashboardScreen"));
-const UserListScreen = lazy(() => import("../features/users/components/UserListScreen"));
-const UserAnalyticsScreen = lazy(() => import("../features/users/components/UserAnalyticsScreen"));
-const EditUserScreen = lazy(() => import("../features/users/components/EditUserScreen"));
-const UserPointsScreen = lazy(() => import("../features/users/components/UserPointsScreen"));
-const UserProfileScreen = lazy(() => import("../features/users/components/UserProfileScreen"));
-const ChargeManagementScreen = lazy(() => import("../features/charge-management/components/ChargeManagementScreen"));
-const StationFormScreen = lazy(() => import("../features/charge-management/components/StationFormScreen"));
-const StationMediaScreen = lazy(() => import("../features/charge-management/components/StationMediaScreen"));
-const StationProfileScreen = lazy(() => import("../features/charge-management/components/StationProfileScreen"));
-const StationsRequestScreen = lazy(() => import("../features/charge-management/components/StationsRequestScreen"));
-const StationStatisticsScreen = lazy(() => import("../features/charge-management/components/StationStatisticsScreen"));
-const ChargerBrandsScreen = lazy(() => import("../features/charge-management/components/ChargerBrandsScreen"));
-const CableConnectScreen = lazy(() => import("../features/ocpp/components/CableConnectScreen"));
-const PriceAlertsScreen = lazy(() => import("../features/pricing/components/PriceAlertsScreen"));
-const ComplaintsScreen = lazy(() => import("../features/complaints/components/ComplaintsScreen"));
-const BannersScreen = lazy(() => import("../features/system/components/BannersScreen"));
-const WelcomeMessagesScreen = lazy(() => import("../features/announcements/components/WelcomeMessagesScreen"));
-const ViewImageReviewScreen = lazy(() => import("../features/charge-management/components/ViewImageReviewScreen"));
-const NearestPreviewScreen = lazy(() => import("../features/charge-management/components/NearestPreviewScreen"));
-const CampaignsScreen = lazy(() => import("../features/campaigns/components/CampaignsScreen"));
-const RenewalsScreen = lazy(() => import("../features/subscriptions/components/RenewalsScreen"));
-const PartnerAdoptionScreen = lazy(
+const DashboardScreen = lazyRoute(() => import("../features/dashboard/components/DashboardScreen"));
+const UserListScreen = lazyRoute(() => import("../features/users/components/UserListScreen"));
+const UserAnalyticsScreen = lazyRoute(() => import("../features/users/components/UserAnalyticsScreen"));
+const EditUserScreen = lazyRoute(() => import("../features/users/components/EditUserScreen"));
+const UserPointsScreen = lazyRoute(() => import("../features/users/components/UserPointsScreen"));
+const UserProfileScreen = lazyRoute(() => import("../features/users/components/UserProfileScreen"));
+const ChargeManagementScreen = lazyRoute(() => import("../features/charge-management/components/ChargeManagementScreen"));
+const StationFormScreen = lazyRoute(() => import("../features/charge-management/components/StationFormScreen"));
+const StationMediaScreen = lazyRoute(() => import("../features/charge-management/components/StationMediaScreen"));
+const StationProfileScreen = lazyRoute(() => import("../features/charge-management/components/StationProfileScreen"));
+const StationsRequestScreen = lazyRoute(() => import("../features/charge-management/components/StationsRequestScreen"));
+const StationStatisticsScreen = lazyRoute(() => import("../features/charge-management/components/StationStatisticsScreen"));
+const ChargerBrandsScreen = lazyRoute(() => import("../features/charge-management/components/ChargerBrandsScreen"));
+const CableConnectScreen = lazyRoute(() => import("../features/ocpp/components/CableConnectScreen"));
+const StationCableConnectScreen = lazyRoute(() => import("../features/ocpp/components/StationCableConnectScreen"));
+const PriceAlertsScreen = lazyRoute(() => import("../features/pricing/components/PriceAlertsScreen"));
+const ComplaintsScreen = lazyRoute(() => import("../features/complaints/components/ComplaintsScreen"));
+const BannersScreen = lazyRoute(() => import("../features/system/components/BannersScreen"));
+const WelcomeMessagesScreen = lazyRoute(() => import("../features/announcements/components/WelcomeMessagesScreen"));
+const ViewImageReviewScreen = lazyRoute(() => import("../features/charge-management/components/ViewImageReviewScreen"));
+const NearestPreviewScreen = lazyRoute(() => import("../features/charge-management/components/NearestPreviewScreen"));
+const CampaignsScreen = lazyRoute(() => import("../features/campaigns/components/CampaignsScreen"));
+const RenewalsScreen = lazyRoute(() => import("../features/subscriptions/components/RenewalsScreen"));
+const PartnerAdoptionScreen = lazyRoute(
   () => import("../features/partner-adoption/components/PartnerAdoptionScreen")
 );
-const LoyaltyBoostsScreen = lazy(() => import("../features/loyalty/components/LoyaltyBoostsScreen"));
-const AppVersionsScreen = lazy(() => import("../features/system/components/AppVersionsScreen"));
-const CarDatabaseScreen = lazy(() => import("../features/system/components/CarDatabaseScreen"));
-const SendNotificationScreen = lazy(() => import("../features/notifications/components/SendNotificationScreen"));
-const NotificationTemplatesScreen = lazy(() => import("../features/notifications/components/NotificationTemplatesScreen"));
-const ReceiptGeneratorScreen = lazy(() => import("../features/receipts/components/ReceiptGeneratorScreen"));
-const EmergencyServicesScreen = lazy(() => import("../features/system/components/EmergencyServicesScreen"));
-const ServiceCategoriesScreen = lazy(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
-const ServiceProvidersScreen = lazy(() => import("../features/service-providers/components/ServiceProvidersScreen"));
-const AddServiceProviderScreen = lazy(() => import("../features/service-providers/components/AddServiceProviderScreen"));
-const ServiceProviderProfileScreen = lazy(() => import("../features/service-providers/components/ServiceProviderProfileScreen"));
-const ConversionRatesScreen = lazy(() => import("../features/offers/components/ConversionRatesScreen"));
-const PendingOffersScreen = lazy(() => import("../features/offers/components/PendingOffersScreen"));
-const ActiveOffersScreen = lazy(() => import("../features/offers/components/ActiveOffersScreen"));
-const OffersScreen = lazy(() => import("../features/offers/components/OffersScreen"));
-const TransactionsScreen = lazy(() => import("../features/offers/components/TransactionsScreen"));
-const SettlementsScreen = lazy(() => import("../features/offers/components/SettlementsScreen"));
-const ProviderSettlementsScreen = lazy(() => import("../features/offers/components/ProviderSettlementsScreen"));
-const PartnersScreen = lazy(() => import("../features/partners/components/PartnersScreen"));
-const AddPartnerScreen = lazy(() => import("../features/partners/components/AddPartnerScreen"));
-const SocialMediaPlatformsScreen = lazy(() => import("../features/social-media/components/SocialMediaPlatformsScreen"));
-const LoyaltyManagementScreen = lazy(() => import("../features/loyalty/components/LoyaltyManagementScreen"));
-const RedemptionsScreen = lazy(() => import("../features/loyalty/components/RedemptionsScreen"));
-const PointAdjustmentsScreen = lazy(() => import("../features/loyalty/components/PointAdjustmentsScreen"));
-const LeaderboardScreen = lazy(() => import("../features/loyalty/components/LeaderboardScreen"));
-const LoyaltyDashboardScreen = lazy(() => import("../features/loyalty/components/LoyaltyDashboardScreen"));
-const BlockUsersScreen = lazy(() => import("../features/loyalty/components/BlockUsersScreen"));
-const BulkAwardScreen = lazy(() => import("../features/loyalty/components/BulkAwardScreen"));
-const PointsLedgerScreen = lazy(() => import("../features/loyalty/components/PointsLedgerScreen"));
-const FlaggedActivityScreen = lazy(() => import("../features/loyalty/components/FlaggedActivityScreen"));
-const TermsScreen = lazy(() => import("../features/terms/components/TermsScreen"));
+const LoyaltyBoostsScreen = lazyRoute(() => import("../features/loyalty/components/LoyaltyBoostsScreen"));
+const AppVersionsScreen = lazyRoute(() => import("../features/system/components/AppVersionsScreen"));
+const CarDatabaseScreen = lazyRoute(() => import("../features/system/components/CarDatabaseScreen"));
+const SendNotificationScreen = lazyRoute(() => import("../features/notifications/components/SendNotificationScreen"));
+const NotificationTemplatesScreen = lazyRoute(() => import("../features/notifications/components/NotificationTemplatesScreen"));
+const ReceiptGeneratorScreen = lazyRoute(() => import("../features/receipts/components/ReceiptGeneratorScreen"));
+const EmergencyServicesScreen = lazyRoute(() => import("../features/system/components/EmergencyServicesScreen"));
+const ServiceCategoriesScreen = lazyRoute(() => import("../features/service-providers/components/ServiceCategoriesScreen"));
+const ServiceProvidersScreen = lazyRoute(() => import("../features/service-providers/components/ServiceProvidersScreen"));
+const AddServiceProviderScreen = lazyRoute(() => import("../features/service-providers/components/AddServiceProviderScreen"));
+const ServiceProviderProfileScreen = lazyRoute(() => import("../features/service-providers/components/ServiceProviderProfileScreen"));
+const ConversionRatesScreen = lazyRoute(() => import("../features/offers/components/ConversionRatesScreen"));
+const PendingOffersScreen = lazyRoute(() => import("../features/offers/components/PendingOffersScreen"));
+const ActiveOffersScreen = lazyRoute(() => import("../features/offers/components/ActiveOffersScreen"));
+const OffersScreen = lazyRoute(() => import("../features/offers/components/OffersScreen"));
+const TransactionsScreen = lazyRoute(() => import("../features/offers/components/TransactionsScreen"));
+const SettlementsScreen = lazyRoute(() => import("../features/offers/components/SettlementsScreen"));
+const ProviderSettlementsScreen = lazyRoute(() => import("../features/offers/components/ProviderSettlementsScreen"));
+const PartnersScreen = lazyRoute(() => import("../features/partners/components/PartnersScreen"));
+const AddPartnerScreen = lazyRoute(() => import("../features/partners/components/AddPartnerScreen"));
+const SocialMediaPlatformsScreen = lazyRoute(() => import("../features/social-media/components/SocialMediaPlatformsScreen"));
+const LoyaltyManagementScreen = lazyRoute(() => import("../features/loyalty/components/LoyaltyManagementScreen"));
+const RedemptionsScreen = lazyRoute(() => import("../features/loyalty/components/RedemptionsScreen"));
+const PointAdjustmentsScreen = lazyRoute(() => import("../features/loyalty/components/PointAdjustmentsScreen"));
+const LeaderboardScreen = lazyRoute(() => import("../features/loyalty/components/LeaderboardScreen"));
+const LoyaltyDashboardScreen = lazyRoute(() => import("../features/loyalty/components/LoyaltyDashboardScreen"));
+const BlockUsersScreen = lazyRoute(() => import("../features/loyalty/components/BlockUsersScreen"));
+const BulkAwardScreen = lazyRoute(() => import("../features/loyalty/components/BulkAwardScreen"));
+const PointsLedgerScreen = lazyRoute(() => import("../features/loyalty/components/PointsLedgerScreen"));
+const FlaggedActivityScreen = lazyRoute(() => import("../features/loyalty/components/FlaggedActivityScreen"));
+const TermsScreen = lazyRoute(() => import("../features/terms/components/TermsScreen"));
 const NotFound = lazy(() => import("../components/NotFound"));
 
 function AppContainer() {
@@ -161,6 +163,16 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <CableConnectScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cable-connect/stations/:stationId"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <StationCableConnectScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

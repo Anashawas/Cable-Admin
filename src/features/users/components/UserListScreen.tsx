@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,9 @@ import {
   CircularProgress,
   Paper,
   MenuItem,
+  Menu,
+  ListItemIcon,
+  ListItemText,
   InputAdornment,
   Divider,
   Avatar,
@@ -27,15 +30,16 @@ import {
   Select,
   FormControl,
   InputLabel,
-  FormControlLabel,
-  Checkbox,
-  DialogTitle,
+  Alert,
+  LinearProgress,
+  Skeleton,
+  useMediaQuery,
   useTheme,
   alpha,
-  type Theme,
+  keyframes,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
+import { arSD } from "@mui/x-data-grid/locales";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -43,66 +47,142 @@ import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
 import GroupIcon from "@mui/icons-material/Group";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PersonIcon from "@mui/icons-material/Person";
 import StoreIcon from "@mui/icons-material/Store";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import RestoreIcon from "@mui/icons-material/Restore";
-import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import EmailIcon from "@mui/icons-material/Email";
-import PhoneIcon from "@mui/icons-material/Phone";
 import LockIcon from "@mui/icons-material/Lock";
 import PublicIcon from "@mui/icons-material/Public";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
 import LoyaltyIcon from "@mui/icons-material/Loyalty";
-import RedeemIcon from "@mui/icons-material/Redeem";
-import BlockIcon from "@mui/icons-material/Block";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { useLoyaltySummary } from "../../loyalty/hooks/use-loyalty";
 import { AppDataGrid, BulkActionsBar } from "../../../components";
 import { getUsersPaged, getUsersSummary, deleteUserById, updateUserProfile, getUserById, createUser, restoreUsers } from "../services/user-service";
 import type { UserSummaryDto, CreateUserRequest } from "../types/api";
 import { useSnackbarStore } from "../../../stores";
-import { useCarTypeStats } from "../hooks/use-user-stats";
+import { useListState, reviveDateOrNull } from "../../../hooks";
 import { PROVIDER_ROLE_ID, DEFAULT_ROLES } from "../constants/roles";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
+import { cityKey, cityLabel } from "../../dashboard/utils/city-names";
+import { AR_MONTHS_LEVANTINE, formatLongDate, parseApiDate } from "../../../utils/date-format";
+import { toCallableNumber } from "../../../utils/phone";
+import { normalizeSearchText, normalizePhoneDigits } from "../../../utils/search-normalize";
 
-const isUser     = (u: { role?: { id?: number } }) => u.role?.id === 3;
 const isProvider = (u: { role?: { id?: number } }) => u.role?.id === 4;
 
 type RoleTab = "all" | "users" | "admins" | "providers";
+const ROLE_TABS: RoleTab[] = ["all", "users", "admins", "providers"];
 
-const getRoleTabConfig = (theme: Theme): Record<RoleTab, { label: string; roleName: string | null; icon: React.ReactNode; gradient: string }> => ({
-  all:       { label: "All",       roleName: null,       icon: <GroupIcon />,              gradient: `linear-gradient(135deg, #0d3276 0%, ${theme.palette.primary.main} 100%)` },
-  users:     { label: "Users",     roleName: "user",     icon: <PersonIcon />,             gradient: `linear-gradient(135deg, ${theme.palette.success.dark} 0%, ${theme.palette.success.main} 100%)` },
-  admins:    { label: "Admins",    roleName: "admin",    icon: <AdminPanelSettingsIcon />, gradient: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%)" },
-  providers: { label: "Providers", roleName: "provider", icon: <StoreIcon />,             gradient: `linear-gradient(135deg, ${theme.palette.warning.dark} 0%, ${theme.palette.warning.dark} 100%)` },
-});
+type RoleKey = "user" | "admin" | "provider" | "worker" | "superadmin" | "other";
+type RoleTone = "default" | "secondary" | "warning" | "info";
+
+const roleKeyOf = (roleName?: string | null): RoleKey => {
+  const n = (roleName ?? "").toLowerCase().replace(/[\s_-]+/g, "");
+  if (n === "user") return "user";
+  if (n === "admin") return "admin";
+  if (n === "superadmin") return "superadmin";
+  if (n === "provider" || n === "serviceprovider") return "provider";
+  if (n === "worker") return "worker";
+  return "other";
+};
+
+const ROLE_TONE: Record<RoleKey, RoleTone> = {
+  user: "default",
+  admin: "secondary",
+  superadmin: "secondary",
+  provider: "warning",
+  worker: "info",
+  other: "default",
+};
+
+/** Western digits regardless of UI language. */
+const fmtNum = (n: number | null | undefined) => (n ?? 0).toLocaleString("en-US");
+
+/**
+ * Search is server-side, so the API contract is unchanged — we only shape the
+ * term so it matches how data is stored: phone-like input ("+962 79…", "079…",
+ * Arabic-Indic digits) collapses to its national digits (a substring of the
+ * stored "96279…"); other text keeps its letters, with Arabic-Indic digits folded.
+ */
+const toServerSearch = (raw: string): string => {
+  const folded = normalizeSearchText(raw);
+  if (/^[+ds()-]+$/.test(folded) && folded.replace(/D/g, "").length >= 4) return normalizePhoneDigits(raw);
+  return raw.replace(/[٠-٩۰-۹]/g, (d) => normalizeSearchText(d));
+};
+
+/** "1 تشرين الأول 2026" / "1 Oct 2026" — Western digits. */
+const formatJoinDate = (value: string | null | undefined, lang: string): string | null => {
+  const d = parseApiDate(value);
+  if (!d) return null;
+  if (lang.startsWith("ar")) return `${d.getDate()} ${AR_MONTHS_LEVANTINE[d.getMonth()]} ${d.getFullYear()}`;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+};
+
+const formatJoinDateFull = (value: string | null | undefined, lang: string): string => {
+  const d = parseApiDate(value);
+  if (!d) return "";
+  const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${formatLongDate(d, lang)}${lang.startsWith("ar") ? "، " : ", "}${time}`;
+};
+
+/** "962790000444" → "+962 79 000 0444"; unrecognised shapes are shown as stored. */
+const formatPhone = (raw?: string | null): string | null => {
+  if (!raw) return null;
+  const callable = toCallableNumber(raw);
+  if (!callable) return raw;
+  const n = callable.slice(4);
+  if (n.length === 9) return `+962 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}`;
+  if (n.length === 8) return `+962 ${n.slice(0, 1)} ${n.slice(1, 4)} ${n.slice(4)}`;
+  return callable;
+};
+
+function SummaryItem({ label, value, tone }: { label: string; value: ReactNode; tone?: "error" }) {
+  return (
+  <Box sx={{ minWidth: 0 }}>
+    <Typography variant="caption" color="text.secondary" noWrap component="div" sx={{ lineHeight: 1.4 }}>{label}</Typography>
+    <Typography
+      variant="subtitle1"
+      fontWeight={700}
+      noWrap
+      sx={{ lineHeight: 1.3, fontVariantNumeric: "tabular-nums", color: tone === "error" ? "error.main" : "text.primary" }}
+    >
+      {value}
+    </Typography>
+  </Box>
+);
+}
+
+const spin = keyframes`from { transform: rotate(0deg); } to { transform: rotate(360deg); }`;
 
 export default function UserListScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || "ar";
+  const isAr = lang.startsWith("ar");
   const theme = useTheme();
-  const ROLE_TAB_CONFIG = useMemo(() => getRoleTabConfig(theme), [theme]);
+  const isMdDown = useMediaQuery(theme.breakpoints.down("md"));
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
-  const [activeTab, setActiveTab] = useState<RoleTab>("all");
-  const [search, setSearch] = useState("");
-  const [phoneSearch, setPhoneSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState<Date | null>(null);
-  const [dateTo, setDateTo] = useState<Date | null>(null);
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
-  const [sort, setSort] = useState("createdAt_desc");
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 20 });
+  const [activeTab, setActiveTab] = useListState<RoleTab>("tab", "all");
+  const [search, setSearch] = useListState("search", "");
+  // Persisted for back-navigation restore (used by other filter UIs on this route).
+  const [phoneSearch, setPhoneSearch] = useListState("phone", "");
+  const [dateFrom, setDateFrom] = useListState<Date | null>("dateFrom", null, reviveDateOrNull);
+  const [dateTo, setDateTo] = useListState<Date | null>("dateTo", null, reviveDateOrNull);
+  const [selectedBrand, setSelectedBrand] = useListState<string>("brand", "");
+  const [selectedCity, setSelectedCity] = useListState<string>("city", "");
+  const [sort, setSort] = useListState("sort", "createdAt_desc");
+  const [paginationModel, setPaginationModel] = useListState<GridPaginationModel>("pagination", { page: 0, pageSize: 20 });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserSummaryDto | null>(null);
   const [drawerUser, setDrawerUser] = useState<UserSummaryDto | null>(null);
@@ -111,7 +191,7 @@ export default function UserListScreen() {
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useListState("showDeleted", false);
   const [showPassword, setShowPassword] = useState(false);
   const [newUserForm, setNewUserForm] = useState<CreateUserRequest>({
     name: "",
@@ -121,6 +201,29 @@ export default function UserListScreen() {
     country: "",
     city: "",
   });
+
+  // Row "more" menu
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [menuRow, setMenuRow] = useState<UserSummaryDto | null>(null);
+
+  // ── Search: the input is immediate, the query (persisted) follows after 300ms ──
+  const [searchInput, setSearchInput] = useState(search);
+  useEffect(() => {
+    const next = toServerSearch(searchInput);
+    if (next === search) return;
+    const h = window.setTimeout(() => {
+      setSearch(next);
+      setPaginationModel((p) => ({ ...p, page: 0 }));
+    }, 300);
+    return () => window.clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  const applySearchNow = useCallback((value: string) => {
+    setSearchInput(value);
+    setSearch(value);
+    setPaginationModel((p) => ({ ...p, page: 0 }));
+  }, [setSearch, setPaginationModel]);
 
   const roleId = activeTab === "users" ? 3 : activeTab === "admins" ? 2 : activeTab === "providers" ? PROVIDER_ROLE_ID : undefined;
   const usersParams = useMemo(() => ({
@@ -133,7 +236,7 @@ export default function UserListScreen() {
     pageSize: paginationModel.pageSize,
   }), [search, roleId, selectedCity, showDeleted, sort, paginationModel.page, paginationModel.pageSize]);
 
-  const { data: pageData, isLoading, error, refetch } = useQuery({
+  const { data: pageData, isLoading, isFetching, error, refetch, dataUpdatedAt } = useQuery({
     queryKey: ["users", "paged", usersParams],
     queryFn: ({ signal }) => getUsersPaged(usersParams, signal),
     placeholderData: (prev) => prev,
@@ -141,7 +244,7 @@ export default function UserListScreen() {
   const items = pageData?.items ?? [];
   const total = pageData?.totalCount ?? 0;
 
-  const { data: usersSummary } = useQuery({
+  const { data: usersSummary, refetch: refetchSummary } = useQuery({
     queryKey: ["users", "summary"],
     queryFn: ({ signal }) => getUsersSummary(signal),
     staleTime: 60 * 1000,
@@ -161,7 +264,7 @@ export default function UserListScreen() {
     return map;
   }, [allServiceProviders]);
 
-  const { data: loyaltySummary } = useLoyaltySummary();
+  const { data: loyaltySummary, refetch: refetchLoyalty } = useLoyaltySummary();
 
   const cityOptions = useMemo(
     () => (usersSummary?.byCity ?? []).map((c) => c.city),
@@ -174,6 +277,26 @@ export default function UserListScreen() {
     admins:    usersSummary?.byRole.find((r) => r.roleId === 2)?.count ?? 0,
     providers: usersSummary?.byRole.find((r) => r.roleId === PROVIDER_ROLE_ID)?.count ?? 0,
   }), [usersSummary]);
+
+  // ── "Last updated N min ago" — re-rendered every 30s ──
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+    const mins = Math.floor(Math.max(0, now - dataUpdatedAt) / 60_000);
+    if (mins < 1) return t("userManagement@list.updatedJustNow");
+    if (mins < 60) return t("userManagement@list.updatedMinutesAgo", { count: mins });
+    return t("userManagement@list.updatedHoursAgo", { count: Math.floor(mins / 60) });
+  }, [dataUpdatedAt, now, t]);
+
+  const handleRefresh = useCallback(() => {
+    refetch();
+    refetchSummary();
+    refetchLoyalty();
+  }, [refetch, refetchSummary, refetchLoyalty]);
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteUserById(id),
@@ -256,15 +379,15 @@ export default function UserListScreen() {
   const hasActiveFilters = !!(search || selectedCity);
 
   const clearFilters = useCallback(() => {
-    setSearch(""); setSelectedCity("");
+    setSearchInput(""); setSearch(""); setSelectedCity("");
     setPaginationModel((p) => ({ ...p, page: 0 }));
-  }, []);
+  }, [setSearch, setSelectedCity, setPaginationModel]);
 
   const handleTabChange = useCallback((_: React.SyntheticEvent, val: RoleTab) => {
     setActiveTab(val);
     setPaginationModel((p) => ({ ...p, page: 0 }));
     setRowSelectionModel([]);
-  }, []);
+  }, [setActiveTab, setPaginationModel]);
 
   const handleEdit = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
     e.stopPropagation();
@@ -278,13 +401,10 @@ export default function UserListScreen() {
     if (id > 0) navigate(`/users/${id}`);
   }, [navigate]);
 
-  const handleDeleteClick = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
-    e.stopPropagation(); setUserToDelete(row); setDeleteDialogOpen(true);
+  const openRowMenu = useCallback((e: React.MouseEvent<HTMLElement>, row: UserSummaryDto) => {
+    e.stopPropagation(); setMenuAnchor(e.currentTarget); setMenuRow(row);
   }, []);
-
-  const handleChangeRoleClick = useCallback((e: React.MouseEvent, row: UserSummaryDto) => {
-    e.stopPropagation(); setUserToChangeRole(row); setChangeRoleDialogOpen(true);
-  }, []);
+  const closeRowMenu = useCallback(() => { setMenuAnchor(null); }, []);
 
   const handleRowClick = useCallback((row: UserSummaryDto) => {
     const id = row.id ?? 0;
@@ -334,86 +454,107 @@ export default function UserListScreen() {
     if (selectedIds.length > 0) openSuccessSnackbar({ message: t("userManagement@bulkDeleted", { count: selectedIds.length }) });
   }, [selectedIds, deleteMutation, queryClient, openSuccessSnackbar, t]);
 
-  // One color per role, shared by chip and avatar so rows read consistently.
-  const roleColor = useCallback((roleName?: string | null) => {
-    const n = (roleName ?? "").toLowerCase();
-    if (n === "admin") return "secondary" as const;
-    if (n === "provider") return "warning" as const;
-    if (n === "worker") return "info" as const;
-    return "success" as const; // user
-  }, []);
+  const roleLabel = useCallback((roleName?: string | null) => {
+    const key = roleKeyOf(roleName);
+    return key === "other" ? (roleName ?? "—") : t(`userManagement@list.roles.${key}`);
+  }, [t]);
+
+  /** Soft tinted avatar colours per role (works in light & dark). */
+  const avatarSx = useCallback((roleName?: string | null) => {
+    const tone = ROLE_TONE[roleKeyOf(roleName)];
+    if (tone === "default") return { bgcolor: theme.palette.action.selected, color: theme.palette.text.secondary };
+    const c = theme.palette[tone].main;
+    return { bgcolor: alpha(c, theme.palette.mode === "dark" ? 0.24 : 0.12), color: theme.palette.mode === "dark" ? theme.palette[tone].light : theme.palette[tone].dark };
+  }, [theme]);
 
   const roleChip = useCallback((roleName: string) => {
-    const n = roleName.toLowerCase();
-    const icon =
-      n === "admin"    ? <AdminPanelSettingsIcon sx={{ fontSize: "13px !important" }} /> :
-      n === "provider" ? <StoreIcon sx={{ fontSize: "13px !important" }} /> :
-      n === "worker"   ? <BusinessCenterIcon sx={{ fontSize: "13px !important" }} /> :
-                         <PersonIcon sx={{ fontSize: "13px !important" }} />;
-    return <Chip label={roleName} size="small" color={roleColor(roleName)} icon={icon} variant="filled" sx={{ fontWeight: 600 }} />;
-  }, [roleColor]);
+    const tone = ROLE_TONE[roleKeyOf(roleName)];
+    return (
+      <Chip
+        label={roleLabel(roleName)}
+        size="small"
+        variant="outlined"
+        color={tone}
+        sx={{ fontWeight: 600, borderRadius: 1.5, ...(tone === "default" && { color: "text.secondary" }) }}
+      />
+    );
+  }, [roleLabel]);
+
+  const hiddenFields = useMemo(() => {
+    const s = new Set<string>();
+    if (isMdDown) { s.add("id"); s.add("city"); s.add("createdAt"); }
+    if (isXs) { s.add("phone"); s.add("isActive"); s.add("providers"); }
+    return s;
+  }, [isMdDown, isXs]);
 
   const columns: GridColDef<UserSummaryDto>[] = useMemo(
-    () => [
-      { field: "id", headerName: t("userManagement@columns.id"), width: 72, align: "center", headerAlign: "center", filterable: false },
+    () => ([
       {
-        field: "name", headerName: t("userManagement@columns.name"), minWidth: 200, flex: 0.7, filterable: false, sortable: false,
+        field: "id", headerName: t("userManagement@columns.id"), width: 72, align: "center", headerAlign: "center", filterable: false,
+        renderCell: ({ row }) => <Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>{row.id}</Typography>,
+      },
+      {
+        field: "name", headerName: t("userManagement@columns.name"), minWidth: 220, flex: 0.8, filterable: false, sortable: false,
         renderCell: ({ row }) => {
           // Phone-only registrations have no name/email — fall back gracefully.
           const primary = row.name?.trim() || row.email?.trim() || (row.phone ? `#${row.id}` : "—");
-          const secondary = row.name?.trim() ? row.email : row.phone;
+          const secondaryIsPhone = !row.name?.trim() || !row.email?.trim();
+          const secondary = row.name?.trim()
+            ? (row.email?.trim() || formatPhone(row.phone))
+            : formatPhone(row.phone);
           const initialSource = row.name?.trim() || row.email?.trim();
           return (
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", height: "100%", lineHeight: "normal" }}>
-              <Avatar
-                sx={{
-                  width: 34, height: 34, fontSize: 14, fontWeight: 700,
-                  bgcolor: `${roleColor(row.role?.name)}.main`,
-                }}
-              >
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", height: "100%", lineHeight: "normal", minWidth: 0 }}>
+              <Avatar sx={{ width: 32, height: 32, fontSize: 14, fontWeight: 700, ...avatarSx(row.role?.name) }}>
                 {initialSource ? initialSource.charAt(0).toUpperCase() : <PersonIcon sx={{ fontSize: 18 }} />}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={600} noWrap sx={{ lineHeight: 1.35 }}>{primary}</Typography>
-                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", lineHeight: 1.35 }}>{secondary ?? ""}</Typography>
+                <Typography variant="body2" fontWeight={600} noWrap sx={{ lineHeight: 1.4 }}>{primary}</Typography>
+                {secondary && (
+                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", lineHeight: 1.4 }}>
+                    {secondaryIsPhone ? <bdi dir="ltr">{secondary}</bdi> : <bdi>{secondary}</bdi>}
+                  </Typography>
+                )}
               </Box>
             </Stack>
           );
         },
       },
       {
-        field: "phone", headerName: t("userManagement@columns.phone"), minWidth: 130, flex: 0.4, filterable: false, sortable: false,
-        renderCell: ({ row }) => <Typography variant="body2" color={row.phone ? "text.primary" : "text.disabled"}>{row.phone ?? "—"}</Typography>,
+        field: "phone", headerName: t("userManagement@columns.phone"), minWidth: 150, flex: 0.4, filterable: false, sortable: false,
+        renderCell: ({ row }) => row.phone
+          ? <Typography variant="body2" noWrap sx={{ fontVariantNumeric: "tabular-nums" }}><bdi dir="ltr">{formatPhone(row.phone)}</bdi></Typography>
+          : <Typography variant="body2" color="text.disabled">—</Typography>,
       },
       {
-        field: "role", headerName: t("userManagement@columns.role"), width: 130, valueGetter: (_, row) => row.role?.name ?? "—", filterable: false, sortable: false,
+        field: "role", headerName: t("userManagement@columns.role"), width: 130, valueGetter: (_, row) => roleLabel(row.role?.name), filterable: false, sortable: false,
         renderCell: ({ row }) => row.role ? roleChip(row.role.name) : <Typography variant="body2" color="text.disabled">—</Typography>,
       },
       {
         field: "city", headerName: t("userManagement@columns.city"), minWidth: 120, flex: 0.4, filterable: false, sortable: false,
-        valueGetter: (_, row) => row.city ?? "",
-        renderCell: ({ row }) => row.city
-          ? (
-            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-              <LocationCityIcon sx={{ fontSize: 15, color: "text.secondary", flexShrink: 0 }} />
-              <Typography variant="body2" noWrap>{row.city}</Typography>
-            </Stack>
-          )
-          : <Typography variant="body2" color="text.disabled">—</Typography>,
+        valueGetter: (_, row) => {
+          const k = cityKey(row.city);
+          return k ? cityLabel(k, lang) : "";
+        },
+        renderCell: ({ row }) => {
+          const k = cityKey(row.city);
+          return k
+            ? <Typography variant="body2" noWrap>{cityLabel(k, lang)}</Typography>
+            : <Typography variant="body2" color="text.disabled">—</Typography>;
+        },
       },
       // Only meaningful on the Providers tab — a dash column for 14k users is noise.
       ...(activeTab === "providers" ? [{
-        field: "providers", headerName: t("userManagement@columns.providers"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
+        field: "providers", headerName: t("userManagement@columns.providers"), width: 110, align: "center", headerAlign: "center", filterable: false, sortable: false,
         renderCell: ({ row }) => {
           const count = providersByOwner.get(row.id!) ?? 0;
           return count > 0 ? (
             <Chip
-              icon={<StoreIcon sx={{ fontSize: "13px !important" }} />}
-              label={count}
+              icon={<StoreIcon sx={{ fontSize: "14px !important" }} />}
+              label={fmtNum(count)}
               size="small"
-              color="info"
               variant="outlined"
-              sx={{ fontWeight: 700 }}
+              sx={{ fontWeight: 600 }}
             />
           ) : (
             <Typography variant="body2" color="text.disabled">—</Typography>
@@ -421,262 +562,280 @@ export default function UserListScreen() {
         },
       } satisfies GridColDef<UserSummaryDto>] : []),
       {
-        field: "isActive", headerName: t("userManagement@columns.status"), width: 100, align: "center", headerAlign: "center", filterable: false, sortable: false,
+        field: "isActive", headerName: t("userManagement@columns.status"), width: 104, align: "center", headerAlign: "center", filterable: false, sortable: false,
+        valueGetter: (_, row) => row.isDeleted !== true ? t("userManagement@columns.active") : t("userManagement@columns.inactive"),
         renderCell: ({ row }) => {
           // List API returns `isDeleted`, not `isActive`. Derive status from it.
           const active = row.isDeleted !== true;
-          return <Chip size="small" label={active ? t("userManagement@columns.active") : t("userManagement@columns.inactive")} color={active ? "success" : "error"} variant="outlined" sx={{ fontWeight: 600 }} />;
+          return (
+            <Chip
+              size="small"
+              variant="outlined"
+              color={active ? "success" : "error"}
+              label={active ? t("userManagement@columns.active") : t("userManagement@columns.inactive")}
+              sx={{ fontWeight: 600, borderRadius: 1.5 }}
+            />
+          );
         },
       },
       {
-        field: "createdAt", headerName: t("userManagement@columns.createdAt") ?? "Joined", width: 110, align: "center", headerAlign: "center", filterable: false,
-        renderCell: ({ row }) => row.createdAt
-          ? <Typography variant="caption" color="text.secondary">{new Date(row.createdAt).toLocaleDateString()}</Typography>
-          : <Typography variant="caption" color="text.disabled">—</Typography>,
+        field: "createdAt", headerName: t("userManagement@columns.createdAt"), width: 150, filterable: false,
+        renderCell: ({ row }) => {
+          const short = formatJoinDate(row.createdAt, lang);
+          return short
+            ? (
+              <Tooltip title={formatJoinDateFull(row.createdAt, lang)} arrow>
+                <Typography variant="body2" color="text.secondary" noWrap sx={{ fontVariantNumeric: "tabular-nums" }}>{short}</Typography>
+              </Tooltip>
+            )
+            : <Typography variant="body2" color="text.disabled">—</Typography>;
+        },
       },
       {
-        field: "actions", headerName: t("userManagement@columns.actions"), width: 140, align: "center", headerAlign: "center", filterable: false, sortable: false, disableColumnMenu: true,
+        field: "actions", headerName: t("userManagement@columns.actions"), width: showDeleted ? 130 : 124, align: "center", headerAlign: "center", filterable: false, sortable: false, disableColumnMenu: true,
         renderCell: ({ row }) => (
-          <Stack direction="row" spacing={0.5} onClick={(e) => e.stopPropagation()}>
+          <Stack direction="row" spacing={0.25} onClick={(e) => e.stopPropagation()}>
             {showDeleted ? (
-              <Tooltip title={t("userManagement@restore")}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  startIcon={<RestoreIcon sx={{ fontSize: 16 }} />}
-                  onClick={() => { if (row.id) restoreMutation.mutate([row.id]); }}
-                  disabled={restoreMutation.isPending}
-                  sx={{ fontWeight: 700, textTransform: "none", borderRadius: 2, fontSize: "0.75rem" }}
-                >
-                  {t("userManagement@restore")}
-                </Button>
-              </Tooltip>
+              <Button
+                size="small"
+                variant="outlined"
+                color="success"
+                startIcon={<RestoreIcon sx={{ fontSize: 16 }} />}
+                onClick={() => { if (row.id) restoreMutation.mutate([row.id]); }}
+                disabled={restoreMutation.isPending}
+                sx={{ fontWeight: 600, textTransform: "none", borderRadius: 2 }}
+              >
+                {t("userManagement@restore")}
+              </Button>
             ) : (
               <>
                 <Tooltip title={t("userManagement@actions.viewProfile")}>
-                  <IconButton size="small" color="primary" onClick={(e) => handleViewProfile(e, row)}><VisibilityIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" aria-label={t("userManagement@actions.viewProfile")} onClick={(e) => handleViewProfile(e, row)}>
+                    <VisibilityIcon fontSize="small" />
+                  </IconButton>
                 </Tooltip>
                 <Tooltip title={t("userManagement@actions.edit")}>
-                  <IconButton size="small" onClick={(e) => handleEdit(e, row)}><EditIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" aria-label={t("userManagement@actions.edit")} onClick={(e) => handleEdit(e, row)}>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
                 </Tooltip>
-                {!isProvider(row) && (
-                  <Tooltip title={t("userManagement@actions.makeProvider")}>
-                    <IconButton size="small" color="warning" onClick={(e) => handleChangeRoleClick(e, row)}><BusinessCenterIcon fontSize="small" /></IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title={t("userManagement@actions.delete")}>
-                  <IconButton size="small" color="error" onClick={(e) => handleDeleteClick(e, row)}><DeleteIcon fontSize="small" /></IconButton>
+                <Tooltip title={t("userManagement@list.moreActions")}>
+                  <IconButton size="small" aria-label={t("userManagement@list.moreActions")} aria-haspopup="menu" onClick={(e) => openRowMenu(e, row)}>
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
                 </Tooltip>
               </>
             )}
           </Stack>
         ),
       },
-    ],
-    [t, roleChip, roleColor, activeTab, handleEdit, handleViewProfile, handleDeleteClick, handleChangeRoleClick, providersByOwner, showDeleted, restoreMutation]
+    ] as GridColDef<UserSummaryDto>[]).filter((c) => !hiddenFields.has(c.field)),
+    [t, lang, roleChip, roleLabel, avatarSx, activeTab, handleEdit, handleViewProfile, openRowMenu, providersByOwner, showDeleted, restoreMutation, hiddenFields]
   );
 
-  const tabConfig = ROLE_TAB_CONFIG[activeTab];
+  const gridLocaleText = useMemo(() => ({
+    ...(isAr ? arSD.components.MuiDataGrid.defaultProps.localeText : {}),
+    toolbarExport: t("userManagement@list.export"),
+    toolbarFilters: t("userManagement@list.filters"),
+    toolbarFiltersTooltipActive: (count: number) => t("userManagement@list.filtersActive", { count }),
+  }), [isAr, t]);
 
-  if (error) {
-    return (
-      <AppScreenContainer>
-        <Box p={2}><Typography color="error">{t("loadingFailed")}</Typography></Box>
-      </AppScreenContainer>
-    );
-  }
+  const trimmedSearch = search.trim();
+  const emptyContent: ReactNode = (
+    <Stack spacing={1.5} alignItems="center" sx={{ px: 2, textAlign: "center" }}>
+      <SearchIcon sx={{ fontSize: 40, color: "text.disabled" }} />
+      <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
+        {trimmedSearch
+          ? t("userManagement@list.noMatch", { query: searchInput.trim() || trimmedSearch, interpolation: { escapeValue: false } })
+          : selectedCity
+            ? t("userManagement@list.noMatchFilters")
+            : t("userManagement@list.noUsers")}
+      </Typography>
+      {hasActiveFilters && (
+        <Stack direction="row" spacing={1}>
+          {trimmedSearch && (
+            <Button size="small" variant="outlined" onClick={() => applySearchNow("")} sx={{ textTransform: "none" }}>
+              {t("userManagement@list.clearSearch")}
+            </Button>
+          )}
+          {selectedCity && (
+            <Button size="small" variant="text" onClick={clearFilters} sx={{ textTransform: "none" }}>
+              {t("userManagement@clearFilters")}
+            </Button>
+          )}
+        </Stack>
+      )}
+    </Stack>
+  );
+
+  const firstLoad = isLoading && !pageData;
+  const backgroundFetching = isFetching && !firstLoad;
+
+  // KPI summary strip — one calm row; loyalty figures grouped under their own label.
+  const blockedCount = loyaltySummary?.blockedUsers ?? 0;
 
   return (
     <AppScreenContainer>
-      <Box sx={{ width: "100%", minWidth: 0, overflow: "hidden", boxSizing: "border-box", p: { xs: 1, sm: 2 } }}>
-        <Stack spacing={2.5} sx={{ width: "100%", minWidth: 0 }}>
+      <Box sx={{ width: "100%", minWidth: 0, overflow: "hidden", boxSizing: "border-box", p: { xs: 2, sm: 3 } }}>
+        <Stack spacing={2} sx={{ width: "100%", minWidth: 0 }}>
 
-          {/* ── Gradient Page Header ── */}
-          <Box
-            sx={{
-              background: showDeleted
-                ? `linear-gradient(135deg, ${theme.palette.error.dark} 0%, ${theme.palette.error.dark} 55%, ${theme.palette.error.main} 100%)`
-                : `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              borderRadius: 3, p: 3, color: "white",
-              position: "relative", overflow: "hidden",
-              transition: "background 0.4s ease",
-            }}
-          >
-            <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
-            <Box sx={{ position: "absolute", bottom: -20, right: 80, width: 90, height: 90, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.05)" }} />
-
-            <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} spacing={2}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 54, height: 54 }}>
-                  {showDeleted ? <DeleteIcon sx={{ fontSize: 28 }} /> : tabConfig.icon}
-                </Avatar>
-                <Box>
-                  <Typography variant="h5" fontWeight={800}>
-                    {showDeleted ? t("userManagement@deletedUsers") : t("userManagement@title")}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.3 }}>
-                    {showDeleted ? t("userManagement@deletedUsersHint") : t("userManagement@subtitle")}
-                  </Typography>
-                </Box>
-              </Stack>
-              <Stack direction="row" spacing={1.5}>
-                <Button
-                  variant="contained"
-                  startIcon={<PersonAddIcon />}
-                  onClick={() => setAddUserDialogOpen(true)}
-                  sx={{
-                    background: "rgba(255,255,255,0.2)",
-                    backdropFilter: "blur(10px)",
-                    color: "white",
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    fontWeight: 600,
-                    "&:hover": { background: "rgba(255,255,255,0.3)" },
-                  }}
-                >
-                  {t("userManagement@addUser")}
-                </Button>
-                <Button
-                  variant={showDeleted ? "contained" : "outlined"}
-                  startIcon={<DeleteIcon />}
-                  onClick={() => { setShowDeleted((v) => !v); setRowSelectionModel([]); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                  size="small"
-                  sx={{
-                    bgcolor: showDeleted ? "rgba(244,67,54,0.85)" : "transparent",
-                    color: "white",
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    fontWeight: 600,
-                    textTransform: "none",
-                    "&:hover": { bgcolor: showDeleted ? "rgba(244,67,54,1)" : "rgba(255,255,255,0.15)" },
-                  }}
-                >
-                  {t("userManagement@deletedUsers")}
-                </Button>
-                <Tooltip title={t("refresh")}>
-                  <IconButton
-                    onClick={() => refetch()}
-                    sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "common.white", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            </Stack>
-
-          </Box>
-
-          {/* ── Loyalty summary strip ── */}
-          {!showDeleted && loyaltySummary && (
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", md: "repeat(5, 1fr)" }, gap: 1.5 }}>
-              {[
-                { icon: <LoyaltyIcon />, label: t("loyalty@netInCirculation"), value: loyaltySummary.outstandingLiabilityPoints.toLocaleString(), color: "primary" as const },
-                { icon: <PeopleAltIcon />, label: t("loyalty@activeMembers"), value: loyaltySummary.activeMembers.toLocaleString(), color: "success" as const },
-                { icon: <RedeemIcon />, label: t("loyalty@redemptionRate"), value: `${Math.round(loyaltySummary.redemptionRatePct)}%`, color: "warning" as const },
-                { icon: <LoyaltyIcon />, label: t("loyalty@totalPointsIssued"), value: loyaltySummary.totalPointsIssued.toLocaleString(), color: "info" as const },
-                { icon: <BlockIcon />, label: t("loyalty@blockedUsers"), value: loyaltySummary.blockedUsers.toLocaleString(), color: "error" as const },
-              ].map((s) => {
-                const c = theme.palette[s.color].main;
-                return (
-                  <Paper key={s.label} elevation={0} sx={{ p: 1.75, borderRadius: 2.5, bgcolor: alpha(c, 0.06), border: "1px solid", borderColor: alpha(c, 0.25), borderInlineStart: `4px solid ${c}`, display: "flex", alignItems: "center", gap: 1.25 }}>
-                    <Box sx={{ width: 38, height: 38, borderRadius: 2, bgcolor: alpha(c, 0.15), color: c, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {s.icon}
-                    </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="h6" fontWeight={800} lineHeight={1.1} noWrap sx={{ color: theme.palette[s.color].dark }}>{s.value}</Typography>
-                      <Typography variant="caption" color="text.secondary" fontWeight={600} noWrap>{s.label}</Typography>
-                    </Box>
-                  </Paper>
-                );
-              })}
+          {/* ── Page header (light) ── */}
+          <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "center" }} spacing={2}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h5" component="h1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
+                {showDeleted ? t("userManagement@deletedUsers") : t("userManagement@title")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {showDeleted ? t("userManagement@deletedUsersHint") : t("userManagement@subtitle")}
+              </Typography>
             </Box>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
+              <Tooltip title={t("userManagement@list.refresh")}>
+                <span>
+                  <IconButton
+                    onClick={handleRefresh}
+                    disabled={isFetching}
+                    aria-label={t("userManagement@list.refresh")}
+                    sx={{ border: 1, borderColor: "divider", borderRadius: 2 }}
+                  >
+                    <RefreshIcon fontSize="small" sx={{ animation: isFetching ? `${spin} 0.9s linear infinite` : "none" }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Button
+                variant={showDeleted ? "contained" : "outlined"}
+                color={showDeleted ? "error" : "inherit"}
+                startIcon={<DeleteIcon />}
+                onClick={() => { setShowDeleted((v) => !v); setRowSelectionModel([]); setPaginationModel((p) => ({ ...p, page: 0 })); }}
+                sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2, ...(!showDeleted && { borderColor: "divider", color: "text.primary" }) }}
+              >
+                {t("userManagement@deletedUsers")}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<PersonAddIcon />}
+                onClick={() => setAddUserDialogOpen(true)}
+                disableElevation
+                sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2 }}
+              >
+                {t("userManagement@addUser")}
+              </Button>
+            </Stack>
+          </Stack>
+
+          {/* ── Summary strip ── */}
+          {!showDeleted && (usersSummary || loyaltySummary) && (
+            <Paper variant="outlined" sx={{ borderRadius: 2, px: 2, py: 1.5 }}>
+              <Stack
+                direction="row"
+                flexWrap="wrap"
+                useFlexGap
+                alignItems="center"
+                sx={{ columnGap: 3, rowGap: 1.5 }}
+              >
+                <SummaryItem label={t("userManagement@list.summary.totalUsers")} value={usersSummary ? fmtNum(usersSummary.totalUsers) : "—"} />
+                {loyaltySummary && (
+                  <>
+                    <SummaryItem label={t("userManagement@list.summary.activeMembers")} value={fmtNum(loyaltySummary.activeMembers)} />
+                    <SummaryItem label={t("userManagement@list.summary.blocked")} value={fmtNum(blockedCount)} tone={blockedCount > 0 ? "error" : undefined} />
+                    <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />
+                    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ color: "text.secondary", flexBasis: { xs: "100%", sm: "auto" } }}>
+                      <LoyaltyIcon sx={{ fontSize: 16 }} />
+                      <Typography variant="overline" sx={{ lineHeight: 1, letterSpacing: isAr ? 0 : undefined }}>
+                        {t("userManagement@list.summary.loyalty")}
+                      </Typography>
+                    </Stack>
+                    <SummaryItem label={t("userManagement@list.summary.issued")} value={fmtNum(loyaltySummary.totalPointsIssued)} />
+                    <SummaryItem label={t("userManagement@list.summary.circulating")} value={fmtNum(loyaltySummary.outstandingLiabilityPoints)} />
+                    <SummaryItem label={t("userManagement@list.summary.redemptionRate")} value={`${Math.round(loyaltySummary.redemptionRatePct)}%`} />
+                  </>
+                )}
+              </Stack>
+            </Paper>
           )}
 
-          {/* ── Main Table Card ── */}
-          <Paper elevation={2} sx={{ borderRadius: 3, overflow: "hidden" }}>
+          {/* ── Main table card ── */}
+          <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", minWidth: 0 }}>
 
-            {/* Role Tabs — hidden in deleted mode */}
-            {!showDeleted && <Box sx={{ borderBottom: "1px solid", borderColor: "divider", px: 1 }}>
-              <Tabs value={activeTab} onChange={handleTabChange} sx={{ "& .MuiTab-root": { fontWeight: 600, minHeight: 52 } }}>
-                {(Object.keys(ROLE_TAB_CONFIG) as RoleTab[]).map((key) => {
-                  const cfg = ROLE_TAB_CONFIG[key];
-                  const isSelected = activeTab === key;
-                  return (
-                    <Tab
-                      key={key} value={key}
-                      label={
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Box sx={{ display: "flex" }}>{cfg.icon}</Box>
-                          <span>{cfg.label}</span>
-                          <Chip
-                            size="small"
-                            label={(roleCounts[key] ?? 0).toLocaleString()}
-                            sx={{
-                              height: 20, fontWeight: 800, fontSize: "0.7rem",
-                              bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.12) : "action.hover",
-                              color: isSelected ? "primary.main" : "text.secondary",
-                            }}
-                          />
-                        </Stack>
-                      }
-                    />
-                  );
-                })}
-              </Tabs>
-            </Box>}
-
-            {/* Deleted mode warning banner */}
-            {showDeleted && (
-              <Box sx={{ px: 2.5, pt: 2, pb: 0 }}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    borderRadius: 2.5,
-                    bgcolor: "error.50",
-                    border: "1px solid",
-                    borderColor: "error.200",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                  }}
+            {/* Role tabs — hidden in deleted mode */}
+            {!showDeleted && (
+              <Box sx={{ borderBottom: 1, borderColor: "divider", px: 1 }}>
+                <Tabs
+                  value={activeTab}
+                  onChange={handleTabChange}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                  allowScrollButtonsMobile
+                  sx={{ minHeight: 48, "& .MuiTab-root": { textTransform: "none", fontWeight: 600, minHeight: 48, px: 2 } }}
                 >
-                  <WarningAmberIcon color="error" />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" fontWeight={700} color="error.dark">
-                      {t("userManagement@deletedUsers")}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {t("userManagement@deletedUsersHint")}
-                    </Typography>
-                  </Box>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    size="small"
-                    startIcon={<GroupIcon />}
-                    onClick={() => setShowDeleted(false)}
-                    sx={{ textTransform: "none", fontWeight: 700, borderRadius: 2 }}
-                  >
-                    {t("userManagement@backToActive")}
-                  </Button>
-                </Paper>
+                  {ROLE_TABS.map((key) => {
+                    const isSelected = activeTab === key;
+                    return (
+                      <Tab
+                        key={key}
+                        value={key}
+                        label={
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <span>{t(`userManagement@list.tabs.${key}`)}</span>
+                            <Box
+                              component="span"
+                              sx={{
+                                px: 0.75, minWidth: 24, height: 20, borderRadius: 10,
+                                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                fontSize: "0.72rem", fontWeight: 600, fontVariantNumeric: "tabular-nums",
+                                bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.12) : "action.hover",
+                                color: isSelected ? "primary.main" : "text.secondary",
+                              }}
+                            >
+                              {usersSummary ? fmtNum(roleCounts[key]) : "–"}
+                            </Box>
+                          </Stack>
+                        }
+                      />
+                    );
+                  })}
+                </Tabs>
               </Box>
             )}
 
-            <Box sx={{ p: 2.5 }}>
+            {/* Deleted mode notice */}
+            {showDeleted && (
+              <Box sx={{ px: 2, pt: 2 }}>
+                <Alert
+                  severity="warning"
+                  icon={<WarningAmberIcon />}
+                  action={
+                    <Button color="inherit" size="small" startIcon={<GroupIcon />} onClick={() => setShowDeleted(false)} sx={{ textTransform: "none", fontWeight: 600 }}>
+                      {t("userManagement@backToActive")}
+                    </Button>
+                  }
+                  sx={{ borderRadius: 2, alignItems: "center" }}
+                >
+                  {t("userManagement@deletedUsersHint")}
+                </Alert>
+              </Box>
+            )}
+
+            <Box sx={{ p: 2, minWidth: 0 }}>
               {/* Filter bar */}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} flexWrap="wrap" alignItems={{ sm: "center" }} sx={{ mb: 2 }}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} flexWrap="wrap" useFlexGap alignItems={{ sm: "center" }} sx={{ mb: 2 }}>
                 <TextField
                   size="small"
-                  placeholder={t("userManagement@searchPlaceholder")}
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                  sx={{ minWidth: 240 }}
+                  placeholder={t("userManagement@list.searchPlaceholder")}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Escape" && searchInput) { e.preventDefault(); applySearchNow(""); } }}
+                  sx={{ minWidth: { sm: 280 }, flex: { sm: "0 1 360px" } }}
+                  inputProps={{ "aria-label": t("userManagement@search") }}
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" color="action" /></InputAdornment>,
-                    endAdornment: search ? (
+                    endAdornment: searchInput ? (
                       <InputAdornment position="end">
-                        <IconButton size="small" onClick={() => setSearch("")}><ClearIcon fontSize="small" /></IconButton>
+                        <Tooltip title={t("userManagement@list.clearSearch")}>
+                          <IconButton size="small" edge="end" aria-label={t("userManagement@list.clearSearch")} onClick={() => applySearchNow("")}>
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       </InputAdornment>
                     ) : undefined,
                   }}
@@ -686,7 +845,7 @@ export default function UserListScreen() {
                   label={t("userManagement@sortBy")}
                   value={sort}
                   onChange={(e) => { setSort(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                  sx={{ minWidth: 175 }}
+                  sx={{ minWidth: 170 }}
                 >
                   <MenuItem value="createdAt_desc">{t("userManagement@sortNewest")}</MenuItem>
                   <MenuItem value="createdAt_asc">{t("userManagement@sortOldest")}</MenuItem>
@@ -699,49 +858,102 @@ export default function UserListScreen() {
                     label={t("userManagement@filterByCity")}
                     value={selectedCity}
                     onChange={(e) => { setSelectedCity(e.target.value); setPaginationModel((p) => ({ ...p, page: 0 })); }}
-                    sx={{ minWidth: 175 }}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><LocationCityIcon fontSize="small" color="action" /></InputAdornment> }}
+                    sx={{ minWidth: 170 }}
                   >
                     <MenuItem value="">{t("userManagement@allCities")}</MenuItem>
                     <Divider />
-                    {cityOptions.map((city) => <MenuItem key={city} value={city}>{city}</MenuItem>)}
+                    {cityOptions.map((city) => {
+                      const k = cityKey(city);
+                      return <MenuItem key={city} value={city}>{k ? cityLabel(k, lang) : city}</MenuItem>;
+                    })}
                   </TextField>
                 )}
                 {hasActiveFilters && (
-                  <Tooltip title={t("userManagement@clearFilters")}>
-                    <Button variant="outlined" size="small" color="inherit" startIcon={<FilterListIcon />} onClick={clearFilters}
-                      sx={{ borderColor: "divider", color: "text.secondary", whiteSpace: "nowrap" }}>
-                      {t("userManagement@clearFilters")}
-                    </Button>
-                  </Tooltip>
+                  <Button variant="text" size="small" color="inherit" startIcon={<FilterListIcon />} onClick={clearFilters}
+                    sx={{ color: "text.secondary", whiteSpace: "nowrap", textTransform: "none" }}>
+                    {t("userManagement@clearFilters")}
+                  </Button>
                 )}
                 <Box sx={{ flex: 1 }} />
-                {hasActiveFilters && (
-                  <Chip label={`${total} / ${roleCounts[activeTab]}`} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700 }} />
-                )}
+                <Stack direction="row" spacing={1.5} alignItems="baseline" sx={{ whiteSpace: "nowrap" }}>
+                  {pageData && (
+                    <Typography variant="body2" fontWeight={600} sx={{ fontVariantNumeric: "tabular-nums" }}>
+                      {hasActiveFilters
+                        ? `${fmtNum(total)} / ${fmtNum(roleCounts[activeTab])}`
+                        : t("userManagement@list.resultsCount", { formatted: fmtNum(total) })}
+                    </Typography>
+                  )}
+                  {lastUpdatedLabel && (
+                    <Typography variant="caption" color="text.secondary">{lastUpdatedLabel}</Typography>
+                  )}
+                </Stack>
               </Stack>
 
-              <AppDataGrid<UserSummaryDto>
-                data={items}
-                columns={columns}
-                loading={isLoading}
-                getRowId={(row) => row.id ?? row.name + row.email}
-                disablePagination={false}
-                paginationModel={paginationModel}
-                onPaginationModelChange={setPaginationModel}
-                total={total}
-                minHeight="60vh"
-                enableColumnFilter
-                enableToolbar
-                checkboxSelection
-                rowSelectionModel={rowSelectionModel}
-                onRowSelectionModelChange={setRowSelectionModel}
-                onRowClick={({ row }) => handleRowClick(row)}
-                sx={{
-                  "& .MuiDataGrid-row": { cursor: "pointer" },
-                  "& .MuiDataGrid-columnHeaders": { bgcolor: "grey.50" },
-                }}
-              />
+              {/* Non-blocking refresh error — keeps the rows already on screen */}
+              {error && pageData && (
+                <Alert
+                  severity="warning"
+                  sx={{ mb: 2, borderRadius: 2, alignItems: "center" }}
+                  action={<Button color="inherit" size="small" onClick={handleRefresh} sx={{ textTransform: "none" }}>{t("userManagement@list.retry")}</Button>}
+                >
+                  {t("userManagement@list.refreshFailed")}
+                </Alert>
+              )}
+
+              {error && !pageData ? (
+                <Alert
+                  severity="error"
+                  sx={{ borderRadius: 2, alignItems: "center" }}
+                  action={<Button color="inherit" size="small" onClick={handleRefresh} sx={{ textTransform: "none" }}>{t("userManagement@list.retry")}</Button>}
+                >
+                  {t("userManagement@list.loadFailed")}
+                </Alert>
+              ) : firstLoad ? (
+                <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Stack key={i} direction="row" spacing={2} alignItems="center" sx={{ px: 2, py: 1.5, borderBottom: i < 7 ? 1 : 0, borderColor: "divider" }}>
+                      <Skeleton variant="circular" width={32} height={32} />
+                      <Box sx={{ flex: 1 }}>
+                        <Skeleton variant="text" width="40%" />
+                        <Skeleton variant="text" width="25%" />
+                      </Box>
+                      <Skeleton variant="rounded" width={72} height={24} sx={{ display: { xs: "none", sm: "block" } }} />
+                      <Skeleton variant="text" width={96} sx={{ display: { xs: "none", md: "block" } }} />
+                    </Stack>
+                  ))}
+                </Box>
+              ) : (
+                <Box sx={{ position: "relative", width: "100%", minWidth: 0, overflowX: "auto" }}>
+                  {backgroundFetching && (
+                    <LinearProgress sx={{ position: "absolute", top: 0, insetInline: 0, height: 2, zIndex: 3, borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
+                  )}
+                  <AppDataGrid<UserSummaryDto>
+                    data={items}
+                    columns={columns}
+                    loading={false}
+                    getRowId={(row) => row.id ?? row.name + row.email}
+                    disablePagination={false}
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={setPaginationModel}
+                    total={total}
+                    minHeight="60vh"
+                    enableColumnFilter
+                    enableToolbar
+                    checkboxSelection
+                    rowSelectionModel={rowSelectionModel}
+                    onRowSelectionModelChange={setRowSelectionModel}
+                    onRowClick={({ row }) => handleRowClick(row)}
+                    localeText={gridLocaleText}
+                    noRowsContent={emptyContent}
+                    sx={{
+                      "& .MuiDataGrid-row": { cursor: "pointer" },
+                      "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": { bgcolor: "background.default" },
+                      "& .MuiDataGrid-toolbarContainer .MuiButton-root": { textTransform: "none", fontWeight: 600 },
+                      "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 600, color: "text.secondary" },
+                    }}
+                  />
+                </Box>
+              )}
             </Box>
           </Paper>
 
@@ -755,6 +967,34 @@ export default function UserListScreen() {
           />
         </Stack>
       </Box>
+
+      {/* ── Row "more" menu: secondary + destructive actions ── */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={closeRowMenu}
+        onClick={(e) => e.stopPropagation()}
+        slotProps={{ paper: { sx: { minWidth: 200, borderRadius: 2 } } }}
+      >
+        {menuRow && !isProvider(menuRow) && (
+          <MenuItem onClick={() => { closeRowMenu(); setUserToChangeRole(menuRow); setChangeRoleDialogOpen(true); }}>
+            <ListItemIcon><BusinessCenterIcon fontSize="small" /></ListItemIcon>
+            <ListItemText>{t("userManagement@actions.makeProvider")}</ListItemText>
+          </MenuItem>
+        )}
+        <MenuItem onClick={() => { closeRowMenu(); const id = menuRow?.id ?? 0; if (id > 0) navigate(`/users/${id}/points`); }}>
+          <ListItemIcon><LoyaltyIcon fontSize="small" /></ListItemIcon>
+          <ListItemText>{t("userManagement@list.points")}</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => { closeRowMenu(); if (menuRow) { setUserToDelete(menuRow); setDeleteDialogOpen(true); } }}
+          sx={{ color: "error.main" }}
+        >
+          <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+          <ListItemText>{t("userManagement@actions.delete")}</ListItemText>
+        </MenuItem>
+      </Menu>
 
       <UserDetailDrawer
         user={drawerUser}

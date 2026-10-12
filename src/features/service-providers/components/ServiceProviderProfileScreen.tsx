@@ -6,7 +6,7 @@ import {
   Box, Stack, Typography, Avatar, Chip, Button, IconButton, Tooltip, Paper,
   Divider, Grid, Tabs, Tab, Link, CircularProgress, Rating, useTheme,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackButton from "../../../components/BackButton";
 import MiscellaneousServicesIcon from "@mui/icons-material/MiscellaneousServices";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import StarIcon from "@mui/icons-material/Star";
@@ -107,9 +107,7 @@ export default function ServiceProviderProfileScreen() {
           <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
             <Stack direction="row" spacing={2} alignItems="center" sx={{ position: "relative" }}>
-              <Tooltip title={t("back")}>
-                <IconButton onClick={() => navigate("/service-providers")} sx={{ color: "#fff", bgcolor: "rgba(255,255,255,0.15)", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}><ArrowBackIcon /></IconButton>
-              </Tooltip>
+              <BackButton fallback="/service-providers" variant="onDark" />
               <Avatar src={s.icon ?? undefined} sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 60, height: 60 }}><MiscellaneousServicesIcon /></Avatar>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>

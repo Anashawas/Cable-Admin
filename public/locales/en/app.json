@@ -15,5 +15,10 @@
   "lightMode": "Light Mode",
   "switchToArabic": "العربية",
   "switchToEnglish": "English",
-  "logout": "Logout"
+  "logout": "Logout",
+  "searchPlaceholder": "Search…",
+  "openMenu": "Open menu",
+  "userMenu": "Account",
+  "collapseSidebar": "Collapse sidebar",
+  "expandSidebar": "Expand sidebar"
 }

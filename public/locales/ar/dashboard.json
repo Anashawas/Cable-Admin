@@ -16,7 +16,8 @@
     "pendingRequests": "الطلبات المعلقة",
     "complaints": "الشكاوى",
     "serviceProviders": "مزودو الخدمات",
-    "partners": "الشركاء (B2B)"
+    "partners": "الشركاء (B2B)",
+    "withVehicles": "مستخدمون لديهم سيارة"
   },
   "actionRequired": "يتطلب إجراء",
   "pendingVerification": "محطات بانتظار التوثيق",
@@ -38,7 +39,7 @@
   "review": "مراجعة",
   "greeting_morning": "صباح الخير",
   "greeting_afternoon": "مساء الخير",
-  "greeting_evening": "مساء النور",
+  "greeting_evening": "مساء الخير",
   "today_newUsers": "مستخدمون جدد اليوم",
   "today_newProviders": "مزودو خدمات جدد اليوم",
   "today_newPartners": "شركاء جدد اليوم",
@@ -62,5 +63,51 @@
   "stationName": "المحطة",
   "stationCity": "المدينة",
   "actions": "إجراءات",
-  "noStations": "لا توجد محطات بعد."
+  "noStations": "لا توجد محطات بعد.",
+  "hero": {
+    "ariaLabel": "ملخص اليوم",
+    "stations": "المحطات",
+    "stationsUnit": "محطة شحن",
+    "sameAsYesterday": "مثل أمس",
+    "stationsAria": "المحطات: {{total}} — موثّقة {{verified}}، ضمن الولاء {{loyalty}}",
+    "verified": "موثّقة",
+    "loyalty": "ضمن الولاء",
+    "scansToday": "مسحات الولاء اليوم",
+    "scansHint": "عدد عمليات كسب النقاط (مسح رمز QR) المسجّلة اليوم في سجل النقاط",
+    "yesterday": "أمس",
+    "thisWeek": "هذا الأسبوع",
+    "newProvidersShort": "مزوّد خدمة جديد اليوم",
+    "newPartnersShort": "شريك جديد اليوم",
+    "unavailable": "تعذّر تحميل هذا الرقم حالياً"
+  },
+  "sub": {
+    "open": "مفتوحة",
+    "verified": "موثّقة",
+    "thisMonth": "هذا الشهر",
+    "ofUsers": "من المستخدمين"
+  },
+  "actionHelp": {
+    "stationUpdateRequests": "تعديلات على بيانات محطات أرسلها المستخدمون",
+    "openComplaints": "شكاوى لم تُحلّ أو تُغلق بعد",
+    "pendingViewImages": "صور رفعها المستخدمون بانتظار الموافقة",
+    "pendingOffers": "عروض مزوّدي الخدمات بانتظار الاعتماد",
+    "settlementsPending": "تسويات شركاء لم تُسدَّد بعد",
+    "settlementsDisputed": "تسويات اعترض عليها أحد الأطراف",
+    "premiumExpired": "محطات انتهى اشتراكها المميّز ولم يُجدَّد",
+    "campaignsEndingSoon": "حملات اقترب موعد انتهائها",
+    "announcementsExpiringSoon": "رسائل ترحيب اقترب موعد انتهائها"
+  },
+  "nothingToAction": "لا شيء يحتاج إجراء الآن",
+  "nothingToActionSub": "كل قوائم المراجعة فارغة.",
+  "trend": {
+    "total": "المجموع",
+    "newUsers": "مستخدمون جدد",
+    "singleBucket": "لا يتوفر توزيع يومي — أعاد الخادم قيمة واحدة فقط ({{count}} مستخدم).",
+    "empty": "لا تسجيلات جديدة خلال آخر 30 يوماً.",
+    "error": "تعذّر تحميل بيانات التسجيل حالياً.",
+    "aria": "مخطط أعمدة للمستخدمين الجدد يومياً خلال آخر 30 يوماً، المجموع {{total}}"
+  },
+  "showLess": "عرض أقل",
+  "unknownCity": "غير محدّدة",
+  "noVisits": "لا توجد زيارات مسجّلة بعد."
 }

@@ -37,6 +37,8 @@ export default function LiveVisibilityPanel({ chargingPointId }: { chargingPoint
   const share = useSetShareLiveStatus();
   const [blockDialog, setBlockDialog] = useState(false);
   const [reason, setReason] = useState("");
+  // The owner's switch changes what every driver sees, so it is confirmed first (true = turning on).
+  const [shareConfirm, setShareConfirm] = useState<boolean | null>(null);
   const busy = block.isPending || share.isPending;
 
   const run = async (action: () => Promise<unknown>, successKey: string) => {
@@ -67,13 +69,30 @@ export default function LiveVisibilityPanel({ chargingPointId }: { chargingPoint
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }} justifyContent="space-between">
         <FormControlLabel
           control={<Switch checked={v.ownerSharing} disabled={busy}
-            onChange={(e) => run(() => share.mutateAsync({ chargingPointId, share: e.target.checked }), e.target.checked ? "ocpp@visibility.sharedOn" : "ocpp@visibility.sharedOff")} />}
+            onChange={(e) => setShareConfirm(e.target.checked)} />}
           label={<Box><Typography variant="body2" fontWeight={700}>{t("ocpp@visibility.ownerSwitch")}</Typography><Typography variant="caption" color="text.secondary">{t("ocpp@visibility.ownerSwitchHint")}</Typography></Box>}
         />
         {v.adminBlocked
           ? <Button size="small" variant="contained" color="success" disabled={busy} onClick={() => run(() => block.mutateAsync({ chargingPointId, blocked: false }), "ocpp@visibility.unblocked")}>{t("ocpp@visibility.unblock")}</Button>
           : <Button size="small" variant="outlined" color="error" disabled={busy} onClick={() => { setReason(""); setBlockDialog(true); }}>{t("ocpp@visibility.block")}</Button>}
       </Stack>
+
+      <Dialog open={shareConfirm != null} onClose={() => !busy && setShareConfirm(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>{shareConfirm ? t("ocpp@visibility.shareOnTitle") : t("ocpp@visibility.shareOffTitle")}</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2">{shareConfirm ? t("ocpp@visibility.shareOnBody") : t("ocpp@visibility.shareOffBody")}</Typography>
+          {shareConfirm && !v.visibleToDrivers && (!v.subscriptionOn || v.adminBlocked) && (
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1.5 }}>{t("ocpp@visibility.shareOnGates")}</Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button onClick={() => setShareConfirm(null)} disabled={busy} color="inherit">{t("cancel")}</Button>
+          <Button variant="contained" color={shareConfirm ? "primary" : "warning"} disabled={busy}
+            onClick={() => { const on = !!shareConfirm; run(async () => { await share.mutateAsync({ chargingPointId, share: on }); setShareConfirm(null); }, on ? "ocpp@visibility.sharedOn" : "ocpp@visibility.sharedOff"); }}>
+            {t("confirm")}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={blockDialog} onClose={() => !busy && setBlockDialog(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ fontWeight: 700 }}>{t("ocpp@visibility.blockTitle")}</DialogTitle>

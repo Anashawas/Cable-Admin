@@ -22,7 +22,8 @@ import {
   InputAdornment,
   Avatar,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackArrowIcon } from "../../../components/BackButton";
+import { useSmartBack } from "../../../hooks/use-smart-back";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import InboxIcon from "@mui/icons-material/Inbox";
 import UserNotificationsDialog from "../../notifications/components/UserNotificationsDialog";
@@ -228,9 +229,7 @@ export default function EditUserScreen() {
     });
   }, [user, reset]);
 
-  const handleBack = useCallback(() => {
-    navigate("/users");
-  }, [navigate]);
+  const handleBack = useSmartBack("/users");
 
   const onSubmit = useCallback(
     (values: EditUserFormValues) => {
@@ -266,7 +265,7 @@ export default function EditUserScreen() {
       },
       {
         id: "back",
-        icon: <ArrowBackIcon />,
+        icon: <BackArrowIcon />,
         label: t("back"),
         onClick: handleBack,
       },

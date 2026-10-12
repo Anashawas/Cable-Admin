@@ -1,4 +1,5 @@
 {
+  "nameAndCategoryRequired": "الاسم والفئة مطلوبان",
   "serviceCategories": "فئات الخدمات",
   "serviceCategories_subtitle": "إدارة فئات وتصنيفات الخدمات",
   "serviceCategories_created": "تم إنشاء فئة الخدمة بنجاح",
@@ -89,6 +90,8 @@
   "priceDescription": "وصف السعر",
   "fromTime": "وقت الافتتاح",
   "toTime": "وقت الإغلاق",
+  "open24h": "مفتوح 24 ساعة",
+  "hoursRequired": "حدّد وقت الافتتاح والإغلاق، أو اختر مفتوح 24 ساعة",
   "methodPayment": "طرق الدفع",
   "websiteUrl": "رابط الموقع الإلكتروني",
   "service": "الخدمات المقدمة",

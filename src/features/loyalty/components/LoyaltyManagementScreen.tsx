@@ -313,7 +313,7 @@ export default function LoyaltyManagementScreen() {
       <ScreenHeader
         icon={<EmojiEventsIcon />}
         title={t("loyaltyManagement")}
-        subtitle={t("loyaltyManagement@subtitle")}
+        subtitle={t("loyalty@subtitle")}
         actions={headerActions}
       />
 

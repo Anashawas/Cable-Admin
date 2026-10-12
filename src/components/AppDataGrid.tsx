@@ -7,6 +7,7 @@ import {
   GridToolbar,
   GridToolbarFilterButton,
   type GridRowHeightParams,
+  type GridLocaleText,
 } from "@mui/x-data-grid";
 import { GridApiCommunity } from "@mui/x-data-grid/internals";
 import { Box, LinearProgress, Typography, Stack, type SxProps, type Theme } from "@mui/material";
@@ -39,6 +40,10 @@ interface AppDataGridProps<T = any> {
   getRowHeight?: (params: { row: T }) => number;
   /** Additional MUI sx styles merged onto the DataGrid. */
   sx?: SxProps<Theme>;
+  /** Optional overrides for the grid's built-in texts (toolbar, filter panel…). */
+  localeText?: Partial<GridLocaleText>;
+  /** Optional custom content for the empty state (replaces the generic "no results"). */
+  noRowsContent?: ReactNode;
 }
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -64,6 +69,8 @@ const AppDataGrid = <T extends Record<string, any>>({
   getRowClassName,
   getRowHeight,
   sx: sxOverrides,
+  localeText,
+  noRowsContent,
 }: AppDataGridProps<T>) => {
   const { t } = useTranslation();
   const apiRef = useRef<GridApiCommunity>(
@@ -102,7 +109,11 @@ const AppDataGrid = <T extends Record<string, any>>({
     </Box>
   );
 
-  const CustomNoRowsOverlay = () => (
+  const CustomNoRowsOverlay = () => noRowsContent ? (
+    <Stack height="100%" alignItems="center" justifyContent="center" sx={{ py: 8, position: "relative", zIndex: 2, pointerEvents: "auto" }}>
+      {noRowsContent}
+    </Stack>
+  ) : (
     <Stack
       height="100%"
       alignItems="center"
@@ -156,6 +167,7 @@ const AppDataGrid = <T extends Record<string, any>>({
       : undefined,
     scrollbarSize: 17,
     slots,
+    ...(localeText && { localeText }),
     sx: {
       minHeight,
       '& .MuiLinearProgress-root': {

@@ -66,6 +66,7 @@ import {
   sendNotification,
 } from "../../notifications/services/notification-service";
 import type { SendNotificationRequest } from "../../notifications/types/api";
+import { useListState } from "../../../hooks";
 
 type StatusFilter = "all" | ComplaintStatus;
 type ComplaintSort = "newest" | "oldest" | "recentlyUpdated";
@@ -126,15 +127,15 @@ export default function ComplaintsScreen() {
   const isRtl = (i18n.language || "en").startsWith("ar");
   const smallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [page, setPage] = useListState("page", 0);
+  const [pageSize, setPageSize] = useListState("pageSize", 10);
+  const [selectedId, setSelectedId] = useListState<number | null>("selectedId", null);
   // On phones the pane flips between list and detail.
   const [mobileDetail, setMobileDetail] = useState(false);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [dateFilter, setDateFilter] = useState<DateRangePreset>("all");
-  const [sortOrder, setSortOrder] = useState<ComplaintSort>("newest");
+  const [search, setSearch] = useListState("search", "");
+  const [statusFilter, setStatusFilter] = useListState<StatusFilter>("status", "all");
+  const [dateFilter, setDateFilter] = useListState<DateRangePreset>("date", "all");
+  const [sortOrder, setSortOrder] = useListState<ComplaintSort>("sort", "newest");
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [complaintToDelete, setComplaintToDelete] = useState<UserComplaintDto | null>(null);
@@ -260,10 +261,10 @@ export default function ComplaintsScreen() {
 
   // Keep a sensible selection: first item of the visible page.
   useEffect(() => {
-    if (paginated.length === 0) { setSelectedId(null); return; }
+    if (paginated.length === 0) { if (!isLoading) setSelectedId(null); return; }
     if (selectedId != null && paginated.some((c) => c.id === selectedId)) return;
     setSelectedId(paginated[0].id);
-  }, [paginated, selectedId]);
+  }, [paginated, selectedId, isLoading]);
 
   // ── Handlers ──
   const handleOpenReply = useCallback((complaint: UserComplaintDto) => {

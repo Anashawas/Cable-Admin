@@ -30,7 +30,7 @@ import {
   DialogActions,
   useTheme,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackButton from "../../../components/BackButton";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import EditNoteIcon from "@mui/icons-material/EditNote";
@@ -234,11 +234,7 @@ export default function UserProfileScreen() {
           <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, color: "white", position: "relative", overflow: "hidden" }}>
             <Box sx={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
             <Stack direction="row" spacing={2} alignItems="center" sx={{ position: "relative" }}>
-              <Tooltip title={t("back")}>
-                <IconButton onClick={() => navigate("/users")} sx={{ color: "#fff", bgcolor: "rgba(255,255,255,0.15)", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}>
-                  <ArrowBackIcon />
-                </IconButton>
-              </Tooltip>
+              <BackButton fallback="/users" variant="onDark" />
               <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 60, height: 60, fontWeight: 700, fontSize: 22 }}>{userLoading ? "" : initials}</Avatar>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 {userLoading ? (

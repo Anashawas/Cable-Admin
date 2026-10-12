@@ -20,7 +20,7 @@ import {
 	ExpandMore,
 } from "@mui/icons-material";
 import { PrivilegeCode } from "../../../constants/privileges-constants";
-import { getNavigationGroups, NavigationGroup, NavigationItem } from "./navigation-config";
+import { getNavigationGroups, isNavPathActive, NavigationGroup, NavigationItem } from "./navigation-config";
 
 interface AppMobileDrawerProps {
 	open: boolean;
@@ -56,7 +56,7 @@ const AppMobileDrawer = ({ open, onClose }: AppMobileDrawerProps) => {
 	// Open the group that contains the current route by default.
 	const initialOpen: Record<string, boolean> = {};
 	for (const g of visibleGroups) {
-		initialOpen[g.id] = g.items.some((i) => i.path === location.pathname);
+		initialOpen[g.id] = g.items.some((i) => isNavPathActive(location.pathname, i.path));
 	}
 	const [expanded, setExpanded] = useState<Record<string, boolean>>(initialOpen);
 
@@ -67,7 +67,7 @@ const AppMobileDrawer = ({ open, onClose }: AppMobileDrawerProps) => {
 		onClose();
 	};
 
-	const isItemActive = (item: NavigationItem) => location.pathname === item.path;
+	const isItemActive = (item: NavigationItem) => isNavPathActive(location.pathname, item.path);
 
 	const selectedItemSx = {
 		mb: 0.5,

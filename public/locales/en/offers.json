@@ -1,4 +1,5 @@
 {
+  "timeline": "Timeline",
   "conversionRates": "Conversion Rates",
   "conversionRates_subtitle": "Manage currency to points conversion rates",
   "conversionRates_info": "Define how many loyalty points equal one unit of each currency. The default rate is applied when no specific currency rate is matched for a transaction.",

@@ -108,6 +108,8 @@ import type { OfferDto, UpdateOfferRequest } from "../../offers/types/api";
 import { getUsersList } from "../../users/services/user-service";
 import { PROVIDER_ROLE_ID } from "../../users/constants/roles";
 import type { UserSummaryDto } from "../../users/types/api";
+import { normalizeTime } from "../../../utils/opening-hours";
+import { useListState } from "../../../hooks";
 
 interface FormData {
   name: string;
@@ -164,7 +166,7 @@ export default function ServiceProvidersScreen() {
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
+  const [selectedCategoryId, setSelectedCategoryId] = useListState<number | undefined>("category", undefined);
 
   const {
     data,
@@ -187,7 +189,7 @@ export default function ServiceProvidersScreen() {
   const uploadAttachmentsMutation = useAddServiceProviderAttachments();
   const deleteAttachmentsMutation = useDeleteServiceProviderAttachments();
 
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+  const [paginationModel, setPaginationModel] = useListState<GridPaginationModel>("pagination", {
     page: 0,
     pageSize: 20,
   });
@@ -202,6 +204,8 @@ export default function ServiceProvidersScreen() {
   const [editingProvider, setEditingProvider] = useState<ServiceProviderDto | null>(null);
   const [editingOffer, setEditingOffer] = useState<OfferDto | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  // "Open 24 hours" — stored as fromTime == toTime == midnight (no flag).
+  const [open24, setOpen24] = useState(true);
   const [changeOwnerDialogOpen, setChangeOwnerDialogOpen] = useState(false);
   const [changeOwnerProvider, setChangeOwnerProvider] = useState<ServiceProviderDto | null>(null);
   const [workerProvider, setWorkerProvider] = useState<ServiceProviderDto | null>(null);
@@ -358,12 +362,18 @@ export default function ServiceProvidersScreen() {
   const handleAddClick = useCallback(() => {
     setEditingProvider(null);
     setFormData(initialFormData);
+    setOpen24(true);
     setFormDialogOpen(true);
   }, []);
 
   const handleEditClick = useCallback((e: React.MouseEvent, row: ServiceProviderDto) => {
     e.stopPropagation();
     setEditingProvider(row);
+    // Raw values can be "0:00", "9:30" or "12:40:00" — a type="time" input
+    // renders those blank, so normalize to "HH:mm" first.
+    const from = normalizeTime(row.fromTime);
+    const to = normalizeTime(row.toTime);
+    setOpen24((from === "" && to === "") || (from === "00:00" && to === "00:00"));
     setFormData({
       name: row.name || "",
       serviceCategoryId: row.serviceCategoryId || "",
@@ -376,8 +386,8 @@ export default function ServiceProvidersScreen() {
       cityName: row.cityName || "",
       price: row.price?.toString() || "",
       priceDescription: row.priceDescription || "",
-      fromTime: row.fromTime || "",
-      toTime: row.toTime || "",
+      fromTime: from,
+      toTime: to,
       methodPayment: row.methodPayment || "",
       hasOffer: row.hasOffer || false,
       offerDescription: row.offerDescription || "",
@@ -572,6 +582,11 @@ export default function ServiceProvidersScreen() {
         return;
       }
 
+      if (!open24 && (!formData.fromTime.trim() || !formData.toTime.trim())) {
+        openErrorSnackbar({ message: t("serviceProviders@hoursRequired") });
+        return;
+      }
+
       // Helper: ensure time is in HH:MM:SS format (backend requirement)
       const formatTime = (t: string) => {
         const trimmed = t.trim();
@@ -592,8 +607,8 @@ export default function ServiceProvidersScreen() {
         cityName: formData.cityName.trim() || null,
         price: formData.price ? parseFloat(formData.price) : null,
         priceDescription: formData.priceDescription.trim() || null,
-        fromTime: formatTime(formData.fromTime),
-        toTime: formatTime(formData.toTime),
+        fromTime: open24 ? "00:00:00" : formatTime(formData.fromTime),
+        toTime: open24 ? "00:00:00" : formatTime(formData.toTime),
         methodPayment: formData.methodPayment.trim() || null,
         hasOffer: formData.hasOffer,
         offerDescription: formData.offerDescription.trim() || null,
@@ -634,7 +649,7 @@ export default function ServiceProvidersScreen() {
         });
       }
     },
-    [formData, editingProvider, createMutation, updateMutation, openSuccessSnackbar, openErrorSnackbar, t]
+    [formData, open24, editingProvider, createMutation, updateMutation, openSuccessSnackbar, openErrorSnackbar, t]
   );
 
   const handleDeleteConfirm = useCallback(() => {
@@ -1449,6 +1464,28 @@ export default function ServiceProvidersScreen() {
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
                 <Grid container spacing={2}>
+                  <Grid size={{ xs: 12 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={open24}
+                          onChange={(e) => {
+                            const on = e.target.checked;
+                            setOpen24(on);
+                            // Leaving 24h: prefill sensible hours if nothing real is set.
+                            if (!on) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                fromTime: prev.fromTime && prev.fromTime !== "00:00" ? prev.fromTime : "09:00",
+                                toTime: prev.toTime && prev.toTime !== "00:00" ? prev.toTime : "22:00",
+                              }));
+                            }
+                          }}
+                        />
+                      }
+                      label={t("open24h")}
+                    />
+                  </Grid>
                   <Grid size={{ xs: 6, sm: 3 }}>
                     <TextField
                       label={t("fromTime")}
@@ -1456,6 +1493,8 @@ export default function ServiceProvidersScreen() {
                       onChange={(e) => setFormData({ ...formData, fromTime: e.target.value })}
                       type="time"
                       fullWidth
+                      disabled={open24}
+                      required={!open24}
                       size="small"
                       InputLabelProps={{ shrink: true }}
                       helperText={t("openingHoursHint")}
@@ -1468,6 +1507,8 @@ export default function ServiceProvidersScreen() {
                       onChange={(e) => setFormData({ ...formData, toTime: e.target.value })}
                       type="time"
                       fullWidth
+                      disabled={open24}
+                      required={!open24}
                       size="small"
                       InputLabelProps={{ shrink: true }}
                       helperText={t("openingHoursHint")}

@@ -135,7 +135,7 @@
   "insights_registrationDate": "Registration Date Range",
   "insights_dateFrom": "From",
   "insights_dateTo": "To",
-  "insights_usersInRange": "{{count}} users",
+  "insights_usersInRange": "{{formatted}} users",
   "insights_clearDates": "Clear date filter",
   "insights_noDateData": "Registration date is not available from the server yet. This filter will apply once the API includes it.",
   "insights_tableFiltered": "Table is filtered to this period",
@@ -151,5 +151,47 @@
   "backToActive": "Back to Active Users",
   "subtitle": "Manage platform users by role",
   "sendNotification": "Send Notification",
-  "viewNotifications": "View Notifications"
+  "viewNotifications": "View Notifications",
+  "list": {
+    "tabs": {
+      "all": "All",
+      "users": "Users",
+      "admins": "Admins",
+      "providers": "Providers"
+    },
+    "roles": {
+      "user": "User",
+      "admin": "Admin",
+      "provider": "Provider",
+      "worker": "Worker",
+      "superadmin": "Super admin"
+    },
+    "summary": {
+      "totalUsers": "Total users",
+      "activeMembers": "Active members",
+      "blocked": "Blocked",
+      "loyalty": "Loyalty",
+      "issued": "Points issued",
+      "circulating": "Net in circulation",
+      "redemptionRate": "Redemption rate"
+    },
+    "export": "Export",
+    "filters": "Filters",
+    "filtersActive": "{{count}} active filters",
+    "searchPlaceholder": "Search by name, email, phone or ID",
+    "clearSearch": "Clear search",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "refreshFailed": "Couldn't refresh the list. The data shown may be out of date.",
+    "loadFailed": "Couldn't load users.",
+    "updatedJustNow": "Updated just now",
+    "updatedMinutesAgo": "Updated {{count}} min ago",
+    "updatedHoursAgo": "Updated {{count}} h ago",
+    "resultsCount": "{{formatted}} users",
+    "noMatch": "No users match \"{{query}}\"",
+    "noMatchFilters": "No users match the current filters",
+    "noUsers": "No users yet",
+    "moreActions": "More actions",
+    "points": "Points & loyalty"
+  }
 }

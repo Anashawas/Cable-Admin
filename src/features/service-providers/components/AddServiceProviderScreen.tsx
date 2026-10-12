@@ -35,7 +35,8 @@ import ContactPhoneIcon from "@mui/icons-material/ContactPhone";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import PaymentIcon from "@mui/icons-material/Payment";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackButton from "../../../components/BackButton";
+import { useSmartBack } from "../../../hooks/use-smart-back";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { useSnackbarStore } from "../../../stores";
@@ -97,6 +98,7 @@ export default function AddServiceProviderScreen() {
   const { t } = useTranslation("serviceProviders");
   const theme = useTheme();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/service-providers");
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
@@ -104,6 +106,8 @@ export default function AddServiceProviderScreen() {
   const createMutation = useCreateServiceProvider();
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  // "Open 24 hours" — stored as fromTime == toTime == midnight (no flag).
+  const [open24, setOpen24] = useState(true);
 
   const formatTime = (t: string) => {
     const trimmed = t.trim();
@@ -116,6 +120,10 @@ export default function AddServiceProviderScreen() {
       e.preventDefault();
       if (!formData.name.trim() || !formData.serviceCategoryId) {
         openErrorSnackbar({ message: t("serviceProviders@nameAndCategoryRequired") });
+        return;
+      }
+      if (!open24 && (!formData.fromTime.trim() || !formData.toTime.trim())) {
+        openErrorSnackbar({ message: t("serviceProviders@hoursRequired") });
         return;
       }
 
@@ -131,8 +139,8 @@ export default function AddServiceProviderScreen() {
         cityName: formData.cityName.trim() || null,
         price: formData.price ? parseFloat(formData.price) : null,
         priceDescription: formData.priceDescription.trim() || null,
-        fromTime: formatTime(formData.fromTime),
-        toTime: formatTime(formData.toTime),
+        fromTime: open24 ? "00:00:00" : formatTime(formData.fromTime),
+        toTime: open24 ? "00:00:00" : formatTime(formData.toTime),
         methodPayment: formData.methodPayment.trim() || null,
         hasOffer: formData.hasOffer,
         offerDescription: formData.offerDescription.trim() || null,
@@ -154,7 +162,7 @@ export default function AddServiceProviderScreen() {
         },
       });
     },
-    [formData, createMutation, openSuccessSnackbar, openErrorSnackbar, navigate, t]
+    [formData, open24, createMutation, openSuccessSnackbar, openErrorSnackbar, navigate, t]
   );
 
   return (
@@ -173,9 +181,7 @@ export default function AddServiceProviderScreen() {
       >
         <Box sx={{ position: "absolute", top: -60, right: -60, width: 240, height: 240, borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <Stack direction="row" spacing={2} alignItems="center">
-          <IconButton onClick={() => navigate("/service-providers")} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.12)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
-            <ArrowBackIcon />
-          </IconButton>
+          <BackButton fallback="/service-providers" variant="onDark" />
           <Box sx={{ width: 52, height: 52, borderRadius: 2.5, background: "rgba(255,255,255,0.18)", border: "1.5px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <AddIcon sx={{ color: "white", fontSize: 28 }} />
           </Box>
@@ -324,11 +330,33 @@ export default function AddServiceProviderScreen() {
               <Typography variant="subtitle1" fontWeight={800} color="secondary.main">{t("hoursAndPricing")}</Typography>
             </Stack>
             <Grid container spacing={2.5}>
-              <Grid size={{ xs: 6, sm: 3 }}>
-                <TextField label={t("fromTime")} value={formData.fromTime} onChange={(e) => setFormData({ ...formData, fromTime: e.target.value })} type="time" fullWidth InputLabelProps={{ shrink: true }} helperText={t("openingHoursHint")} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
+              <Grid size={{ xs: 12 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={open24}
+                      onChange={(e) => {
+                        const on = e.target.checked;
+                        setOpen24(on);
+                        // Leaving 24h: prefill sensible hours if nothing real is set.
+                        if (!on) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            fromTime: prev.fromTime && prev.fromTime !== "00:00" ? prev.fromTime : "09:00",
+                            toTime: prev.toTime && prev.toTime !== "00:00" ? prev.toTime : "22:00",
+                          }));
+                        }
+                      }}
+                    />
+                  }
+                  label={t("open24h")}
+                />
               </Grid>
               <Grid size={{ xs: 6, sm: 3 }}>
-                <TextField label={t("toTime")} value={formData.toTime} onChange={(e) => setFormData({ ...formData, toTime: e.target.value })} type="time" fullWidth InputLabelProps={{ shrink: true }} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
+                <TextField label={t("fromTime")} value={formData.fromTime} onChange={(e) => setFormData({ ...formData, fromTime: e.target.value })} type="time" fullWidth disabled={open24} required={!open24} InputLabelProps={{ shrink: true }} helperText={t("openingHoursHint")} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
+              </Grid>
+              <Grid size={{ xs: 6, sm: 3 }}>
+                <TextField label={t("toTime")} value={formData.toTime} onChange={(e) => setFormData({ ...formData, toTime: e.target.value })} type="time" fullWidth disabled={open24} required={!open24} InputLabelProps={{ shrink: true }} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
               </Grid>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <TextField label={t("price")} value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} type="number" fullWidth inputProps={{ step: "any", min: 0, inputMode: "decimal" }} InputProps={{ startAdornment: <InputAdornment position="start"><AttachMoneyIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }} helperText={t("priceHint")} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2.5 } }} />
@@ -459,7 +487,7 @@ export default function AddServiceProviderScreen() {
               <Button
                 variant="outlined"
                 color="inherit"
-                onClick={() => navigate("/service-providers")}
+                onClick={goBack}
                 sx={{ borderRadius: 2.5, minWidth: 120, fontWeight: 700, textTransform: "none" }}
               >
                 {t("cancel")}

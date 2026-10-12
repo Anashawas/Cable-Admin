@@ -49,6 +49,14 @@ export interface NavigationGroup {
 	items: NavigationItem[];
 }
 
+/** True when `pathname` is the nav item's path or a sub-route of it
+ *  (e.g. /cable-connect/stations/42 keeps /cable-connect active).
+ *  "/" only matches itself so the dashboard never matches everything. */
+export function isNavPathActive(pathname: string, itemPath: string): boolean {
+	if (itemPath === "/") return pathname === "/";
+	return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+}
+
 /** The single source of truth for the admin navigation — used by both the
  *  desktop collapsible sidebar and the mobile drawer so they never drift. */
 export function getNavigationGroups(t: TFunction): NavigationGroup[] {

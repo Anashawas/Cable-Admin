@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,20 +13,12 @@ import {
   IconButton,
   Tooltip,
   MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Paper,
   Button,
   Skeleton,
   useTheme,
   Avatar,
-  Card,
-  CardContent,
-  CardActions,
   Divider,
-  ToggleButtonGroup,
-  ToggleButton,
   Pagination,
   Dialog,
   DialogTitle,
@@ -39,9 +31,12 @@ import {
   ListItemIcon,
   Menu,
   CircularProgress,
+  Alert,
+  LinearProgress,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel, GridRowSelectionModel } from "@mui/x-data-grid";
 import SearchIcon from "@mui/icons-material/Search";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
@@ -53,16 +48,10 @@ import VerifiedIcon from "@mui/icons-material/Verified";
 import BoltIcon from "@mui/icons-material/Bolt";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
 import ClearIcon from "@mui/icons-material/Clear";
-import EvStationIcon from "@mui/icons-material/EvStation";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import ViewModuleIcon from "@mui/icons-material/ViewModule";
-import ViewListIcon from "@mui/icons-material/ViewList";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import PhoneIcon from "@mui/icons-material/Phone";
 import ShareIcon from "@mui/icons-material/Share";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
@@ -75,15 +64,13 @@ import PeopleIcon from "@mui/icons-material/People";
 import ProviderActivityDialog from "../../loyalty/components/ProviderActivityDialog";
 import InsightsIcon from "@mui/icons-material/Insights";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import TuneIcon from "@mui/icons-material/Tune";
 import WorkerDialog from "../../workers/components/WorkerDialog";
 import BadgeIcon from "@mui/icons-material/Badge";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PersonIcon from "@mui/icons-material/Person";
-import HandshakeIcon from "@mui/icons-material/Handshake";
-import { useChargeManagement, type SortOption } from "../hooks/use-charge-management";
+import { useChargeManagement } from "../hooks/use-charge-management";
+import { useListState } from "../../../hooks";
 import { getAllPlugTypes, changeStationOwner, deleteStation } from "../services/station-form-service";
 import { getUsersList } from "../../users/services/user-service";
 import { useSnackbarStore } from "../../../stores";
@@ -92,38 +79,34 @@ import type { ChargingPointDto } from "../types/api";
 import StationRowDetailDialog from "./StationRowDetailDialog";
 import { DateCell } from "../../../components";
 import { matchesDateRange, type DateRangePreset } from "../../../utils/date-format";
+import ChargeFiltersBar from "./ChargeFiltersBar";
+import StationCard, { StationCardSkeleton, isStationActive, paymentMethods } from "./StationCard";
+import PlugChips from "./PlugChips";
+import { cityKey, cityLabel } from "../../dashboard/utils/city-names";
 
-const SORT_OPTIONS: { value: SortOption; labelKey: string }[] = [
-  { value: "NONE", labelKey: "chargeManagement@sort.none" },
-  { value: "VISITORS_HIGH_TO_LOW", labelKey: "chargeManagement@sort.visitorsHighToLow" },
-  { value: "VISITORS_LOW_TO_HIGH", labelKey: "chargeManagement@sort.visitorsLowToHigh" },
-  { value: "RATING_HIGH_TO_LOW", labelKey: "chargeManagement@sort.ratingHighToLow" },
-  { value: "NAME_A_TO_Z", labelKey: "chargeManagement@sort.nameAtoZ" },
-  { value: "JOINED_NEWEST", labelKey: "chargeManagement@sort.joinedNewest" },
-  { value: "JOINED_OLDEST", labelKey: "chargeManagement@sort.joinedOldest" },
-  { value: "EDITED_NEWEST", labelKey: "chargeManagement@sort.editedNewest" },
-  { value: "EDITED_OLDEST", labelKey: "chargeManagement@sort.editedOldest" },
-];
+const Num = ({ v }: { v: number }) => <bdi>{v.toLocaleString("en-US")}</bdi>;
 
-const DATE_RANGE_OPTIONS: { value: DateRangePreset; labelKey: string }[] = [
-  { value: "all", labelKey: "chargeManagement@filters.all" },
-  { value: "7d", labelKey: "chargeManagement@filters.last7Days" },
-  { value: "30d", labelKey: "chargeManagement@filters.last30Days" },
-  { value: "90d", labelKey: "chargeManagement@filters.last90Days" },
-  { value: "365d", labelKey: "chargeManagement@filters.lastYear" },
-];
+/** Re-renders every `ms` so relative times («منذ 30 ث») stay fresh. */
+function useNow(ms: number) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), ms);
+    return () => window.clearInterval(id);
+  }, [ms]);
+  return now;
+}
 
 export default function ChargeManagementScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
   const queryClient = useQueryClient();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
-  const [viewMode, setViewMode] = useState<"card" | "table">("card");
-  const [cardPage, setCardPage] = useState(1);
+  const [viewMode, setViewMode] = useListState<"card" | "table">("viewMode", "card");
+  const [cardPage, setCardPage] = useListState("cardPage", 1);
   const CARD_PAGE_SIZE = 12;
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+  const [paginationModel, setPaginationModel] = useListState<GridPaginationModel>("pagination", {
     page: 0,
     pageSize: 25,
   });
@@ -141,13 +124,13 @@ export default function ChargeManagementScreen() {
   const [cardMenuAnchor, setCardMenuAnchor] = useState<null | HTMLElement>(null);
   const [cardMenuRow, setCardMenuRow] = useState<ChargingPointDto | null>(null);
   const [ownerSearch, setOwnerSearch] = useState("");
-  const [cityFilter, setCityFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [verifiedFilter, setVerifiedFilter] = useState<string>("");
-  const [stationTypeFilter, setStationTypeFilter] = useState<string>("");
-  const [plugTypeFilter, setPlugTypeFilter] = useState<number[]>([]);
-  const [joinedFilter, setJoinedFilter] = useState<DateRangePreset>("all");
-  const [editedFilter, setEditedFilter] = useState<DateRangePreset>("all");
+  const [cityFilter, setCityFilter] = useListState<string>("city", "");
+  const [statusFilter, setStatusFilter] = useListState<string>("status", "");
+  const [verifiedFilter, setVerifiedFilter] = useListState<string>("verified", "");
+  const [stationTypeFilter, setStationTypeFilter] = useListState<string>("stationType", "");
+  const [plugTypeFilter, setPlugTypeFilter] = useListState<number[]>("plugTypes", []);
+  const [joinedFilter, setJoinedFilter] = useListState<DateRangePreset>("joined", "all");
+  const [editedFilter, setEditedFilter] = useListState<DateRangePreset>("edited", "all");
 
   const { data: plugTypes = [] } = useQuery({
     queryKey: ["charge-management", "plug-types"],
@@ -213,23 +196,34 @@ export default function ChargeManagementScreen() {
 
   const {
     data,
+    allData,
     isLoading,
+    isFetching,
     error,
+    refreshError,
+    dataUpdatedAt,
     search,
+    debouncedSearch,
     sortOption,
     handleSearchChange,
     handleSortChange,
     handleRefresh,
   } = useChargeManagement();
 
+  // City options are grouped by canonical key so legacy spellings collapse
+  // into one entry, and labelled in the UI language (Arabic in Arabic UI).
   const uniqueCities = useMemo(() => {
     const set = new Set<string>();
     data.forEach((r) => {
-      const c = (r.cityName ?? "").trim();
-      if (c) set.add(c);
+      const k = cityKey(r.cityName);
+      if (k) set.add(k);
     });
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [data]);
+    // Keep a restored selection visible even if the current search hides it.
+    if (cityFilter) set.add(cityFilter);
+    return Array.from(set)
+      .map((key) => ({ key, label: cityLabel(key, i18n.language) }))
+      .sort((a, b) => a.label.localeCompare(b.label, i18n.language));
+  }, [data, cityFilter, i18n.language]);
   const uniqueStatuses = useMemo(() => {
     const set = new Set<string>();
     data.forEach((r) => {
@@ -249,7 +243,7 @@ export default function ChargeManagementScreen() {
 
   const filteredData = useMemo(() => {
     return data.filter((row) => {
-      if (cityFilter && (row.cityName ?? "").trim() !== cityFilter) return false;
+      if (cityFilter && cityKey(row.cityName) !== cityKey(cityFilter)) return false;
       if (statusFilter && (row.statusSummary?.name ?? "").trim() !== statusFilter) return false;
       if (verifiedFilter === "yes" && !row.isVerified) return false;
       if (verifiedFilter === "no" && row.isVerified) return false;
@@ -276,18 +270,28 @@ export default function ChargeManagementScreen() {
   const cardTotalPages = Math.ceil(filteredData.length / CARD_PAGE_SIZE);
 
   const hasActiveFilters =
-    cityFilter ||
-    statusFilter ||
-    verifiedFilter ||
-    stationTypeFilter ||
+    !!cityFilter ||
+    !!statusFilter ||
+    !!verifiedFilter ||
+    !!stationTypeFilter ||
     plugTypeFilter.length > 0 ||
     joinedFilter !== "all" ||
     editedFilter !== "all";
-  const activeFilterCount =
-    [cityFilter, statusFilter, verifiedFilter, stationTypeFilter].filter(Boolean).length +
-    (plugTypeFilter.length > 0 ? 1 : 0) +
-    (joinedFilter !== "all" ? 1 : 0) +
-    (editedFilter !== "all" ? 1 : 0);
+
+  /** Back to the first page in both views — called only from user changes, never on restore. */
+  const resetPages = useCallback(() => {
+    setPaginationModel((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+    setCardPage(1);
+  }, []);
+  /** Wrap a filter setter so changing it also resets paging. */
+  const withReset = useCallback(
+    <V,>(setter: (v: V) => void) =>
+      (v: V) => {
+        setter(v);
+        resetPages();
+      },
+    [resetPages]
+  );
   const handleClearFilters = useCallback(() => {
     setCityFilter("");
     setStatusFilter("");
@@ -296,8 +300,31 @@ export default function ChargeManagementScreen() {
     setPlugTypeFilter([]);
     setJoinedFilter("all");
     setEditedFilter("all");
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-  }, []);
+    resetPages();
+  }, [resetPages]);
+  const handleSearchInput = useCallback(
+    (v: string) => {
+      handleSearchChange(v);
+      resetPages();
+    },
+    [handleSearchChange, resetPages]
+  );
+  const handleClearSearch = useCallback(() => handleSearchInput(""), [handleSearchInput]);
+  const handleClearEverything = useCallback(() => {
+    handleClearFilters();
+    handleSearchChange("");
+  }, [handleClearFilters, handleSearchChange]);
+
+  // «آخر تحديث منذ …» — ticks every 30 s.
+  const now = useNow(30_000);
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return undefined;
+    const sec = Math.max(0, Math.round((now - dataUpdatedAt) / 1000));
+    if (sec < 60) return t("chargeManagement@list.updatedSecondsAgo", { count: Math.max(sec, 1) });
+    const min = Math.round(sec / 60);
+    if (min < 60) return t("chargeManagement@list.updatedMinutesAgo", { count: min });
+    return t("chargeManagement@list.updatedHoursAgo", { count: Math.round(min / 60) });
+  }, [dataUpdatedAt, now, t]);
 
   const handleRowClick = useCallback(
     (params: { row: ChargingPointDto }) => navigate(`/charge-management/${params.row.id}`),
@@ -467,25 +494,18 @@ export default function ChargeManagementScreen() {
       {
         field: "plugTypeSummary",
         headerName: t("chargeManagement@columns.plugs"),
-        minWidth: 140,
-        width: 160,
+        minWidth: 180,
+        width: 220,
         filterable: false,
         sortable: false,
-        renderCell: ({ row }) => {
-          const plugs = row.plugTypeSummary ?? [];
-          const labels = [...new Set(plugs.map((p) => (p.serialNumber ?? p.name ?? "").trim()).filter(Boolean))];
-          if (labels.length === 0) return "—";
-          return (
-            <Stack direction="row" flexWrap="wrap" gap={0.5} useFlexGap sx={{ py: 0.5 }}>
-              {labels.slice(0, 4).map((l) => (
-                <Chip key={l} label={l} size="small" variant="outlined" sx={{ maxWidth: 72 }} />
-              ))}
-              {labels.length > 4 && (
-                <Chip label={`+${labels.length - 4}`} size="small" variant="outlined" />
-              )}
-            </Stack>
-          );
-        },
+        renderCell: ({ row }) =>
+          (row.plugTypeSummary ?? []).length === 0 ? (
+            "—"
+          ) : (
+            <Box sx={{ display: "flex", alignItems: "center", height: "100%", overflow: "hidden" }}>
+              <PlugChips plugs={row.plugTypeSummary} max={2} />
+            </Box>
+          ),
       },
       {
         field: "chargerSpeed",
@@ -524,7 +544,7 @@ export default function ChargeManagementScreen() {
         headerName: t("chargeManagement@columns.city"),
         minWidth: 110,
         width: 120,
-        valueGetter: (_, row) => row.cityName ?? "—",
+        valueGetter: (_, row) => (row.cityName ? cityLabel(row.cityName, i18n.language) : "—"),
         filterable: false,
         sortable: true,
       },
@@ -534,6 +554,11 @@ export default function ChargeManagementScreen() {
         minWidth: 160,
         flex: 0.8,
         valueGetter: (_, row) => row.address ?? "—",
+        renderCell: ({ row }) => (
+          <Typography variant="body2" color="text.secondary" noWrap title={row.address ?? undefined} sx={{ lineHeight: "inherit" }}>
+            {row.address || "—"}
+          </Typography>
+        ),
         filterable: false,
         sortable: false,
       },
@@ -681,21 +706,12 @@ export default function ChargeManagementScreen() {
         filterable: false,
         sortable: false,
         renderCell: ({ row }) => {
-          const method = (row.methodPayment ?? "") as string;
-          const hasVisa = /visa/i.test(method);
-          const hasCliQ = /cliq/i.test(method);
-          if (!hasVisa && !hasCliQ) return method || "—";
+          const methods = paymentMethods(row.methodPayment);
+          if (methods.length === 0) return "—";
           return (
-            <Stack direction="row" alignItems="center" spacing={0.5}>
-              {hasVisa && (
-                <Tooltip title="Visa">
-                  <CreditCardIcon sx={{ fontSize: 20, color: "primary.main" }} />
-                </Tooltip>
-              )}
-              {hasCliQ && (
-                <Chip label="CliQ" size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
-              )}
-            </Stack>
+            <Typography variant="body2" color="text.secondary" noWrap title={methods.join(" · ")} sx={{ lineHeight: "inherit" }}>
+              {methods.join(" · ")}
+            </Typography>
           );
         },
       },
@@ -804,498 +820,302 @@ export default function ChargeManagementScreen() {
         ),
       },
     ],
-    [t, handleEdit, handleMedia, handleSocialLinks, handlePremium, handleAnalytics, handleActivity, handleManageWorker, handleOpenDetail, handleOpenChangeOwner]
+    [t, i18n.language, handleEdit, handleMedia, handleSocialLinks, handlePremium, handleAnalytics, handleActivity, handleManageWorker, handleOpenDetail, handleOpenChangeOwner]
   );
 
 
-  const totalStations = data.length;
-  const activeStations = useMemo(() => data.filter(r => r.statusSummary?.id === 1 || r.statusSummary?.name?.toLowerCase() === "active").length, [data]);
-  const verifiedStations = useMemo(() => data.filter(r => r.isVerified).length, [data]);
+  // Header figures describe the whole network, not the current search.
+  const statsSource = allData ?? [];
+  const totalStations = statsSource.length;
+  const activeStations = useMemo(() => statsSource.filter(isStationActive).length, [statsSource]);
+  const verifiedStations = useMemo(() => statsSource.filter((r) => r.isVerified).length, [statsSource]);
+
+  const handleOpenStation = useCallback((row: ChargingPointDto) => navigate(`/charge-management/${row.id}`), [navigate]);
 
   if (error) {
     return (
       <AppScreenContainer>
         <Box p={2}>
-          <Typography color="error">{t("loadingFailed")}</Typography>
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={handleRefresh} disabled={isFetching}>
+                {t("chargeManagement@list.retry")}
+              </Button>
+            }
+          >
+            {t("loadingFailed")}
+          </Alert>
         </Box>
       </AppScreenContainer>
     );
   }
 
+  const isEmpty = !isLoading && filteredData.length === 0;
+  const searchTerm = debouncedSearch.trim();
+
   return (
     <AppScreenContainer>
-      <Box sx={{ width: "100%", minWidth: 0, overflow: "hidden", boxSizing: "border-box", p: { xs: 1, sm: 2 } }}>
-        <Stack spacing={2.5} sx={{ width: "100%", minWidth: 0 }}>
+      <Box sx={{ width: "100%", minWidth: 0, overflow: "hidden", boxSizing: "border-box", p: { xs: 2, sm: 3 } }}>
+        <Stack spacing={2} sx={{ width: "100%", minWidth: 0 }}>
 
-          {/* ── Page Banner ─────────────────────────────────────────────────── */}
-          <Box
-            sx={{
-              background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              borderRadius: 3,
-              p: { xs: 2, md: 3 },
-              position: "relative",
-              overflow: "hidden",
-              color: "#fff",
-            }}
+          {/* ── Page header: title + inline stats · actions ─────────────────── */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "stretch", sm: "flex-start" }}
+            justifyContent="space-between"
+            gap={2}
           >
-            <Box sx={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.05)", top: -100, right: -60, pointerEvents: "none" }} />
-            <Box sx={{ position: "absolute", width: 160, height: 160, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)", bottom: -60, left: 80, pointerEvents: "none" }} />
-
-            <Stack direction={{ xs: "column", md: "row" }} alignItems={{ md: "center" }} justifyContent="space-between" spacing={2}>
-              {/* Left: title + kpis */}
-              <Box sx={{ flex: 1 }}>
-                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
-                  <Box sx={{ width: 56, height: 56, borderRadius: 2, bgcolor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <EvStationIcon sx={{ fontSize: 32 }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="h5" fontWeight={700} color="white">
-                      {t("chargeManagement@title")}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
-                      {t("chargeManagement@subtitle")}
-                    </Typography>
-                  </Box>
-                </Stack>
-                <Stack direction="row" spacing={2} flexWrap="wrap">
-                  {[
-                    { label: t("chargeManagement@kpi.total"), value: totalStations },
-                    { label: t("chargeManagement@kpi.active"), value: activeStations },
-                    { label: t("chargeManagement@kpi.verified"), value: verifiedStations },
-                  ].map(kpi => (
-                    <Box key={kpi.label} sx={{ background: "rgba(255,255,255,0.13)", borderRadius: 2, px: 2, py: 1, minWidth: 90 }}>
-                      {isLoading ? (
-                        <Skeleton variant="rounded" width={48} height={32} sx={{ bgcolor: "rgba(255,255,255,0.2)", mb: 0.5 }} />
-                      ) : (
-                        <Typography variant="h5" fontWeight={700} color="white">{kpi.value}</Typography>
-                      )}
-                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{kpi.label}</Typography>
-                    </Box>
-                  ))}
-                  {!isLoading && hasActiveFilters && (
-                    <Box sx={{ background: "rgba(255,255,0,0.15)", borderRadius: 2, px: 2, py: 1, minWidth: 90, border: "1px solid rgba(255,255,0,0.3)" }}>
-                      <Typography variant="h5" fontWeight={700} color="white">{filteredData.length}</Typography>
-                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.75)" }}>{t("chargeManagement@filters.filtered")}</Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </Box>
-
-              {/* Right: action buttons */}
-              <Stack direction="row" spacing={1} flexShrink={0}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddStation}
-                  sx={{ bgcolor: "rgba(255,255,255,0.2)", "&:hover": { bgcolor: "rgba(255,255,255,0.3)" }, color: "#fff", boxShadow: "none", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.3)" }}
-                >
-                  {t("chargeManagement@actions.addStation")}
-                </Button>
-                <Tooltip title={t("refresh")}>
-                  <IconButton onClick={handleRefresh} sx={{ color: "rgba(255,255,255,0.8)", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
-                    <RefreshIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t("chargeManagement@actions.viewComplaints")}>
-                  <IconButton onClick={handleViewComplaints} sx={{ color: "rgba(255,255,255,0.8)", bgcolor: "rgba(255,255,255,0.1)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
-                    <ReportProblemIcon />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            </Stack>
-          </Box>
-
-          {/* ── Shimmer skeleton while first load ───────────────────────────── */}
-          {isLoading && (
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-              <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-                {[220, 155, 140, 130, 120, 140, 190].map((w, i) => (
-                  <Skeleton key={i} variant="rounded" width={w} height={40} sx={{ borderRadius: 1 }} />
-                ))}
-              </Stack>
-              <Skeleton variant="text" width={120} height={20} sx={{ mt: 1.5 }} />
-            </Paper>
-          )}
-
-          {isLoading && (
-            <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
-              {/* header row */}
-              <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", gap: 2 }}>
-                {[80, 180, 120, 70, 90, 100, 140, 110, 80].map((w, i) => (
-                  <Skeleton key={i} variant="text" width={w} height={20} />
-                ))}
-              </Box>
-              {/* shimmer rows */}
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Box key={i} sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", gap: 2 }}>
-                  <Skeleton variant="rounded" width={40} height={40} sx={{ flexShrink: 0 }} />
-                  <Skeleton variant="text" width={160} height={20} />
-                  <Skeleton variant="rounded" width={80} height={22} sx={{ borderRadius: 3 }} />
-                  <Skeleton variant="text" width={60} height={20} />
-                  <Skeleton variant="text" width={100} height={20} />
-                  <Skeleton variant="text" width={90} height={20} />
-                  <Box sx={{ display: "flex", gap: 0.5 }}>
-                    {[1,2,3,4,5].map(s => <Skeleton key={s} variant="circular" width={14} height={14} />)}
-                  </Box>
-                  <Skeleton variant="text" width={60} height={20} />
-                  <Box sx={{ display: "flex", gap: 0.5, ml: "auto" }}>
-                    <Skeleton variant="circular" width={28} height={28} />
-                    <Skeleton variant="circular" width={28} height={28} />
-                  </Box>
-                </Box>
-              ))}
-            </Paper>
-          )}
-
-          {/* ── Filter Bar + Grid (hidden while skeleton is shown) ─────────── */}
-          {!isLoading && <>
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 1.5, sm: 2 },
-              borderRadius: 3,
-              bgcolor: "background.paper",
-              border: "1px solid",
-              borderColor: "divider",
-              boxShadow: `0 2px 12px ${alpha(theme.palette.primary.main, 0.06)}`,
-              "& .MuiOutlinedInput-root": { borderRadius: 2 },
-            }}
-          >
-            {/* Header: title + active count · results pill + view toggle */}
-            <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1} sx={{ mb: 1.75 }}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Box sx={{ width: 30, height: 30, borderRadius: 2, bgcolor: "primary.main", color: "primary.contrastText", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 3px 8px ${alpha(theme.palette.primary.main, 0.3)}` }}>
-                  <TuneIcon sx={{ fontSize: 18 }} />
-                </Box>
-                <Typography variant="subtitle2" fontWeight={800}>{t("chargeManagement@filters.title")}</Typography>
-                {activeFilterCount > 0 && (
-                  <Chip size="small" label={activeFilterCount} color="primary" sx={{ height: 20, minWidth: 22, fontWeight: 800, fontSize: "0.72rem" }} />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h5" component="h1" fontWeight={800} sx={{ lineHeight: 1.25 }}>
+                {t("chargeManagement@title")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {t("chargeManagement@subtitle")}
+              </Typography>
+              <Stack
+                direction="row"
+                gap={1}
+                useFlexGap
+                flexWrap="wrap"
+                alignItems="center"
+                sx={{ mt: 1.5 }}
+                aria-label={t("chargeManagement@list.statsLabel")}
+              >
+                {[
+                  { key: "total", label: t("chargeManagement@kpi.total"), value: totalStations, color: theme.palette.text.secondary },
+                  { key: "active", label: t("chargeManagement@kpi.active"), value: activeStations, color: theme.palette.success.main },
+                  { key: "verified", label: t("chargeManagement@kpi.verified"), value: verifiedStations, color: theme.palette.primary.main },
+                ].map((kpi) =>
+                  isLoading ? (
+                    <Skeleton key={kpi.key} variant="rounded" width={96} height={24} sx={{ borderRadius: 4 }} />
+                  ) : (
+                    <Chip
+                      key={kpi.key}
+                      size="small"
+                      variant="outlined"
+                      icon={<Box component="span" sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: kpi.color, flexShrink: 0 }} />}
+                      label={
+                        <>
+                          <Box component="span" sx={{ fontWeight: 800, color: "text.primary" }}><Num v={kpi.value} /></Box>{" "}
+                          <Box component="span" sx={{ color: "text.secondary" }}>{kpi.label}</Box>
+                        </>
+                      }
+                      sx={{ height: 26, borderColor: "divider", "& .MuiChip-icon": { mx: 1 } }}
+                    />
+                  )
                 )}
               </Stack>
-              <Stack direction="row" spacing={1.25} alignItems="center">
-                <Chip
-                  icon={<EvStationIcon sx={{ fontSize: 16 }} />}
-                  label={t("chargeManagement@filters.resultsCount", "{{count}} stations", { count: filteredData.length })}
-                  size="small"
-                  sx={{ fontWeight: 700, bgcolor: alpha(theme.palette.primary.main, 0.1), color: "primary.main", "& .MuiChip-icon": { color: "primary.main" } }}
-                />
-                <ToggleButtonGroup
-                  value={viewMode}
-                  exclusive
-                  size="small"
-                  onChange={(_, v) => v && setViewMode(v)}
-                  sx={{
-                    "& .MuiToggleButton-root": {
-                      px: 1, py: 0.4, border: "1px solid", borderColor: "divider", borderRadius: 2,
-                      "&.Mui-selected": { bgcolor: "primary.main", color: "primary.contrastText", "&:hover": { bgcolor: "primary.dark" } },
-                    },
-                  }}
-                >
-                  <ToggleButton value="card"><ViewModuleIcon fontSize="small" /></ToggleButton>
-                  <ToggleButton value="table"><ViewListIcon fontSize="small" /></ToggleButton>
-                </ToggleButtonGroup>
-              </Stack>
-            </Stack>
-            <Divider sx={{ mb: 1.75 }} />
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }} flexWrap="wrap" useFlexGap>
-              <TextField
-                size="small"
-                placeholder={t("chargeManagement@searchPlaceholder")}
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: "text.disabled" }} /></InputAdornment> }}
-                sx={{ minWidth: 220, flex: 1 }}
-              />
-              <FormControl size="small" sx={{ minWidth: 155 }}>
-                <InputLabel>{t("chargeManagement@sort.label")}</InputLabel>
-                <Select value={sortOption} label={t("chargeManagement@sort.label")} onChange={(e) => handleSortChange(e.target.value as SortOption)}>
-                  {SORT_OPTIONS.map(opt => <MenuItem key={opt.value} value={opt.value}>{t(opt.labelKey)}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 140 }}>
-                <InputLabel>{t("chargeManagement@filters.city")}</InputLabel>
-                <Select value={cityFilter} label={t("chargeManagement@filters.city")} onChange={(e) => { setCityFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
-                  <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
-                  {uniqueCities.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 130 }}>
-                <InputLabel>{t("chargeManagement@filters.status")}</InputLabel>
-                <Select value={statusFilter} label={t("chargeManagement@filters.status")} onChange={(e) => { setStatusFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
-                  <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
-                  {uniqueStatuses.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>{t("chargeManagement@filters.verified")}</InputLabel>
-                <Select value={verifiedFilter} label={t("chargeManagement@filters.verified")} onChange={(e) => { setVerifiedFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
-                  <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
-                  <MenuItem value="yes">{t("chargeManagement@filters.yes")}</MenuItem>
-                  <MenuItem value="no">{t("chargeManagement@filters.no")}</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 140 }}>
-                <InputLabel>{t("chargeManagement@filters.stationType")}</InputLabel>
-                <Select value={stationTypeFilter} label={t("chargeManagement@filters.stationType")} onChange={(e) => { setStationTypeFilter(e.target.value); setPaginationModel(p => ({ ...p, page: 0 })); }}>
-                  <MenuItem value="">{t("chargeManagement@filters.all")}</MenuItem>
-                  {uniqueStationTypes.map(st => <MenuItem key={st} value={st}>{st}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>{t("chargeManagement@filters.joined")}</InputLabel>
-                <Select value={joinedFilter} label={t("chargeManagement@filters.joined")} onChange={(e) => { setJoinedFilter(e.target.value as DateRangePreset); setPaginationModel(p => ({ ...p, page: 0 })); }}>
-                  {DATE_RANGE_OPTIONS.map(o => <MenuItem key={o.value} value={o.value}>{t(o.labelKey)}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>{t("chargeManagement@filters.lastEdit")}</InputLabel>
-                <Select value={editedFilter} label={t("chargeManagement@filters.lastEdit")} onChange={(e) => { setEditedFilter(e.target.value as DateRangePreset); setPaginationModel(p => ({ ...p, page: 0 })); }}>
-                  {DATE_RANGE_OPTIONS.map(o => <MenuItem key={o.value} value={o.value}>{t(o.labelKey)}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel>{t("chargeManagement@filters.plugType")}</InputLabel>
-                <Select
-                  multiple
-                  value={plugTypeFilter}
-                  label={t("chargeManagement@filters.plugType")}
-                  onChange={(e) => { const v = e.target.value; setPlugTypeFilter(typeof v === "string" ? [] : v); setPaginationModel(p => ({ ...p, page: 0 })); }}
-                  renderValue={(sel) => sel.length === 0 ? t("chargeManagement@filters.all") : sel.length === 1 ? (() => { const p = plugTypes.find(x => x.id === sel[0]); return p?.serialNumber ? `${p.name ?? ""} (${p.serialNumber})` : (p?.name ?? String(sel[0])); })() : t("chargeManagement@filters.plugTypeCount", "{{count}} selected", { count: sel.length })}
-                >
-                  {plugTypes.map(p => <MenuItem key={p.id} value={p.id}>{p.serialNumber ? `${p.name ?? ""} (${p.serialNumber})` : (p.name ?? String(p.id))}</MenuItem>)}
-                </Select>
-              </FormControl>
-              {hasActiveFilters && (
-                <Button size="small" startIcon={<ClearIcon />} onClick={handleClearFilters} color="error" variant="outlined" sx={{ flexShrink: 0, borderRadius: 2, fontWeight: 700 }}>
-                  {t("chargeManagement@filters.clearAll")}
-                </Button>
-              )}
-            </Stack>
-          </Paper>
-
-          {/* ── Card View ───────────────────────────────────────────────────── */}
-          {viewMode === "card" && (
-            <>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr", xl: "repeat(4, 1fr)" }, gap: 2.5 }}>
-                {cardPagedData.map((row) => {
-                  const isActive = row.statusSummary?.id === 1 || row.statusSummary?.name?.toLowerCase() === "active";
-                  const rate = row.avgChargingPointRate != null ? Number(row.avgChargingPointRate) : null;
-                  const stars = rate != null ? Math.round(rate) : 0;
-                  const plugs = [...new Set((row.plugTypeSummary ?? []).map((p) => (p.serialNumber ?? p.name ?? "").trim()).filter(Boolean))];
-                  return (
-                    <Card
-                      key={row.id}
-                      elevation={0}
-                      onClick={() => navigate(`/charge-management/${row.id}`)}
-                      sx={{
-                        borderRadius: 3,
-                        border: "1.5px solid",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        "&:hover": { borderColor: "primary.main", boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.15)}`, transform: "translateY(-2px)" },
-                        overflow: "visible",
-                        position: "relative",
-                      }}
-                    >
-                      {/* Card header with station image */}
-                      <Box sx={{ position: "relative", height: 140, bgcolor: "grey.100", borderRadius: "12px 12px 0 0", overflow: "hidden" }}>
-                        {row.iConUrl ? (
-                          <Box component="img" src={row.iConUrl} alt={row.name ?? ""} sx={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                        ) : (
-                          <Box sx={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)" }}>
-                            <EvStationIcon sx={{ fontSize: 52, color: "primary.light", opacity: 0.5 }} />
-                          </Box>
-                        )}
-                        {/* Status + verified badges */}
-                        <Box sx={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 0.5 }}>
-                          <Chip label={row.statusSummary?.name ?? "—"} color={isActive ? "success" : "default"} size="small" sx={{ fontWeight: 700, fontSize: "0.68rem", height: 22 }} />
-                          {row.hasOwner === false && (
-                            <Chip icon={<PersonOffIcon sx={{ fontSize: "13px !important" }} />} label={t("chargeManagement@owner.unassigned")} color="warning" size="small" sx={{ fontWeight: 700, fontSize: "0.68rem", height: 22, "& .MuiChip-icon": { color: "inherit" } }} />
-                          )}
-                        </Box>
-                        {row.isVerified && (
-                          <Box sx={{ position: "absolute", top: 8, right: 8 }}>
-                            <Tooltip title={t("chargeManagement@columns.verified")}>
-                              <VerifiedIcon sx={{ color: "white", fontSize: 22, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
-                            </Tooltip>
-                          </Box>
-                        )}
-                        {/* Speed badge */}
-                        {row.chargerSpeed != null && (
-                          <Box sx={{ position: "absolute", bottom: 8, right: 8, bgcolor: "rgba(0,0,0,0.65)", borderRadius: 1.5, px: 1, py: 0.3, display: "flex", alignItems: "center", gap: 0.3 }}>
-                            <BoltIcon sx={{ fontSize: 14, color: "warning.light" }} />
-                            <Typography variant="caption" sx={{ color: "white", fontWeight: 700, fontSize: "0.7rem" }}>{row.chargerSpeed} kW</Typography>
-                          </Box>
-                        )}
-                      </Box>
-
-                      <CardContent sx={{ pb: 1, pt: 1.5, px: 2 }}>
-                        {/* Name */}
-                        <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ mb: 0.5 }}>
-                          {row.name || t("chargeManagement@unnamed")}
-                        </Typography>
-
-                        {/* City + Address */}
-                        {(row.cityName || row.address) && (
-                          <Stack direction="row" alignItems="flex-start" spacing={0.5} sx={{ mb: 0.75 }}>
-                            <LocationOnIcon sx={{ fontSize: 14, color: "text.disabled", mt: 0.2, flexShrink: 0 }} />
-                            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
-                              {[row.cityName, row.address].filter(Boolean).join(" · ")}
-                            </Typography>
-                          </Stack>
-                        )}
-
-                        {/* Phone */}
-                        {row.phone && (
-                          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.75 }}>
-                            <PhoneIcon sx={{ fontSize: 13, color: "text.disabled" }} />
-                            <Typography variant="caption" color="text.secondary">{row.phone}</Typography>
-                          </Stack>
-                        )}
-
-                        {/* Rating */}
-                        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
-                          {[1,2,3,4,5].map((i) =>
-                            i <= stars
-                              ? <StarIcon key={i} sx={{ fontSize: 14, color: "warning.main" }} />
-                              : <StarBorderIcon key={i} sx={{ fontSize: 14, color: "action.disabled" }} />
-                          )}
-                          {row.rateCount != null && row.rateCount > 0 && (
-                            <Typography variant="caption" color="text.secondary">({row.rateCount})</Typography>
-                          )}
-                        </Stack>
-
-                        {/* Stats row */}
-                        <Stack direction="row" spacing={2}>
-                          <Stack direction="row" alignItems="center" spacing={0.4}>
-                            <VisibilityIcon sx={{ fontSize: 14, color: "text.disabled" }} />
-                            <Typography variant="caption" color="text.secondary" fontWeight={600}>{row.visitorsCount ?? 0}</Typography>
-                          </Stack>
-                          {row.chargersCount != null && (
-                            <Stack direction="row" alignItems="center" spacing={0.4}>
-                              <BoltIcon sx={{ fontSize: 14, color: "warning.main" }} />
-                              <Typography variant="caption" color="text.secondary" fontWeight={600}>{row.chargersCount}</Typography>
-                            </Stack>
-                          )}
-                          {row.methodPayment && /cliq/i.test(row.methodPayment) && (
-                            <Chip label="CliQ" size="small" sx={{ height: 18, fontSize: "0.65rem", px: 0 }} />
-                          )}
-                          {row.methodPayment && /visa/i.test(row.methodPayment) && (
-                            <CreditCardIcon sx={{ fontSize: 16, color: "primary.main" }} />
-                          )}
-                        </Stack>
-
-                        {/* Owner + partner */}
-                        {(row.ownerName || row.isPartner) && (
-                          <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.75 }} flexWrap="wrap" useFlexGap>
-                            {row.ownerName ? (
-                              <Stack direction="row" alignItems="center" spacing={0.4} sx={{ minWidth: 0 }}>
-                                <PersonIcon sx={{ fontSize: 13, color: "text.disabled" }} />
-                                <Typography variant="caption" color="text.secondary" noWrap>{row.ownerName}</Typography>
-                              </Stack>
-                            ) : null}
-                            {row.isPartner ? (
-                              <Chip
-                                icon={<HandshakeIcon sx={{ fontSize: "13px !important" }} />}
-                                label={t("chargeManagement@partner")}
-                                size="small"
-                                color="success"
-                                variant="outlined"
-                                sx={{ height: 18, "& .MuiChip-label": { px: 0.5, fontSize: "0.6rem", fontWeight: 700 } }}
-                              />
-                            ) : null}
-                          </Stack>
-                        )}
-
-                        {/* Plug chips */}
-                        {plugs.length > 0 && (
-                          <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mt: 1 }}>
-                            {plugs.slice(0, 3).map((l) => (
-                              <Chip key={l} label={l} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem", maxWidth: 80 }} />
-                            ))}
-                            {plugs.length > 3 && <Chip label={`+${plugs.length - 3}`} size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem" }} />}
-                          </Stack>
-                        )}
-                      </CardContent>
-
-                      <Divider />
-                      <CardActions sx={{ px: 1.5, py: 1, justifyContent: "space-between", gap: 1 }} onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          size="small"
-                          startIcon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
-                          onClick={() => navigate(`/charge-management/${row.id}`)}
-                          sx={{ fontWeight: 700, textTransform: "none", borderRadius: 2, color: "primary.main" }}
-                        >
-                          {t("chargeManagement@detail.title")}
-                        </Button>
-                        <Stack direction="row" spacing={0.5} alignItems="center">
-                          <Tooltip title={t("chargeManagement@actions.edit")}>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => handleEdit(e, row.id)}
-                              sx={{ color: "primary.main", bgcolor: alpha(theme.palette.primary.main, 0.08), "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.16) } }}
-                            >
-                              <EditIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title={t("loyalty@activity")}>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => handleActivity(e, row)}
-                              sx={{ color: "secondary.main", bgcolor: alpha(theme.palette.secondary.main, 0.08), "&:hover": { bgcolor: alpha(theme.palette.secondary.main, 0.16) } }}
-                            >
-                              <ReceiptLongIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title={t("more")}>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => openCardMenu(e, row)}
-                              sx={{ color: "text.secondary", bgcolor: alpha(theme.palette.text.primary, 0.05), "&:hover": { bgcolor: alpha(theme.palette.text.primary, 0.1) } }}
-                            >
-                              <MoreVertIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </CardActions>
-                    </Card>
-                  );
-                })}
-              </Box>
-              {cardTotalPages > 1 && (
-                <Box sx={{ display: "flex", justifyContent: "center", pt: 1 }}>
-                  <Pagination count={cardTotalPages} page={cardPage} onChange={(_, p) => setCardPage(p)} color="primary" shape="rounded" />
-                </Box>
-              )}
-            </>
-          )}
-
-          {/* ── Table View ───────────────────────────────────────────────────── */}
-          {viewMode === "table" && (
-            <Box sx={{ "& .premium-row": { bgcolor: alpha("#FFD700", 0.08) }, "& .MuiDataGrid-cell": { py: 1.5 } }}>
-              <AppDataGrid<ChargingPointDto>
-                data={paginatedData}
-                columns={columns}
-                loading={false}
-                getRowId={(row) => row.id}
-                onRowClick={handleRowClick}
-                disablePagination={false}
-                paginationModel={paginationModel}
-                onPaginationModelChange={setPaginationModel}
-                total={filteredData.length}
-                minHeight="60vh"
-                enableColumnFilter
-                enableToolbar
-                checkboxSelection
-                rowSelectionModel={rowSelectionModel}
-                onRowSelectionModelChange={setRowSelectionModel}
-                getRowClassName={getRowClassName}
-                getRowHeight={() => 76}
-              />
             </Box>
+
+            <Stack direction="row" spacing={1} alignItems="center" flexShrink={0} sx={{ alignSelf: { xs: "flex-end", sm: "flex-start" } }}>
+              <Tooltip title={t("chargeManagement@list.complaintsHint")}>
+                <IconButton
+                  onClick={handleViewComplaints}
+                  aria-label={t("chargeManagement@list.complaintsHint")}
+                  sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, color: "warning.main" }}
+                >
+                  <ReportProblemIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t("refresh")}>
+                {/* span keeps the tooltip working while the button is disabled */}
+                <span>
+                  <IconButton
+                    onClick={handleRefresh}
+                    disabled={isFetching}
+                    aria-label={t("refresh")}
+                    aria-busy={isFetching}
+                    sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+                  >
+                    <RefreshIcon
+                      sx={{
+                        animation: isFetching ? "cm-spin 0.9s linear infinite" : "none",
+                        "@keyframes cm-spin": { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } },
+                      }}
+                    />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddStation}
+                sx={{ borderRadius: 2, fontWeight: 700, textTransform: "none", whiteSpace: "nowrap", height: 40 }}
+              >
+                {t("chargeManagement@actions.addStation")}
+              </Button>
+            </Stack>
+          </Stack>
+
+          {/* ── Filters ─────────────────────────────────────────────────────── */}
+          {isLoading ? (
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {[240, 136, 136, 136, 160, 120].map((w, i) => (
+                  <Skeleton key={i} variant="rounded" width={w} height={40} sx={{ borderRadius: 2 }} />
+                ))}
+              </Stack>
+            </Paper>
+          ) : (
+            <ChargeFiltersBar
+              values={{
+                search,
+                sort: sortOption,
+                city: cityFilter,
+                status: statusFilter,
+                verified: verifiedFilter,
+                stationType: stationTypeFilter,
+                plugTypes: plugTypeFilter,
+                joined: joinedFilter,
+                edited: editedFilter,
+              }}
+              cities={uniqueCities}
+              statuses={uniqueStatuses}
+              stationTypes={uniqueStationTypes}
+              plugTypes={plugTypes}
+              resultCount={filteredData.length}
+              lastUpdatedLabel={lastUpdatedLabel}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onSearchChange={handleSearchInput}
+              onSortChange={handleSortChange}
+              onCityChange={withReset(setCityFilter)}
+              onStatusChange={withReset(setStatusFilter)}
+              onVerifiedChange={withReset(setVerifiedFilter)}
+              onStationTypeChange={withReset(setStationTypeFilter)}
+              onPlugTypesChange={withReset(setPlugTypeFilter)}
+              onJoinedChange={withReset(setJoinedFilter)}
+              onEditedChange={withReset(setEditedFilter)}
+              onClearAll={handleClearEverything}
+            />
           )}
-          </>}
+
+          {/* Refresh failed but older data is still shown — non-blocking. */}
+          {refreshError && !isFetching && (
+            <Alert
+              severity="warning"
+              variant="outlined"
+              action={
+                <Button color="inherit" size="small" onClick={handleRefresh}>
+                  {t("chargeManagement@list.retry")}
+                </Button>
+              }
+            >
+              {t("chargeManagement@list.refreshFailed")}
+            </Alert>
+          )}
+
+          {/* ── Results ─────────────────────────────────────────────────────── */}
+          <Box sx={{ position: "relative" }}>
+            {/* Thin progress while a background refresh runs; results stay visible. */}
+            {!isLoading && isFetching && (
+              <LinearProgress
+                aria-label={t("refresh")}
+                sx={{ position: "absolute", top: -10, insetInlineStart: 0, insetInlineEnd: 0, height: 2, borderRadius: 1 }}
+              />
+            )}
+
+            {isLoading && viewMode === "card" && (
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", xl: "repeat(4, 1fr)" }, gap: 2 }}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <StationCardSkeleton key={i} />
+                ))}
+              </Box>
+            )}
+
+            {isLoading && viewMode === "table" && (
+              <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Box key={i} sx={{ px: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", gap: 2 }}>
+                    <Skeleton variant="rounded" width={40} height={40} sx={{ flexShrink: 0 }} />
+                    <Skeleton variant="text" width={160} height={20} />
+                    <Skeleton variant="rounded" width={80} height={22} sx={{ borderRadius: 3 }} />
+                    <Skeleton variant="text" width={60} height={20} />
+                    <Skeleton variant="text" width={100} height={20} />
+                    <Box sx={{ display: "flex", gap: 0.5, marginInlineStart: "auto" }}>
+                      <Skeleton variant="circular" width={28} height={28} />
+                      <Skeleton variant="circular" width={28} height={28} />
+                    </Box>
+                  </Box>
+                ))}
+              </Paper>
+            )}
+
+            {/* Empty result */}
+            {isEmpty && (
+              <Paper elevation={0} sx={{ p: { xs: 3, sm: 5 }, borderRadius: 3, border: "1px dashed", borderColor: "divider", textAlign: "center" }}>
+                <SearchOffIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                <Typography variant="subtitle1" fontWeight={700}>
+                  {searchTerm
+                    ? t("chargeManagement@list.emptySearch", { term: searchTerm })
+                    : t("chargeManagement@list.empty")}
+                </Typography>
+                <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+                  {searchTerm && (
+                    <Button variant="outlined" size="small" onClick={handleClearSearch} sx={{ textTransform: "none", borderRadius: 2 }}>
+                      {t("chargeManagement@list.clearSearch")}
+                    </Button>
+                  )}
+                  {hasActiveFilters && (
+                    <Button variant="outlined" size="small" onClick={handleClearFilters} sx={{ textTransform: "none", borderRadius: 2 }}>
+                      {t("chargeManagement@list.clearFilters")}
+                    </Button>
+                  )}
+                </Stack>
+              </Paper>
+            )}
+
+            {/* ── Card View ── */}
+            {!isLoading && !isEmpty && viewMode === "card" && (
+              <>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", xl: "repeat(4, 1fr)" }, gap: 2, alignItems: "stretch" }}>
+                  {cardPagedData.map((row) => (
+                    <StationCard
+                      key={row.id}
+                      row={row}
+                      highlight={searchTerm}
+                      onOpen={handleOpenStation}
+                      onEdit={handleEdit}
+                      onMedia={handleMedia}
+                      onActivity={handleActivity}
+                      onMenu={openCardMenu}
+                    />
+                  ))}
+                </Box>
+                {cardTotalPages > 1 && (
+                  <Box sx={{ display: "flex", justifyContent: "center", pt: 3 }}>
+                    <Pagination count={cardTotalPages} page={cardPage} onChange={(_, p) => setCardPage(p)} color="primary" shape="rounded" />
+                  </Box>
+                )}
+              </>
+            )}
+
+            {/* ── Table View ── */}
+            {!isLoading && !isEmpty && viewMode === "table" && (
+              <Box sx={{ "& .premium-row": { bgcolor: alpha("#FFD700", 0.08) }, "& .MuiDataGrid-cell": { py: 1.5 } }}>
+                <AppDataGrid<ChargingPointDto>
+                  data={paginatedData}
+                  columns={columns}
+                  loading={false}
+                  getRowId={(row) => row.id}
+                  onRowClick={handleRowClick}
+                  disablePagination={false}
+                  paginationModel={paginationModel}
+                  onPaginationModelChange={setPaginationModel}
+                  total={filteredData.length}
+                  minHeight="60vh"
+                  enableColumnFilter
+                  enableToolbar
+                  checkboxSelection
+                  rowSelectionModel={rowSelectionModel}
+                  onRowSelectionModelChange={setRowSelectionModel}
+                  getRowClassName={getRowClassName}
+                  getRowHeight={() => 76}
+                />
+              </Box>
+            )}
+          </Box>
 
           {/* ── Card overflow menu ── */}
           <Menu

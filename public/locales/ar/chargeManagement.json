@@ -183,9 +183,10 @@
     "paymentMethods": "طرق الدفع",
     "services": "الخدمات",
     "verifiedHint": "وضع علامة على المحطة كموثّقة",
-    "open24h": "مفتوح ٢٤ ساعة",
+    "open24h": "مفتوح 24 ساعة",
     "fromTime": "من الساعة",
-    "toTime": "إلى الساعة"
+    "toTime": "إلى الساعة",
+    "hoursRequired": "حدّد وقت الافتتاح والإغلاق، أو اختر مفتوح 24 ساعة"
   },
   "media": {
     "title": "الوسائط",
@@ -208,5 +209,36 @@
   "stationDeleted": "تم حذف المحطة بنجاح",
   "confirmDeleteTitle": "حذف المحطة",
   "confirmDeleteMessage": "هل أنت متأكد من حذف هذه المحطة؟ لا يمكن التراجع عن هذا الإجراء.",
-  "deleteStation": "حذف المحطة"
+  "deleteStation": "حذف المحطة",
+  "list": {
+    "statsLabel": "إحصائيات المحطات",
+    "searchPlaceholder": "ابحث بالاسم، المدينة، الهاتف أو الرقم",
+    "clearSearch": "مسح البحث",
+    "clearFilters": "مسح الفلاتر",
+    "searchChip": "بحث: {{value}}",
+    "moreFilters": "فلاتر أخرى",
+    "resetMore": "إعادة تعيين",
+    "done": "تم",
+    "stationsWord": "محطة",
+    "cardView": "عرض البطاقات",
+    "tableView": "عرض الجدول",
+    "complaintsHint": "الشكاوى والبلاغات — عرض البلاغات المقدّمة عن المحطات",
+    "verifiedStation": "محطة موثّقة",
+    "partnerHint": "شريك في برنامج الولاء",
+    "maxPower": "أقصى قدرة شحن",
+    "ratingTooltip": "التقييم {{rate}} من 5 · {{count}} تقييم",
+    "noRating": "لا توجد تقييمات بعد",
+    "chargersTooltip": "عدد الشواحن",
+    "viewsTooltip": "المشاهدات",
+    "payment": "طرق الدفع",
+    "morePlugs": "{{count}} أنواع قوابس أخرى",
+    "openStation": "فتح محطة {{name}}",
+    "empty": "لا توجد محطات تطابق الفلاتر المحددة",
+    "emptySearch": "لا توجد محطات تطابق \"{{term}}\"",
+    "updatedSecondsAgo": "آخر تحديث منذ {{count}} ث",
+    "updatedMinutesAgo": "آخر تحديث منذ {{count}} د",
+    "updatedHoursAgo": "آخر تحديث منذ {{count}} س",
+    "refreshFailed": "تعذّر تحديث القائمة — تُعرض آخر بيانات محمّلة",
+    "retry": "إعادة المحاولة"
+  }
 }

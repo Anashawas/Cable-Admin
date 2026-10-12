@@ -135,7 +135,7 @@
   "insights_registrationDate": "نطاق تاريخ التسجيل",
   "insights_dateFrom": "من",
   "insights_dateTo": "إلى",
-  "insights_usersInRange": "{{count}} مستخدم",
+  "insights_usersInRange": "{{formatted}} مستخدم",
   "insights_clearDates": "مسح فلتر التاريخ",
   "insights_noDateData": "تاريخ التسجيل غير متوفر من الخادم بعد. سيعمل هذا الفلتر عند إضافته في الـ API.",
   "insights_tableFiltered": "الجدول مفلتر لهذه الفترة",
@@ -151,5 +151,47 @@
   "backToActive": "العودة للمستخدمين النشطين",
   "subtitle": "إدارة مستخدمي المنصة حسب الدور",
   "sendNotification": "إرسال إشعار",
-  "viewNotifications": "عرض الإشعارات"
+  "viewNotifications": "عرض الإشعارات",
+  "list": {
+    "tabs": {
+      "all": "الكل",
+      "users": "مستخدمون",
+      "admins": "مشرفون",
+      "providers": "مزوّدو خدمة"
+    },
+    "roles": {
+      "user": "مستخدم",
+      "admin": "مشرف",
+      "provider": "مزوّد خدمة",
+      "worker": "عامل",
+      "superadmin": "مشرف عام"
+    },
+    "summary": {
+      "totalUsers": "إجمالي المستخدمين",
+      "activeMembers": "الأعضاء النشطون",
+      "blocked": "المحظورون",
+      "loyalty": "الولاء",
+      "issued": "النقاط الصادرة",
+      "circulating": "صافي المتداول",
+      "redemptionRate": "معدل الاستبدال"
+    },
+    "export": "تصدير",
+    "filters": "فلاتر",
+    "filtersActive": "{{count}} فلاتر نشطة",
+    "searchPlaceholder": "ابحث بالاسم، البريد، الهاتف أو الرقم",
+    "clearSearch": "مسح البحث",
+    "refresh": "تحديث",
+    "retry": "إعادة المحاولة",
+    "refreshFailed": "تعذّر تحديث القائمة. البيانات المعروضة قد لا تكون محدّثة.",
+    "loadFailed": "تعذّر تحميل المستخدمين.",
+    "updatedJustNow": "آخر تحديث الآن",
+    "updatedMinutesAgo": "آخر تحديث منذ {{count}} د",
+    "updatedHoursAgo": "آخر تحديث منذ {{count}} س",
+    "resultsCount": "{{formatted}} مستخدم",
+    "noMatch": "لا يوجد مستخدمون يطابقون \"{{query}}\"",
+    "noMatchFilters": "لا يوجد مستخدمون يطابقون الفلاتر الحالية",
+    "noUsers": "لا يوجد مستخدمون",
+    "moreActions": "إجراءات أخرى",
+    "points": "النقاط والولاء"
+  }
 }

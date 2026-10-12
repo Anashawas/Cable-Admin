@@ -27,7 +27,8 @@ import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { toTelHref } from "../../../utils/phone";
 import { getPendingRequests, approveRequest, rejectRequest } from "../services/request-service";
 import { useSnackbarStore } from "../../../stores";
-import { is24Hours, timeLabel } from "../../../utils/opening-hours";
+import { normalizeTime, timeLabel } from "../../../utils/opening-hours";
+import { useListState } from "../../../hooks";
 
 const FILTERS: { value: string; key: string }[] = [
   { value: "", key: "all" },
@@ -63,10 +64,10 @@ export default function StationsRequestScreen() {
   const isRtl = i18n.language === "ar";
   const smallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useListState<string>("status", "");
   const [rejectTarget, setRejectTarget] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useListState<number | null>("selectedId", null);
   // On phones the pane flips between list and detail.
   const [mobileDetail, setMobileDetail] = useState(false);
 
@@ -88,11 +89,11 @@ export default function StationsRequestScreen() {
 
   // Keep a sensible selection: first pending item, else first item.
   useEffect(() => {
-    if (data.length === 0) { setSelectedId(null); return; }
+    if (data.length === 0) { if (!isLoading) setSelectedId(null); return; }
     if (selectedId != null && data.some((r) => r.id === selectedId)) return;
     const firstPending = data.find((r) => (r.requestStatus ?? "").toLowerCase() === "pending");
     setSelectedId((firstPending ?? data[0]).id);
-  }, [data, selectedId]);
+  }, [data, selectedId, isLoading]);
 
   const approveMutation = useMutation({
     mutationFn: (requestId: number) => approveRequest(requestId),
@@ -120,7 +121,9 @@ export default function StationsRequestScreen() {
   const fmtVal = (v: unknown, field?: string): string => {
     if (v == null || v === "") return "—";
     if (typeof v === "string" && (field === "fromTime" || field === "toTime")) {
-      return is24Hours(v, v) ? t("chargeManagement@form.open24h") : timeLabel(v);
+      // A single from/to value is the 24h marker only when it is midnight;
+      // is24Hours(v, v) would be true for every value (identical from/to).
+      return normalizeTime(v) === "00:00" ? t("chargeManagement@form.open24h") : timeLabel(v);
     }
     if (Array.isArray(v)) {
       if (!v.length) return "—";

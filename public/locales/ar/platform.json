@@ -90,6 +90,10 @@
     "deleteModelMessage": "هل أنت متأكد من حذف"
   },
   "emergency": {
+    "total": "الإجمالي",
+    "sectionBasic": "المعلومات الأساسية",
+    "sectionContact": "معلومات التواصل",
+    "sectionAvailability": "أوقات التوفّر",
     "title": "الخدمات الطارئة",
     "add": "إضافة خدمة",
     "edit": "تعديل الخدمة",

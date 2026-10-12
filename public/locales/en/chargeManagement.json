@@ -185,7 +185,8 @@
     "verifiedHint": "Mark this station as verified",
     "open24h": "Open 24 hours",
     "fromTime": "Opens",
-    "toTime": "Closes"
+    "toTime": "Closes",
+    "hoursRequired": "Set both opening and closing times, or tick Open 24 hours"
   },
   "media": {
     "title": "Media",
@@ -208,5 +209,36 @@
   "stationDeleted": "Station deleted successfully",
   "confirmDeleteTitle": "Delete Station",
   "confirmDeleteMessage": "Are you sure you want to delete this station? This action cannot be undone.",
-  "deleteStation": "Delete Station"
+  "deleteStation": "Delete Station",
+  "list": {
+    "statsLabel": "Station statistics",
+    "searchPlaceholder": "Search by name, city, phone or ID",
+    "clearSearch": "Clear search",
+    "clearFilters": "Clear filters",
+    "searchChip": "Search: {{value}}",
+    "moreFilters": "More filters",
+    "resetMore": "Reset",
+    "done": "Done",
+    "stationsWord": "stations",
+    "cardView": "Card view",
+    "tableView": "Table view",
+    "complaintsHint": "Complaints & reports — view reports filed about stations",
+    "verifiedStation": "Verified station",
+    "partnerHint": "Loyalty programme partner",
+    "maxPower": "Max charging power",
+    "ratingTooltip": "Rated {{rate}} of 5 · {{count}} reviews",
+    "noRating": "No ratings yet",
+    "chargersTooltip": "Chargers",
+    "viewsTooltip": "Views",
+    "payment": "Payment methods",
+    "morePlugs": "{{count}} more plug types",
+    "openStation": "Open station {{name}}",
+    "empty": "No stations match the selected filters",
+    "emptySearch": "No stations match \"{{term}}\"",
+    "updatedSecondsAgo": "Updated {{count}}s ago",
+    "updatedMinutesAgo": "Updated {{count}}m ago",
+    "updatedHoursAgo": "Updated {{count}}h ago",
+    "refreshFailed": "Couldn't refresh the list — showing the last loaded data",
+    "retry": "Retry"
+  }
 }

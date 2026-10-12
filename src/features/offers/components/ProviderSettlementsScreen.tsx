@@ -23,7 +23,8 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackButton from "../../../components/BackButton";
+import { useSmartBack } from "../../../hooks/use-smart-back";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import MiscellaneousServicesIcon from "@mui/icons-material/MiscellaneousServices";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -47,6 +48,7 @@ export default function ProviderSettlementsScreen() {
   const { t, i18n } = useTranslation(["offers", "common"]);
   const theme = useTheme();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/settlements");
 
   const STATUS_CFG: Record<number, { label_key: string; color: string; bg: string }> = {
     1: { label_key: "pending", color: theme.palette.warning.dark, bg: alpha(theme.palette.warning.main, 0.12) },
@@ -106,7 +108,7 @@ export default function ProviderSettlementsScreen() {
       <AppScreenContainer>
         <Box sx={{ py: 10, textAlign: "center" }}>
           <Typography variant="h6" color="text.disabled">{t("offers@settlements_emptyTitle")}</Typography>
-          <Button onClick={() => navigate("/settlements")} sx={{ mt: 2 }}>{t("back")}</Button>
+          <Button onClick={goBack} sx={{ mt: 2 }}>{t("back")}</Button>
         </Box>
       </AppScreenContainer>
     );
@@ -130,9 +132,7 @@ export default function ProviderSettlementsScreen() {
 
         {/* Back + Provider info */}
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-          <IconButton onClick={() => navigate("/settlements")} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.12)", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
-            <ArrowBackIcon />
-          </IconButton>
+          <BackButton fallback="/settlements" variant="onDark" />
           <Avatar sx={{ bgcolor: "rgba(255,255,255,0.15)", width: 52, height: 52, borderRadius: 2.5 }}>
             {isCP ? <EvStationIcon sx={{ fontSize: 28 }} /> : <MiscellaneousServicesIcon sx={{ fontSize: 28 }} />}
           </Avatar>

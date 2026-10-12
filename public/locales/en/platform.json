@@ -90,6 +90,10 @@
     "deleteModelMessage": "Are you sure you want to delete"
   },
   "emergency": {
+    "total": "Total",
+    "sectionBasic": "Basic information",
+    "sectionContact": "Contact information",
+    "sectionAvailability": "Availability",
     "title": "Emergency Services",
     "add": "Add service",
     "edit": "Edit service",

@@ -16,7 +16,8 @@
     "pendingRequests": "Pending Requests",
     "complaints": "Complaints",
     "serviceProviders": "Service Providers",
-    "partners": "Partners (B2B)"
+    "partners": "Partners (B2B)",
+    "withVehicles": "Users with a vehicle"
   },
   "actionRequired": "Action Required",
   "pendingVerification": "Stations pending verification",
@@ -62,5 +63,51 @@
   "stationName": "Station",
   "stationCity": "City",
   "actions": "Actions",
-  "noStations": "No stations yet."
+  "noStations": "No stations yet.",
+  "hero": {
+    "ariaLabel": "Today at a glance",
+    "stations": "Stations",
+    "stationsUnit": "charging stations",
+    "sameAsYesterday": "Same as yesterday",
+    "stationsAria": "Stations: {{total}} — {{verified}} verified, {{loyalty}} in loyalty",
+    "verified": "Verified",
+    "loyalty": "In loyalty",
+    "scansToday": "Loyalty scans today",
+    "scansHint": "Points-earn transactions (QR scans) recorded in the points ledger today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "newProvidersShort": "new provider(s) today",
+    "newPartnersShort": "new partner(s) today",
+    "unavailable": "This figure couldn't be loaded right now"
+  },
+  "sub": {
+    "open": "open",
+    "verified": "verified",
+    "thisMonth": "this month",
+    "ofUsers": "of users"
+  },
+  "actionHelp": {
+    "stationUpdateRequests": "Station data changes submitted by users",
+    "openComplaints": "Not yet resolved or closed",
+    "pendingViewImages": "User-uploaded photos awaiting approval",
+    "pendingOffers": "Service-provider offers awaiting approval",
+    "settlementsPending": "Partner settlements not yet paid",
+    "settlementsDisputed": "Settlements disputed by a party",
+    "premiumExpired": "Stations whose premium ended without renewal",
+    "campaignsEndingSoon": "Campaigns close to their end date",
+    "announcementsExpiringSoon": "Welcome messages close to expiry"
+  },
+  "nothingToAction": "Nothing needs action right now",
+  "nothingToActionSub": "All review queues are empty.",
+  "trend": {
+    "total": "Total",
+    "newUsers": "New users",
+    "singleBucket": "No daily breakdown available — the server returned a single value ({{count}} users).",
+    "empty": "No new sign-ups in the last 30 days.",
+    "error": "Sign-up data couldn’t be loaded right now.",
+    "aria": "Bar chart of daily new users over the last 30 days, total {{total}}"
+  },
+  "showLess": "Show less",
+  "unknownCity": "Unspecified",
+  "noVisits": "No visits recorded yet."
 }

@@ -1,11 +1,9 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { alpha } from "@mui/material/styles";
-import { Box, Grid, Typography, useTheme, Skeleton, Stack, Chip, Button, type Theme } from "@mui/material";
-import { BarChart } from "@mui/x-charts/BarChart";
-import { LineChart } from "@mui/x-charts/LineChart";
+import { Box, Grid, Typography, useTheme, Stack, Button, type Theme } from "@mui/material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 import PeopleIcon from "@mui/icons-material/People";
@@ -18,14 +16,15 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import StoreIcon from "@mui/icons-material/Store";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import SettingsIcon from "@mui/icons-material/Settings";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import VerifiedIcon from "@mui/icons-material/Verified";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import PaymentsIcon from "@mui/icons-material/Payments";
+import GavelIcon from "@mui/icons-material/Gavel";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import LocationCityIcon from "@mui/icons-material/LocationCity";
+import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 import { getPendingRequests } from "../../charge-management/services/request-service";
@@ -34,7 +33,16 @@ import { getAllServiceProviders } from "../../service-providers/services/service
 import { getAllPartnerAgreements } from "../../partners/services/partners-service";
 import { getAllComplaints } from "../../complaints/services/complaints-service";
 import { getAttentionSummary } from "../services/attention-service";
-import { useAuthenticationStore } from "../../../stores";
+import { localDayBounds } from "../../../utils/date-format";
+import DashboardHero from "./DashboardHero";
+import {
+  ActionList, AnalyticsCard, Num, RankedList, RegistrationTrendChart, SectionTitle, StatsStrip,
+  type ActionItem, type RankedRow, type StatItem,
+} from "./DashboardSections";
+import { cityKey, cityLabel } from "../utils/city-names";
+import { buildRegistrationSeries } from "../utils/registration-trend";
+
+const UNKNOWN_CITY = "__unknown__";
 
 // Theme-driven where a palette token exists; the remaining hexes are
 // deliberate per-section accents with no theme equivalent.
@@ -51,98 +59,18 @@ const getSections = (theme: Theme) => [
   { path: "/car-management",     titleKey: "systemData",        descKey: "dashboard@sec_system",            Icon: SettingsIcon,      accent: "#37474f" },
 ];
 
-// Section label used above each block
-function SectionLabel({ icon, children }: { icon?: ReactNode; children: ReactNode }) {
-  return (
-    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 1.5 }}>
-      {icon}
-      <Typography variant="subtitle2" fontWeight={800} sx={{ color: "text.primary", letterSpacing: 0.3, textTransform: "uppercase", fontSize: 12 }}>
-        {children}
-      </Typography>
-    </Stack>
-  );
-}
-
-// KPI card on a light surface with a per-metric accent
-function KpiCard({ label, value, sub, Icon, accent, loading, onClick }: {
-  label: string; value: number; sub?: ReactNode; Icon: typeof PeopleIcon; accent: string; loading?: boolean; onClick: () => void;
-}) {
-  return (
-    <Box
-      onClick={onClick}
-      sx={{
-        bgcolor: "background.paper", borderRadius: 3, p: 2.25, cursor: "pointer", height: "100%",
-        border: "1px solid", borderColor: "divider",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        transition: "box-shadow .2s, transform .15s, border-color .2s",
-        "&:hover": { boxShadow: `0 8px 24px ${alpha(accent, 0.2)}`, transform: "translateY(-3px)", borderColor: alpha(accent, 0.5) },
-      }}
-    >
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: alpha(accent, 0.12), color: accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon sx={{ fontSize: 24 }} />
-        </Box>
-        <ChevronRightIcon sx={{ color: "text.disabled", fontSize: 18 }} />
-      </Stack>
-      {loading ? (
-        <Skeleton variant="text" width="55%" height={40} sx={{ mt: 1 }} />
-      ) : (
-        <Typography variant="h4" fontWeight={800} sx={{ mt: 1, lineHeight: 1.1 }}>{value.toLocaleString()}</Typography>
-      )}
-      <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mt: 0.25 }}>{label}</Typography>
-      {sub && <Box sx={{ mt: 0.75 }}>{sub}</Box>}
-    </Box>
-  );
-}
-
-// Ranked horizontal bar-list — clearer than a cramped bar chart for long labels
-function BarList({ items, color, emptyLabel }: { items: { label: string; value: number }[]; color: string; emptyLabel: string }) {
-  if (items.length === 0) return <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>{emptyLabel}</Typography>;
-  const max = Math.max(...items.map((i) => i.value), 1);
-  return (
-    <Stack spacing={1.4} sx={{ px: 0.5, py: 0.75 }}>
-      {items.map((it, idx) => (
-        <Box key={idx}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-            <Typography variant="caption" fontWeight={800} sx={{ color, width: 16, flexShrink: 0, textAlign: "center" }}>{idx + 1}</Typography>
-            <Typography variant="body2" fontWeight={600} noWrap title={it.label} sx={{ flex: 1, minWidth: 0 }}>{it.label}</Typography>
-            <Typography variant="body2" fontWeight={800} sx={{ flexShrink: 0, color }}>{it.value.toLocaleString()}</Typography>
-          </Stack>
-          <Box sx={{ height: 8, borderRadius: 4, bgcolor: alpha(color, 0.12), overflow: "hidden" }}>
-            <Box sx={{ height: "100%", width: `${(it.value / max) * 100}%`, minWidth: 6, borderRadius: 4, background: `linear-gradient(90deg, ${alpha(color, 0.65)}, ${color})`, transition: "width .5s ease" }} />
-          </Box>
-        </Box>
-      ))}
-    </Stack>
-  );
-}
-
-function ChartCard({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
-  return (
-    <Box sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider", borderRadius: 3, overflow: "hidden", height: "100%", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2, py: 1.4, borderBottom: "1px solid", borderColor: "divider" }}>
-        <Box sx={{ color: "primary.main", display: "flex" }}>{icon}</Box>
-        <Typography variant="subtitle2" fontWeight={800}>{title}</Typography>
-      </Stack>
-      <Box sx={{ p: 1.5 }}>{children}</Box>
-    </Box>
-  );
-}
-
 export default function DashboardScreen() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
-  const user = useAuthenticationStore((s) => s.user);
-  const isAr = i18n.language === "ar";
 
-  const { data: stations = [], isLoading: loadingStations } = useQuery({
+  const { data: stations = [], isLoading: loadingStations, isError: stationsError } = useQuery({
     queryKey: ["dashboard", "latest-stations"],
     queryFn: ({ signal }) => getAllChargingPoints({ name: null, chargerPointTypeId: null, cityName: null }, signal),
   });
 
   // Efficient: one aggregate call instead of loading ~14k users.
-  const { data: usersSummary, isLoading: loadingUsers } = useQuery({
+  const { data: usersSummary, isLoading: loadingUsers, isError: usersError } = useQuery({
     queryKey: ["users", "summary"],
     queryFn: ({ signal }) => getUsersSummary(signal),
     staleTime: 60 * 1000,
@@ -174,111 +102,113 @@ export default function DashboardScreen() {
 
   // One-call "needs attention" counts (all queues). Falls back to the
   // per-query counts below when the endpoint is unavailable.
-  const { data: attention } = useQuery({
+  const { data: attention, isLoading: loadingAttention } = useQuery({
     queryKey: ["dashboard", "attention-summary"],
     queryFn: ({ signal }) => getAttentionSummary(signal),
     staleTime: 60 * 1000,
   });
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayNewUsers = usersSummary?.newToday ?? 0;
+  const today = localDayBounds(new Date()).from.slice(0, 10);
   const todayNewProviders = useMemo(() => serviceProviders.filter((sp) => sp.createdAt?.slice(0, 10) === today).length, [serviceProviders, today]);
   const todayNewPartners = useMemo(() => partners.filter((p) => p.createdAt?.slice(0, 10) === today).length, [partners, today]);
 
-  // Action-required signals
+  // Action-required signals (client-side fallback when attention-summary is unavailable)
   const pendingApproval = useMemo(() => updateRequests.filter((r) => (r.requestStatus ?? "").toLowerCase() === "pending").length, [updateRequests]);
   const openComplaints = useMemo(() => complaints.filter((c) => c.status !== 1 && c.status !== 2).length, [complaints]);
 
-  const greeting = useMemo(() => {
-    const h = new Date().getHours();
-    if (h < 12) return t("dashboard@greeting_morning");
-    if (h < 18) return t("dashboard@greeting_afternoon");
-    return t("dashboard@greeting_evening");
-  }, [t]);
-
-  const dateLabel = new Intl.DateTimeFormat(isAr ? "ar-SA" : "en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
-
-  // Chart data
-  const stationsByCity = useMemo(() => {
+  // ── Analytics data ──
+  const stationsByCity = useMemo<RankedRow[]>(() => {
     const map = new Map<string, number>();
-    for (const s of stations) { const city = s.cityName?.trim() || "—"; map.set(city, (map.get(city) ?? 0) + 1); }
-    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  }, [stations]);
+    for (const s of stations) {
+      const key = cityKey(s.cityName) ?? UNKNOWN_CITY;
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([key, value]) => ({ key, value, label: key === UNKNOWN_CITY ? t("dashboard@unknownCity") : cityLabel(key, i18n.language) }));
+  }, [stations, i18n.language, t]);
 
-  const topByVisitors = useMemo(() =>
-    [...stations].filter((s) => (s.visitorsCount ?? 0) > 0).sort((a, b) => (b.visitorsCount ?? 0) - (a.visitorsCount ?? 0)).slice(0, 8).map((s) => ({ name: s.name ?? "—", count: s.visitorsCount ?? 0 })),
+  const topByVisitors = useMemo<RankedRow[]>(() =>
+    stations
+      .filter((s) => (s.visitorsCount ?? 0) > 0)
+      .sort((a, b) => (b.visitorsCount ?? 0) - (a.visitorsCount ?? 0))
+      .slice(0, 10)
+      .map((s) => ({ key: String(s.id), label: s.name?.trim() || "—", value: s.visitorsCount ?? 0, path: `/charge-management/${s.id}` })),
   [stations]);
 
-  const trend = usersSummary?.registrationTrend ?? [];
-  const hasTrend = trend.length > 1;
+  const trend = useMemo(
+    () => buildRegistrationSeries(usersSummary?.registrationTrend, usersSummary?.totalUsers, 30),
+    [usersSummary?.registrationTrend, usersSummary?.totalUsers],
+  );
 
-  const todayItems = [
-    { label: t("dashboard@today_newUsers"), value: todayNewUsers, icon: <PersonAddIcon sx={{ fontSize: 22 }} />, path: "/users", loading: loadingUsers },
-    { label: t("dashboard@today_newProviders"), value: todayNewProviders, icon: <StoreIcon sx={{ fontSize: 22 }} />, path: "/service-providers", loading: loadingProviders },
-    { label: t("dashboard@today_newPartners"), value: todayNewPartners, icon: <HandshakeIcon sx={{ fontSize: 22 }} />, path: "/partners", loading: loadingPartners },
+  // ── Overview strip ──
+  // Stations are already the hero's headline (total / verified / loyalty), so
+  // that slot shows users-with-a-vehicle instead — already in the users summary,
+  // and the best proxy for "real EV drivers" on the platform. Falls back to the
+  // stations count if the summary doesn't carry the field.
+  const openComplaintsCount = attention?.openComplaints ?? openComplaints;
+  const totalUsers = usersSummary?.totalUsers;
+  const withVehicles = usersSummary?.withVehicles;
+  const hasVehicles = typeof withVehicles === "number";
+  const vehiclesPct = hasVehicles && totalUsers ? Math.round((withVehicles / totalUsers) * 100) : null;
+  const subLine = (n: number, key: string) => <><Num v={n} /> {t(key)}</>;
+
+  const overview: StatItem[] = [
+    { key: "users", label: t("dashboard@kpi.users"), value: usersError ? null : totalUsers ?? 0, Icon: PeopleIcon, path: "/users", accent: theme.palette.primary.main, loading: loadingUsers,
+      sub: typeof usersSummary?.newThisMonth === "number" ? <>+{subLine(usersSummary.newThisMonth, "dashboard@sub.thisMonth")}</> : undefined },
+    hasVehicles || loadingUsers
+      ? { key: "vehicles", label: t("dashboard@kpi.withVehicles"), value: usersError ? null : withVehicles ?? 0, Icon: DirectionsCarIcon, path: "/user-analytics", accent: theme.palette.success.main, loading: loadingUsers,
+          sub: vehiclesPct !== null ? <><bdi>{vehiclesPct}%</bdi> {t("dashboard@sub.ofUsers")}</> : undefined }
+      : { key: "stations", label: t("dashboard@kpi.stations"), value: stationsError ? null : stations.length, Icon: EvStationIcon, path: "/charge-management", accent: theme.palette.success.main, loading: loadingStations,
+          sub: subLine(stations.filter((s) => s.isVerified).length, "dashboard@sub.verified") },
+    { key: "providers", label: t("dashboard@kpi.serviceProviders"), value: serviceProviders.length, Icon: StoreIcon, path: "/service-providers", accent: "#00897b", loading: loadingProviders },
+    { key: "partners", label: t("dashboard@kpi.partners"), value: partners.length, Icon: HandshakeIcon, path: "/partners", accent: "#5c6bc0", loading: loadingPartners },
+    { key: "complaints", label: t("dashboard@kpi.complaints"), value: complaints.length, Icon: ReportProblemIcon, path: "/complaints", accent: theme.palette.error.main, loading: loadingComplaints,
+      sub: subLine(openComplaintsCount, "dashboard@sub.open") },
   ];
 
-  const kpiCards = [
-    { label: t("dashboard@kpi.users"), value: usersSummary?.totalUsers ?? 0, Icon: PeopleIcon, path: "/users", accent: theme.palette.primary.main, loading: loadingUsers,
-      sub: todayNewUsers > 0 ? <Chip size="small" icon={<ArrowUpwardIcon sx={{ fontSize: "14px !important" }} />} label={`${todayNewUsers} ${t("dashboard@todaySuffix")}`} sx={{ height: 20, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> : null },
-    { label: t("dashboard@kpi.stations"), value: stations.length, Icon: EvStationIcon, path: "/charge-management", accent: theme.palette.success.main, loading: loadingStations,
-      sub: <Chip size="small" icon={<VerifiedIcon sx={{ fontSize: "14px !important" }} />} label={`${stations.filter((s) => s.isVerified).length}`} sx={{ height: 20, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> },
-    { label: t("dashboard@kpi.serviceProviders"), value: serviceProviders.length, Icon: StoreIcon, path: "/service-providers", accent: "#00695c", loading: loadingProviders },
-    { label: t("dashboard@kpi.partners"), value: partners.length, Icon: HandshakeIcon, path: "/partners", accent: "#3949ab", loading: loadingPartners },
-    { label: t("dashboard@kpi.complaints"), value: complaints.length, Icon: ReportProblemIcon, path: "/complaints", accent: theme.palette.error.dark, loading: loadingComplaints,
-      sub: openComplaints > 0 ? <Chip size="small" label={`${openComplaints} ${t("dashboard@openComplaints")}`} sx={{ height: 20, bgcolor: alpha(theme.palette.error.dark, 0.1), color: theme.palette.error.dark, fontWeight: 700, "& .MuiChip-label": { px: 0.75, fontSize: "0.68rem" } }} /> : null },
-  ];
-
-  // Prefer the single attention-summary endpoint (all queues). Fall back to the
-  // two client-side counts if it isn't available yet.
-  const actions = useMemo(() => {
-    if (attention) {
-      return [
-        { show: attention.stationUpdateRequests > 0, label: t("dashboard@pendingApproval"), value: attention.stationUpdateRequests, Icon: ListAltIcon, accent: theme.palette.warning.dark, path: "/stations-request" },
-        { show: attention.openComplaints > 0, label: t("dashboard@openComplaints"), value: attention.openComplaints, Icon: ReportProblemIcon, accent: theme.palette.error.dark, path: "/complaints" },
-        { show: attention.pendingViewImages > 0, label: t("dashboard@pendingViewImages"), value: attention.pendingViewImages, Icon: ImageOutlinedIcon, accent: "#00838f", path: "/view-image-review" },
-        { show: attention.pendingOffers > 0, label: t("dashboard@pendingOffers"), value: attention.pendingOffers, Icon: LocalOfferIcon, accent: "#6a1b9a", path: "/pending-offers" },
-        { show: attention.settlementsPending > 0, label: t("dashboard@settlementsPending"), value: attention.settlementsPending, Icon: PaymentsIcon, accent: theme.palette.primary.main, path: "/settlements" },
-        { show: attention.settlementsDisputed > 0, label: t("dashboard@settlementsDisputed"), value: attention.settlementsDisputed, Icon: PaymentsIcon, accent: theme.palette.error.dark, path: "/settlements" },
-        // premiumExpiringSoon is promoted to a prominent banner above (see below).
-        { show: attention.premiumExpired > 0, label: t("dashboard@premiumExpired"), value: attention.premiumExpired, Icon: WorkspacePremiumIcon, accent: theme.palette.error.dark, path: "/charge-management" },
-        { show: attention.campaignsEndingSoon > 0, label: t("dashboard@campaignsEndingSoon"), value: attention.campaignsEndingSoon, Icon: CampaignIcon, accent: theme.palette.warning.dark, path: "/campaigns" },
-        { show: attention.announcementsExpiringSoon > 0, label: t("dashboard@announcementsExpiringSoon"), value: attention.announcementsExpiringSoon, Icon: CampaignIcon, accent: theme.palette.warning.dark, path: "/welcome-messages" },
-      ].filter((a) => a.show);
-    }
-    return [
-      { show: pendingApproval > 0, label: t("dashboard@pendingApproval"), value: pendingApproval, Icon: ListAltIcon, accent: theme.palette.warning.dark, path: "/stations-request" },
-      { show: openComplaints > 0, label: t("dashboard@openComplaints"), value: openComplaints, Icon: ReportProblemIcon, accent: theme.palette.error.dark, path: "/complaints" },
-    ].filter((a) => a.show);
-  }, [attention, pendingApproval, openComplaints, t]);
+  // ── Action list ── Prefer the single attention-summary endpoint (all queues);
+  // fall back to the two client-side counts if it isn't available.
+  const actions = useMemo<ActionItem[]>(() => {
+    const item = (key: string, labelKey: string, value: number, Icon: ActionItem["Icon"], accent: string, path: string): ActionItem =>
+      ({ key, label: t(`dashboard@${labelKey}`), help: t(`dashboard@actionHelp.${key}`), value, Icon, accent, path });
+    const all: ActionItem[] = attention
+      ? [
+          item("stationUpdateRequests", "pendingApproval", attention.stationUpdateRequests, ListAltIcon, theme.palette.warning.dark, "/stations-request"),
+          item("openComplaints", "openComplaints", attention.openComplaints, ReportProblemIcon, theme.palette.error.main, "/complaints"),
+          item("pendingViewImages", "pendingViewImages", attention.pendingViewImages, ImageOutlinedIcon, "#00838f", "/view-image-review"),
+          item("pendingOffers", "pendingOffers", attention.pendingOffers, LocalOfferIcon, "#8e24aa", "/pending-offers"),
+          item("settlementsPending", "settlementsPending", attention.settlementsPending, PaymentsIcon, theme.palette.info.main, "/settlements"),
+          item("settlementsDisputed", "settlementsDisputed", attention.settlementsDisputed, GavelIcon, theme.palette.error.main, "/settlements"),
+          // premiumExpiringSoon is promoted to the prominent banner above.
+          item("premiumExpired", "premiumExpired", attention.premiumExpired, WorkspacePremiumIcon, theme.palette.error.main, "/charge-management"),
+          item("campaignsEndingSoon", "campaignsEndingSoon", attention.campaignsEndingSoon, CampaignIcon, theme.palette.warning.dark, "/campaigns"),
+          item("announcementsExpiringSoon", "announcementsExpiringSoon", attention.announcementsExpiringSoon, CampaignIcon, theme.palette.warning.dark, "/welcome-messages"),
+        ]
+      : [
+          item("stationUpdateRequests", "pendingApproval", pendingApproval, ListAltIcon, theme.palette.warning.dark, "/stations-request"),
+          item("openComplaints", "openComplaints", openComplaints, ReportProblemIcon, theme.palette.error.main, "/complaints"),
+        ];
+    return all.filter((a) => (a.value ?? 0) > 0);
+  }, [attention, pendingApproval, openComplaints, t, theme]);
+  const loadingActions = loadingAttention || (!attention && (loadingRequests || loadingComplaints));
 
   return (
     <Box sx={{ width: "100%", height: "100%", overflow: "auto", p: { xs: 2, sm: 3 } }}>
 
-      {/* ── Hero ── */}
-      <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2.5, md: 3 }, mb: 3, position: "relative", overflow: "hidden", color: "common.white" }}>
-        <Box sx={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)", top: -120, insetInlineEnd: -80, pointerEvents: "none" }} />
-        <Box sx={{ position: "absolute", width: 150, height: 150, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.05)", bottom: -60, insetInlineStart: 40, pointerEvents: "none" }} />
-        <Grid container spacing={2.5} alignItems="center" sx={{ position: "relative" }}>
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Typography variant="h4" fontWeight={800} sx={{ mb: 0.5 }}>{greeting}{user?.name ? `, ${user.name}` : ""}!</Typography>
-            <Typography variant="body1" sx={{ opacity: 0.75 }}>{dateLabel}</Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 7 }}>
-            <Grid container spacing={1.5}>
-              {todayItems.map((item) => (
-                <Grid size={{ xs: 4 }} key={item.label}>
-                  <Box onClick={() => navigate(item.path)} sx={{ bgcolor: "rgba(255,255,255,0.13)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: 2.5, p: { xs: 1.25, md: 1.75 }, textAlign: "center", cursor: "pointer", transition: "background .2s", "&:hover": { bgcolor: "rgba(255,255,255,0.22)" } }}>
-                    <Box sx={{ opacity: 0.85, mb: 0.25 }}>{item.icon}</Box>
-                    {item.loading ? <Skeleton variant="text" width="55%" height={28} sx={{ bgcolor: "rgba(255,255,255,0.2)", mx: "auto" }} /> : <Typography variant="h5" fontWeight={800} lineHeight={1}>{item.value.toLocaleString()}</Typography>}
-                    <Typography variant="caption" sx={{ opacity: 0.72, mt: 0.5, display: "block", lineHeight: 1.3 }}>{item.label}</Typography>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-        </Grid>
-      </Box>
+      {/* ── Hero: greeting + headline KPIs ── */}
+      <DashboardHero
+        stations={stations}
+        loadingStations={loadingStations}
+        stationsError={stationsError}
+        newUsersToday={usersSummary?.newToday}
+        newUsersThisWeek={usersSummary?.newThisWeek}
+        loadingUsers={loadingUsers}
+        usersError={usersError}
+        newProvidersToday={todayNewProviders}
+        newPartnersToday={todayNewPartners}
+      />
 
       {/* ── Premium expiring-soon reminder (prominent) ── */}
       {attention && attention.premiumExpiringSoon > 0 && (
@@ -313,83 +243,52 @@ export default function DashboardScreen() {
         </Box>
       )}
 
-      {/* ── Action Required ── */}
-      <Box sx={{ mb: 3 }}>
-        <SectionLabel icon={<ReportProblemIcon sx={{ fontSize: 18, color: "warning.main" }} />}>{t("dashboard@actionRequired")}</SectionLabel>
-        {loadingRequests || loadingComplaints ? (
-          <Grid container spacing={2}>{[0, 1].map((i) => <Grid size={{ xs: 12, sm: 6 }} key={i}><Skeleton variant="rounded" height={72} sx={{ borderRadius: 3 }} /></Grid>)}</Grid>
-        ) : actions.length === 0 ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, p: 2, borderRadius: 3, bgcolor: alpha(theme.palette.success.main, 0.08), border: "1px solid", borderColor: alpha(theme.palette.success.main, 0.25) }}>
-            <CheckCircleIcon sx={{ color: "success.main" }} />
-            <Typography variant="body2" fontWeight={600} color="success.dark">{t("dashboard@allClear")}</Typography>
-          </Box>
-        ) : (
-          <Grid container spacing={2}>
-            {actions.map((a) => (
-              <Grid size={{ xs: 12, sm: 6 }} key={a.label}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 2, borderRadius: 3, bgcolor: alpha(a.accent, 0.07), border: "1px solid", borderColor: alpha(a.accent, 0.3) }}>
-                  <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: alpha(a.accent, 0.15), color: a.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><a.Icon /></Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="h6" fontWeight={800} lineHeight={1.1} sx={{ color: a.accent }}>{a.value.toLocaleString()}</Typography>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600}>{a.label}</Typography>
-                  </Box>
-                  <Button size="small" variant="contained" onClick={() => navigate(a.path)} sx={{ bgcolor: a.accent, borderRadius: 2, fontWeight: 700, textTransform: "none", "&:hover": { bgcolor: a.accent, filter: "brightness(0.92)" } }}>
-                    {t("dashboard@review")}
-                  </Button>
+      {/* ── Needs action: compact list, colour only on icon + count ── */}
+      <Box component="section" aria-labelledby="dash-actions-title" sx={{ mb: 3 }}>
+        <SectionTitle id="dash-actions-title" icon={<NotificationsActiveOutlinedIcon />}>{t("dashboard@actionRequired")}</SectionTitle>
+        <ActionList items={actions} loading={loadingActions} onOpen={navigate} labelledBy="dash-actions-title" />
+      </Box>
+
+      {/* ── Platform overview: one compact stats strip ── */}
+      <Box component="section" aria-labelledby="dash-overview-title" sx={{ mb: 3 }}>
+        <SectionTitle id="dash-overview-title" icon={<BarChartIcon />}>{t("dashboard@overview")}</SectionTitle>
+        <StatsStrip items={overview} onOpen={navigate} labelledBy="dash-overview-title" />
+      </Box>
+
+      {/* ── Analytics: three equal-height cards ── */}
+      <Box component="section" aria-labelledby="dash-analytics-title" sx={{ mb: 3 }}>
+        <SectionTitle id="dash-analytics-title" icon={<QueryStatsIcon />}>{t("dashboard@charts.title")}</SectionTitle>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <AnalyticsCard
+              title={t("dashboard@newUsersTrend")}
+              Icon={ShowChartIcon}
+              action={!loadingUsers && !usersError && trend.status === "ok" ? (
+                <Box sx={{ textAlign: "end", flexShrink: 0 }}>
+                  <Typography variant="subtitle2" fontWeight={800} sx={{ lineHeight: 1.1 }}><Num v={trend.total} /></Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>{t("dashboard@trend.total")}</Typography>
                 </Box>
-              </Grid>
-            ))}
+              ) : undefined}
+            >
+              <RegistrationTrendChart series={trend} loading={loadingUsers} error={usersError} />
+            </AnalyticsCard>
           </Grid>
-        )}
-      </Box>
-
-      {/* ── Platform KPIs (light, per-metric colors) ── */}
-      <Box sx={{ mb: 3 }}>
-        <SectionLabel icon={<BarChartIcon sx={{ fontSize: 18, color: "primary.main" }} />}>{t("dashboard@overview")}</SectionLabel>
-        <Grid container spacing={2}>
-          {kpiCards.map((c) => (
-            <Grid size={{ xs: 6, sm: 4, md: 2.4 }} key={c.label}>
-              <KpiCard label={c.label} value={c.value} sub={c.sub} Icon={c.Icon} accent={c.accent} loading={c.loading} onClick={() => navigate(c.path)} />
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-
-      {/* ── Analytics ── */}
-      <Box sx={{ mb: 3 }}>
-        <SectionLabel icon={<QueryStatsIcon sx={{ fontSize: 18, color: "primary.main" }} />}>{t("dashboard@charts.title")}</SectionLabel>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: hasTrend ? 4 : 6 }}>
-            <ChartCard title={t("dashboard@charts.byCity")} icon={<BarChartIcon fontSize="small" />}>
-              {loadingStations ? <Skeleton variant="rounded" height={240} /> : (
-                <BarList items={stationsByCity.map(([label, value]) => ({ label, value }))} color={theme.palette.primary.main} emptyLabel={t("dashboard@noStations")} />
-              )}
-            </ChartCard>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <AnalyticsCard title={t("dashboard@charts.topVisitors")} Icon={TrendingUpIcon}>
+              <RankedList rows={topByVisitors} color={theme.palette.secondary.main} loading={loadingStations} emptyLabel={t("dashboard@noVisits")} onOpen={navigate} />
+            </AnalyticsCard>
           </Grid>
-          <Grid size={{ xs: 12, md: hasTrend ? 4 : 6 }}>
-            <ChartCard title={t("dashboard@charts.topVisitors")} icon={<BarChartIcon fontSize="small" />}>
-              {loadingStations ? <Skeleton variant="rounded" height={240} /> : (
-                <BarList items={topByVisitors.map((s) => ({ label: s.name, value: s.count }))} color={theme.palette.secondary.main} emptyLabel={t("dashboard@noStations")} />
-              )}
-            </ChartCard>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <AnalyticsCard title={t("dashboard@charts.byCity")} Icon={LocationCityIcon}>
+              <RankedList rows={stationsByCity} color={theme.palette.primary.main} loading={loadingStations} emptyLabel={t("dashboard@noStations")} />
+            </AnalyticsCard>
           </Grid>
-          {hasTrend && (
-            <Grid size={{ xs: 12, md: 4 }}>
-              <ChartCard title={t("dashboard@newUsersTrend")} icon={<ShowChartIcon fontSize="small" />}>
-                <LineChart
-                  xAxis={[{ scaleType: "point", data: trend.map((d) => d.day.slice(5)), tickLabelStyle: { fontSize: 9 } }]}
-                  series={[{ data: trend.map((d) => d.count), color: theme.palette.primary.main, area: true, showMark: false }]}
-                  height={Math.max(topByVisitors.length * 30 + 40, 200)}
-                  margin={{ top: 10, right: 16, bottom: 28, left: 34 }} />
-              </ChartCard>
-            </Grid>
-          )}
         </Grid>
       </Box>
 
       {/* ── Quick Access ── */}
       <Box>
-        <SectionLabel icon={<ListAltIcon sx={{ fontSize: 18, color: "primary.main" }} />}>{t("dashboard@sections")}</SectionLabel>
+        <SectionTitle icon={<ListAltIcon />}>{t("dashboard@sections")}</SectionTitle>
         <Grid container spacing={1.5} sx={{ pb: 3 }}>
           {getSections(theme).map(({ path, titleKey, descKey, Icon, accent }) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={path}>

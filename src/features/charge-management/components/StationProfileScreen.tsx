@@ -6,7 +6,7 @@ import {
   Box, Stack, Typography, Avatar, Chip, Button, IconButton, Tooltip, Paper,
   Divider, Grid, Tabs, Tab, Link, CircularProgress, useTheme,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackButton from "../../../components/BackButton";
 import EditIcon from "@mui/icons-material/Edit";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -159,9 +159,7 @@ export default function StationProfileScreen() {
             <Box sx={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
               <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
-                <Tooltip title={t("back")}>
-                  <IconButton onClick={() => navigate("/charge-management")} sx={{ color: "#fff", bgcolor: "rgba(255,255,255,0.15)", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}><ArrowBackIcon /></IconButton>
-                </Tooltip>
+                <BackButton fallback="/charge-management" variant="onDark" />
                 <Avatar src={s.iConUrl ?? undefined} variant="rounded" sx={{ width: 60, height: 60, bgcolor: "rgba(255,255,255,0.18)" }}><EvStationIcon sx={{ fontSize: 32 }} /></Avatar>
                 <Box sx={{ minWidth: 0 }}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>

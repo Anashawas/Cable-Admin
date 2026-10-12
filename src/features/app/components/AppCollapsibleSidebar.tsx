@@ -9,7 +9,6 @@ import {
 	IconButton,
 	Collapse,
 	Typography,
-	Avatar,
 	Tooltip,
 	alpha,
 } from "@mui/material";
@@ -25,7 +24,7 @@ import {
 	ExpandMore,
 } from "@mui/icons-material";
 import { PrivilegeCode } from "../../../constants/privileges-constants";
-import { getNavigationGroups, NavigationGroup, NavigationItem } from "./navigation-config";
+import { getNavigationGroups, isNavPathActive, NavigationGroup, NavigationItem } from "./navigation-config";
 
 const EXPANDED_WIDTH = 300;
 const COLLAPSED_WIDTH = 64;
@@ -37,7 +36,6 @@ const AppCollapsibleSidebar = () => {
 	const theme = useTheme();
 	const sidebarExpanded = useLayoutStore((state) => state.sidebarExpanded);
 	const toggleSidebar = useLayoutStore((state) => state.toggleSidebar);
-	const user = useAuthenticationStore((state) => state.user);
 	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
 		chargeManagement: false,
 		userManagement: false,
@@ -51,11 +49,6 @@ const AppCollapsibleSidebar = () => {
 
 	const drawerWidth = sidebarExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
 
-	const getUserInitial = () => {
-		if (!user?.name) return "U";
-		return user.name.charAt(0).toUpperCase();
-	};
-
 	// ── Theme-aware palette ─────────────────────────────────────────────
 	// Dark mode keeps the navy gradient; light mode is a clean white sidebar.
 	const isDark = theme.palette.mode === "dark";
@@ -63,7 +56,6 @@ const AppCollapsibleSidebar = () => {
 		bg: isDark
 			? "linear-gradient(180deg, #0d1f4e 0%, #0d3276 60%, #0a4a8f 100%)"
 			: theme.palette.background.paper,
-		headerBg: isDark ? "rgba(0,0,0,0.15)" : alpha(theme.palette.primary.main, 0.04),
 		border: isDark ? "rgba(255,255,255,0.10)" : theme.palette.divider,
 		text: isDark ? "#ffffff" : theme.palette.text.primary,
 		textMuted: isDark ? "rgba(255,255,255,0.6)" : theme.palette.text.secondary,
@@ -116,7 +108,7 @@ const AppCollapsibleSidebar = () => {
 	const isPathInGroup = (groupItems: NavigationItem[]) => {
 		return groupItems.some(
 			item =>
-				location.pathname === item.path ||
+				isNavPathActive(location.pathname, item.path) ||
 				(item.path === "/offers" &&
 					(location.pathname === "/pending-offers" || location.pathname === "/active-offers"))
 		);
@@ -137,6 +129,12 @@ const AppCollapsibleSidebar = () => {
 			...group,
 			items: filterVisibleItems(group.items)
 		})).filter(group => group.items.length > 0);
+	};
+
+	const collapseBtnSx = {
+		color: c.iconMuted,
+		"&:hover": { color: c.text, bgcolor: c.hoverBg },
+		"&.Mui-focusVisible": { outline: `2px solid ${c.accent}`, outlineOffset: 2 },
 	};
 
 	const navItemSx = (isActive: boolean) => ({
@@ -189,7 +187,7 @@ const AppCollapsibleSidebar = () => {
 				},
 			}}
 		>
-			{/* ── Header / user area ── */}
+			{/* ── Brand + collapse control ── */}
 			{sidebarExpanded ? (
 				<Box
 					sx={{
@@ -197,48 +195,56 @@ const AppCollapsibleSidebar = () => {
 						justifyContent: "space-between",
 						alignItems: "center",
 						px: 2,
-						py: 2,
-						minHeight: 72,
-						background: c.headerBg,
+						height: 64,
+						flexShrink: 0,
 						borderBottom: `1px solid ${c.border}`,
 					}}
 				>
-					<Box display="flex" alignItems="center" sx={{ minWidth: 0 }}>
-						<Avatar
+					{/* Brand lives here on desktop; the header shows the page title instead. */}
+					<Box display="flex" alignItems="center" gap={1.5} sx={{ minWidth: 0 }}>
+						<Box
+							component="img"
+							src={`${window.env.host.virtualPath}/images/Cable-Logo.png`}
+							alt=""
 							sx={{
-								width: 40,
-								height: 40,
-								background: "linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)",
-								mr: 1.5,
-								fontSize: "1.1rem",
-								fontWeight: "bold",
-								color: "white",
-								boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+								height: 32,
+								width: 32,
+								borderRadius: 1,
+								objectFit: "contain",
+								flexShrink: 0,
+								bgcolor: isDark ? "rgba(255,255,255,0.9)" : "transparent",
+								p: isDark ? 0.25 : 0,
 							}}
-						>
-							{user ? getUserInitial() : "?"}
-						</Avatar>
-						<Box sx={{ minWidth: 0 }}>
-							<Typography variant="subtitle2" noWrap fontWeight={700} sx={{ color: c.text, lineHeight: 1.2 }}>
-								{user?.email ?? t("guest")}
-							</Typography>
-							<Typography variant="caption" noWrap sx={{ color: c.textMuted, lineHeight: 1 }}>
-								{user?.name ?? ""}
-							</Typography>
-						</Box>
+						/>
+						<Typography variant="subtitle1" noWrap fontWeight={600} sx={{ color: c.text }}>
+							{t("app@appTitle")}
+						</Typography>
 					</Box>
-					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: c.iconMuted, "&:hover": { color: c.text, bgcolor: c.hoverBg } }}>
-						{isRTL ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-					</IconButton>
+					<Tooltip title={t("app@collapseSidebar")} arrow>
+						<IconButton
+							onClick={handleToggleExpanded}
+							size="small"
+							aria-label={t("app@collapseSidebar")}
+							aria-expanded
+							sx={collapseBtnSx}
+						>
+							{isRTL ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+						</IconButton>
+					</Tooltip>
 				</Box>
 			) : (
-				<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2, minHeight: 72, gap: 1, background: c.headerBg, borderBottom: `1px solid ${c.border}` }}>
-					<Avatar sx={{ width: 32, height: 32, background: "linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)", fontSize: "0.9rem", fontWeight: "bold", color: "white" }}>
-						{user ? getUserInitial() : "?"}
-					</Avatar>
-					<IconButton onClick={handleToggleExpanded} size="small" sx={{ color: c.iconMuted, "&:hover": { color: c.text, bgcolor: c.hoverBg } }}>
-						{isRTL ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-					</IconButton>
+				<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: 64, flexShrink: 0, borderBottom: `1px solid ${c.border}` }}>
+					<Tooltip title={t("app@expandSidebar")} placement={isRTL ? "left" : "right"} arrow>
+						<IconButton
+							onClick={handleToggleExpanded}
+							size="small"
+							aria-label={t("app@expandSidebar")}
+							aria-expanded={false}
+							sx={collapseBtnSx}
+						>
+							{isRTL ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+						</IconButton>
+					</Tooltip>
 				</Box>
 			)}
 
@@ -290,7 +296,7 @@ const AppCollapsibleSidebar = () => {
 									<Collapse in={groupOpen} timeout="auto" unmountOnExit>
 										<List component="div" disablePadding>
 											{group.items.map((item) => {
-												const isActive = location.pathname === item.path;
+												const isActive = isNavPathActive(location.pathname, item.path);
 												return (
 													<ListItemButton
 														key={item.path}
@@ -328,9 +334,9 @@ const AppCollapsibleSidebar = () => {
 						filterVisibleGroups(navigationGroups).flatMap(group => group.items).map((item) => (
 							<Tooltip key={item.path} title={item.label} placement="right" arrow>
 								<ListItemButton
-									selected={location.pathname === item.path}
+									selected={isNavPathActive(location.pathname, item.path)}
 									onClick={() => handleNavigate(item.path)}
-									sx={navItemSx(location.pathname === item.path)}
+									sx={navItemSx(isNavPathActive(location.pathname, item.path))}
 								>
 									<ListItemIcon sx={{ minWidth: 0, mr: "auto", justifyContent: "center" }}>
 										{item.icon}
@@ -343,9 +349,9 @@ const AppCollapsibleSidebar = () => {
 					{filterVisibleItems(standaloneNavigationItems).map((item) => (
 						<Tooltip key={item.path} title={!sidebarExpanded ? item.label : ""} placement="right" arrow>
 							<ListItemButton
-								selected={location.pathname === item.path}
+								selected={isNavPathActive(location.pathname, item.path)}
 								onClick={() => handleNavigate(item.path)}
-								sx={navItemSx(location.pathname === item.path)}
+								sx={navItemSx(isNavPathActive(location.pathname, item.path))}
 							>
 								<ListItemIcon sx={{ minWidth: 0, mr: sidebarExpanded ? 2 : "auto", justifyContent: "center" }}>
 									{item.icon}

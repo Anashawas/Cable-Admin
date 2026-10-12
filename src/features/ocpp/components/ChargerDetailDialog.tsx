@@ -13,7 +13,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import TerminalIcon from "@mui/icons-material/Terminal";
 import EvStationIcon from "@mui/icons-material/EvStation";
-import { useSnackbarStore } from "../../../stores";
+import { useLanguageStore, useSnackbarStore } from "../../../stores";
+import { LANGUAGE } from "../../../constants/language-constants";
+import ChargerIcon, { iconPlugColor, iconPlugOf, plugConnectors, plugFamily } from "./ChargerIcon";
 import {
   useDeleteChargePoint, useOcppChargePoint, useOcppRawMessages, useRotateChargePointPassword,
   useSetChargePointEnabled, useUpdateChargePoint, useUpdateConnector,
@@ -58,8 +60,10 @@ function Confirm({ open, title, body, danger, pending, onClose, onConfirm }: { o
 }
 
 /** Per-connector plug type + rated power, editable inline. The plug type is what the driver app shows next to "free". */
-function ConnectorRow({ c }: { c: OcppConnectorDto }) {
+function ConnectorRow({ c, online }: { c: OcppConnectorDto; online: boolean }) {
   const { t } = useTranslation();
+  const ar = useLanguageStore((s) => s.language) === LANGUAGE.AR;
+  const family = c.connectorId > 0 ? plugFamily(c, ar) : "";
   const fmt = useDateFmt();
   const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
@@ -100,7 +104,16 @@ function ConnectorRow({ c }: { c: OcppConnectorDto }) {
               <MenuItem value="">{t("ocpp@detail.noPlugType")}</MenuItem>
               {plugTypes.map((p) => <MenuItem key={p.id} value={p.id}>{p.name}{p.plugTypeFamily ? ` (${p.plugTypeFamily})` : ""}</MenuItem>)}
             </TextField>
-          : c.plugTypeName ?? <Typography variant="caption" color="warning.main">{t("ocpp@detail.setPlugType")}</Typography>}
+          : c.plugTypeName
+            ? (
+              <Stack spacing={0.25}>
+                {family && family !== c.plugTypeName && (
+                  <Typography variant="caption" fontWeight={800} sx={{ color: iconPlugColor(iconPlugOf(c), online), lineHeight: 1.2 }}>{family}</Typography>
+                )}
+                <span>{c.plugTypeName}</span>
+              </Stack>
+            )
+            : <Typography variant="caption" color="warning.main">{t("ocpp@detail.setPlugType")}</Typography>}
       </TableCell>
       <TableCell>
         {editing
@@ -132,6 +145,9 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
   const { data: cp, isLoading } = useOcppChargePoint(id);
+  const ar = useLanguageStore((s) => s.language) === LANGUAGE.AR;
+  const cpOnline = !!cp && cp.isConnected && cp.isEnabled;
+  const plugs = cp ? plugConnectors(cp.connectors) : [];
   const [showLog, setShowLog] = useState(false);
   const { data: log = [] } = useOcppRawMessages(id, 50, showLog);
 
@@ -194,10 +210,22 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
     <>
       <Dialog open={id != null} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, pr: 7 }}>
-          <EvStationIcon color="primary" />
+          {cp
+            ? <ChargerIcon plugs={plugs.map(iconPlugOf)} offline={!cpOnline} size={36} />
+            : <EvStationIcon color="primary" />}
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="h6" fontWeight={800} noWrap>{cp ? (cp.displayName || cp.chargePointId) : t("ocpp@detail.title")}</Typography>
             {cp && <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>{cp.chargePointId} · {cp.stationName} (#{cp.chargingPointId})</Typography>}
+            {cp && plugs.length > 0 && (
+              <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                {plugs.map((c, i) => (
+                  <Typography key={c.id} variant="caption" fontWeight={800} sx={{ color: iconPlugColor(iconPlugOf(c), cpOnline) }}>
+                    {i > 0 && <Box component="span" sx={{ color: "text.disabled", fontWeight: 400, me: 0.75 }}>·</Box>}
+                    {plugFamily(c, ar) || `#${c.connectorId}`}
+                  </Typography>
+                ))}
+              </Stack>
+            )}
           </Box>
           {cp && <ConnectionChip state={cp.connectionState} isEnabled={cp.isEnabled} lockedUntil={cp.lockedUntil} size="medium" />}
           <IconButton onClick={onClose} sx={{ position: "absolute", right: 12, top: 12 }}><CloseIcon /></IconButton>
@@ -314,7 +342,7 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                           <TableCell />
                         </TableRow>
                       </TableHead>
-                      <TableBody>{cp.connectors.map((c) => <ConnectorRow key={c.id} c={c} />)}</TableBody>
+                      <TableBody>{cp.connectors.map((c) => <ConnectorRow key={c.id} c={c} online={cpOnline} />)}</TableBody>
                     </Table>
                   </Box>
                 )}

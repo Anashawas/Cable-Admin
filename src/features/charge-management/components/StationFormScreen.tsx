@@ -30,7 +30,7 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackButton from "../../../components/BackButton";
 import SaveIcon from "@mui/icons-material/Save";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -62,7 +62,7 @@ import { useChargerBrands } from "../hooks/use-charger-brands";
 import LocationPicker from "./LocationPicker";
 import { useSnackbarStore } from "../../../stores";
 import type { ChargingPointDto } from "../types/api";
-import { is24Hours, normalizeTime } from "../../../utils/opening-hours";
+import { normalizeTime } from "../../../utils/opening-hours";
 
 // ── Services chip categories (display only) ───────────────────────────────────
 const SERVICE_CATEGORIES: { label: string; items: string[] }[] = [
@@ -299,9 +299,19 @@ export default function StationFormScreen() {
     enabled: isEditMode && stationId > 0,
   });
 
+  // "Open 24 hours" is explicit UI state. The backend has no flag — 24h is
+  // stored as fromTime == toTime == "0:00" — so it is derived once on load and
+  // translated back to that marker on submit. New stations default to 24h.
+  const [open24, setOpen24] = useState(true);
+  const [hoursError, setHoursError] = useState(false);
+
   useEffect(() => {
     if (station && isEditMode) {
       reset(mapStationToFormValues(station));
+      const f = normalizeTime(station.fromTime);
+      const tt = normalizeTime(station.toTime);
+      setOpen24((f === "" && tt === "") || (f === "00:00" && tt === "00:00"));
+      setHoursError(false);
     }
   }, [station, isEditMode, reset]);
 
@@ -346,6 +356,12 @@ export default function StationFormScreen() {
 
   const onSubmit = useCallback(
     (values: StationFormValues) => {
+      const from = normalizeTime(values.fromTime);
+      const to = normalizeTime(values.toTime);
+      if (!open24 && (from === "" || to === "")) {
+        setHoursError(true);
+        return;
+      }
       const body: Record<string, unknown> = {
         name: values.name,
         phone: values.phone || null,
@@ -366,8 +382,8 @@ export default function StationFormScreen() {
         chargerSpeed: values.chargerSpeed ?? null,
         chargersCount: values.chargersCount ?? null,
         isVerified: values.isVerified,
-        fromTime: values.fromTime || null,
-        toTime: values.toTime || null,
+        fromTime: open24 ? "0:00" : from,
+        toTime: open24 ? "0:00" : to,
       };
       if (isEditMode && stationId > 0) {
         updateMutation.mutate({ id: stationId, body });
@@ -375,7 +391,7 @@ export default function StationFormScreen() {
         addMutation.mutate(body);
       }
     },
-    [isEditMode, stationId, addMutation, updateMutation]
+    [isEditMode, stationId, addMutation, updateMutation, open24]
   );
 
   const isSubmitting = addMutation.isPending || updateMutation.isPending;
@@ -397,11 +413,7 @@ export default function StationFormScreen() {
         <Box sx={{ background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, borderRadius: 3, p: { xs: 2, md: 2.5 }, mb: 3, color: "#fff", position: "relative", overflow: "hidden" }}>
           <Box sx={{ position: "absolute", top: -40, right: -40, width: 150, height: 150, borderRadius: "50%", bgcolor: "rgba(255,255,255,0.06)" }} />
           <Stack direction="row" spacing={2} alignItems="center">
-            <Tooltip title={t("back")}>
-              <IconButton onClick={() => navigate(isEditMode && stationId ? `/charge-management/${stationId}` : "/charge-management")} sx={{ color: "#fff", bgcolor: "rgba(255,255,255,0.15)", "&:hover": { bgcolor: "rgba(255,255,255,0.25)" } }}>
-                <ArrowBackIcon />
-              </IconButton>
-            </Tooltip>
+            <BackButton fallback={isEditMode && stationId ? `/charge-management/${stationId}` : "/charge-management"} variant="onDark" />
             <Box sx={{ width: 48, height: 48, borderRadius: 2, bgcolor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <EvStationIcon sx={{ fontSize: 26 }} />
             </Box>
@@ -632,41 +644,63 @@ export default function StationFormScreen() {
                     {(() => {
                       const fromTime = watch("fromTime") ?? "";
                       const toTime = watch("toTime") ?? "";
-                      const is24 = is24Hours(fromTime, toTime);
+                      const showError = hoursError && !open24;
                       return (
                         <Box>
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={is24}
+                                checked={open24}
                                 onChange={(e) => {
                                   const on = e.target.checked;
-                                  setValue("fromTime", on ? "0:00" : "09:00", { shouldDirty: true });
-                                  setValue("toTime", on ? "0:00" : "22:00", { shouldDirty: true });
+                                  setOpen24(on);
+                                  setHoursError(false);
+                                  if (!on) {
+                                    // Leaving 24h: prefill sensible hours if nothing real is set.
+                                    const f = toHHmm(fromTime);
+                                    const tt = toHHmm(toTime);
+                                    if (f === "" || f === "00:00") setValue("fromTime", "09:00", { shouldDirty: true });
+                                    if (tt === "" || tt === "00:00") setValue("toTime", "22:00", { shouldDirty: true });
+                                  }
                                 }}
                               />
                             }
                             label={t("chargeManagement@form.open24h")}
                           />
-                          {!is24 && (
-                            <Stack direction="row" spacing={2}>
-                              <TextField
-                                type="time"
-                                label={t("chargeManagement@form.fromTime")}
-                                value={toHHmm(fromTime)}
-                                onChange={(e) => setValue("fromTime", e.target.value, { shouldDirty: true })}
-                                fullWidth
-                                slotProps={{ inputLabel: { shrink: true } }}
-                              />
-                              <TextField
-                                type="time"
-                                label={t("chargeManagement@form.toTime")}
-                                value={toHHmm(toTime)}
-                                onChange={(e) => setValue("toTime", e.target.value, { shouldDirty: true })}
-                                fullWidth
-                                slotProps={{ inputLabel: { shrink: true } }}
-                              />
-                            </Stack>
+                          <Stack direction="row" spacing={2}>
+                            <TextField
+                              type="time"
+                              label={t("chargeManagement@form.fromTime")}
+                              value={toHHmm(fromTime)}
+                              onChange={(e) => {
+                                setValue("fromTime", e.target.value, { shouldDirty: true });
+                                setHoursError(false);
+                              }}
+                              disabled={open24}
+                              required={!open24}
+                              error={showError && toHHmm(fromTime) === ""}
+                              fullWidth
+                              slotProps={{ inputLabel: { shrink: true } }}
+                            />
+                            <TextField
+                              type="time"
+                              label={t("chargeManagement@form.toTime")}
+                              value={toHHmm(toTime)}
+                              onChange={(e) => {
+                                setValue("toTime", e.target.value, { shouldDirty: true });
+                                setHoursError(false);
+                              }}
+                              disabled={open24}
+                              required={!open24}
+                              error={showError && toHHmm(toTime) === ""}
+                              fullWidth
+                              slotProps={{ inputLabel: { shrink: true } }}
+                            />
+                          </Stack>
+                          {showError && (
+                            <Typography variant="caption" color="error" sx={{ mt: 0.5, display: "block" }}>
+                              {t("chargeManagement@form.hoursRequired")}
+                            </Typography>
                           )}
                         </Box>
                       );

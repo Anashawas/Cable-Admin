@@ -73,6 +73,7 @@ import {
 import { getSettlements, getSettlementsCsv } from "../services/offers-service";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useSetCreditLimit } from "../../partners/hooks/use-partners";
+import { useListState } from "../../../hooks";
 import type { ProviderSettlementDto, SettlementStatus, WalletTransactionType, ProviderType } from "../types/api";
 
 const STATUS_CFG: Record<number, { label_key: string; color: "warning" | "success" | "error" }> = {
@@ -160,10 +161,10 @@ export default function SettlementsScreen() {
 
   const currentYear = new Date().getFullYear();
 
-  const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [selectedWeek, setSelectedWeek] = useState<number | undefined>(undefined);
-  const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined);
-  const [providerTypeFilter, setProviderTypeFilter] = useState<"ChargingPoint" | "ServiceProvider" | undefined>(undefined);
+  const [selectedYear, setSelectedYear] = useListState("year", currentYear);
+  const [selectedWeek, setSelectedWeek] = useListState<number | undefined>("week", undefined);
+  const [statusFilter, setStatusFilter] = useListState<number | undefined>("status", undefined);
+  const [providerTypeFilter, setProviderTypeFilter] = useListState<"ChargingPoint" | "ServiceProvider" | undefined>("providerType", undefined);
 
   const { data: rawData, isLoading, error, search, handleSearchChange, handleRefresh } = useSettlements({
     year: selectedYear,
@@ -211,7 +212,7 @@ export default function SettlementsScreen() {
 
   const { data: summary, isLoading: summaryLoading } = useSettlementSummary(selectedYear);
   const updateStatusMutation = useUpdateSettlementStatus();
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 20 });
+  const [paginationModel, setPaginationModel] = useListState<GridPaginationModel>("pagination", { page: 0, pageSize: 20 });
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedSettlement, setSelectedSettlement] = useState<ProviderSettlementDto | null>(null);
   const { data: settlementTx, isLoading: settlementTxLoading } = useSettlementTransactions(

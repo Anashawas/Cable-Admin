@@ -15,5 +15,10 @@
   "lightMode": "الوضع النهاري",
   "switchToArabic": "العربية",
   "switchToEnglish": "English",
-  "logout": "تسجيل الخروج"
+  "logout": "تسجيل الخروج",
+  "searchPlaceholder": "ابحث…",
+  "openMenu": "فتح القائمة",
+  "userMenu": "الحساب",
+  "collapseSidebar": "طي القائمة الجانبية",
+  "expandSidebar": "توسيع القائمة الجانبية"
 }

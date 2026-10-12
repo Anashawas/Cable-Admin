@@ -10,9 +10,9 @@ import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import LinkIcon from "@mui/icons-material/Link";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { Box, Paper, Stack, Typography } from "@mui/material";
+import { Box, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { useLanguageStore } from "../../../stores";
-import { formatFullDateTime, formatRelative } from "../../../utils/date-format";
+import { formatFullDateTime, formatRelative, parseApiDate } from "../../../utils/date-format";
 import type { OcppConnectionState, OcppOnboardingDto, OcppSubscriptionStateDto } from "../types/api";
 
 /** Pull the most descriptive message out of an axios error. */
@@ -33,10 +33,25 @@ export function ocppBaseUrl(): string {
   return isDev ? "wss://ocpp-dev.cable-app.com" : "wss://ocpp.cable-app.com";
 }
 
+/** Levantine month names, as Jordanian admins read them (same as the partner web). */
+const AR_MONTHS = [
+  "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+  "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول",
+];
+
+/** "12 تشرين الأول 2026 · 12:40" in Arabic (Western digits, like the rest of the admin); en-GB otherwise. */
+function fullDateTime(v: string, language: string): string {
+  if (!language.startsWith("ar")) return formatFullDateTime(v, language);
+  const d = parseApiDate(v);
+  if (!d) return "—";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getDate()} ${AR_MONTHS[d.getMonth()]} ${d.getFullYear()} · ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 export function useDateFmt() {
   const language = useLanguageStore((s) => s.language);
   return {
-    full: (v?: string | null) => (v ? formatFullDateTime(v, language) : "—"),
+    full: (v?: string | null) => (v ? fullDateTime(v, language) : "—"),
     relative: (v?: string | null) => (v ? formatRelative(v, language) : "—"),
   };
 }
@@ -162,4 +177,55 @@ export function ReliabilityChip({ pct, size = "small" }: { pct?: number | null; 
   if (pct == null) return <Chip size={size} variant="outlined" label={t("ocpp@reliability.notYet")} sx={{ color: "text.disabled" }} />;
   const color: ChipProps["color"] = pct >= 95 ? "success" : pct >= 80 ? "warning" : "error";
   return <Chip size={size} color={color} variant={pct >= 95 ? "filled" : "outlined"} label={`${Number(pct).toFixed(1)}%`} sx={{ fontWeight: 700 }} />;
+}
+
+/** A small coloured dot, used as the icon of quiet chips and in legends. */
+export function Dot({ color, size = 8 }: { color: string; size?: number }) {
+  return <Box component="span" aria-hidden sx={{ width: size, height: size, borderRadius: "50%", bgcolor: color, flexShrink: 0, display: "inline-block" }} />;
+}
+
+const QUIET_CHIP_SX = { fontWeight: 600, "& .MuiChip-icon": { marginInlineStart: "8px", marginInlineEnd: "-2px" } } as const;
+
+/** Table version of ConnectionChip / OnboardingChip: an outlined chip with a status dot. */
+export function StatusDotChip({
+  state, isEnabled = true, lockedUntil, onboardingState,
+}: { state: OcppConnectionState; isEnabled?: boolean; lockedUntil?: string | null; onboardingState?: OcppOnboardingDto["state"] | null }) {
+  const { t } = useTranslation();
+  let label: string;
+  let dot: string;
+  if (onboardingState && isEnabled) {
+    label = t(`ocpp@onboarding.${onboardingState}`);
+    dot = onboardingState === "Refused" ? "error.main" : onboardingState === "Connected" ? "info.main" : onboardingState === "Booted" ? "success.main" : "text.disabled";
+  } else if (!isEnabled) {
+    label = t("ocpp@state.disabled");
+    dot = "text.disabled";
+  } else if (lockedUntil && new Date(lockedUntil) > new Date()) {
+    label = t("ocpp@state.locked");
+    dot = "warning.main";
+  } else {
+    label = t(`ocpp@state.${state}`);
+    dot = state === "Online" ? "success.main" : state === "Reconnecting" ? "warning.main" : "error.main";
+  }
+  return <Chip size="small" variant="outlined" icon={<Dot color={dot} />} label={label} sx={QUIET_CHIP_SX} />;
+}
+
+/** Table version of SubscriptionChip: neutral outline, the dot carries the status; warning tone only when there is none. */
+export function SubscriptionQuietChip({ sub }: { sub: OcppSubscriptionStateDto }) {
+  const { t } = useTranslation();
+  if (!sub.status) return <Chip size="small" variant="outlined" color="warning" label={t("ocpp@subscription.none")} sx={{ fontWeight: 600 }} />;
+  const dot = sub.status === "Active" ? "success.main" : sub.status === "ExpiringSoon" || sub.status === "InGrace" ? "warning.main" : "error.main";
+  return <Chip size="small" variant="outlined" icon={<Dot color={dot} />} label={t(`ocpp@subscription.${sub.status}`)} sx={QUIET_CHIP_SX} />;
+}
+
+/** Reliability as a small coloured figure; "—" with an explanation until the daily job has scored it. */
+export function ReliabilityText({ pct }: { pct?: number | null }) {
+  const { t } = useTranslation();
+  if (pct == null)
+    return (
+      <Tooltip title={t("ocpp@reliability.notYet")}>
+        <Typography variant="body2" color="text.disabled" component="span" tabIndex={0} aria-label={t("ocpp@reliability.notYet")}>—</Typography>
+      </Tooltip>
+    );
+  const color = pct >= 95 ? "success.main" : pct >= 80 ? "warning.main" : "error.main";
+  return <Typography variant="body2" fontWeight={700} color={color} component="span"><bdi dir="ltr">{Number(pct).toFixed(1)}%</bdi></Typography>;
 }

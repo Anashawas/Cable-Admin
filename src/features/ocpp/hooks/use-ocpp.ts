@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addAuthorizedTag,
   changeAvailability,
@@ -34,6 +34,7 @@ import {
 } from "../services/ocpp-service";
 import type {
   AddAuthorizedTagRequest,
+  OcppChargePointListItemDto,
   OcppChargePointsQuery,
   OcppTriggerMessage,
   RegisterChargePointRequest,
@@ -64,6 +65,38 @@ export function useOcppChargePoints(query: OcppChargePointsQuery, live = true) {
     queryFn: ({ signal }) => getChargePoints(query, signal),
     refetchInterval: live ? LIVE_REFETCH_MS : false,
     placeholderData: (prev) => prev,
+  });
+}
+
+/**
+ * Every charger of the fleet, for views that group by station. The list endpoint is paged,
+ * so pages of 100 are walked until hasNextPage is false (capped at 50 pages = 5,000 chargers).
+ */
+export function useOcppAllChargePoints(live = true) {
+  return useQuery({
+    queryKey: [...OCPP_QUERY_KEY, "charge-points", "all"],
+    queryFn: async ({ signal }) => {
+      const items: OcppChargePointListItemDto[] = [];
+      for (let page = 1; page <= 50; page++) {
+        const res = await getChargePoints({ page, pageSize: 100 }, signal);
+        items.push(...res.items);
+        if (!res.hasNextPage || res.items.length === 0) break;
+      }
+      return items;
+    },
+    refetchInterval: live ? LIVE_REFETCH_MS : false,
+    placeholderData: (prev) => prev,
+  });
+}
+
+/** Detail (connectors + today's figures) of several chargers at once; shares the cache with useOcppChargePoint. */
+export function useOcppChargePointDetails(ids: number[], live = true) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: [...OCPP_QUERY_KEY, "charge-point", id],
+      queryFn: ({ signal }: { signal: AbortSignal }) => getChargePoint(id, 10, signal),
+      refetchInterval: live ? LIVE_REFETCH_MS : (false as const),
+    })),
   });
 }
 
