@@ -20,8 +20,9 @@ import { useSnackbarStore } from "../../../stores";
 import {
   OCPP_QUERY_KEY, useChangeAvailability, useOcppCommands, useRemoteStart, useRemoteStop, useResetChargePoint, useSyncLocalList, useTriggerMessage, useUnlockConnector,
 } from "../hooks/use-ocpp";
-import type { OcppChargePointDetailDto, OcppCommandDto, OcppCommandResultDto, OcppTriggerMessage } from "../types/api";
+import type { OcppChargePointDetailDto, OcppCommandDto, OcppCommandResultDto, OcppTriggerMessage, RemoteStartLimit } from "../types/api";
 import { errMessage, useDateFmt } from "./ocpp-ui";
+import { ChargeLimitFields, useChargeLimitForm } from "./ChargeLimitControls";
 
 /** The transport outcome + the unit's verdict in one chip. */
 export function CommandOutcomeChip({ status, resultStatus, accepted }: { status: string; resultStatus?: string | null; accepted?: boolean }) {
@@ -41,6 +42,35 @@ function Confirm({ open, title, body, danger, pending, onClose, onConfirm }: { o
         <Button onClick={onClose} disabled={pending} color="inherit">{t("cancel")}</Button>
         <Button onClick={onConfirm} disabled={pending} variant="contained" color={danger ? "error" : "primary"}
           startIcon={pending ? <CircularProgress size={16} color="inherit" /> : undefined}>{t("confirm")}</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+/** The start confirmation, with the optional "stop at …" (JOD / kWh / battery %) sent along with it. */
+function StartSessionDialog({ connectorId, pending, onClose, onConfirm }: { connectorId: number; pending?: boolean; onClose: () => void; onConfirm: (limit: RemoteStartLimit | null) => void }) {
+  const { t } = useTranslation();
+  const form = useChargeLimitForm();
+  const { check } = form;
+  return (
+    <Dialog open onClose={() => !pending && onClose()} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t("ocpp@commands.confirm.startTitle", { connector: connectorId })}</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2}>
+          <Typography variant="body2">{t("ocpp@commands.confirm.startBody")}</Typography>
+          <ChargeLimitFields form={form} label={t("ocpp@limit.optional")} disabled={pending} />
+          {check.kind && <Typography variant="caption" color="text.secondary">{t("ocpp@limit.hint")}</Typography>}
+        </Stack>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Button onClick={onClose} disabled={pending} color="inherit">{t("cancel")}</Button>
+        <Button
+          variant="contained" disabled={pending || !check.ok}
+          onClick={() => onConfirm(check.kind && check.value != null ? { chargeLimitKind: check.kind, chargeLimitValue: check.value } : null)}
+          startIcon={pending ? <CircularProgress size={16} color="inherit" /> : undefined}
+        >
+          {t("confirm")}
+        </Button>
       </DialogActions>
     </Dialog>
   );
@@ -131,6 +161,9 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
       case "start": return run(() => start.mutateAsync({ id: cp.id, connectorId: pendingAction.connectorId }));
     }
   };
+
+  const confirmStart = (connectorId: number, limit: RemoteStartLimit | null) =>
+    run(() => start.mutateAsync({ id: cp.id, connectorId, limit }));
 
   const confirmText = (a: PendingAction): { title: string; body: string; danger: boolean } => {
     switch (a.kind) {
@@ -312,7 +345,10 @@ export default function ChargerControlPanel({ cp }: { cp: OcppChargePointDetailD
         </>
       )}
 
-      {pendingAction && (
+      {pendingAction?.kind === "start" ? (
+        <StartSessionDialog connectorId={pendingAction.connectorId} pending={busy} onClose={() => setPendingAction(null)}
+          onConfirm={(limit) => confirmStart(pendingAction.connectorId, limit)} />
+      ) : pendingAction && (
         <Confirm open {...confirmText(pendingAction)} pending={busy} onClose={() => setPendingAction(null)} onConfirm={confirmPending} />
       )}
     </Paper>

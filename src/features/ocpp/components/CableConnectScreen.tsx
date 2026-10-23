@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Box, Button, Chip, IconButton, InputAdornment, MenuItem, Paper, Skeleton, Stack, TextField, Tooltip, Typography,
+  Box, Button, IconButton, InputAdornment, MenuItem, Paper, Skeleton, Stack, TextField, Tooltip, Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -10,6 +10,7 @@ import SpeedIcon from "@mui/icons-material/Speed";
 import AlertsSection from "./AlertsSection";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { useOcppAlerts, useOcppAllChargePoints, useOcppFleetHealth, useRecomputeReliability } from "../hooks/use-ocpp";
+import { useOcppLive } from "../hooks/use-ocpp-live";
 import { useAuthenticationStore, useSnackbarStore } from "../../../stores";
 
 /** Admin roles (Admin, SuperAdmin) — only they may recompute reliability. */
@@ -20,6 +21,7 @@ import ChargerDetailDialog from "./ChargerDetailDialog";
 import RegisterChargerDialog from "./RegisterChargerDialog";
 import SummaryCard, { Figure } from "./SummaryCard";
 import StationCard from "./StationCard";
+import { LiveIndicator } from "./ocpp-ui";
 import { groupByStation, stationMatches, type StationFilters, type SubscriptionFilter } from "./station-groups";
 import { useListState } from "../../../hooks";
 
@@ -57,6 +59,8 @@ export default function CableConnectScreen() {
   const [viewId, setViewId] = useState<number | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
 
+  // Pushed changes of the whole fleet while this screen is open; the polls slow down meanwhile.
+  useOcppLive();
   const health = useOcppFleetHealth();
   const recompute = useRecomputeReliability();
   const canRecompute = isAdminRole(useAuthenticationStore((s) => s.user?.role));
@@ -88,11 +92,7 @@ export default function CableConnectScreen() {
             <Box sx={{ minWidth: 0 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="h5" fontWeight={800} component="h1">{t("ocpp@title")}</Typography>
-                <Chip
-                  size="small" color="success" variant="outlined" label={t("ocpp@live")}
-                  icon={<Box component="span" sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "success.main" }} aria-hidden />}
-                  sx={{ fontWeight: 700, height: 22, "& .MuiChip-icon": { marginInlineStart: "8px", marginInlineEnd: "-2px" } }}
-                />
+                <LiveIndicator />
               </Stack>
               <Typography variant="body2" color="text.secondary">{t("ocpp@subtitle")}</Typography>
             </Box>

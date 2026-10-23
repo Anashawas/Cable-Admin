@@ -24,46 +24,67 @@ import {
   getChargePoints,
   getFleetHealth,
   getRawMessages,
+  getSessionLive,
   registerChargePoint,
   removeAuthorizedTag,
   rotateChargePointPassword,
   setAuthorizedTagEnabled,
   setChargePointEnabled,
+  setSessionChargeLimit,
   updateChargePoint,
   updateConnector,
 } from "../services/ocpp-service";
 import type {
   AddAuthorizedTagRequest,
+  OcppChargeLimitKind,
   OcppChargePointListItemDto,
   OcppChargePointsQuery,
   OcppTriggerMessage,
   RegisterChargePointRequest,
+  RemoteStartLimit,
   UpdateChargePointRequest,
   UpdateConnectorRequest,
 } from "../types/api";
+import { OCPP_QUERY_KEY } from "../utils/live-events";
+import { useOcppLiveConnected } from "./use-ocpp-live";
 
-export const OCPP_QUERY_KEY = ["ocpp"];
+export { OCPP_QUERY_KEY };
 
 /** Live screens poll: chargers report every 15–60 s, so 15 s keeps "last seen" honest without hammering the API. */
 export const LIVE_REFETCH_MS = 15_000;
+
+/** While the live connection pushes changes the poll is only a safety net. */
+export const LIVE_CONNECTED_REFETCH_MS = 60_000;
+
+/** A running session's figures: every 5 s without the live connection (each meter reading is pushed with it). */
+const SESSION_LIVE_REFETCH_MS = 5_000;
+
+/** The poll interval of a live screen: slower while connected, off when the screen is not live. */
+function useLiveRefetch(live: boolean): number | false {
+  const connected = useOcppLiveConnected();
+  if (!live) return false;
+  return connected ? LIVE_CONNECTED_REFETCH_MS : LIVE_REFETCH_MS;
+}
 
 // ============================================
 // Queries
 // ============================================
 
 export function useOcppFleetHealth(live = true) {
+  const refetchInterval = useLiveRefetch(live);
   return useQuery({
     queryKey: [...OCPP_QUERY_KEY, "fleet-health"],
     queryFn: ({ signal }) => getFleetHealth(signal),
-    refetchInterval: live ? LIVE_REFETCH_MS : false,
+    refetchInterval,
   });
 }
 
 export function useOcppChargePoints(query: OcppChargePointsQuery, live = true) {
+  const refetchInterval = useLiveRefetch(live);
   return useQuery({
     queryKey: [...OCPP_QUERY_KEY, "charge-points", query],
     queryFn: ({ signal }) => getChargePoints(query, signal),
-    refetchInterval: live ? LIVE_REFETCH_MS : false,
+    refetchInterval,
     placeholderData: (prev) => prev,
   });
 }
@@ -73,6 +94,7 @@ export function useOcppChargePoints(query: OcppChargePointsQuery, live = true) {
  * so pages of 100 are walked until hasNextPage is false (capped at 50 pages = 5,000 chargers).
  */
 export function useOcppAllChargePoints(live = true) {
+  const refetchInterval = useLiveRefetch(live);
   return useQuery({
     queryKey: [...OCPP_QUERY_KEY, "charge-points", "all"],
     queryFn: async ({ signal }) => {
@@ -84,30 +106,44 @@ export function useOcppAllChargePoints(live = true) {
       }
       return items;
     },
-    refetchInterval: live ? LIVE_REFETCH_MS : false,
+    refetchInterval,
     placeholderData: (prev) => prev,
   });
 }
 
 /** Detail (connectors + today's figures) of several chargers at once; shares the cache with useOcppChargePoint. */
 export function useOcppChargePointDetails(ids: number[], live = true) {
+  const refetchInterval = useLiveRefetch(live);
   return useQueries({
     queries: ids.map((id) => ({
       queryKey: [...OCPP_QUERY_KEY, "charge-point", id],
       queryFn: ({ signal }: { signal: AbortSignal }) => getChargePoint(id, 10, signal),
-      refetchInterval: live ? LIVE_REFETCH_MS : (false as const),
+      refetchInterval,
     })),
   });
 }
 
 export function useOcppChargePoint(id: number | null | undefined, live = true) {
+  const refetchInterval = useLiveRefetch(live);
   return useQuery({
     queryKey: [...OCPP_QUERY_KEY, "charge-point", id],
     queryFn: ({ signal }) => getChargePoint(id!, 10, signal),
     enabled: id != null && id > 0,
     // A unit that has not booted yet is being commissioned right now: poll every 4 s so the
     // admin at the station sees "connected" the moment it happens.
-    refetchInterval: (q) => (!live ? false : q.state.data && !q.state.data.lastBootAt ? 4_000 : LIVE_REFETCH_MS),
+    refetchInterval: (q) => (!live ? false : q.state.data && !q.state.data.lastBootAt ? 4_000 : refetchInterval),
+  });
+}
+
+/** One session's live figures (power, amps, battery, cost so far, limit). Stops polling once it is closed. */
+export function useOcppSessionLive(transactionId: number | null | undefined, live = true) {
+  const connected = useOcppLiveConnected();
+  return useQuery({
+    queryKey: [...OCPP_QUERY_KEY, "session-live", transactionId],
+    queryFn: ({ signal }) => getSessionLive(transactionId!, signal),
+    enabled: transactionId != null && transactionId > 0,
+    refetchInterval: (q) =>
+      !live || (q.state.data && !q.state.data.isOpen) ? false : connected ? LIVE_CONNECTED_REFETCH_MS : SESSION_LIVE_REFETCH_MS,
   });
 }
 
@@ -268,7 +304,8 @@ export function useChangeAvailability() {
 export function useRemoteStart() {
   const invalidate = useInvalidateOcpp();
   return useMutation({
-    mutationFn: ({ id, connectorId }: { id: number; connectorId: number }) => remoteStart(id, connectorId),
+    mutationFn: ({ id, connectorId, limit }: { id: number; connectorId: number; limit?: RemoteStartLimit | null }) =>
+      remoteStart(id, connectorId, limit),
     onSettled: invalidate,
   });
 }
@@ -278,6 +315,16 @@ export function useRemoteStop() {
   return useMutation({
     mutationFn: ({ id, transactionId }: { id: number; transactionId: number }) => remoteStop(id, transactionId),
     onSettled: invalidate,
+  });
+}
+
+/** Set, change (kind + value) or clear (kind null) the "stop at …" of a running session. */
+export function useSetSessionChargeLimit() {
+  const invalidate = useInvalidateOcpp();
+  return useMutation({
+    mutationFn: ({ transactionId, kind, value }: { transactionId: number; kind: OcppChargeLimitKind | null; value: number | null }) =>
+      setSessionChargeLimit(transactionId, kind, value),
+    onSuccess: invalidate,
   });
 }
 

@@ -24,7 +24,9 @@ import type { ChargerCredentials, OcppConnectorDto } from "../types/api";
 import { CredentialsDialog } from "./RegisterChargerDialog";
 import ChargerControlPanel from "./ChargerControlPanel";
 import ChargerConfigPanel from "./ChargerConfigPanel";
-import { ConnectionChip, ConnectorStatusChip, OnboardingCard, ReliabilityChip, SubscriptionChip, errMessage, fmtDuration, fmtKwh, ocppBaseUrl, useDateFmt } from "./ocpp-ui";
+import LiveSessionPanel from "./LiveSessionPanel";
+import { ChargeLimitChip } from "./ChargeLimitControls";
+import { ConnectionChip, ConnectorStatusChip, OnboardingCard, ReliabilityChip, SubscriptionChip, errMessage, fmtDuration, fmtKwh, fmtSocRange, ocppBaseUrl, useDateFmt } from "./ocpp-ui";
 import { useQuery } from "@tanstack/react-query";
 import { getAllPlugTypes } from "../../charge-management/services/station-form-service";
 import MenuItem from "@mui/material/MenuItem";
@@ -148,6 +150,8 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
   const ar = useLanguageStore((s) => s.language) === LANGUAGE.AR;
   const cpOnline = !!cp && cp.isConnected && cp.isEnabled;
   const plugs = cp ? plugConnectors(cp.connectors) : [];
+  /** Running sessions get the live panel (stale ones stay in the table only, like the stop button). */
+  const runningSessions = cp ? cp.recentTransactions.filter((x) => x.isOpen && !x.isStale) : [];
   const [showLog, setShowLog] = useState(false);
   const { data: log = [] } = useOcppRawMessages(id, 50, showLog);
 
@@ -284,6 +288,9 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                 </Stack>
               </Paper>
 
+              {/* Running sessions: live figures and the "stop at …" limit */}
+              {runningSessions.map((tx) => <LiveSessionPanel key={tx.id} tx={tx} />)}
+
               {/* Charger + connection info */}
               <Paper variant="outlined" sx={{ borderRadius: 2, p: 2 }}>
                 <Stack spacing={2} divider={<Divider />}>
@@ -362,8 +369,10 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                           <TableCell>{t("ocpp@columns.connector")}</TableCell>
                           <TableCell>{t("ocpp@columns.tag")}</TableCell>
                           <TableCell>{t("ocpp@columns.started")}</TableCell>
+                          <TableCell>{t("ocpp@columns.ended")}</TableCell>
                           <TableCell>{t("ocpp@columns.duration")}</TableCell>
                           <TableCell>{t("ocpp@columns.energy")}</TableCell>
+                          <TableCell>{t("ocpp@columns.battery")}</TableCell>
                           <TableCell>{t("ocpp@columns.price")}</TableCell>
                           <TableCell>{t("ocpp@columns.source")}</TableCell>
                           <TableCell>{t("ocpp@columns.reason")}</TableCell>
@@ -373,22 +382,25 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                         {cp.recentTransactions.map((tx) => (
                           <TableRow key={tx.id} hover>
                             <TableCell>
-                              <Stack direction="row" spacing={0.5} alignItems="center">
+                              <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
                                 <Typography variant="body2" fontWeight={700}>#{tx.id}</Typography>
                                 {tx.isOpen && <Chip size="small" color="primary" label={t("ocpp@detail.open")} sx={{ height: 18, fontSize: 10 }} />}
                                 {tx.isStale && <Chip size="small" color="warning" label={t("ocpp@detail.stale")} sx={{ height: 18, fontSize: 10 }} />}
                                 {tx.isOrphan && <Chip size="small" color="default" label={t("ocpp@detail.orphan")} sx={{ height: 18, fontSize: 10 }} />}
                                 {tx.wasRejected && <Chip size="small" color="error" variant="outlined" label={t("ocpp@detail.rejected")} sx={{ height: 18, fontSize: 10 }} />}
+                                <ChargeLimitChip limit={tx.chargeLimit} />
                               </Stack>
                             </TableCell>
                             <TableCell>{tx.connectorId}</TableCell>
                             <TableCell sx={{ fontFamily: "monospace" }}>{tx.idTag || "—"}</TableCell>
                             <TableCell><Typography variant="caption">{fmt.full(tx.startedAt)}</Typography></TableCell>
+                            <TableCell><Typography variant="caption">{tx.isOpen ? "—" : fmt.full(tx.stoppedAt)}</Typography></TableCell>
                             <TableCell>{fmtDuration(tx.durationSec)}</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>{fmtKwh(tx.energyKwh)}</TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}><bdi dir="ltr">{fmtSocRange(tx.socStartPercent, tx.socEndPercent)}</bdi></TableCell>
                             <TableCell sx={{ whiteSpace: "nowrap" }}>{tx.costJod != null ? `${tx.costJod.toFixed(3)} JOD` : "—"}</TableCell>
                             <TableCell><Chip size="small" variant="outlined" label={t(`ocpp@source.${tx.startSource ?? "Card"}`, { defaultValue: tx.startSource ?? "Card" })} sx={{ height: 20, fontSize: 11 }} /></TableCell>
-                            <TableCell><Tooltip title={tx.stopReason ?? ""}><span>{tx.stopReasonText ?? tx.stopReason ?? "—"}</span></Tooltip></TableCell>
+                            <TableCell><Tooltip title={tx.stopReason ?? ""}><span>{(ar ? tx.stopReasonTextAr : null) ?? tx.stopReasonText ?? tx.stopReason ?? "—"}</span></Tooltip></TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

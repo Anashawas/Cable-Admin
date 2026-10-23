@@ -5,6 +5,7 @@ import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useOcppChargePoints } from "../hooks/use-ocpp";
+import { useOcppLive } from "../hooks/use-ocpp-live";
 import SubscriptionPanel from "../../subscriptions/components/SubscriptionPanel";
 import ChargersTable from "./ChargersTable";
 import ChargerDetailDialog from "./ChargerDetailDialog";
@@ -33,6 +34,8 @@ export default function StationChargersSection({ chargingPointId, stationName, o
   const [viewId, setViewId] = useState<number | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
 
+  // The station profile tab is live too; on the Cable Connect station page that screen holds the connection.
+  useOcppLive(showChargers);
   const list = useOcppChargePoints({ chargingPointId, pageSize: 100 }, showChargers);
   const items = list.data?.items ?? [];
 

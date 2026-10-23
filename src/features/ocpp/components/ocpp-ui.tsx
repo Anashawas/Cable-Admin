@@ -13,6 +13,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { Box, Paper, Stack, Tooltip, Typography } from "@mui/material";
 import { useLanguageStore } from "../../../stores";
 import { formatFullDateTime, formatRelative, parseApiDate } from "../../../utils/date-format";
+import { useOcppLiveStore } from "../services/ocpp-live";
 import type { OcppConnectionState, OcppOnboardingDto, OcppSubscriptionStateDto } from "../types/api";
 
 /** Pull the most descriptive message out of an axios error. */
@@ -67,6 +68,33 @@ export function fmtDuration(sec?: number | null): string {
 
 export function fmtKwh(v?: number | null): string {
   return v == null ? "—" : `${Number(v).toFixed(2)} kWh`;
+}
+
+/** Battery at the start → at the end ("20% → 80%"); "—" when the car reported neither. */
+export function fmtSocRange(start?: number | null, end?: number | null): string {
+  if (start == null && end == null) return "—";
+  const p = (v?: number | null) => (v == null ? "?" : `${v}%`);
+  return `${p(start)} → ${p(end)}`;
+}
+
+/** Header chip: green "Live" while events are pushed; otherwise how the page keeps itself fresh. */
+export function LiveIndicator() {
+  const { t } = useTranslation();
+  const state = useOcppLiveStore((s) => s.state);
+  const on = state === "connected";
+  const pending = state === "idle" || state === "connecting" || state === "reconnecting";
+  const label = on ? t("ocpp@live") : pending ? t(state === "reconnecting" ? "ocpp@liveConn.reconnecting" : "ocpp@liveConn.connecting") : t("ocpp@liveConn.polling");
+  const hint = on ? t("ocpp@liveConn.connectedHint") : pending ? t("ocpp@liveConn.connectingHint") : t("ocpp@liveConn.pollingHint");
+  const dot = on ? "success.main" : pending ? "warning.main" : "text.disabled";
+  return (
+    <Tooltip title={hint}>
+      <Chip
+        size="small" variant="outlined" color={on ? "success" : "default"} label={label} aria-label={`${label} — ${hint}`} role="status"
+        icon={<Box component="span" sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: dot }} aria-hidden />}
+        sx={{ fontWeight: 700, height: 22, "& .MuiChip-icon": { marginInlineStart: "8px", marginInlineEnd: "-2px" } }}
+      />
+    </Tooltip>
+  );
 }
 
 /** Online / Reconnecting / Offline, with disabled and locked overriding the colour. */

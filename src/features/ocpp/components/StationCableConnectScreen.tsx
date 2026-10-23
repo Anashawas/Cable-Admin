@@ -18,6 +18,7 @@ import { getStationById } from "../../charge-management/services/station-form-se
 import { useLanguageStore } from "../../../stores";
 import { LANGUAGE } from "../../../constants/language-constants";
 import { useLiveVisibility, useOcppAlerts, useOcppChargePointDetails, useOcppChargePoints } from "../hooks/use-ocpp";
+import { useOcppLive } from "../hooks/use-ocpp-live";
 import type { OcppChargePointDetailDto, OcppChargePointListItemDto, OcppConnectorDto } from "../types/api";
 import AlertsSection from "./AlertsSection";
 import ChargerDetailDialog from "./ChargerDetailDialog";
@@ -26,7 +27,7 @@ import StationChargersSection from "./StationChargersSection";
 import SummaryCard, { Figure } from "./SummaryCard";
 import ChargerIcon, { iconPlugColor, iconPlugOf, iconPlugsFromCounts, plugConnectors, plugFamily } from "./ChargerIcon";
 import { ChargerEnabledSwitch } from "./ChargersTable";
-import { Dot, ReliabilityText, StatusDotChip, SubscriptionChip, useDateFmt } from "./ocpp-ui";
+import { Dot, LiveIndicator, ReliabilityText, StatusDotChip, SubscriptionChip, useDateFmt } from "./ocpp-ui";
 import { summarizeStation } from "./station-groups";
 import BackButton from "../../../components/BackButton";
 
@@ -183,6 +184,7 @@ function StationView({ id }: { id: number }) {
   const { t } = useTranslation();
   const [viewId, setViewId] = useState<number | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
+  useOcppLive();
 
   // Same query as the station page's Cable Connect tab, so the cache is shared.
   const list = useOcppChargePoints({ chargingPointId: id, pageSize: 100 });
@@ -225,6 +227,7 @@ function StationView({ id }: { id: number }) {
               {loading && !station.data ? <Skeleton width={220} /> : name}
             </Typography>
             <Typography variant="body2" color="text.secondary"><bdi>#{id}</bdi></Typography>
+            <Box sx={{ alignSelf: "center" }}><LiveIndicator /></Box>
             {station.data?.cityName && (
               <Stack direction="row" spacing={0.25} alignItems="center" sx={{ color: "text.secondary" }}>
                 <LocationOnOutlinedIcon sx={{ fontSize: 16 }} aria-hidden />

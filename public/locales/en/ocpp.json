@@ -64,7 +64,9 @@
     "expires": "Expires",
     "reliability": "Reliability",
     "price": "Price",
-    "source": "Started by"
+    "source": "Started by",
+    "ended": "Ended",
+    "battery": "Battery"
   },
   "subscription": {
     "title": "Cable Connect subscription",
@@ -491,5 +493,65 @@
     "notFound": "Station not found",
     "settings": "Station settings",
     "openInCableConnect": "Open in Cable Connect"
+  },
+  "liveConn": {
+    "connecting": "Connecting…",
+    "reconnecting": "Reconnecting…",
+    "polling": "Auto-refresh",
+    "connectedHint": "Live: changes appear the moment a charger reports them",
+    "connectingHint": "Connecting to live updates — refreshing every 15 s meanwhile",
+    "pollingHint": "Live updates are not available — refreshing every 15 s"
+  },
+  "session": {
+    "title": "Charging now",
+    "session": "Session #{{id}} · plug {{connector}}",
+    "power": "Power",
+    "maxPower": "max {{value}} kW",
+    "energy": "Energy",
+    "current": "Current",
+    "voltage": "Voltage",
+    "temperature": "Temperature",
+    "battery": "Battery",
+    "batteryHint": "At the start → now",
+    "cost": "Cost so far",
+    "rate": "{{rate}} fils/kWh · {{window}}",
+    "started": "Started",
+    "elapsed": "Running for {{duration}}",
+    "lastReading": "Last reading {{ago}}",
+    "noReadings": "No meter reading yet",
+    "loadError": "Live figures are not available right now"
+  },
+  "limit": {
+    "title": "Stop at",
+    "optional": "Stop at… (optional)",
+    "none": "No limit",
+    "kind": {
+      "Jod": "Amount (JOD)",
+      "Kwh": "Energy (kWh)",
+      "Soc": "Battery %"
+    },
+    "unit": {
+      "Jod": "JOD",
+      "Kwh": "kWh",
+      "Soc": "%"
+    },
+    "value": "Value",
+    "range": "Between {{min}} and {{max}} {{unit}}",
+    "errors": {
+      "required": "Enter the limit value",
+      "range": "Must be between {{min}} and {{max}} {{unit}}",
+      "integer": "Use a whole number"
+    },
+    "hint": "Cable stops the session by itself when it reaches this. Choose “No limit” to charge until the car or the operator stops it.",
+    "set": "Stop at…",
+    "change": "Change limit",
+    "clear": "Remove limit",
+    "dialogTitle": "Stop session #{{session}} automatically",
+    "badge": "Stop at {{text}}",
+    "reached": "Limit reached",
+    "stopping": "Stopping — limit reached ({{text}})",
+    "setAt": "Set {{ago}}",
+    "saved": "Charge limit saved",
+    "cleared": "Charge limit removed"
   }
 }

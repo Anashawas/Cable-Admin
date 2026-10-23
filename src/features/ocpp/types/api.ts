@@ -107,10 +107,119 @@ export interface OcppTransactionDto {
   startSource?: string;
   startedByUserId?: number | null;
   stopReasonText?: string | null;
+  stopReasonTextAr?: string | null;
   /** Price under the time-of-use tariff; null while open or when the energy is unknown. */
   costFils?: number | null;
   costJod?: number | null;
   tariffVersion?: number | null;
+  /** Battery % at the first and at the last / final reading; null when the car does not report it. */
+  socStartPercent?: number | null;
+  socEndPercent?: number | null;
+  /** "Stop at …"; null when none. */
+  chargeLimit?: OcppChargeLimitDto | null;
+}
+
+// ============================================
+// Charge limit — Cable.Ocpp stops the session itself at an amount, an energy or a battery %
+// ============================================
+
+export type OcppChargeLimitKind = "Jod" | "Kwh" | "Soc";
+
+export interface OcppChargeLimitDto {
+  kind: OcppChargeLimitKind;
+  value: number;
+  /** "7 JOD" / "7 دينار", from the API (invariant digits). */
+  text: string;
+  textAr: string;
+  setAt?: string | null;
+  /** Set when the server sent the stop; the session closes a few seconds later. */
+  reachedAt?: string | null;
+}
+
+/** Remote start body: the limit is optional and travels with the start. */
+export interface RemoteStartLimit {
+  chargeLimitKind: OcppChargeLimitKind;
+  chargeLimitValue: number;
+}
+
+// ============================================
+// Session live — GET sessions/{transactionId}/live
+// ============================================
+
+export interface OcppSessionSampleDto {
+  at: string;
+  powerW?: number | null;
+  socPercent?: number | null;
+  energyKwh?: number | null;
+  currentA?: number | null;
+  voltageV?: number | null;
+  temperatureC?: number | null;
+}
+
+export interface OcppSessionPriceLineDto {
+  key: string;
+  nameEn: string;
+  nameAr: string;
+  kwh: number;
+  priceFils: number;
+  fils: number;
+}
+
+/** One session in detail: while open the figures are "so far"; once closed the final ones. */
+export interface OcppSessionLiveDto {
+  id: number;
+  chargingPointId: number;
+  chargerId: number;
+  chargerName?: string | null;
+  connectorId: number;
+  startedAt: string;
+  stoppedAt?: string | null;
+  isOpen: boolean;
+  durationSec: number;
+  startSource: string;
+  stopReason?: string | null;
+  stopReasonText?: string | null;
+  stopReasonTextAr?: string | null;
+  energyKwh?: number | null;
+  powerW?: number | null;
+  socPercent?: number | null;
+  voltageV?: number | null;
+  currentA?: number | null;
+  temperatureC?: number | null;
+  lastSampleAt?: string | null;
+  secondsSinceSample?: number | null;
+  maxPowerW?: number | null;
+  avgPowerW?: number | null;
+  costFils?: number | null;
+  costJod?: number | null;
+  /** Open only: fils/kWh of the tariff window right now and its name. */
+  currentRateFils?: number | null;
+  currentWindowNameEn?: string | null;
+  currentWindowNameAr?: string | null;
+  price?: OcppSessionPriceLineDto[] | null;
+  /** Up to 120 points, oldest first. */
+  series: OcppSessionSampleDto[];
+  socStartPercent?: number | null;
+  socEndPercent?: number | null;
+  chargeLimit?: OcppChargeLimitDto | null;
+}
+
+// ============================================
+// Live push — SignalR /hubs/ocpp, client method "ocpp". A hint only: refetch what it names.
+// ============================================
+
+export type OcppLiveEventType = "connector" | "session" | "charger";
+
+export interface OcppLiveEvent {
+  type: OcppLiveEventType;
+  chargingPointId: number;
+  /** The OcppChargePoint id (the charger), not the OCPP string id. */
+  chargerId: number;
+  connectorId?: number | null;
+  transactionId?: number | null;
+  /** connector: OCPP status · session: started | updated | stopped | limit-reached · charger: online | offline | booted. */
+  status?: string | null;
+  at: string;
 }
 
 export interface OcppChargePointTodayDto {

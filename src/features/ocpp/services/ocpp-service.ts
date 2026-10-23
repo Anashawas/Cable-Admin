@@ -4,6 +4,8 @@ import type {
   ChargerCredentials,
   OcppAlertDto,
   OcppAuthorizedTagDto,
+  OcppChargeLimitDto,
+  OcppChargeLimitKind,
   OcppChargePointDetailDto,
   OcppChargePointListItemDto,
   OcppChargePointsQuery,
@@ -14,7 +16,9 @@ import type {
   OcppAlertThresholdsDto,
   OcppLocalListStateDto,
   OcppRawMessageDto,
+  OcppSessionLiveDto,
   PagedResult,
+  RemoteStartLimit,
   OcppTriggerMessage,
   RegisterChargePointRequest,
   UpdateChargePointRequest,
@@ -152,7 +156,9 @@ export const changeAvailability = (id: number, connectorId: number, type: "Opera
 
 export const remoteStop = (id: number, transactionId: number) => cmd(id, "remote-stop", { transactionId });
 
-export const remoteStart = (id: number, connectorId: number) => cmd(id, "remote-start", { connectorId });
+/** The optional limit ("stop at 7 JOD") is enforced by Cable.Ocpp; an out-of-range value is a 400 with a localized detail. */
+export const remoteStart = (id: number, connectorId: number, limit?: RemoteStartLimit | null) =>
+  cmd(id, "remote-start", limit ? { connectorId, ...limit } : { connectorId });
 
 export const getConfiguration = (id: number, keys?: string[]) => cmd(id, "get-configuration", { keys: keys ?? null });
 
@@ -167,6 +173,25 @@ export const syncLocalList = async (id: number): Promise<OcppLocalListStateDto> 
 export const getCommands = async (id: number, take = 30, signal?: AbortSignal): Promise<OcppCommandDto[]> => {
   const { data } = await server.get<OcppCommandDto[]>(`${BASE}/charge-points/${id}/commands`, { params: { take }, signal });
   return data;
+};
+
+// ============================================
+// Sessions — live figures and the charge limit of a running one
+// ============================================
+
+export const getSessionLive = async (transactionId: number, signal?: AbortSignal): Promise<OcppSessionLiveDto> => {
+  const { data } = await server.get<OcppSessionLiveDto>(`${BASE}/sessions/${transactionId}/live`, { signal });
+  return data;
+};
+
+/** kind null clears the limit (the API then returns null). */
+export const setSessionChargeLimit = async (
+  transactionId: number,
+  kind: OcppChargeLimitKind | null,
+  value: number | null,
+): Promise<OcppChargeLimitDto | null> => {
+  const { data } = await server.put<OcppChargeLimitDto | null>(`${BASE}/sessions/${transactionId}/limit`, { kind, value });
+  return data ?? null;
 };
 
 // ============================================
