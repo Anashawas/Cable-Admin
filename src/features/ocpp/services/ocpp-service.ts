@@ -17,6 +17,7 @@ import type {
   OcppLocalListStateDto,
   OcppRawMessageDto,
   OcppSessionLiveDto,
+  OcppStationSessionDto,
   PagedResult,
   RemoteStartLimit,
   OcppTriggerMessage,
@@ -181,6 +182,20 @@ export const getCommands = async (id: number, take = 30, signal?: AbortSignal): 
 
 export const getSessionLive = async (transactionId: number, signal?: AbortSignal): Promise<OcppSessionLiveDto> => {
   const { data } = await server.get<OcppSessionLiveDto>(`${BASE}/sessions/${transactionId}/live`, { signal });
+  return data;
+};
+
+/** One page of a station's sessions, newest first (the partner app's endpoint; admins may call it). */
+export const getStationSessions = async (
+  chargingPointId: number,
+  page: number,
+  pageSize: number,
+  signal?: AbortSignal,
+): Promise<PagedResult<OcppStationSessionDto>> => {
+  const { data } = await server.get<PagedResult<OcppStationSessionDto>>(
+    `api/provider/charging-points/${chargingPointId}/sessions`,
+    { params: { page, pageSize }, signal },
+  );
   return data;
 };
 

@@ -553,5 +553,147 @@
     "setAt": "Set {{ago}}",
     "saved": "Charge limit saved",
     "cleared": "Charge limit removed"
+  },
+  "payments": {
+    "title": "Charging revenue",
+    "subtitle": "Value of Cable Connect charging sessions per station",
+    "stationButton": "Revenue",
+    "tabs": {
+      "label": "Cable Connect sections",
+      "overview": "Overview",
+      "payments": "Revenue"
+    },
+    "export": "Export CSV",
+    "retry": "Retry",
+    "close": "Close",
+    "loading": "Loading sessions",
+    "runningN": "{{n}} running now",
+    "runningSoFar": "Running, so far",
+    "loadError": "Couldn't load the sessions.",
+    "stationsError": "Couldn't load the stations and chargers.",
+    "partial": "Couldn't load the sessions of: {{names}}. The figures leave them out.",
+    "capped": "The period is long for these stations, so only their latest 2,000 sessions are shown: {{names}}. The oldest sessions may be missing; pick a shorter period.",
+    "noStations": "No stations with chargers yet",
+    "empty": "No sessions in this period",
+    "emptyHint": "Try a longer period or clear some filters.",
+    "note": "Values follow Cable's time-of-use tariff. How the driver paid isn't recorded by the system, so the page shows how each session started (card / driver app / staff) and its value in JOD. No loyalty or QR transactions are included.",
+    "period": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7": "Last 7 days",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "custom": "Custom"
+    },
+    "filters": {
+      "label": "Filters",
+      "period": "Period",
+      "from": "From",
+      "to": "To",
+      "badRange": "Start date is after end date",
+      "station": "Station",
+      "allStations": "All stations",
+      "charger": "Charger",
+      "pickStation": "Pick a station first",
+      "source": "Started by",
+      "status": "Status",
+      "all": "All"
+    },
+    "source": {
+      "Card": "Card",
+      "App": "Driver app",
+      "Operator": "Staff"
+    },
+    "status": {
+      "completed": "Completed",
+      "running": "Running"
+    },
+    "summary": {
+      "label": "Period summary",
+      "revenue": "Total value",
+      "energy": "Energy sold",
+      "sessions": "Completed sessions",
+      "perSession": "Average per session",
+      "perKwh": "Average price per kWh",
+      "running": "Running now",
+      "soFar": "So far",
+      "bySource": "By how started",
+      "completedOnly": "Completed sessions only",
+      "openHint": "Running sessions are not added to the total until they end; the amount shown is their value so far."
+    },
+    "byStation": {
+      "title": "By station",
+      "station": "Station",
+      "sessions": "Sessions",
+      "sessionsToday": "Sessions today",
+      "running": "Running now",
+      "share": "Share",
+      "shareOf": "{{name}} share: {{pct}}%",
+      "last": "Last session",
+      "openStation": "Open {{name}} in Cable Connect"
+    },
+    "byCharger": {
+      "title": "By charger",
+      "charger": "Charger"
+    },
+    "chart": {
+      "title": "Daily value",
+      "hint": "In JOD per day. Hover or focus a bar for details.",
+      "point": "{{day}}\nJOD {{revenue}} · {{kwh}} kWh · Sessions: {{n}}"
+    },
+    "daily": {
+      "title": "By day",
+      "date": "Day",
+      "sessions": "Sessions",
+      "energy": "Energy",
+      "revenue": "Value",
+      "perKwh": "Avg. per kWh",
+      "total": "Total",
+      "expand": "Show sessions of {{day}}",
+      "collapse": "Hide sessions of {{day}}",
+      "sessionsOf": "Sessions of {{day}}",
+      "hint": "Click a day to see its sessions, and a session for its details and price breakdown."
+    },
+    "session": {
+      "title": "Session #{{id}}",
+      "open": "Open session #{{id}}",
+      "time": "Time",
+      "where": "Station / charger",
+      "plugN": "Plug {{n}}",
+      "startedBy": "Started by",
+      "userId": "User #{{id}}",
+      "duration": "Duration",
+      "battery": "Battery",
+      "ended": "Stop reason",
+      "avgPower": "Average power",
+      "maxPower": "Peak power",
+      "priceTitle": "Price breakdown",
+      "window": "Window",
+      "rate": "Rate",
+      "filsPerKwh": "{{v}} fils/kWh",
+      "detailError": "The price breakdown isn't available for this session right now."
+    },
+    "duration": {
+      "lessThanMin": "< 1 min",
+      "min": "{{m}} min",
+      "hm": "{{h}} h {{m}} min"
+    },
+    "csv": {
+      "id": "Session",
+      "date": "Day",
+      "started": "Started at",
+      "stopped": "Ended at",
+      "station": "Station",
+      "charger": "Charger",
+      "plug": "Plug",
+      "startedBy": "Started by",
+      "card": "Card",
+      "userId": "User ID",
+      "durationMin": "Duration (min)",
+      "kwh": "Energy (kWh)",
+      "jod": "Value (JOD)",
+      "status": "Status",
+      "stopReason": "Stop reason"
+    }
   }
 }

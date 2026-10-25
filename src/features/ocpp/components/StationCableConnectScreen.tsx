@@ -8,6 +8,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
@@ -258,6 +259,13 @@ function StationView({ id }: { id: number }) {
           <Tooltip title={t("ocpp@refresh")}>
             <IconButton onClick={refresh} aria-label={t("ocpp@refresh")}><RefreshIcon /></IconButton>
           </Tooltip>
+          <Button
+            variant="outlined" color="inherit" size="small" component={RouterLink} to={`/cable-connect/payments?station=${id}`}
+            startIcon={<PaymentsOutlinedIcon fontSize="small" />}
+            sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2, borderColor: "divider", height: 36 }}
+          >
+            {t("ocpp@payments.stationButton")}
+          </Button>
           <Button
             variant="outlined" color="inherit" size="small" component={RouterLink} to={`/charge-management/${id}`}
             startIcon={<OpenInNewIcon fontSize="small" />}

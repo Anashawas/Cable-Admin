@@ -119,6 +119,36 @@ export interface OcppTransactionDto {
   chargeLimit?: OcppChargeLimitDto | null;
 }
 
+/**
+ * One session of a station, from the station sessions list the partner app uses
+ * (GET api/provider/charging-points/{id}/sessions, newest first). Times are Jordan
+ * local time without a zone. There is no payment method or paid status: the cost is
+ * the value under Cable's time-of-use tariff.
+ */
+export interface OcppStationSessionDto {
+  id: number;
+  ocppChargePointId: number;
+  chargerName?: string | null;
+  connectorId: number;
+  idTag: string;
+  startedAt: string;
+  stoppedAt?: string | null;
+  durationSec?: number | null;
+  energyKwh?: number | null;
+  isOpen: boolean;
+  /** Card | App | Operator */
+  startSource?: string;
+  startedByUserId?: number | null;
+  stopReason?: string | null;
+  stopReasonText?: string | null;
+  stopReasonTextAr?: string | null;
+  costFils?: number | null;
+  costJod?: number | null;
+  socStartPercent?: number | null;
+  socEndPercent?: number | null;
+  chargeLimit?: OcppChargeLimitDto | null;
+}
+
 // ============================================
 // Charge limit — Cable.Ocpp stops the session itself at an amount, an energy or a battery %
 // ============================================

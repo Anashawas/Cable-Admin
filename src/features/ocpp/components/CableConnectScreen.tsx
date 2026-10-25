@@ -8,6 +8,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import SpeedIcon from "@mui/icons-material/Speed";
 import AlertsSection from "./AlertsSection";
+import ConnectTabs from "./ConnectTabs";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { useOcppAlerts, useOcppAllChargePoints, useOcppFleetHealth, useRecomputeReliability } from "../hooks/use-ocpp";
 import { useOcppLive } from "../hooks/use-ocpp-live";
@@ -121,6 +122,8 @@ export default function CableConnectScreen() {
               </Button>
             </Stack>
           </Stack>
+
+          <ConnectTabs value="overview" />
 
           <FleetSummary h={health.data} />
 
