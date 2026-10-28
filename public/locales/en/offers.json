@@ -198,6 +198,10 @@
   "settlements_typeOffer": "Offer",
   "settlements_typeRedemption": "Redemption",
   "settlements_txEmpty": "No transactions for this settlement.",
+  "settlements_promoPaidByCable": "Discounts paid by Cable",
+  "settlements_promoPaidByCableHint": "Cable's share of the promo discounts in this settlement, owed to the provider (already in the net balance).",
+  "settlements_promoDiscount": "Promo discount {{amount}} JOD",
+  "settlements_promoShares": "Cable {{cable}} · partner {{provider}} JOD",
 
   "settlements_owner": "Owner",
   "settlements_payment": "Payment",

@@ -10,6 +10,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import EvStationIcon from "@mui/icons-material/EvStation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import AppScreenContainer from "../../../app/components/AppScreenContainer";
 import BackButton from "../../../../components/BackButton";
 import { useLanguageStore, useSnackbarStore } from "../../../../stores";
@@ -17,7 +18,7 @@ import { LANGUAGE } from "../../../../constants/language-constants";
 import { useAdminSession } from "../../hooks/use-live-charging";
 import { downloadSessionReceipt } from "../../services/live-charging-service";
 import type { OcppTransactionDto } from "../../types/api";
-import type { AdminSessionDetailDto } from "../../types/live-charging";
+import type { AdminSessionAlertDto, AdminSessionDetailDto } from "../../types/live-charging";
 import { carNameOf, fmtJod, saveBlob, sessionWho } from "../../utils/live-charging";
 import { fmtDurationLong, fmtNum, stopReasonLabel } from "../../utils/payments-format";
 import { fmtSocRange, useDateFmt } from "../ocpp-ui";
@@ -112,6 +113,36 @@ export default function ChargingSessionDetailScreen() {
   );
 }
 
+/** Alerts that point at a problem with the charger (not the driver) read as errors. */
+const ALERT_SEVERITY: Record<string, "error" | "warning"> = { limitStopNotAccepted: "error", stale: "error" };
+
+/** §11.2: the session's alerts, prominently, each with its code as a chip and the text in the UI language. */
+function SessionAlerts({ alerts, ar }: { alerts: AdminSessionAlertDto[]; ar: boolean }) {
+  const { t } = useTranslation();
+  if (alerts.length === 0) return null;
+  const severity = alerts.some((a) => ALERT_SEVERITY[a.code] === "error") ? "error" : "warning";
+  return (
+    <Alert
+      severity={severity} variant="outlined" icon={<WarningAmberRoundedIcon />} role="region" aria-labelledby="sd-alerts"
+      sx={{ borderRadius: 3, borderWidth: 2, "& .MuiAlert-message": { width: "100%" } }}
+    >
+      <Typography id="sd-alerts" fontWeight={800} sx={{ mb: 1 }}>{t("liveCharging@detail.alerts.title")}</Typography>
+      <Stack spacing={1} component="ul" sx={{ m: 0, p: 0, listStyle: "none" }}>
+        {alerts.map((a) => (
+          <Stack key={a.code} component="li" direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
+            <Chip
+              size="small" color={ALERT_SEVERITY[a.code] ?? "warning"}
+              label={t(`liveCharging@detail.alerts.code.${a.code}`, { defaultValue: a.code })}
+              sx={{ fontWeight: 700, flexShrink: 0, alignSelf: { xs: "flex-start", sm: "center" } }}
+            />
+            <Typography variant="body2" color="text.primary"><bdi>{(ar ? a.textAr : a.textEn) || a.text}</bdi></Typography>
+          </Stack>
+        ))}
+      </Stack>
+    </Alert>
+  );
+}
+
 function SessionDetail({ d, refetch, fetching }: { d: AdminSessionDetailDto; refetch: () => void; fetching: boolean }) {
   const { t } = useTranslation();
   const ar = useLanguageStore((s) => s.language) === LANGUAGE.AR;
@@ -182,6 +213,9 @@ function SessionDetail({ d, refetch, fetching }: { d: AdminSessionDetailDto; ref
           </Tooltip>
         </Stack>
       </Stack>
+
+      {/* §11.2: what to look at, first */}
+      <SessionAlerts alerts={d.alerts ?? []} ar={ar} />
 
       {/* Running: live figures and the "stop at …" controls of the charger page */}
       {s.isOpen && !s.isStale && <LiveSessionPanel tx={asTransaction(d)} />}

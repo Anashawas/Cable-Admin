@@ -1,6 +1,6 @@
 /**
  * Sprint 5 live charging — admin API shapes. Mirrors Application/Ocpp/LiveCharging
- * (AdminSessionQueries, ConnectorCodeQueries, ConnectorReports, DriverCards, LiveChargingSettings)
+ * (AdminSessionQueries, ConnectorCodeQueries, ConnectorReports, LiveChargingSettings)
  * and Application/Pricing/StationTariffFeature.cs. Dates are Jordan local time without a zone.
  */
 import type {
@@ -75,6 +75,8 @@ export interface AdminSessionRowDto {
   pointsAwarded?: number | null;
   /** App start: how far the phone was from the station, in metres. */
   startDistanceMeters?: number | null;
+  /** §11.2: a cheap alert only (started far away, parked after charging, stale); the detail lists every alert. */
+  hasAlerts?: boolean;
 }
 
 export interface AdminSessionTotalsDto {
@@ -151,20 +153,24 @@ export interface AdminSessionDetailDto {
   issues: AdminSessionIssueDto[];
   /** null = none / not decided; 0 = decided, none. */
   pointsAwarded?: number | null;
+  /** §11.2: what the admin should look at, in a fixed order; empty = nothing. */
+  alerts?: AdminSessionAlertDto[] | null;
 }
 
-// ============================================
-// RFID cards linked to a user — GET/DELETE api/admin/users/{userId}/ocpp-cards
-// ============================================
+/** §11.2 alert codes (stable). */
+export type AdminSessionAlertCode =
+  | "startedFarAway"
+  | "repeatedFailedStarts"
+  | "parkedAfterCharging"
+  | "limitStopNotAccepted"
+  | "stale";
 
-export interface OcppCardDto {
-  id: number;
-  idTag: string;
-  label?: string | null;
-  isEnabled: boolean;
-  linkedAt: string;
-  /** The app's own virtual tag (CBL-U…): unlinking it switches app charging off for the account. */
-  isAppTag: boolean;
+/** One alert on a session: `text` follows Accept-Language, `textAr` / `textEn` carry both. */
+export interface AdminSessionAlertDto {
+  code: AdminSessionAlertCode | string;
+  text: string;
+  textAr: string;
+  textEn: string;
 }
 
 // ============================================
@@ -276,6 +282,7 @@ export interface ConnectorReportsQuery {
 
 // ============================================
 // Live charging switches — GET/PUT api/admin/ocpp/live-charging-settings
+// (automatic points are not used — decision Oct 28 — so the admin neither shows nor sends them)
 // ============================================
 
 export interface LiveChargingSettingsDto {
@@ -283,14 +290,10 @@ export interface LiveChargingSettingsDto {
   maxDistanceMeters: number;
   /** Refuse an app start without the phone's position. */
   requireLocation: boolean;
-  autoPointsEnabled: boolean;
-  /** When automatic points were last switched; only sessions ending after it earn points. */
-  autoPointsSince?: string | null;
 }
 
 /** PUT body: null / absent = unchanged. */
 export interface LiveChargingSettingsUpdate {
   maxDistanceMeters?: number | null;
   requireLocation?: boolean | null;
-  autoPointsEnabled?: boolean | null;
 }

@@ -12,6 +12,7 @@ import type {
   UpdateSettlementStatusRequest,
   SettlementSummaryDto,
   SettlementTransactionDto,
+  SettlementTransactionsDto,
   ProviderType,
   AddWalletDepositRequest,
   WalletBalanceDto,
@@ -215,14 +216,27 @@ export const updateSettlementStatusBatch = async (data: {
   return res;
 };
 
-/** C1 — the transaction line-items behind a single settlement. */
+/** C1 — the transaction line-items behind a single settlement, with the promo discounts Cable paid (Sprint 5). */
 export const getSettlementTransactions = async (
   settlementId: number
-): Promise<SettlementTransactionDto[]> => {
+): Promise<SettlementTransactionsDto> => {
   const response = await server.get("/api/offers/GetSettlementTransactions", {
     params: { settlementId },
   });
-  return response.data ?? [];
+  const data = response.data;
+  // The API returns { …week, items, promoDiscountsPaidByCable }; tolerate a bare list too.
+  const items: SettlementTransactionDto[] = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+  return {
+    settlementId: data?.settlementId ?? settlementId,
+    providerType: data?.providerType ?? "",
+    providerId: data?.providerId ?? 0,
+    periodYear: data?.periodYear ?? 0,
+    periodWeek: data?.periodWeek ?? 0,
+    fromUtc: data?.fromUtc ?? "",
+    toUtc: data?.toUtc ?? "",
+    items,
+    promoDiscountsPaidByCable: Number(data?.promoDiscountsPaidByCable ?? 0) || 0,
+  };
 };
 
 /** C4 — download settlements as CSV honoring the current filters. */

@@ -4,6 +4,7 @@ import {
   Box, Chip, Link, Skeleton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Tooltip, Typography,
 } from "@mui/material";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined";
 import { useLanguageStore } from "../../../../stores";
 import { LANGUAGE } from "../../../../constants/language-constants";
@@ -111,6 +112,13 @@ export default function SessionsTable({ rows, loading, hideStation, hideWho, emp
                     <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
                       <Typography variant="body2" fontWeight={800}><Ltr>#{s.id}</Ltr></Typography>
                       <SessionStateChip isOpen={s.isOpen} isStale={s.isStale} />
+                      {s.hasAlerts && (
+                        <Tooltip title={t("liveCharging@sessions.hasAlerts")}>
+                          <Box component="span" role="img" sx={{ display: "inline-flex", color: "warning.main" }}>
+                            <WarningAmberRoundedIcon sx={{ fontSize: 18 }} />
+                          </Box>
+                        </Tooltip>
+                      )}
                       {s.openIssues > 0 && (
                         <Tooltip title={t("liveCharging@sessions.openIssues", { count: s.openIssues })}>
                           <Chip

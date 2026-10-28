@@ -8,7 +8,6 @@ import type {
   ConnectorReportsQuery,
   LiveChargingSettingsDto,
   LiveChargingSettingsUpdate,
-  OcppCardDto,
   StationTariffDto,
   TouWindowDto,
 } from "../types/live-charging";
@@ -61,20 +60,6 @@ export const getUserSessions = async (
     signal,
   });
   return data;
-};
-
-// ============================================
-// RFID cards linked to a user (4.9)
-// ============================================
-
-export const getUserCards = async (userId: number, signal?: AbortSignal): Promise<OcppCardDto[]> => {
-  const { data } = await server.get<OcppCardDto[]>(`api/admin/users/${userId}/ocpp-cards`, { signal });
-  return Array.isArray(data) ? data : [];
-};
-
-/** On the app's own tag (isAppTag) this switches app charging off for the account instead. */
-export const unlinkUserCard = async (userId: number, cardId: number): Promise<void> => {
-  await server.delete(`api/admin/users/${userId}/ocpp-cards/${cardId}`);
 };
 
 // ============================================

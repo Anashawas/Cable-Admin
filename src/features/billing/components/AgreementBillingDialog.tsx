@@ -27,6 +27,7 @@ import {
 import ShoppingCartCheckoutIcon from "@mui/icons-material/ShoppingCartCheckout";
 import SaveIcon from "@mui/icons-material/Save";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import { DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import { formatShortDate } from "../../../utils/date-format";
@@ -34,6 +35,7 @@ import { apiErrorMessage, fmtJod } from "../../../utils/api-error";
 import { useAgreementBundles, useSetBillingModel } from "../hooks/use-billing";
 import type { BillingModel, BillingProviderType } from "../types/api";
 import BreakEvenMeter from "./BreakEvenMeter";
+import ModelCompareDialog from "./ModelCompareDialog";
 import PlanStatusChip from "./PlanStatusChip";
 import SellBundleDialog from "./SellBundleDialog";
 
@@ -53,8 +55,9 @@ const BUNDLE_STATE_COLOR: Record<string, "success" | "warning" | "error" | "defa
 
 /**
  * The loyalty billing of one partner agreement: the model switch (percentage |
- * bundle), the current bundle, "sell a bundle" with the margin check, and the
- * bundle history with a break-even meter for every bundle that is on.
+ * bundle) with "compare models" (the sales tool), the current bundle, "sell a
+ * bundle" with the margin check, and the bundle history with a break-even meter
+ * for every bundle that is on.
  */
 export default function AgreementBillingDialog({ agreement, onClose }: { agreement: AgreementRef | null; onClose: () => void }) {
   const { t, i18n } = useTranslation();
@@ -68,6 +71,7 @@ export default function AgreementBillingDialog({ agreement, onClose }: { agreeme
   const [model, setModelState] = useState<BillingModel>("percentage");
   const [minAmount, setMinAmount] = useState<number | null>(null);
   const [sellOpen, setSellOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const [openCodes, setOpenCodes] = useState<number | null>(null);
 
   useEffect(() => {
@@ -77,7 +81,10 @@ export default function AgreementBillingDialog({ agreement, onClose }: { agreeme
   }, [data]);
 
   useEffect(() => {
-    if (agreement) setOpenCodes(null);
+    if (agreement) {
+      setOpenCodes(null);
+      setCompareOpen(false);
+    }
   }, [agreement]);
 
   if (!agreement) return null;
@@ -116,8 +123,15 @@ export default function AgreementBillingDialog({ agreement, onClose }: { agreeme
         ) : (
           <Stack spacing={2.5}>
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Typography variant="subtitle1" fontWeight={800}>{t("billing@bundle.model")}</Typography>
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>{t("billing@bundle.modelHint")}</Typography>
+              <Stack direction="row" spacing={1} alignItems="flex-start">
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle1" fontWeight={800}>{t("billing@bundle.model")}</Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>{t("billing@bundle.modelHint")}</Typography>
+                </Box>
+                <Button variant="outlined" size="small" startIcon={<CompareArrowsIcon />} onClick={() => setCompareOpen(true)} sx={{ flexShrink: 0 }}>
+                  {t("billing@compare.action")}
+                </Button>
+              </Stack>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
                 <ToggleButtonGroup exclusive size="small" value={model} onChange={(_, v) => v && setModelState(v as BillingModel)}>
                   <ToggleButton value="percentage">{t("billing@bundle.percentage")}</ToggleButton>
@@ -231,6 +245,14 @@ export default function AgreementBillingDialog({ agreement, onClose }: { agreeme
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose}>{t("close")}</Button>
       </DialogActions>
+
+      <ModelCompareDialog
+        open={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        providerType={agreement.providerType}
+        providerId={agreement.providerId}
+        providerName={agreement.providerName}
+      />
 
       <SellBundleDialog
         open={sellOpen}

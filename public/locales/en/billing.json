@@ -321,6 +321,53 @@
     "navAction": "Loyalty billing (model & bundles)"
   },
 
+  "compare": {
+    "action": "Compare models",
+    "title": "Compare billing models",
+    "subtitle": "This partner's completed transactions of the last {{days}} days, as they were on percentage and simulated on a scan bundle. Internal to Cable.",
+    "plan": "Bundle plan",
+    "planDefault": "The partner's bundle (or the first loyalty plan)",
+    "option": "Price option",
+    "optionDefault": "Cheapest for the period",
+    "period": "{{from}} – {{to}}",
+    "currentModel": "Now on",
+    "recommended": "Recommended",
+    "percentageCol": "Percentage",
+    "bundleCol": "Scan bundle",
+    "metric": "Figure",
+    "rows": {
+      "transactions": "Transactions",
+      "scansUsed": "Scans used",
+      "totalAmount": "Amount paid at the partner",
+      "averageAmount": "Average transaction",
+      "partnerPays": "Partner pays Cable",
+      "commissionAt": "at {{percent}}% commission",
+      "bundlesNeeded": "{{count}} × {{price}} JOD",
+      "perScan": "Partner pays per scan",
+      "listPerScan": "List price {{price}} JOD / scan",
+      "points": "Points given",
+      "pointsCost": "Points cost",
+      "margin": "Cable margin",
+      "marginPerScan": "Cable margin per scan",
+      "leftOver": "Scans paid for, not used",
+      "unlimited": "Unlimited",
+      "minimum": "Bundle minimum amount"
+    },
+    "simulated": "Codes billed on a bundle in this period: {{count}} — their percentage figures use the agreement's current commission and reward %.",
+    "belowMinimum": "Transactions under the bundle minimum ({{min}} JOD): {{count}} — they get no code on a bundle, so the bundle side leaves them out.",
+    "partnerSaving": "Partner saves with the bundle",
+    "marginDifference": "Cable margin: bundle − percentage",
+    "footnote": "1 point = {{value}} JOD · points cost only (boost and promo points are marketing and not counted).",
+    "noData": "No completed transactions in the last 90 days — nothing to compare.",
+    "recommendation": {
+      "noTransactions": "No completed transactions in the last {{days}} days — nothing to compare.",
+      "bundleLosesForCable": "The bundle would cost Cable {{loss}} JOD in points over this period — keep the percentage or pick a pricier bundle.",
+      "bundleSavesPartner": "The bundle saves the partner {{saving}} JOD over {{days}} days, with a Cable margin of {{margin}} JOD.",
+      "percentageCheaperForPartner": "The percentage model is {{extra}} JOD cheaper for the partner over {{days}} days."
+    },
+    "loadError": "The comparison could not be loaded"
+  },
+
   "requests": {
     "navTitle": "Upgrade requests",
     "title": "Upgrade requests",

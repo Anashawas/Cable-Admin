@@ -58,6 +58,7 @@ import MiscellaneousServicesIcon from "@mui/icons-material/MiscellaneousServices
 import CreditScoreIcon from "@mui/icons-material/CreditScore";
 import HistoryIcon from "@mui/icons-material/History";
 import PersonIcon from "@mui/icons-material/Person";
+import DiscountIcon from "@mui/icons-material/Discount";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { useSnackbarStore } from "../../../stores";
 import {
@@ -215,10 +216,12 @@ export default function SettlementsScreen() {
   const [paginationModel, setPaginationModel] = useListState<GridPaginationModel>("pagination", { page: 0, pageSize: 20 });
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedSettlement, setSelectedSettlement] = useState<ProviderSettlementDto | null>(null);
-  const { data: settlementTx, isLoading: settlementTxLoading } = useSettlementTransactions(
+  const { data: settlementTxData, isLoading: settlementTxLoading } = useSettlementTransactions(
     selectedSettlement?.id,
     detailDialogOpen
   );
+  const settlementTx = settlementTxData?.items;
+  const promoPaidByCable = settlementTxData?.promoDiscountsPaidByCable ?? 0;
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<SettlementStatus>(3);
   const [adminNote, setAdminNote] = useState("");
@@ -1495,6 +1498,19 @@ export default function SettlementsScreen() {
                         </Paper>
                       </Grid>
                     )}
+                    {promoPaidByCable > 0 && (
+                      <Grid size={{ xs: 6, sm: 3 }}>
+                        <Tooltip title={t("offers@settlements_promoPaidByCableHint")}>
+                          <Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.secondary.main, 0.08), borderRadius: 2, textAlign: "center", border: "1px solid", borderColor: alpha(theme.palette.secondary.main, 0.3) }}>
+                            <Typography variant="caption" color="text.secondary">{t("offers@settlements_promoPaidByCable")}</Typography>
+                            <Typography variant="h6" fontWeight={700} color="secondary.dark">
+                              {promoPaidByCable.toFixed(3)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">JOD</Typography>
+                          </Paper>
+                        </Tooltip>
+                      </Grid>
+                    )}
                     <Grid size={{ xs: 6, sm: 3 }}>
                       <Paper elevation={0} sx={{ p: 1.5, bgcolor: "grey.50", borderRadius: 2, textAlign: "center" }}>
                         <Typography variant="caption" color="text.secondary">{t("offers@totalTransactions")}</Typography>
@@ -1571,6 +1587,14 @@ export default function SettlementsScreen() {
                                   />
                                 )}
                                 {tx.code && <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.62rem" }}>{tx.code}</Typography>}
+                                {tx.promoTitle && (
+                                  <Chip
+                                    size="small" color="secondary"
+                                    icon={<DiscountIcon sx={{ fontSize: "13px !important" }} />}
+                                    label={<bdi>{tx.promoTitle}</bdi>}
+                                    sx={{ height: 20, maxWidth: 220, "& .MuiChip-label": { px: 0.5, fontSize: "0.62rem", fontWeight: 700 } }}
+                                  />
+                                )}
                               </Stack>
                               <Typography variant="caption" color="text.disabled">
                                 {formatDate(tx.completedAt ?? tx.createdAt)}{tx.statusName ? ` · ${tx.statusName}` : ""}
@@ -1581,6 +1605,19 @@ export default function SettlementsScreen() {
                               <Typography variant="caption" fontWeight={700} color={positive ? "success.main" : "error.main"}>
                                 {positive ? "+" : ""}{tx.points} pts
                               </Typography>
+                              {tx.promoDiscountJod != null && tx.promoDiscountJod > 0 && (
+                                <>
+                                  <Typography variant="caption" fontWeight={700} color="secondary.dark">
+                                    {t("offers@settlements_promoDiscount", { amount: tx.promoDiscountJod.toFixed(3) })}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.62rem" }}>
+                                    {t("offers@settlements_promoShares", {
+                                      cable: (tx.promoCableShareJod ?? 0).toFixed(3),
+                                      provider: (tx.promoProviderShareJod ?? 0).toFixed(3),
+                                    })}
+                                  </Typography>
+                                </>
+                              )}
                             </Stack>
                           </Stack>
                         );

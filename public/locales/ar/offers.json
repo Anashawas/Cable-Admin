@@ -198,6 +198,10 @@
   "settlements_typeOffer": "عرض",
   "settlements_typeRedemption": "استبدال",
   "settlements_txEmpty": "لا توجد معاملات لهذه التسوية.",
+  "settlements_promoPaidByCable": "خصومات دفعتها كيبل",
+  "settlements_promoPaidByCableHint": "حصة كيبل من خصومات العروض الترويجية في هذه التسوية، مستحقة للمزوّد (محسوبة في الرصيد الصافي).",
+  "settlements_promoDiscount": "خصم ترويجي {{amount}} دينار",
+  "settlements_promoShares": "كيبل {{cable}} · الشريك {{provider}} دينار",
 
   "settlements_owner": "المالك",
   "settlements_payment": "الدفع",

@@ -13,7 +13,9 @@ import {
   getPlans,
   getPlanSubscribers,
   getPlanSubscriptions,
+  getPendingUpgradeRequestsCount,
   getUpgradeRequests,
+  modelCompare,
   rejectUpgradeRequest,
   saveFeatureMatrix,
   sellBundle,
@@ -26,6 +28,7 @@ import type {
   BillingModel,
   BillingProviderType,
   CreatePlanSubscriptionRequest,
+  ModelCompareRequest,
   PlanInput,
   UpgradePlanSubscriptionRequest,
   UpgradeRequestStatus,
@@ -161,7 +164,7 @@ export function useUpgradeRequests(status: UpgradeRequestStatus | null, page: nu
 export function usePendingUpgradeRequestsCount() {
   return useQuery({
     queryKey: [...BILLING_QUERY_KEY, "upgrade-requests", "pending-count"],
-    queryFn: async ({ signal }) => (await getUpgradeRequests({ status: "Pending", page: 1, pageSize: 1 }, signal)).totalCount,
+    queryFn: ({ signal }) => getPendingUpgradeRequestsCount(signal),
     staleTime: 60 * 1000,
     retry: false,
   });
@@ -213,6 +216,18 @@ export function useSellBundle() {
       // The price is debited from the provider wallet.
       queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
     },
+  });
+}
+
+/** The sales tool: percentage vs a simulated scan bundle over the partner's last 90 days (read-only POST). */
+export function useModelCompare(request: ModelCompareRequest | null, enabled = true) {
+  return useQuery({
+    queryKey: [...BILLING_QUERY_KEY, "model-compare", request],
+    queryFn: ({ signal }) => modelCompare(request as ModelCompareRequest, signal),
+    enabled: enabled && !!request && request.providerId > 0,
+    staleTime: 60 * 1000,
+    retry: false,
+    placeholderData: (prev) => prev,
   });
 }
 

@@ -8,6 +8,8 @@ import type {
   CreatePlanSubscriptionRequest,
   MarginCheckRequest,
   MarginCheckResult,
+  ModelCompareRequest,
+  ModelCompareResult,
   PagedResult,
   PlanCategory,
   PlanChangeLogDto,
@@ -102,6 +104,20 @@ export const marginCheck = async (body: MarginCheckRequest, signal?: AbortSignal
   return data;
 };
 
+/**
+ * POST /api/admin/plans/model-compare — the partner's last 90 days on percentage vs simulated on a scan bundle,
+ * with a recommendation (admin only). 422 PLAN_NOT_APPLICABLE / INVALID_PRICE_OPTION.
+ */
+export const modelCompare = async (body: ModelCompareRequest, signal?: AbortSignal): Promise<ModelCompareResult> => {
+  const { data } = await server.post<ModelCompareResult>("api/admin/plans/model-compare", {
+    providerType: body.providerType,
+    providerId: body.providerId,
+    bundlePlanId: body.bundlePlanId ?? null,
+    priceOptionId: body.priceOptionId ?? null,
+  }, { signal });
+  return data;
+};
+
 // ── Subscription records ─────────────────────────────────────────────
 
 /** GET /api/admin/subscriptions?providerType=&providerId= — every record, newest first. */
@@ -149,6 +165,12 @@ export const getUpgradeRequests = async (
     signal,
   });
   return asPaged<UpgradeRequestDto>(data);
+};
+
+/** GET /api/admin/upgrade-requests/pending-count — { pendingCount } (the dashboard badge). */
+export const getPendingUpgradeRequestsCount = async (signal?: AbortSignal): Promise<number> => {
+  const { data } = await server.get<{ pendingCount?: number }>("api/admin/upgrade-requests/pending-count", { signal });
+  return data?.pendingCount ?? 0;
 };
 
 /** POST /api/admin/upgrade-requests/{id}/reject */

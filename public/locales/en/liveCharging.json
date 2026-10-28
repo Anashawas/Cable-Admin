@@ -47,7 +47,8 @@
     "noMatch": "No sessions match these filters",
     "loadError": "The sessions could not be loaded",
     "open": "Open session #{{id}}",
-    "openIssues": "Open problems: {{count}}"
+    "openIssues": "Open problems: {{count}}",
+    "hasAlerts": "Alerts on this session — open it to see them"
   },
   "filters": {
     "label": "Filters",
@@ -147,7 +148,17 @@
     "issues": "Problems reported",
     "noIssues": "The driver reported no problem with this session",
     "openComplaint": "Open in complaints",
-    "reply": "Reply"
+    "reply": "Reply",
+    "alerts": {
+      "title": "Look at this session",
+      "code": {
+        "startedFarAway": "Started far away",
+        "repeatedFailedStarts": "Failed starts before",
+        "parkedAfterCharging": "Parked after charging",
+        "limitStopNotAccepted": "Limit stop refused",
+        "stale": "Stale"
+      }
+    }
   },
   "issueReason": {
     "WrongCost": "Wrong cost",
@@ -253,7 +264,7 @@
   },
   "settings": {
     "title": "Live charging settings",
-    "subtitle": "App start rules and automatic points for Cable Connect sessions.",
+    "subtitle": "App start rules for Cable Connect sessions.",
     "loadError": "The settings could not be loaded",
     "proximityTitle": "Start from the app",
     "proximityHint": "A driver may start from the app only near the station.",
@@ -263,45 +274,13 @@
     "maxDistanceRange": "Between {{min}} and {{max}} m",
     "requireLocation": "Require the phone's location",
     "requireLocationHint": "Off lets old app versions start without a location.",
-    "saved": "Settings saved",
-    "pointsTitle": "Automatic points",
-    "pointsHint": "When a driver's session ends, they earn points for its cost under the station's partner agreement, like a QR scan.",
-    "pointsEnabled": "On",
-    "pointsDisabled": "Off",
-    "onSince": "On since {{at}}",
-    "offSince": "Last switched off at {{at}}",
-    "pointsWarning": "Only sessions that end after automatic points are switched on earn points; earlier sessions do not get them later.",
-    "pointsOn": "Automatic points switched on",
-    "pointsOff": "Automatic points switched off",
-    "confirmOnTitle": "Switch automatic points on?",
-    "confirmOnBody": "From now on, every driver session that ends earns points and charges the station's commission. Sessions that ended before now are not counted.",
-    "confirmOffTitle": "Switch automatic points off?",
-    "confirmOffBody": "Sessions that end from now on earn no automatic points."
+    "saved": "Settings saved"
   },
   "user": {
     "tab": "Charging",
     "sessions": "Charging sessions",
     "allSessions": "Open in sessions",
-    "noSessions": "This user has no charging sessions",
-    "cards": "Linked cards",
-    "cardsHint": "RFID cards linked to this account; their sessions show in the user's history and earn points.",
-    "cardsError": "The cards could not be loaded",
-    "noCards": "No cards linked",
-    "idTag": "Card / idTag",
-    "label": "Label",
-    "linkedAt": "Linked",
-    "state": "State",
-    "enabled": "Enabled",
-    "disabled": "Disabled",
-    "appTag": "App",
-    "unlink": "Unlink",
-    "switchOffApp": "Switch off app charging",
-    "confirmUnlinkTitle": "Unlink this card?",
-    "confirmUnlinkBody": "{{card}} will no longer be linked to this user. Past sessions stay in their history.",
-    "confirmAppTitle": "Switch off app charging?",
-    "confirmAppBody": "This is the app's own tag ({{card}}): the user will not be able to start charging from the app.",
-    "unlinked": "Card unlinked",
-    "appTagOff": "App charging switched off for this user"
+    "noSessions": "This user has no charging sessions"
   },
   "errors": {
     "generic": "Something went wrong",

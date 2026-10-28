@@ -213,6 +213,27 @@ export interface SettlementTransactionDto {
   currencyCode: string | null;
   createdAt: string;
   completedAt: string | null;
+  /** Sprint 5: the promo used on a partner scan (title in the request language); null on lines without one. */
+  promoTitle?: string | null;
+  promoDiscountJod?: number | null;
+  /** Cable's share of the discount — owed to the provider. */
+  promoCableShareJod?: number | null;
+  /** The provider's own share of the discount. */
+  promoProviderShareJod?: number | null;
+}
+
+/** GET /api/offers/GetSettlementTransactions?settlementId={id} — the settlement's week and its line items. */
+export interface SettlementTransactionsDto {
+  settlementId: number;
+  providerType: string;
+  providerId: number;
+  periodYear: number;
+  periodWeek: number;
+  fromUtc: string;
+  toUtc: string;
+  items: SettlementTransactionDto[];
+  /** Sprint 5: Cable's share of the promo discounts in this settlement, owed to the provider (already in the net balance). */
+  promoDiscountsPaidByCable: number;
 }
 
 export interface SettlementSummaryDto {

@@ -6,14 +6,12 @@ import {
   getConnectorReports,
   getLiveChargingSettings,
   getStationTariff,
-  getUserCards,
   getUserSessions,
   removeStationTariff,
   renewConnectorCode,
   resolveConnectorReport,
   setLiveChargingSettings,
   setStationTariff,
-  unlinkUserCard,
 } from "../services/live-charging-service";
 import type {
   AdminSessionsQuery,
@@ -58,26 +56,6 @@ export function useUserSessions(userId: number, status: "open" | "closed" | "", 
     queryFn: ({ signal }) => getUserSessions(userId, { status, page, pageSize }, signal),
     placeholderData: (prev) => prev,
     enabled: enabled && userId > 0,
-  });
-}
-
-// ============================================
-// Cards linked to a user
-// ============================================
-
-export function useUserCards(userId: number, enabled = true) {
-  return useQuery({
-    queryKey: [...KEY, "user-cards", userId],
-    queryFn: ({ signal }) => getUserCards(userId, signal),
-    enabled: enabled && userId > 0,
-  });
-}
-
-export function useUnlinkUserCard() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ userId, cardId }: { userId: number; cardId: number }) => unlinkUserCard(userId, cardId),
-    onSuccess: (_r, v) => qc.invalidateQueries({ queryKey: [...KEY, "user-cards", v.userId] }),
   });
 }
 

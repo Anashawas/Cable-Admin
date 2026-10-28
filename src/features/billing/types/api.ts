@@ -384,3 +384,81 @@ export interface SetBillingModelResult {
   openPercentageCodes: number;
   bundle?: LoyaltyBundleDto | null;
 }
+
+// ── Model compare (sales tool, §3.4) ─────────────────────────────────
+
+export interface ModelCompareRequest {
+  providerType: BillingProviderType;
+  providerId: number;
+  /** A Loyalty plan to simulate; null = the partner's current / latest bundle plan, else the first active Loyalty plan. */
+  bundlePlanId?: number | null;
+  /** One of that plan's price options; null = the partner's own option, else the cheapest for the period. */
+  priceOptionId?: number | null;
+}
+
+/** The percentage model over the period (what happened). */
+export interface ModelComparePercentageDto {
+  transactions: number;
+  totalAmountJod: number;
+  averageAmountJod: number;
+  commissionPercent: number;
+  commissionJod: number;
+  /** Base points (before boosts / promos). */
+  points: number;
+  pointsCostJod: number;
+  cableMarginJod: number;
+  /** Codes in the period that were bundle-billed, so their percentage figures are simulated. */
+  simulatedTransactions: number;
+}
+
+/** The same period simulated on a scan bundle. */
+export interface ModelCompareBundleDto {
+  planId: number;
+  planKey: string;
+  planName: string;
+  priceOptionId: number;
+  priceJod: number;
+  /** Null = unlimited. */
+  scans?: number | null;
+  months?: number | null;
+  bundlesNeeded: number;
+  costJod: number;
+  pricePerScanJod?: number | null;
+  effectivePricePerScanJod?: number | null;
+  scansUsed: number;
+  scansLeftOver?: number | null;
+  minimumAmountJod: number;
+  belowMinimumTransactions: number;
+  points: number;
+  pointsCostJod: number;
+  cableMarginJod: number;
+}
+
+export type ModelCompareModel = "bundle" | "percentage" | "noData";
+export type ModelCompareCode = "bundleSavesPartner" | "bundleLosesForCable" | "percentageCheaperForPartner" | "noTransactions";
+
+export interface ModelCompareRecommendationDto {
+  model: ModelCompareModel | string;
+  code: ModelCompareCode | string;
+  /** In the request language. */
+  text: string;
+  /** Percentage commission − bundle cost (positive = the bundle is cheaper for the partner). */
+  partnerSavingJod: number;
+  /** Bundle margin − percentage margin (positive = Cable earns more on the bundle). */
+  cableMarginDifferenceJod: number;
+}
+
+export interface ModelCompareResult {
+  providerType: BillingProviderType;
+  providerId: number;
+  providerName?: string | null;
+  currentBillingModel: BillingModel | string;
+  fromUtc: string;
+  toUtc: string;
+  days: number;
+  pointsPerJod: number;
+  pointValueJod: number;
+  percentage: ModelComparePercentageDto;
+  bundle: ModelCompareBundleDto;
+  recommendation: ModelCompareRecommendationDto;
+}
