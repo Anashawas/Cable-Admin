@@ -73,6 +73,7 @@ i18n
       "gifts",
       "promos",
       "billing",
+      "liveCharging",
     ],
   });
 

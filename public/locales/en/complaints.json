@@ -71,5 +71,30 @@
     "delete": "Delete",
     "changeStatus": "Change Status"
   },
-  "selectPrompt": "Select a complaint to review"
+  "selectPrompt": "Select a complaint to review",
+  "kindSession": "Charging sessions",
+  "session": {
+    "title": "Charging session",
+    "open": "Open session",
+    "id": "Session",
+    "station": "Station",
+    "charger": "Charger",
+    "plug": "Plug",
+    "time": "Time",
+    "energy": "Energy",
+    "cost": "Cost",
+    "method": "Started by",
+    "stopReason": "Why it ended",
+    "receiptNo": "Receipt no.",
+    "photo": "Photo attached"
+  },
+  "replyPanel": {
+    "title": "Status and reply to the driver",
+    "current": "Current reply",
+    "reply": "Reply (shown to the user in the app)",
+    "hint": "Optional, up to 1000 characters. Saved with the status.",
+    "hintSession": "Optional, up to 1000 characters. The driver gets a notification on every status or reply change.",
+    "save": "Save",
+    "saved": "Status and reply saved"
+  }
 }

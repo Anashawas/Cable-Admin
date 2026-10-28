@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -67,8 +67,11 @@ import {
 } from "../../notifications/services/notification-service";
 import type { SendNotificationRequest } from "../../notifications/types/api";
 import { useListState } from "../../../hooks";
+import { ComplaintReplyPanel, ComplaintSessionCard } from "./ComplaintSessionPanel";
 
 type StatusFilter = "all" | ComplaintStatus;
+/** "ChargingSession" = "problem with this session" complaints only. */
+type KindFilter = "all" | "ChargingSession";
 type ComplaintSort = "newest" | "oldest" | "recentlyUpdated";
 
 const COMPLAINT_SORTS: { value: ComplaintSort; labelKey: string }[] = [
@@ -136,6 +139,19 @@ export default function ComplaintsScreen() {
   const [statusFilter, setStatusFilter] = useListState<StatusFilter>("status", "all");
   const [dateFilter, setDateFilter] = useListState<DateRangePreset>("date", "all");
   const [sortOrder, setSortOrder] = useListState<ComplaintSort>("sort", "newest");
+  const [kindFilter, setKindFilter] = useListState<KindFilter>("kind", "all");
+  // Deep link from a charging session: /complaints?id=311 opens that complaint.
+  const [searchParams] = useSearchParams();
+  const linkedId = Number(searchParams.get("id"));
+  useEffect(() => {
+    if (!Number.isInteger(linkedId) || linkedId <= 0) return;
+    setSearch(String(linkedId));
+    setStatusFilter("all");
+    setKindFilter("all");
+    setPage(0);
+    setSelectedId(linkedId);
+    if (smallScreen) setMobileDetail(true);
+  }, [linkedId]);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [complaintToDelete, setComplaintToDelete] = useState<UserComplaintDto | null>(null);
@@ -205,6 +221,8 @@ export default function ComplaintsScreen() {
   });
 
   // ── Derived ──
+  const sessionComplaints = useMemo(() => data.filter((c) => c.kind === "ChargingSession").length, [data]);
+
   const statusCounts = useMemo(() => {
     const counts: Record<"all" | ComplaintStatus, number> = {
       all: data.length,
@@ -222,6 +240,9 @@ export default function ComplaintsScreen() {
 
   const filteredData = useMemo(() => {
     let list = data;
+    if (kindFilter !== "all") {
+      list = list.filter((c) => c.kind === kindFilter);
+    }
     if (statusFilter !== "all") {
       list = list.filter((c) => c.status === statusFilter);
     }
@@ -250,7 +271,7 @@ export default function ComplaintsScreen() {
       if (tb == null) return -1;
       return sortOrder === "oldest" ? ta - tb : tb - ta;
     });
-  }, [data, statusFilter, search, dateFilter, sortOrder]);
+  }, [data, kindFilter, statusFilter, search, dateFilter, sortOrder]);
 
   const paginated = useMemo(() => {
     const start = page * pageSize;
@@ -391,6 +412,18 @@ export default function ComplaintsScreen() {
                           );
                         })}
                     </Stack>
+                    {sessionComplaints > 0 && (
+                      <Stack direction="row" spacing={0.75} sx={{ mt: 1 }}>
+                        <Chip
+                          size="small" icon={<EvStationIcon />}
+                          label={`${t("complaints@kindSession")} (${sessionComplaints})`}
+                          onClick={() => { setKindFilter(kindFilter === "ChargingSession" ? "all" : "ChargingSession"); setPage(0); }}
+                          color="primary" variant={kindFilter === "ChargingSession" ? "filled" : "outlined"}
+                          aria-pressed={kindFilter === "ChargingSession"}
+                          sx={{ fontWeight: 700, cursor: "pointer" }}
+                        />
+                      </Stack>
+                    )}
                   </Box>
 
                   {/* Items */}
@@ -425,6 +458,9 @@ export default function ComplaintsScreen() {
                                 <Stack direction="row" spacing={0.75} alignItems="baseline">
                                   <Typography variant="body2" fontWeight={800} flexShrink={0}>#{c.id}</Typography>
                                   <Typography variant="body2" fontWeight={600} noWrap sx={{ minWidth: 0 }}>{c.userAccount?.name || t("complaints@unknownUser")}</Typography>
+                                  {c.kind === "ChargingSession" && (
+                                    <Tooltip title={t("complaints@kindSession")}><EvStationIcon sx={{ fontSize: 15, color: "primary.main", alignSelf: "center", flexShrink: 0 }} aria-label={t("complaints@kindSession")} /></Tooltip>
+                                  )}
                                 </Stack>
                                 <Typography variant="caption" color="text.secondary" noWrap display="block">{c.note || "\u2014"}</Typography>
                                 <Typography variant="caption" color="text.disabled" noWrap display="block">
@@ -579,6 +615,16 @@ export default function ComplaintsScreen() {
                             <Typography variant="caption" color="text.disabled" sx={{ textTransform: "uppercase", letterSpacing: 0.8, fontSize: "0.65rem", fontWeight: 700, display: "block", mb: 0.75 }}>{t("complaints@columns.note")}</Typography>
                             <Typography variant="body1" sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{selected.note ?? "\u2014"}</Typography>
                           </Paper>
+
+                          {/* "Problem with this session": the linked charging session */}
+                          {selected.kind === "ChargingSession" && <ComplaintSessionCard complaint={selected} />}
+
+                          {/* Status with the reply the driver sees in the app */}
+                          <ComplaintReplyPanel
+                            complaint={selected}
+                            statuses={STATUS_ORDER}
+                            statusLabel={(st) => t(`complaints@status_${STATUS_META[st].key}`)}
+                          />
                         </Box>
 
                         {/* Action bar */}

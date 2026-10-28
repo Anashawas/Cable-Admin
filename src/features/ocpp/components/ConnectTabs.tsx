@@ -2,8 +2,10 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { Tab, Tabs } from "@mui/material";
 
-/** Cable Connect sections: the fleet overview and the charging revenue page. */
-export default function ConnectTabs({ value }: { value: "overview" | "payments" }) {
+export type ConnectTab = "overview" | "payments" | "sessions" | "reports" | "settings";
+
+/** Cable Connect sections: the fleet overview, the charging revenue page and the live-charging pages. */
+export default function ConnectTabs({ value }: { value: ConnectTab }) {
   const { t } = useTranslation();
   return (
     <Tabs
@@ -15,6 +17,9 @@ export default function ConnectTabs({ value }: { value: "overview" | "payments" 
     >
       <Tab value="overview" label={t("ocpp@payments.tabs.overview")} component={RouterLink} to="/cable-connect" />
       <Tab value="payments" label={t("ocpp@payments.tabs.payments")} component={RouterLink} to="/cable-connect/payments" />
+      <Tab value="sessions" label={t("liveCharging@nav.sessions")} component={RouterLink} to="/charging-sessions" />
+      <Tab value="reports" label={t("liveCharging@nav.plugReports")} component={RouterLink} to="/plug-reports" />
+      <Tab value="settings" label={t("liveCharging@nav.settings")} component={RouterLink} to="/cable-connect/settings" />
     </Tabs>
   );
 }

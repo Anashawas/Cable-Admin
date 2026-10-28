@@ -7,13 +7,16 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChargerIcon, { iconPlugsFromCounts } from "./ChargerIcon";
 import { Dot, ReliabilityText, SubscriptionQuietChip, useDateFmt } from "./ocpp-ui";
 import type { StationGroup } from "./station-groups";
+import type { StationReportSummary } from "../utils/live-charging";
+import { PlugReportBadge } from "./live-charging/live-ui";
 
 const MAX_ICONS = 5;
 
 export const stationCableConnectPath = (chargingPointId: number) => `/cable-connect/stations/${chargingPointId}`;
 
 /** One station on the Cable Connect overview; the whole card links to the station's page. */
-export default function StationCard({ g }: { g: StationGroup }) {
+/** `reports`: open "plug didn't work" reports at the station (warning when a plug is suspected). */
+export default function StationCard({ g, reports }: { g: StationGroup; reports?: StationReportSummary }) {
   const { t } = useTranslation();
   const fmt = useDateFmt();
   const chargersTotal = g.chargers.length;
@@ -51,6 +54,9 @@ export default function StationCard({ g }: { g: StationGroup }) {
             label={<bdi>{g.openAlerts}</bdi>} aria-label={t("ocpp@stations.alerts", { count: g.openAlerts })}
             sx={{ fontWeight: 700, height: 24 }}
           />
+        )}
+        {reports && reports.openReports > 0 && (
+          <PlugReportBadge stat={{ openReports: reports.openReports, reportsToday: 0, suspectedIssue: reports.suspectedPlugs > 0, lastReportAt: "" }} compact />
         )}
         <ChevronRightIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.25, transform: (th) => (th.direction === "rtl" ? "scaleX(-1)" : "none") }} aria-hidden />
       </Stack>

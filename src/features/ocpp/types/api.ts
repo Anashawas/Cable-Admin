@@ -147,6 +147,17 @@ export interface OcppStationSessionDto {
   socStartPercent?: number | null;
   socEndPercent?: number | null;
   chargeLimit?: OcppChargeLimitDto | null;
+  // Sprint 5 (§11.a) — who charged, as the partner list shows it (masked phone, no user id).
+  /** App | Sticker | Card | Operator; Sticker = an app start from the plug's CHG- code. */
+  startMethod?: string | null;
+  driver?: { displayName?: string | null; phoneMasked?: string | null } | null;
+  cardLabel?: string | null;
+  startedByUserName?: string | null;
+  receiptNo?: string | null;
+  /** The driver's car, e.g. "Hyundai Ioniq 5". */
+  carName?: string | null;
+  /** Automatic points (null = none / not decided). */
+  pointsAwarded?: number | null;
 }
 
 // ============================================
