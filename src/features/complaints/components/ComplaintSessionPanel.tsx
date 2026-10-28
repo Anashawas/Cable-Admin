@@ -16,6 +16,7 @@ import { fmtJod } from "../../ocpp/utils/live-charging";
 import { fmtDay, fmtNum, fmtTime12 } from "../../ocpp/utils/payments-format";
 import { Field, Ltr, StartMethodChip, useProblemToast } from "../../ocpp/components/live-charging/live-ui";
 import { sessionDetailPath } from "../../ocpp/components/live-charging/SessionsTable";
+import ComplaintPhoto from "./ComplaintPhoto";
 
 const caption = { textTransform: "uppercase", letterSpacing: 0.8, fontSize: "0.65rem", fontWeight: 700 } as const;
 const REPLY_MAX = 1000;
@@ -60,7 +61,7 @@ export function ComplaintSessionCard({ complaint }: { complaint: UserComplaintDt
           <Field label={t("complaints@session.method")}><StartMethodChip method={s.startMethod} /></Field>
           <Field label={t("complaints@session.stopReason")}>{s.stopReasonText ? <bdi>{s.stopReasonText}</bdi> : null}</Field>
           <Field label={t("complaints@session.receiptNo")} mono>{s.receiptNo ? <Ltr>{s.receiptNo}</Ltr> : null}</Field>
-          <Field label={t("complaints@session.photo")} mono>{complaint.imageFileName ? <Ltr>{complaint.imageFileName}</Ltr> : null}</Field>
+          <Field label={t("complaints@session.photo")}>{complaint.imageFileName ? <ComplaintPhoto complaintId={complaint.id} /> : null}</Field>
         </Box>
       )}
     </Paper>
