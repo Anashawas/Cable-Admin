@@ -8,6 +8,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { avgPerKwh, costOf, sourceOf, type DayRow, type PaymentSession, type Totals } from "../../utils/payments";
 import { fmtDay, fmtDurationLong, fmtNum, fmtTime12, stopReasonLabel } from "../../utils/payments-format";
+import { PointsChip } from "../live-charging/live-ui";
 
 const Ltr = ({ children }: { children: ReactNode }) => <bdi dir="ltr">{children}</bdi>;
 const num = { textAlign: "end", whiteSpace: "nowrap" } as const;
@@ -163,13 +164,17 @@ export default function DailyRevenueTable({ rows, totals, ar, stationName, charg
                                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                                     <Chip
                                       size="small" variant="outlined" sx={{ height: 22, fontSize: 11, fontWeight: 600 }}
-                                      label={t(`ocpp@payments.source.${sourceOf(s)}`)}
+                                      label={s.startMethod === "Sticker" ? t("liveCharging@method.Sticker") : t(`ocpp@payments.source.${sourceOf(s)}`)}
                                     />
                                     {who && (
                                       <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
                                         <bdi dir="ltr" style={{ fontFamily: "monospace" }}>{who}</bdi>
                                       </Typography>
                                     )}
+                                    {s.carName && (
+                                      <Typography variant="caption" color="text.secondary" display="block"><bdi>{s.carName}</bdi></Typography>
+                                    )}
+                                    {s.pointsAwarded != null && <Box sx={{ mt: 0.25 }}><PointsChip points={s.pointsAwarded} /></Box>}
                                   </TableCell>
                                   <TableCell sx={{ whiteSpace: "nowrap" }}><bdi>{fmtDurationLong(s.durationSec, t)}</bdi></TableCell>
                                   <TableCell sx={{ whiteSpace: "nowrap" }}><Battery start={s.socStartPercent} end={s.socEndPercent} /></TableCell>

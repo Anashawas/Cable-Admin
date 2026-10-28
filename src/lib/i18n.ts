@@ -70,6 +70,7 @@ i18n
       "pricing",
       "subscriptions",
       "partnerAdoption",
+      "liveCharging",
     ],
   });
 

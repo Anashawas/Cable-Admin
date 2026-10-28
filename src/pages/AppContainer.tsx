@@ -30,6 +30,10 @@ const ChargerBrandsScreen = lazyRoute(() => import("../features/charge-managemen
 const CableConnectScreen = lazyRoute(() => import("../features/ocpp/components/CableConnectScreen"));
 const StationCableConnectScreen = lazyRoute(() => import("../features/ocpp/components/StationCableConnectScreen"));
 const ConnectPaymentsScreen = lazyRoute(() => import("../features/ocpp/components/payments/ConnectPaymentsScreen"));
+const ChargingSessionsScreen = lazyRoute(() => import("../features/ocpp/components/live-charging/ChargingSessionsScreen"));
+const ChargingSessionDetailScreen = lazyRoute(() => import("../features/ocpp/components/live-charging/ChargingSessionDetailScreen"));
+const PlugReportsScreen = lazyRoute(() => import("../features/ocpp/components/live-charging/PlugReportsScreen"));
+const LiveChargingSettingsScreen = lazyRoute(() => import("../features/ocpp/components/live-charging/LiveChargingSettingsScreen"));
 const PriceAlertsScreen = lazyRoute(() => import("../features/pricing/components/PriceAlertsScreen"));
 const ComplaintsScreen = lazyRoute(() => import("../features/complaints/components/ComplaintsScreen"));
 const BannersScreen = lazyRoute(() => import("../features/system/components/BannersScreen"));
@@ -174,6 +178,46 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <ConnectPaymentsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cable-connect/settings"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <LiveChargingSettingsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/charging-sessions"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ChargingSessionsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/charging-sessions/:sessionId"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <ChargingSessionDetailScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/plug-reports"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PlugReportsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

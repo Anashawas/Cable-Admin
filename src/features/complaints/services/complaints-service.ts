@@ -47,12 +47,17 @@ const deleteComplaint = async (
 
 /**
  * PATCH api/usercomplaints/UpdateUserComplaintStatus/{id}
+ * `reply` (optional, ≤ 1000) is the answer shown to the driver; null keeps the current one.
+ * On a ChargingSession complaint every status or reply change pushes the driver.
  */
 const updateComplaintStatus = async (
   id: number,
-  status: ComplaintStatus
+  status: ComplaintStatus,
+  reply?: string | null
 ): Promise<void> => {
-  await server.patch(`api/usercomplaints/UpdateUserComplaintStatus/${id}`, { status });
+  const body: { status: ComplaintStatus; reply?: string } = { status };
+  if (reply != null && reply.trim()) body.reply = reply.trim();
+  await server.patch(`api/usercomplaints/UpdateUserComplaintStatus/${id}`, body);
 };
 
 export { getAllComplaints, getComplaintsByChargingPointId, deleteComplaint, updateComplaintStatus };

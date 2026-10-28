@@ -32,6 +32,8 @@ import {
 	Image as ImageIcon,
 	EventRepeat as EventRepeatIcon,
 	PhoneIphone as PhoneIphoneIcon,
+	History as HistoryIcon,
+	PowerOff as PowerOffIcon,
 } from "@mui/icons-material";
 import { PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -69,6 +71,8 @@ export function getNavigationGroups(t: TFunction): NavigationGroup[] {
 				{ label: t("chargeManagement"), path: "/charge-management", icon: <EvStationIcon /> },
 				{ label: t("chargerBrands"), path: "/charger-brands", icon: <BoltIcon /> },
 				{ label: t("cableConnect"), path: "/cable-connect", icon: <CableIcon /> },
+				{ label: t("liveCharging@nav.sessions"), path: "/charging-sessions", icon: <HistoryIcon /> },
+				{ label: t("liveCharging@nav.plugReports"), path: "/plug-reports", icon: <PowerOffIcon /> },
 				{ label: t("stationStatistics"), path: "/station-statistics", icon: <QueryStatsIcon /> },
 				{ label: t("stationsRequest"), path: "/stations-request", icon: <ListAltIcon /> },
 				{ label: t("userComplaints"), path: "/complaints", icon: <ReportProblemIcon /> },

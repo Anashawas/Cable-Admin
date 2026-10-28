@@ -31,6 +31,9 @@ import { useQuery } from "@tanstack/react-query";
 import { getAllPlugTypes } from "../../charge-management/services/station-form-service";
 import MenuItem from "@mui/material/MenuItem";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { useConnectorReports } from "../hooks/use-live-charging";
+import { plugKey, plugReportStats, type PlugReportStat } from "../utils/live-charging";
+import { PlugReportBadge } from "./live-charging/live-ui";
 
 function Info({ label, value, mono = false }: { label: string; value?: ReactNode; mono?: boolean }) {
   if (value == null || value === "" || value === "—") return null;
@@ -62,7 +65,7 @@ function Confirm({ open, title, body, danger, pending, onClose, onConfirm }: { o
 }
 
 /** Per-connector plug type + rated power, editable inline. The plug type is what the driver app shows next to "free". */
-function ConnectorRow({ c, online }: { c: OcppConnectorDto; online: boolean }) {
+function ConnectorRow({ c, online, report }: { c: OcppConnectorDto; online: boolean; report?: PlugReportStat }) {
   const { t } = useTranslation();
   const ar = useLanguageStore((s) => s.language) === LANGUAGE.AR;
   const family = c.connectorId > 0 ? plugFamily(c, ar) : "";
@@ -91,7 +94,12 @@ function ConnectorRow({ c, online }: { c: OcppConnectorDto; online: boolean }) {
   return (
     <TableRow hover>
       <TableCell sx={{ fontWeight: 700 }}>{c.connectorId === 0 ? "⚡ 0" : c.connectorId}</TableCell>
-      <TableCell><ConnectorStatusChip status={c.status} /></TableCell>
+      <TableCell>
+        <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
+          <ConnectorStatusChip status={c.status} />
+          <PlugReportBadge stat={report} />
+        </Stack>
+      </TableCell>
       <TableCell>
         {c.errorCode !== "NoError" ? (
           <Stack spacing={0.25}>
@@ -154,6 +162,9 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
   const runningSessions = cp ? cp.recentTransactions.filter((x) => x.isOpen && !x.isStale) : [];
   const [showLog, setShowLog] = useState(false);
   const { data: log = [] } = useOcppRawMessages(id, 50, showLog);
+  // Open "plug didn't work" reports of this station's plugs (shared with the station page).
+  const reports = useConnectorReports({ status: "open", chargingPointId: cp?.chargingPointId ?? 0 }, !!cp);
+  const reportStats = plugReportStats(reports.data ?? []);
 
   const rotate = useRotateChargePointPassword();
   const setEnabled = useSetChargePointEnabled();
@@ -349,7 +360,7 @@ export default function ChargerDetailDialog({ id, onClose }: ChargerDetailDialog
                           <TableCell />
                         </TableRow>
                       </TableHead>
-                      <TableBody>{cp.connectors.map((c) => <ConnectorRow key={c.id} c={c} online={cpOnline} />)}</TableBody>
+                      <TableBody>{cp.connectors.map((c) => <ConnectorRow key={c.id} c={c} online={cpOnline} report={reportStats.get(plugKey(cp.id, c.connectorId))} />)}</TableBody>
                     </Table>
                   </Box>
                 )}

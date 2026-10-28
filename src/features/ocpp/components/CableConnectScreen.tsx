@@ -25,6 +25,8 @@ import StationCard from "./StationCard";
 import { LiveIndicator } from "./ocpp-ui";
 import { groupByStation, stationMatches, type StationFilters, type SubscriptionFilter } from "./station-groups";
 import { useListState } from "../../../hooks";
+import { useConnectorReports } from "../hooks/use-live-charging";
+import { stationReportSummaries } from "../utils/live-charging";
 
 /** Fleet at a glance: chargers online, free plugs, then the rest as small figures. */
 function FleetSummary({ h }: { h?: OcppFleetHealthDto }) {
@@ -78,6 +80,9 @@ export default function CableConnectScreen() {
   const alerts = useOcppAlerts({ openOnly: true, take: 50 });
   const stations = useMemo(() => groupByStation(list.data ?? [], alerts.data ?? []), [list.data, alerts.data]);
   const visible = useMemo(() => stations.filter((g) => stationMatches(g, filters)), [stations, filters]);
+  // Open "plug didn't work" reports per station, for the warning on the station cards.
+  const reports = useConnectorReports({ status: "open" });
+  const reportsByStation = useMemo(() => stationReportSummaries(reports.data ?? []), [reports.data]);
 
   const filtersActive = filters.search !== "" || filters.state !== "" || filters.enabled !== "" || filters.subscription !== "";
 
@@ -215,7 +220,7 @@ export default function CableConnectScreen() {
             >
               {visible.map((g) => (
                 <Box component="li" key={g.chargingPointId} sx={{ minWidth: 0 }}>
-                  <StationCard g={g} />
+                  <StationCard g={g} reports={reportsByStation.get(g.chargingPointId)} />
                 </Box>
               ))}
             </Box>

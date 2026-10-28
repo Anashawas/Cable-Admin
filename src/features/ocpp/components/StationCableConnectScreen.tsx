@@ -31,6 +31,10 @@ import { ChargerEnabledSwitch } from "./ChargersTable";
 import { Dot, LiveIndicator, ReliabilityText, StatusDotChip, SubscriptionChip, useDateFmt } from "./ocpp-ui";
 import { summarizeStation } from "./station-groups";
 import BackButton from "../../../components/BackButton";
+import { useConnectorReports } from "../hooks/use-live-charging";
+import { plugKey, plugReportStats, type PlugReportStat } from "../utils/live-charging";
+import { PlugReportBadge } from "./live-charging/live-ui";
+import StationLiveChargingSections from "./live-charging/StationLiveChargingSections";
 
 const flipInRtl = { transform: (th: { direction: string }) => (th.direction === "rtl" ? "scaleX(-1)" : "none") } as const;
 
@@ -58,7 +62,7 @@ function PlugChip({ c, online }: { c: OcppConnectorDto; online: boolean }) {
 }
 
 /** A charger of the station: icon, name, state, plugs, and the enabled switch. Click opens the detail dialog. */
-function StationChargerCard({ row, detail, onOpen }: { row: OcppChargePointListItemDto; detail?: OcppChargePointDetailDto; onOpen: (id: number) => void }) {
+function StationChargerCard({ row, detail, onOpen, reports }: { row: OcppChargePointListItemDto; detail?: OcppChargePointDetailDto; onOpen: (id: number) => void; reports?: Map<string, PlugReportStat> }) {
   const { t } = useTranslation();
   const fmt = useDateFmt();
   const name = row.displayName || row.chargePointId;
@@ -94,7 +98,12 @@ function StationChargerCard({ row, detail, onOpen }: { row: OcppChargePointListI
       {/* Plugs */}
       {plugs && plugs.length > 0 ? (
         <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap aria-label={t("ocpp@columns.plugs")}>
-          {plugs.map((c) => <PlugChip key={c.id} c={c} online={online} />)}
+          {plugs.map((c) => (
+            <Stack key={c.id} direction="row" spacing={0.5} alignItems="center">
+              <PlugChip c={c} online={online} />
+              <PlugReportBadge stat={reports?.get(plugKey(row.id, c.connectorId))} compact />
+            </Stack>
+          ))}
         </Stack>
       ) : (
         <Typography variant="body2" fontWeight={600} color={row.freeConnectors > 0 ? "success.main" : "text.secondary"}>
@@ -198,6 +207,9 @@ function StationView({ id }: { id: number }) {
   const alerts = useOcppAlerts({ openOnly: true, take: 50 });
   const visibility = useLiveVisibility(id);
   const details = useOcppChargePointDetails(chargers.map((c) => c.id));
+  // Open "plug didn't work" reports per plug, for the warning next to each plug.
+  const reports = useConnectorReports({ status: "open", chargingPointId: id });
+  const reportStats = useMemo(() => plugReportStats(reports.data ?? []), [reports.data]);
 
   const g = useMemo(
     () => summarizeStation(id, chargers, alerts.data ?? [], station.data?.name ?? ""),
@@ -214,7 +226,7 @@ function StationView({ id }: { id: number }) {
   const dash = "—";
   const relColor = g.reliabilityAvg == null ? undefined : g.reliabilityAvg >= 95 ? "success.main" : g.reliabilityAvg >= 80 ? "warning.main" : "error.main";
 
-  const refresh = () => { list.refetch(); alerts.refetch(); visibility.refetch(); details.forEach((q) => q.refetch()); };
+  const refresh = () => { list.refetch(); alerts.refetch(); visibility.refetch(); reports.refetch(); details.forEach((q) => q.refetch()); };
 
   const v = visibility.data;
 
@@ -332,12 +344,15 @@ function StationView({ id }: { id: number }) {
               >
                 {chargers.map((c) => (
                   <Box component="li" key={c.id} sx={{ minWidth: 0 }}>
-                    <StationChargerCard row={c} detail={detailById.get(c.id)} onOpen={setViewId} />
+                    <StationChargerCard row={c} detail={detailById.get(c.id)} onOpen={setViewId} reports={reportStats} />
                   </Box>
                 ))}
               </Box>
             )}
           </Box>
+
+          {/* Live charging: latest sessions, plug reports, stickers, the station's own tariff */}
+          <StationLiveChargingSections chargingPointId={id} />
         </>
       )}
 

@@ -52,6 +52,8 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import EditIcon from "@mui/icons-material/Edit";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import EvStationIcon from "@mui/icons-material/EvStation";
+import UserChargingTab from "../../ocpp/components/live-charging/UserChargingTab";
 import { useSnackbarStore } from "../../../stores";
 import { getUserById } from "../services/user-service";
 import {
@@ -304,6 +306,7 @@ export default function UserProfileScreen() {
               {[
                 { icon: <PersonIcon fontSize="small" />, label: t("userManagement@profile.overview") },
                 { icon: <ReceiptLongIcon fontSize="small" />, label: t("userManagement@profile.transactions") },
+                { icon: <EvStationIcon fontSize="small" />, label: t("liveCharging@user.tab") },
               ].map((tb, i) => (
                 <Tab
                   key={i}
@@ -402,6 +405,9 @@ export default function UserProfileScreen() {
                   </Grid>
                 </Grid>
               )}
+
+              {/* ── Charging (Cable Connect sessions and linked cards) ── */}
+              {tab === 2 && validUser && <UserChargingTab userId={userId} />}
 
               {/* ── Points & Transactions ── */}
               {tab === 1 && (
