@@ -73,6 +73,8 @@ export interface AdminSessionRowDto {
   car?: SessionCarDto | null;
   carName?: string | null;
   pointsAwarded?: number | null;
+  /** App start: how far the phone was from the station, in metres. */
+  startDistanceMeters?: number | null;
 }
 
 export interface AdminSessionTotalsDto {

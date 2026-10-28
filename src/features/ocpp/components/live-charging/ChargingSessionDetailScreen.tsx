@@ -211,6 +211,9 @@ function SessionDetail({ d, refetch, fetching }: { d: AdminSessionDetailDto; ref
             <Field label={t("liveCharging@detail.idTag")} mono><Ltr>{s.idTag || "—"}</Ltr></Field>
             <Field label={t("liveCharging@detail.method")}><StartMethodChip method={s.startMethod} /></Field>
             <Field label={t("liveCharging@detail.car")}>{car ? <bdi>{car}</bdi> : null}</Field>
+            {s.startDistanceMeters != null && (
+              <Field label={t("liveCharging@detail.startDistance")}>{t("liveCharging@detail.meters", { count: s.startDistanceMeters })}</Field>
+            )}
             <Field label={t("liveCharging@detail.points")}>
               {points == null ? <Typography variant="body2" color="text.secondary">{t("liveCharging@points.notDecided")}</Typography> : <PointsChip points={points} />}
             </Field>

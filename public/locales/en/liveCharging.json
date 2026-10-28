@@ -93,6 +93,8 @@
     "idTag": "idTag",
     "method": "Started by",
     "car": "Car",
+    "startDistance": "Distance from the station at start",
+    "meters": "{{count}} m",
     "points": "Points",
     "where": "Station and plug",
     "station": "Station",

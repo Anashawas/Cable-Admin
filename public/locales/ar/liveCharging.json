@@ -93,6 +93,8 @@
     "idTag": "idTag",
     "method": "طريقة البدء",
     "car": "السيارة",
+    "startDistance": "بعده عن المحطة عند البدء",
+    "meters": "{{count}} م",
     "points": "النقاط",
     "where": "المحطة والمقبس",
     "station": "المحطة",
