@@ -1,0 +1,247 @@
+{
+  "navTitle": "الأكواد والعروض",
+  "title": "الأكواد والعروض",
+  "subtitle": "حملات برومو بتنطبق عند مسح الشريك: خصومات بتتقاسمها كيبل والشريك، أو نقاط إضافية.",
+  "newCampaign": "حملة جديدة",
+  "searchPlaceholder": "ابحث بالعنوان أو الكود",
+  "noDates": "بدون تواريخ",
+  "noBudget": "بدون ميزانية",
+  "budgetExhausted": "خلصت الميزانية",
+  "points": "نقطة",
+
+  "columns": {
+    "campaign": "الحملة",
+    "effect": "التأثير",
+    "code": "الكود",
+    "codesClaimed": "انضاف {{claimed}} من {{total}}",
+    "dates": "التواريخ",
+    "usage": "الاستعمال",
+    "claimsUses": "انضاف {{claims}} · استُعمل {{uses}}",
+    "limit": "السقف {{limit}}",
+    "budget": "ميزانية كيبل",
+    "share": "كيبل {{share}}%",
+    "active": "فعّالة"
+  },
+
+  "effect": {
+    "DiscountPercent": "خصم بنسبة",
+    "DiscountFixed": "خصم ثابت (دينار)",
+    "PointsMultiplier": "مضاعف نقاط",
+    "BonusPoints": "نقاط إضافية"
+  },
+  "effectShort": {
+    "percent": "خصم {{value}}%",
+    "percentCapped": "خصم {{value}}% (بحد {{cap}} د)",
+    "fixed": "خصم {{value}} د",
+    "multiplier": "نقاط ×{{value}}",
+    "bonus": "+{{value}} نقطة"
+  },
+  "effectValueLabel": {
+    "DiscountPercent": "نسبة الخصم",
+    "DiscountFixed": "قيمة الخصم",
+    "PointsMultiplier": "المضاعف",
+    "BonusPoints": "النقاط الإضافية"
+  },
+  "effectValueHint": {
+    "DiscountPercent": "من 1 لـ 100",
+    "DiscountFixed": "بالدينار، أكبر من 0",
+    "PointsMultiplier": "أكبر من 1 ولحد 10 (1.5، 2، 3). الأعلى بين البرومو والحملة بينطبق، مش ضرب.",
+    "BonusPoints": "رقم صحيح، بينضاف فوق نقاط المسحة"
+  },
+
+  "scope": {
+    "None": "لا شي",
+    "All": "الكل",
+    "Selected": "معيّنين"
+  },
+  "codeMode": {
+    "Public": "كود عام",
+    "Unique": "أكواد فريدة"
+  },
+  "codeModeHint": {
+    "Public": "كود واحد بيكتبه الكل (مثلاً CABLE20).",
+    "Unique": "ولّد أكواد PRM- لمرة وحدة ووزّعها (تصدير CSV)."
+  },
+  "appliesTo": {
+    "PartnerScan": "مسح الشريك (كود PTR-)"
+  },
+  "userStatus": {
+    "Available": "متاح",
+    "Used": "مستعمل",
+    "Expired": "منتهي",
+    "Revoked": "ملغي"
+  },
+  "source": {
+    "Code": "انضاف بالكود",
+    "Assigned": "أعطاه الأدمن"
+  },
+
+  "rules": {
+    "required": "مطلوب",
+    "percentRange": "خصم النسبة من 1 لـ 100",
+    "fixedPositive": "الخصم الثابت لازم يكون أكبر من 0 دينار",
+    "multiplierRange": "المضاعف أكبر من 1 ولحد 10",
+    "bonusWhole": "النقاط الإضافية رقم صحيح، 1 على الأقل",
+    "shareRange": "حصة كيبل من 0 لـ 100%",
+    "capPositive": "الحد الأعلى لازم يكون أكبر من 0",
+    "budgetPositive": "الميزانية لازم تكون أكبر من 0",
+    "minAmountNegative": "أقل مبلغ ما بيكون سالب",
+    "budgetRequired": "لازم ميزانية لما كيبل بتتحمّل جزء من الخصم",
+    "capRequired": "لازم حد أعلى للخصم لكل استعمال لما كيبل بتتحمّل جزء من خصم النسبة",
+    "noAllWhenPartnerPays": "الشريك بيتحمّل جزء من هالخصم (حصة كيبل أقل من 100%)، فالمحطات والمزوّدين لازم يكونوا «معيّنين» بس — مش «الكل».",
+    "pickScope": "اختار محطات أو مزوّدي خدمة أو الاثنين",
+    "pickStation": "اختار محطة وحدة على الأقل",
+    "pickProvider": "اختار مزوّد خدمة واحد على الأقل",
+    "endsBeforeStart": "النهاية لازم تكون بعد البداية",
+    "validDaysRange": "من 1 لـ 365 يوم",
+    "totalLimitMin": "1 على الأقل",
+    "perUserRange": "من 1 لـ 100",
+    "publicCodeFormat": "من 3 لـ 30 حرف أو رقم (المسافات والشرطات بتنشال)",
+    "publicCodeReserved": "الأكواد اللي بتبلّش بـ PRM أو PTR أو GFT أو CBL محجوزة",
+    "budgetBelowSpent": "الميزانية ما بتنزل عن {{spent}} دينار دفعتهم كيبل"
+  },
+
+  "form": {
+    "selectedCount": "مختار {{count}}",
+    "fixErrors": "صلّح الحقول المعلّمة أول",
+    "budgetExhaustedHint": "انطفت تلقائياً: خلصت ميزانية كيبل. ارفع الميزانية لترجّعها.",
+    "texts": "النصوص",
+    "textsHint": "بتظهر على كرت المستخدم باللغتين.",
+    "titleAr": "العنوان (عربي)",
+    "titleEn": "العنوان (إنجليزي)",
+    "descriptionAr": "الوصف (عربي)",
+    "descriptionEn": "الوصف (إنجليزي)",
+    "scopeLabelAr": "وين بينطبق (عربي)",
+    "scopeLabelEn": "وين بينطبق (إنجليزي)",
+    "scopeLabelHint": "نص اختياري للكرت، مثلاً «عند مغاسل إربد»",
+    "effect": "التأثير",
+    "effectLocked": "الحملة انستعملت: نوع التأثير وقيمته والحد الأعلى وحصة كيبل مقفولين.",
+    "effectType": "نوع التأثير",
+    "maxDiscountJod": "أعلى خصم لكل استعمال",
+    "maxDiscountHint": "مثلاً 100% بحد أقصى 5 دنانير",
+    "funding": "مين بيدفع",
+    "fundingHint": "حصة كيبل من كل خصم، والباقي على الشريك. جزء كيبل محدود بالميزانية.",
+    "fundingPointsHint": "تأثير النقاط بتدفعه كيبل من ميزانية النقاط؛ الحصة مهمة للخصومات بس.",
+    "cableSharePercent": "حصة كيبل",
+    "shareSplit": "كيبل {{cable}}% · الشريك {{partner}}%",
+    "cableBudgetJod": "ميزانية كيبل",
+    "budgetHint": "الحملة بتنطفي لما تخلص",
+    "spent": "مصروف كيبل",
+    "left": "باقي",
+    "where": "وين بينطبق",
+    "whereHint": "المسحة بينطبق عليها الكود إذا الشريك ضمن نطاق نوعه، وبعدها شروط التصنيف والمدينة وأقل مبلغ.",
+    "stations": "المحطات",
+    "pickStations": "اختار المحطات",
+    "providers": "مزوّدي الخدمة",
+    "pickProviders": "اختار مزوّدي الخدمة",
+    "categories": "تصنيفات الخدمة",
+    "categoriesHint": "لمزوّدي الخدمة بس · فاضي = الكل",
+    "cities": "مدن الشريك",
+    "citiesHint": "فاضي = كل المدن",
+    "minAmountJod": "أقل مبلغ",
+    "appliesToHint": "النسخة الأولى: مسح الشريك بس.",
+    "limits": "الحدود والتواريخ",
+    "startsAt": "البداية",
+    "endsAt": "النهاية",
+    "jordanTime": "بتوقيت الأردن · اختياري",
+    "validDaysAfterClaim": "صلاحية بعد الإضافة (أيام)",
+    "validDaysHint": "مثلاً 30 يوم من إضافته",
+    "totalLimit": "السقف الكلي",
+    "totalLimitHint": "إضافات بالكود · فاضي = بلا سقف",
+    "perUserLimit": "لكل مستخدم",
+    "newUsersOnly": "للمستخدمين الجدد بس (حساب عمره أقل من 30 يوم)",
+    "code": "الكود",
+    "codeModeLocked": "في أكواد انولّدت أو انضافت — نوع الكود ما بيتغيّر.",
+    "codeHint": "عام = كود واحد للكل؛ فريد = أكواد لمرة وحدة.",
+    "publicCode": "الكود العام",
+    "publicCodeHint": "حروف وأرقام، مثلاً WASH100",
+    "isActive": "فعّالة",
+    "create": "أنشئ الحملة"
+  },
+
+  "toast": {
+    "created": "انضافت الحملة",
+    "updated": "انحفظت الحملة"
+  },
+
+  "tabs": {
+    "settings": "الإعدادات",
+    "codes": "الأكواد",
+    "assign": "أعطِ للمستخدمين",
+    "report": "التقرير"
+  },
+
+  "codes": {
+    "publicMode": "هالحملة بتستعمل الكود العام {{code}}. غيّر نوع الكود لـ«فريد» (قبل أي إضافة) لتولّد أكواد.",
+    "total": "الأكواد",
+    "claimed": "انضافت",
+    "unclaimed": "لسا ما انضافت",
+    "generateTitle": "ولّد أكواد فريدة",
+    "generateHint": "عشوائية PRM- + 8 خانات (بدون 0 O 1 I L). كل كود بينضاف مرة وحدة.",
+    "count": "العدد",
+    "countHint": "من 1 لـ 5000 بالدفعة",
+    "countInvalid": "من 1 لـ {{max}}",
+    "generated": "انولّد {{generated}} كود — المجموع {{total}}",
+    "generate": "ولّد",
+    "export": "صدّر الأكواد (CSV)"
+  },
+
+  "assign": {
+    "done": "انعطى لـ {{assigned}} مستخدم (تخطّينا {{skipped}}). بيوصلهم إشعار.",
+    "inactive": "بس الحملة الفعّالة والشغّالة بتنعطى للمستخدمين.",
+    "title": "أعطِ للمستخدمين",
+    "hint": "بيضيف البرومو لـ«أكوادي» مع إشعار. اللي عنده ياه، أو وصل الحد لكل مستخدم، أو مش جديد (للجدد بس) بيتخطّى.",
+    "target": {
+      "Users": "مستخدمين معيّنين",
+      "City": "حسب المدينة",
+      "All": "الكل"
+    },
+    "cities": "المدن (مدينة المستخدم)",
+    "recipients": "أرقام المستخدمين أو أرقام الهواتف",
+    "recipientsHint": "واحد بكل سطر أو مفصولين بفواصل · {{users}} مستخدم · {{phones}} هاتف",
+    "allWarning": "كل المستخدمين بيوصلهم البرومو وإشعار.",
+    "send": "أعطِ",
+    "confirmTitle": "تعطي البرومو؟",
+    "confirmAll": "كل المستخدمين بيوصلهم البرومو مع إشعار.",
+    "confirmCity": "مستخدمين {{count}} مدن بيوصلهم البرومو مع إشعار.",
+    "confirmUsers": "{{count}} مستخدم بيوصلهم البرومو مع إشعار."
+  },
+
+  "report": {
+    "claims": "انضاف",
+    "assignedHint": "منهم {{count}} أعطاهم الأدمن",
+    "uses": "الاستعمالات",
+    "totalDiscount": "مجموع الخصم",
+    "onAmount": "على {{amount}}",
+    "bonusPoints": "نقاط إضافية",
+    "cableShare": "حصة كيبل",
+    "partnersShare": "حصة الشركاء",
+    "budget": "الميزانية الباقية",
+    "noBudget": "بدون ميزانية",
+    "leftOf": "دفعت كيبل {{spent}} من {{budget}}",
+    "byPartner": "حسب الشريك",
+    "noUses": "لسا ما انستعمل.",
+    "partner": "الشريك",
+    "amount": "المبلغ",
+    "discount": "الخصم",
+    "partnerShare": "حصة الشريك",
+    "station": "محطة",
+    "provider": "مزوّد خدمة"
+  },
+
+  "userPromos": {
+    "tabTitle": "أكواد العروض",
+    "title": "أكواد المستخدم",
+    "status": "الحالة",
+    "empty": "ما في أكواد.",
+    "campaign": "الحملة",
+    "code": "الكود",
+    "claimedAt": "انضاف",
+    "expiresAt": "بينتهي",
+    "revoke": "إلغاء الكود",
+    "revokeTitle": "إلغاء البرومو",
+    "revokeHint": "«{{title}}» بينشال من أكواد المستخدم. بس الأكواد المتاحة بتنلغى.",
+    "reason": "السبب",
+    "revoked": "انلغى البرومو"
+  }
+}

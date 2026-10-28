@@ -32,6 +32,11 @@ import {
 	Image as ImageIcon,
 	EventRepeat as EventRepeatIcon,
 	PhoneIphone as PhoneIphoneIcon,
+	LocalActivity as LocalActivityIcon,
+	ShoppingBag as ShoppingBagIcon,
+	WorkspacePremium as WorkspacePremiumIcon,
+	Upgrade as UpgradeIcon,
+	NotificationImportant as NotificationImportantIcon,
 } from "@mui/icons-material";
 import { PrivilegeCode } from "../../../constants/privileges-constants";
 
@@ -110,6 +115,10 @@ export function getNavigationGroups(t: TFunction): NavigationGroup[] {
 					path: "/partner-adoption",
 					icon: <PhoneIphoneIcon />,
 				},
+				// Sprint 5 — partner billing
+				{ label: t("billing@plans.navTitle"), path: "/billing/plans", icon: <WorkspacePremiumIcon /> },
+				{ label: t("billing@requests.navTitle"), path: "/billing/upgrade-requests", icon: <UpgradeIcon /> },
+				{ label: t("billing@alerts.navTitle"), path: "/billing/alerts", icon: <NotificationImportantIcon /> },
 			],
 		},
 		{
@@ -123,6 +132,10 @@ export function getNavigationGroups(t: TFunction): NavigationGroup[] {
 				{ label: t("loyalty@boosts.navTitle"), path: "/loyalty-boosts", icon: <BoltIcon /> },
 				{ label: t("leaderboard"), path: "/loyalty-leaderboard", icon: <EmojiEventsIcon /> },
 				{ label: t("redemptions"), path: "/redemptions", icon: <RedeemIcon /> },
+				// Sprint 5 — Cable Gifts and promo codes
+				{ label: t("gifts@navTitle"), path: "/cable-gifts", icon: <CardGiftcardIcon /> },
+				{ label: t("gifts@orders.navTitle"), path: "/gift-orders", icon: <ShoppingBagIcon /> },
+				{ label: t("promos@navTitle"), path: "/promos", icon: <LocalActivityIcon /> },
 				{ label: t("pointAdjustments"), path: "/point-adjustments", icon: <AccountBalanceWalletIcon /> },
 				{ label: t("pointsLedger"), path: "/loyalty-ledger", icon: <ReceiptLongIcon /> },
 				{ label: t("bulkAward"), path: "/loyalty-bulk-award", icon: <CardGiftcardIcon /> },

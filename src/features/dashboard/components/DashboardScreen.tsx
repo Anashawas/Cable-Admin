@@ -26,6 +26,8 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import LocationCityIcon from "@mui/icons-material/LocationCity";
 import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import RedeemIcon from "@mui/icons-material/Redeem";
+import UpgradeIcon from "@mui/icons-material/Upgrade";
 import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 import { getPendingRequests } from "../../charge-management/services/request-service";
 import { getUsersSummary } from "../../users/services/user-service";
@@ -33,6 +35,8 @@ import { getAllServiceProviders } from "../../service-providers/services/service
 import { getAllPartnerAgreements } from "../../partners/services/partners-service";
 import { getAllComplaints } from "../../complaints/services/complaints-service";
 import { getAttentionSummary } from "../services/attention-service";
+import { usePendingGiftOrdersCount } from "../../gifts/hooks/use-gifts";
+import { usePendingUpgradeRequestsCount } from "../../billing/hooks/use-billing";
 import { localDayBounds } from "../../../utils/date-format";
 import DashboardHero from "./DashboardHero";
 import {
@@ -194,6 +198,17 @@ export default function DashboardScreen() {
   }, [attention, pendingApproval, openComplaints, t, theme]);
   const loadingActions = loadingAttention || (!attention && (loadingRequests || loadingComplaints));
 
+  // Sprint 5 queues: gift orders waiting for the Cable team, partner upgrade requests.
+  const { data: pendingGiftOrders = 0 } = usePendingGiftOrdersCount();
+  const { data: pendingUpgradeRequests = 0 } = usePendingUpgradeRequestsCount();
+  const allActions = useMemo<ActionItem[]>(() => {
+    const extra: ActionItem[] = [
+      { key: "pendingGiftOrders", label: t("gifts@orders.pendingAction"), help: t("gifts@orders.pendingHelp"), value: pendingGiftOrders, Icon: RedeemIcon, accent: "#c17a00", path: "/gift-orders" },
+      { key: "pendingUpgradeRequests", label: t("billing@requests.pendingAction"), help: t("billing@requests.pendingHelp"), value: pendingUpgradeRequests, Icon: UpgradeIcon, accent: theme.palette.secondary.dark, path: "/billing/upgrade-requests" },
+    ];
+    return [...actions, ...extra.filter((a) => a.value > 0)];
+  }, [actions, pendingGiftOrders, pendingUpgradeRequests, t, theme]);
+
   return (
     <Box sx={{ width: "100%", height: "100%", overflow: "auto", p: { xs: 2, sm: 3 } }}>
 
@@ -246,7 +261,7 @@ export default function DashboardScreen() {
       {/* ── Needs action: compact list, colour only on icon + count ── */}
       <Box component="section" aria-labelledby="dash-actions-title" sx={{ mb: 3 }}>
         <SectionTitle id="dash-actions-title" icon={<NotificationsActiveOutlinedIcon />}>{t("dashboard@actionRequired")}</SectionTitle>
-        <ActionList items={actions} loading={loadingActions} onOpen={navigate} labelledBy="dash-actions-title" />
+        <ActionList items={allActions} loading={loadingActions} onOpen={navigate} labelledBy="dash-actions-title" />
       </Box>
 
       {/* ── Platform overview: one compact stats strip ── */}

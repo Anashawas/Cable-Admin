@@ -72,6 +72,16 @@ const BulkAwardScreen = lazyRoute(() => import("../features/loyalty/components/B
 const PointsLedgerScreen = lazyRoute(() => import("../features/loyalty/components/PointsLedgerScreen"));
 const FlaggedActivityScreen = lazyRoute(() => import("../features/loyalty/components/FlaggedActivityScreen"));
 const TermsScreen = lazyRoute(() => import("../features/terms/components/TermsScreen"));
+// Sprint 5 — rewards & partner billing
+const GiftsScreen = lazyRoute(() => import("../features/gifts/components/GiftsScreen"));
+const GiftOrdersScreen = lazyRoute(() => import("../features/gifts/components/GiftOrdersScreen"));
+const PromosScreen = lazyRoute(() => import("../features/promos/components/PromosScreen"));
+const PromoCampaignScreen = lazyRoute(() => import("../features/promos/components/PromoCampaignScreen"));
+const PlansScreen = lazyRoute(() => import("../features/billing/components/PlansScreen"));
+const PlanFormScreen = lazyRoute(() => import("../features/billing/components/PlanFormScreen"));
+const FeatureMatrixScreen = lazyRoute(() => import("../features/billing/components/FeatureMatrixScreen"));
+const UpgradeRequestsScreen = lazyRoute(() => import("../features/billing/components/UpgradeRequestsScreen"));
+const BillingAlertsScreen = lazyRoute(() => import("../features/billing/components/BillingAlertsScreen"));
 const NotFound = lazy(() => import("../components/NotFound"));
 
 function AppContainer() {
@@ -664,6 +674,97 @@ function AppContainer() {
               <ProtectedRoute isAllowed={!!user}>
                 <AppLayout>
                   <FlaggedActivityScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Sprint 5 — rewards & partner billing */}
+          <Route
+            path="/cable-gifts"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <GiftsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/gift-orders"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <GiftOrdersScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/promos"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PromosScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/promos/:id"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PromoCampaignScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billing/plans"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PlansScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billing/plans/:id"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <PlanFormScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billing/feature-matrix"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <FeatureMatrixScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billing/upgrade-requests"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <UpgradeRequestsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billing/alerts"
+            element={
+              <ProtectedRoute isAllowed={!!user}>
+                <AppLayout>
+                  <BillingAlertsScreen />
                 </AppLayout>
               </ProtectedRoute>
             }

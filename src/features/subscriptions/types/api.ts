@@ -129,6 +129,11 @@ export interface RecordPaymentRequest {
 	payer: PayerRef;
 	note?: string | null;
 	receiptImageFileName?: string | null;
+	/** Partner billing (optional): the plan / price option this payment buys. */
+	planId?: number | null;
+	priceOptionId?: number | null;
+	/** Partner billing (optional): the upgrade request this payment fulfils. */
+	upgradeRequestId?: number | null;
 }
 
 export interface RecordPaymentResponse {

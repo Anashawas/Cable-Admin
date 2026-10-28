@@ -1,0 +1,119 @@
+{
+  "navTitle": "هدايا كيبل",
+  "title": "هدايا كيبل",
+  "subtitle": "هدايا بيشتريها المستخدمين بنقاطهم، وفريق كيبل بيجهّز كل طلب.",
+  "add": "هدية جديدة",
+  "searchPlaceholder": "ابحث بالاسم",
+  "unlimited": "بلا حدود",
+  "remainingOfStock": "باقي من الكمية",
+  "noDates": "دائماً",
+  "allCities": "كل المدن",
+  "viewOrders": "طلبات هاي الهدية",
+
+  "columns": {
+    "gift": "الهدية",
+    "type": "النوع",
+    "pointsCost": "النقاط",
+    "stock": "الكمية",
+    "perUser": "لكل مستخدم",
+    "orders": "الطلبات",
+    "dates": "التواريخ",
+    "cities": "المدن",
+    "active": "فعّالة"
+  },
+
+  "type": {
+    "Physical": "هدية عينية",
+    "ChargeCredit": "رصيد شحن",
+    "Voucher": "قسيمة",
+    "Other": "أخرى"
+  },
+  "typeHint": {
+    "Physical": "توصيل أو استلام — الفريق بيتواصل مع المستخدم.",
+    "ChargeCredit": "الفريق بيرتّبها يدوياً.",
+    "Voucher": "كود القسيمة بيظهر للمستخدم بعد التسليم.",
+    "Other": "حسب نص «طريقة الاستلام»."
+  },
+
+  "status": {
+    "Pending": "بانتظار التجهيز",
+    "Fulfilled": "تم التسليم",
+    "Cancelled": "ملغي"
+  },
+
+  "form": {
+    "createTitle": "هدية جديدة",
+    "editTitle": "تعديل الهدية",
+    "required": "مطلوب",
+    "pointsCostInvalid": "تكلفة النقاط لازم تكون أكبر من 0",
+    "stockInvalid": "الكمية ما بتكون سالبة",
+    "stockBelowOrdered": "الكمية ما بتنزل عن {{count}} قطعة انطلبت",
+    "perUserInvalid": "الحد لكل مستخدم لازم يكون 1 على الأقل",
+    "endsBeforeStart": "النهاية لازم تكون بعد البداية",
+    "imageType": "مسموح صور jpg أو png أو webp بس",
+    "imageSize": "حجم الصورة لازم يكون 5 ميغا أو أقل",
+    "image": "الصورة",
+    "imageHint": "jpg أو png أو webp، لحد 5 ميغا",
+    "nameAr": "الاسم (عربي)",
+    "nameEn": "الاسم (إنجليزي)",
+    "descriptionAr": "الوصف (عربي)",
+    "descriptionEn": "الوصف (إنجليزي)",
+    "howToReceiveAr": "طريقة الاستلام (عربي)",
+    "howToReceiveEn": "طريقة الاستلام (إنجليزي)",
+    "type": "نوع الهدية",
+    "pointsCost": "تكلفة النقاط",
+    "stock": "الكمية",
+    "stockHintOrdered": "انطلب منها {{count}} · فاضي = بلا حدود",
+    "unlimitedHint": "فاضي = بلا حدود",
+    "perUserLimit": "الحد لكل مستخدم",
+    "startsAt": "البداية",
+    "endsAt": "النهاية",
+    "jordanTime": "بتوقيت الأردن · اختياري",
+    "cities": "المدن",
+    "citiesHint": "فاضي = كل المدن",
+    "sortOrder": "الترتيب",
+    "isActive": "فعّالة (ظاهرة بالتطبيق)",
+    "pendingHint": "في {{count}} طلبات على هاي الهدية لسا بانتظار التجهيز."
+  },
+
+  "toast": {
+    "created": "انضافت الهدية",
+    "updated": "انحفظت الهدية"
+  },
+
+  "orders": {
+    "navTitle": "طلبات الهدايا",
+    "title": "طلبات الهدايا",
+    "subtitle": "سلّم أو ألغِ الطلبات. الإلغاء بيرجّع كل النقاط وبيرجّع القطعة للكمية.",
+    "columns": {
+      "code": "الطلب",
+      "gift": "الهدية",
+      "user": "المستخدم",
+      "points": "النقاط",
+      "status": "الحالة",
+      "details": "ملاحظات"
+    },
+    "call": "اتصال",
+    "accountPhone": "رقم الحساب",
+    "userNote": "ملاحظة المستخدم",
+    "noNote": "بدون ملاحظة",
+    "noReason": "بدون سبب",
+    "fulfill": "تم التسليم",
+    "cancel": "إلغاء الطلب",
+    "searchPlaceholder": "رقم الطلب أو الهاتف أو الاسم",
+    "from": "من",
+    "to": "إلى",
+    "exportCsv": "تصدير CSV",
+    "fulfillTitle": "تسليم طلب هدية",
+    "cancelTitle": "إلغاء طلب هدية",
+    "fulfillHint": "ملاحظة اختيارية بتظهر للمستخدم بـ«هداياي» (مثلاً تفاصيل الاستلام).",
+    "fulfillVoucherHint": "اكتب كود القسيمة — المستخدم بيشوفه بـ«هداياي» مع زر نسخ.",
+    "cancelHint": "كل الـ{{points}} نقطة بترجع لمحفظة المستخدم والقطعة بترجع للكمية. المستخدم بيوصله إشعار.",
+    "fulfillmentNote": "ملاحظة أو كود القسيمة",
+    "cancelReason": "السبب",
+    "fulfilled": "تم تسليم الطلب {{code}}",
+    "cancelled": "انلغى الطلب {{code}} — رجعت {{points}} نقطة",
+    "pendingAction": "طلبات هدايا معلّقة",
+    "pendingHelp": "هدايا انطلبت بالنقاط وبانتظار فريق كيبل"
+  }
+}

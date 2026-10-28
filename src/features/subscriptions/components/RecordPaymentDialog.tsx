@@ -28,6 +28,7 @@ import { addMonths, format } from "date-fns";
 import { DecimalField } from "../../../components";
 import { useSnackbarStore } from "../../../stores";
 import { parseApiDate, formatShortDate } from "../../../utils/date-format";
+import { apiErrorMessage } from "../../../utils/api-error";
 import { useRecordPayment, useUploadPaymentProof } from "../hooks/use-subscriptions";
 import PayerPicker from "./PayerPicker";
 import { PAYMENT_METHOD } from "../types/api";
@@ -52,6 +53,17 @@ interface RecordPaymentDialogProps {
 	ownerName?: string | null;
 	/** When present, a renewal extends from the current expiry. */
 	subscription?: SubscriptionDto | null;
+	/** Prefills the plan length (e.g. from a partner's upgrade request). */
+	initialPlanMonths?: number | null;
+	/** Prefills the amount (e.g. the plan's price for those months). */
+	initialAmount?: number | null;
+	/** Partner billing: the upgrade request this payment fulfils. */
+	upgradeRequestId?: number | null;
+	/** Partner billing: the plan / price option being paid for. */
+	planId?: number | null;
+	priceOptionId?: number | null;
+	/** Called after the payment is recorded. */
+	onRecorded?: () => void;
 }
 
 /**
@@ -68,6 +80,12 @@ export default function RecordPaymentDialog({
 	ownerUserAccountId,
 	ownerName,
 	subscription,
+	initialPlanMonths,
+	initialAmount,
+	upgradeRequestId,
+	planId,
+	priceOptionId,
+	onRecorded,
 }: RecordPaymentDialogProps) {
 	const { t, i18n } = useTranslation();
 	const openSuccessSnackbar = useSnackbarStore((s) => s.openSuccessSnackbar);
@@ -86,8 +104,8 @@ export default function RecordPaymentDialog({
 
 	useEffect(() => {
 		if (!open) return;
-		setPlanMonths(3);
-		setAmount(null);
+		setPlanMonths(initialPlanMonths && initialPlanMonths >= 1 ? Math.min(24, initialPlanMonths) : 3);
+		setAmount(initialAmount ?? null);
 		setMethod(PAYMENT_METHOD.CliQ);
 		setPaidDate(new Date());
 		setPayer(
@@ -97,7 +115,7 @@ export default function RecordPaymentDialog({
 		);
 		setNote("");
 		setProof(null);
-	}, [open, entityId, ownerUserAccountId]);
+	}, [open, entityId, ownerUserAccountId, initialPlanMonths, initialAmount]);
 
 	/** Mirrors the server rule so the admin sees the period before saving. */
 	const preview = useMemo(() => {
@@ -126,6 +144,9 @@ export default function RecordPaymentDialog({
 				paidDate: format(paidDate, "yyyy-MM-dd'T'HH:mm:ss"),
 				payer,
 				note: note.trim() || null,
+				...(planId ? { planId } : {}),
+				...(priceOptionId ? { priceOptionId } : {}),
+				...(upgradeRequestId ? { upgradeRequestId } : {}),
 			},
 			{
 				onSuccess: (res) => {
@@ -150,10 +171,11 @@ export default function RecordPaymentDialog({
 							}
 						);
 					}
+					onRecorded?.();
 					onClose();
 				},
 				onError: (err: Error) =>
-					openErrorSnackbar({ message: err?.message ?? t("loadingFailed") }),
+					openErrorSnackbar({ message: apiErrorMessage(err, t("loadingFailed")) }),
 			}
 		);
 	}, [
@@ -167,6 +189,10 @@ export default function RecordPaymentDialog({
 		method,
 		note,
 		proof,
+		planId,
+		priceOptionId,
+		upgradeRequestId,
+		onRecorded,
 		recordMutation,
 		proofMutation,
 		onClose,

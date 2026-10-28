@@ -51,7 +51,9 @@ import LoyaltyIcon from "@mui/icons-material/Loyalty";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import EditIcon from "@mui/icons-material/Edit";
+import LocalActivityIcon from "@mui/icons-material/LocalActivity";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
+import UserPromosPanel from "../../promos/components/UserPromosPanel";
 import { useSnackbarStore } from "../../../stores";
 import { getUserById } from "../services/user-service";
 import {
@@ -304,6 +306,7 @@ export default function UserProfileScreen() {
               {[
                 { icon: <PersonIcon fontSize="small" />, label: t("userManagement@profile.overview") },
                 { icon: <ReceiptLongIcon fontSize="small" />, label: t("userManagement@profile.transactions") },
+                { icon: <LocalActivityIcon fontSize="small" />, label: t("promos@userPromos.tabTitle") },
               ].map((tb, i) => (
                 <Tab
                   key={i}
@@ -531,6 +534,9 @@ export default function UserProfileScreen() {
                   </Grid>
                 </Grid>
               )}
+
+              {/* ── Promo codes (Sprint 5) ── */}
+              {tab === 2 && <UserPromosPanel userId={userId} />}
             </Box>
           </Paper>
         </Stack>

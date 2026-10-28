@@ -47,6 +47,7 @@ import { getComplaintsByChargingPointId } from "../../complaints/services/compla
 import StationReviewsSection from "./StationReviewsSection";
 import StationPremiumSection from "./StationPremiumSection";
 import SubscriptionPanel from "../../subscriptions/components/SubscriptionPanel";
+import PlanSubscriptionsPanel from "../../billing/components/PlanSubscriptionsPanel";
 import StationViewImageSection from "./StationViewImageSection";
 import SocialLinksDisplay from "../../social-media/components/SocialLinksDisplay";
 import ProviderActivityFeed from "../../loyalty/components/ProviderActivityFeed";
@@ -422,14 +423,24 @@ export default function StationProfileScreen() {
 
               {/* Subscription + payment history */}
               {tab === 7 && (
-                <SubscriptionPanel
-                  entityType="StationPremium"
-                  entityId={s.id}
-                  entityName={s.name}
-                  ownerUserAccountId={s.ownerId}
-                  ownerName={s.ownerName}
-                  enabled
-                />
+                <Stack spacing={2.5}>
+                  <SubscriptionPanel
+                    entityType="StationPremium"
+                    entityId={s.id}
+                    entityName={s.name}
+                    ownerUserAccountId={s.ownerId}
+                    ownerName={s.ownerName}
+                    enabled
+                  />
+                  {/* Partner billing (Sprint 5): every plan record + new / trial / upgrade / cancel */}
+                  <PlanSubscriptionsPanel
+                    providerType="ChargingPoint"
+                    providerId={s.id}
+                    providerName={s.name}
+                    ownerUserAccountId={s.ownerId}
+                    ownerName={s.ownerName}
+                  />
+                </Stack>
               )}
 
               {/* Cable Connect (OCPP): live chargers, subscription, allowed cards */}

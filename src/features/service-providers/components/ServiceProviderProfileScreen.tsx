@@ -28,6 +28,7 @@ import RateReviewIcon from "@mui/icons-material/RateReview";
 import InsightsIcon from "@mui/icons-material/Insights";
 import PeopleIcon from "@mui/icons-material/People";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { getServiceProviderById, getServiceProviderRatings } from "../services/service-provider-service";
 import type { ServiceProviderDto } from "../types/api";
@@ -36,6 +37,8 @@ import ProviderActivityFeed from "../../loyalty/components/ProviderActivityFeed"
 import AnalyticsPanel from "../../analytics/components/AnalyticsPanel";
 import { StationFollowersPanel, StationNotificationsPanel } from "../../charge-management/components/StationEngagementPanels";
 import { formatOpeningHours } from "../../../utils/opening-hours";
+import SubscriptionPanel from "../../subscriptions/components/SubscriptionPanel";
+import PlanSubscriptionsPanel from "../../billing/components/PlanSubscriptionsPanel";
 
 function Section({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -140,6 +143,7 @@ export default function ServiceProviderProfileScreen() {
                 { icon: <InsightsIcon fontSize="small" />, label: t("analytics@title") },
                 { icon: <PeopleIcon fontSize="small" />, label: t("chargeManagement@engagement.followers") },
                 { icon: <CampaignIcon fontSize="small" />, label: t("chargeManagement@engagement.notifications") },
+                { icon: <WorkspacePremiumIcon fontSize="small" />, label: t("billing@records.title.panel") },
               ].map((tb, i) => (
                 <Tab key={i} icon={tb.icon} iconPosition="start" label={tb.label} disableRipple
                   sx={{ minHeight: 44, px: 2, borderRadius: 2.5, fontWeight: 700, textTransform: "none", color: "text.secondary", transition: "all .2s ease",
@@ -254,6 +258,27 @@ export default function ServiceProviderProfileScreen() {
 
               {/* Notifications sent */}
               {tab === 5 && <StationNotificationsPanel providerType="ServiceProvider" providerId={s.id} enabled />}
+
+              {/* Premium payments + partner billing records (Sprint 5) */}
+              {tab === 6 && (
+                <Stack spacing={2.5}>
+                  <SubscriptionPanel
+                    entityType="ServiceProviderPremium"
+                    entityId={s.id}
+                    entityName={s.name}
+                    ownerUserAccountId={s.ownerId}
+                    ownerName={s.ownerName}
+                    enabled
+                  />
+                  <PlanSubscriptionsPanel
+                    providerType="ServiceProvider"
+                    providerId={s.id}
+                    providerName={s.name}
+                    ownerUserAccountId={s.ownerId}
+                    ownerName={s.ownerName}
+                  />
+                </Stack>
+              )}
             </Box>
           </Paper>
         </Stack>

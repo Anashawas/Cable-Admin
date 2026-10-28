@@ -1,0 +1,119 @@
+{
+  "navTitle": "Cable Gifts",
+  "title": "Cable Gifts",
+  "subtitle": "Gifts users buy with their points. The Cable team fulfils every order.",
+  "add": "New gift",
+  "searchPlaceholder": "Search by name",
+  "unlimited": "Unlimited",
+  "remainingOfStock": "left of stock",
+  "noDates": "Always on",
+  "allCities": "All cities",
+  "viewOrders": "View this gift's orders",
+
+  "columns": {
+    "gift": "Gift",
+    "type": "Type",
+    "pointsCost": "Points",
+    "stock": "Stock",
+    "perUser": "Per user",
+    "orders": "Orders",
+    "dates": "Dates",
+    "cities": "Cities",
+    "active": "Active"
+  },
+
+  "type": {
+    "Physical": "Physical",
+    "ChargeCredit": "Charge credit",
+    "Voucher": "Voucher",
+    "Other": "Other"
+  },
+  "typeHint": {
+    "Physical": "Delivered or picked up — the team contacts the user.",
+    "ChargeCredit": "Arranged by the team by hand.",
+    "Voucher": "The voucher code is shown to the user once fulfilled.",
+    "Other": "As described in \"How to receive\"."
+  },
+
+  "status": {
+    "Pending": "Pending",
+    "Fulfilled": "Fulfilled",
+    "Cancelled": "Cancelled"
+  },
+
+  "form": {
+    "createTitle": "New gift",
+    "editTitle": "Edit gift",
+    "required": "Required",
+    "pointsCostInvalid": "Points cost must be more than 0",
+    "stockInvalid": "Stock can't be negative",
+    "stockBelowOrdered": "Stock can't be below the {{count}} pieces already ordered",
+    "perUserInvalid": "The per-user limit must be at least 1",
+    "endsBeforeStart": "The end must be after the start",
+    "imageType": "Only jpg, png or webp images are allowed",
+    "imageSize": "The image must be 5 MB or less",
+    "image": "Image",
+    "imageHint": "jpg, png or webp, up to 5 MB",
+    "nameAr": "Name (Arabic)",
+    "nameEn": "Name (English)",
+    "descriptionAr": "Description (Arabic)",
+    "descriptionEn": "Description (English)",
+    "howToReceiveAr": "How to receive (Arabic)",
+    "howToReceiveEn": "How to receive (English)",
+    "type": "Gift type",
+    "pointsCost": "Points cost",
+    "stock": "Stock",
+    "stockHintOrdered": "{{count}} already ordered · empty = unlimited",
+    "unlimitedHint": "Empty = unlimited",
+    "perUserLimit": "Limit per user",
+    "startsAt": "Starts",
+    "endsAt": "Ends",
+    "jordanTime": "Jordan time · optional",
+    "cities": "Cities",
+    "citiesHint": "Empty = every city",
+    "sortOrder": "Order",
+    "isActive": "Active (shown in the app)",
+    "pendingHint": "{{count}} orders of this gift are still pending."
+  },
+
+  "toast": {
+    "created": "Gift created",
+    "updated": "Gift saved"
+  },
+
+  "orders": {
+    "navTitle": "Gift orders",
+    "title": "Gift orders",
+    "subtitle": "Fulfil or cancel orders. Cancelling refunds all the points and returns the piece to stock.",
+    "columns": {
+      "code": "Order",
+      "gift": "Gift",
+      "user": "User",
+      "points": "Points",
+      "status": "Status",
+      "details": "Notes"
+    },
+    "call": "Call",
+    "accountPhone": "Account phone",
+    "userNote": "User note",
+    "noNote": "No note",
+    "noReason": "No reason",
+    "fulfill": "Mark fulfilled",
+    "cancel": "Cancel order",
+    "searchPlaceholder": "Order code, phone or name",
+    "from": "From",
+    "to": "To",
+    "exportCsv": "Export CSV",
+    "fulfillTitle": "Fulfil gift order",
+    "cancelTitle": "Cancel gift order",
+    "fulfillHint": "Optional note shown to the user in \"My gifts\" (e.g. pickup details).",
+    "fulfillVoucherHint": "Enter the voucher code — the user sees it in \"My gifts\" with a copy button.",
+    "cancelHint": "All {{points}} points go back to the user's wallet and the piece returns to stock. The user gets a notification.",
+    "fulfillmentNote": "Note or voucher code",
+    "cancelReason": "Reason",
+    "fulfilled": "Order {{code}} fulfilled",
+    "cancelled": "Order {{code}} cancelled — {{points}} points refunded",
+    "pendingAction": "Pending gift orders",
+    "pendingHelp": "Gifts bought with points waiting for the Cable team"
+  }
+}

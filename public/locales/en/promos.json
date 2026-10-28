@@ -1,0 +1,247 @@
+{
+  "navTitle": "Codes & promos",
+  "title": "Codes & promos",
+  "subtitle": "Promo campaigns used at partner scans: discounts Cable and partners share, or extra points.",
+  "newCampaign": "New campaign",
+  "searchPlaceholder": "Search title or code",
+  "noDates": "No dates",
+  "noBudget": "no budget",
+  "budgetExhausted": "Budget used up",
+  "points": "points",
+
+  "columns": {
+    "campaign": "Campaign",
+    "effect": "Effect",
+    "code": "Code",
+    "codesClaimed": "{{claimed}} / {{total}} claimed",
+    "dates": "Dates",
+    "usage": "Usage",
+    "claimsUses": "{{claims}} added · {{uses}} used",
+    "limit": "Limit {{limit}}",
+    "budget": "Cable budget",
+    "share": "Cable {{share}}%",
+    "active": "Active"
+  },
+
+  "effect": {
+    "DiscountPercent": "Percent discount",
+    "DiscountFixed": "Fixed discount (JOD)",
+    "PointsMultiplier": "Points multiplier",
+    "BonusPoints": "Bonus points"
+  },
+  "effectShort": {
+    "percent": "−{{value}}%",
+    "percentCapped": "−{{value}}% (max {{cap}} JOD)",
+    "fixed": "−{{value}} JOD",
+    "multiplier": "Points ×{{value}}",
+    "bonus": "+{{value}} points"
+  },
+  "effectValueLabel": {
+    "DiscountPercent": "Discount %",
+    "DiscountFixed": "Discount amount",
+    "PointsMultiplier": "Multiplier",
+    "BonusPoints": "Bonus points"
+  },
+  "effectValueHint": {
+    "DiscountPercent": "1–100",
+    "DiscountFixed": "In JOD, more than 0",
+    "PointsMultiplier": "Above 1, at most 10 (1.5, 2, 3). The higher of promo and boost wins — never multiplied.",
+    "BonusPoints": "A whole number, added on top of the scan's points"
+  },
+
+  "scope": {
+    "None": "None",
+    "All": "All",
+    "Selected": "Selected"
+  },
+  "codeMode": {
+    "Public": "Public code",
+    "Unique": "Unique codes"
+  },
+  "codeModeHint": {
+    "Public": "One code everyone types (e.g. CABLE20).",
+    "Unique": "Generate one-time PRM- codes and hand them out (export CSV)."
+  },
+  "appliesTo": {
+    "PartnerScan": "Partner scan (PTR- code)"
+  },
+  "userStatus": {
+    "Available": "Available",
+    "Used": "Used",
+    "Expired": "Expired",
+    "Revoked": "Revoked"
+  },
+  "source": {
+    "Code": "Added by code",
+    "Assigned": "Assigned by admin"
+  },
+
+  "rules": {
+    "required": "Required",
+    "percentRange": "A percent discount is 1–100",
+    "fixedPositive": "A fixed discount must be more than 0 JOD",
+    "multiplierRange": "A multiplier is above 1 and at most 10",
+    "bonusWhole": "Bonus points must be a whole number of at least 1",
+    "shareRange": "Cable's share is 0–100%",
+    "capPositive": "The cap must be more than 0",
+    "budgetPositive": "The budget must be more than 0",
+    "minAmountNegative": "The minimum amount can't be negative",
+    "budgetRequired": "A budget is required when Cable pays part of the discount",
+    "capRequired": "A per-use cap is required when Cable pays part of a percent discount",
+    "noAllWhenPartnerPays": "The partner pays part of this discount (Cable share below 100%), so stations and providers must be Selected — never All.",
+    "pickScope": "Pick stations, service providers or both",
+    "pickStation": "Select at least one station",
+    "pickProvider": "Select at least one service provider",
+    "endsBeforeStart": "The end must be after the start",
+    "validDaysRange": "1–365 days",
+    "totalLimitMin": "At least 1",
+    "perUserRange": "1–100",
+    "publicCodeFormat": "3–30 letters or digits (spaces and dashes are ignored)",
+    "publicCodeReserved": "Codes starting with PRM, PTR, GFT or CBL are reserved",
+    "budgetBelowSpent": "The budget can't be below the {{spent}} JOD Cable already paid"
+  },
+
+  "form": {
+    "selectedCount": "{{count}} selected",
+    "fixErrors": "Fix the highlighted fields first",
+    "budgetExhaustedHint": "Switched off automatically: Cable's budget is used up. Raise the budget to switch it back on.",
+    "texts": "Texts",
+    "textsHint": "Shown on the user's card in both languages.",
+    "titleAr": "Title (Arabic)",
+    "titleEn": "Title (English)",
+    "descriptionAr": "Description (Arabic)",
+    "descriptionEn": "Description (English)",
+    "scopeLabelAr": "Where it applies (Arabic)",
+    "scopeLabelEn": "Where it applies (English)",
+    "scopeLabelHint": "Optional card text, e.g. \"At Irbid car washes\"",
+    "effect": "Effect",
+    "effectLocked": "The campaign was already used: the effect type, value, cap and Cable's share are locked.",
+    "effectType": "Effect type",
+    "maxDiscountJod": "Max discount per use",
+    "maxDiscountHint": "e.g. 100% up to 5 JOD",
+    "funding": "Who pays",
+    "fundingHint": "Cable's share of every discount; the rest is carried by the partner. Cable's part is capped by the budget.",
+    "fundingPointsHint": "Points effects are paid by Cable's points budget; the share only matters for discounts.",
+    "cableSharePercent": "Cable share",
+    "shareSplit": "Cable {{cable}}% · partner {{partner}}%",
+    "cableBudgetJod": "Cable budget",
+    "budgetHint": "The campaign switches off when it is used up",
+    "spent": "Spent by Cable",
+    "left": "left",
+    "where": "Where it applies",
+    "whereHint": "A scan qualifies when the partner is inside the scope of its type; then category, city and minimum amount apply.",
+    "stations": "Stations",
+    "pickStations": "Choose stations",
+    "providers": "Service providers",
+    "pickProviders": "Choose service providers",
+    "categories": "Service categories",
+    "categoriesHint": "Service providers only · empty = all",
+    "cities": "Partner cities",
+    "citiesHint": "Empty = every city",
+    "minAmountJod": "Minimum amount",
+    "appliesToHint": "Version 1 supports partner scans only.",
+    "limits": "Limits & dates",
+    "startsAt": "Starts",
+    "endsAt": "Ends",
+    "jordanTime": "Jordan time · optional",
+    "validDaysAfterClaim": "Valid days after adding",
+    "validDaysHint": "e.g. 30 days from adding",
+    "totalLimit": "Total limit",
+    "totalLimitHint": "Claims by code · empty = no limit",
+    "perUserLimit": "Per user",
+    "newUsersOnly": "New users only (account under 30 days)",
+    "code": "Code",
+    "codeModeLocked": "Codes were already generated or claimed — the code mode can't change.",
+    "codeHint": "Public = one shared code; Unique = one-time codes.",
+    "publicCode": "Public code",
+    "publicCodeHint": "Letters and digits, e.g. WASH100",
+    "isActive": "Active",
+    "create": "Create campaign"
+  },
+
+  "toast": {
+    "created": "Campaign created",
+    "updated": "Campaign saved"
+  },
+
+  "tabs": {
+    "settings": "Settings",
+    "codes": "Codes",
+    "assign": "Give to users",
+    "report": "Report"
+  },
+
+  "codes": {
+    "publicMode": "This campaign uses the public code {{code}}. Switch the code mode to Unique (before any claim) to generate codes.",
+    "total": "Codes",
+    "claimed": "Claimed",
+    "unclaimed": "Not claimed yet",
+    "generateTitle": "Generate unique codes",
+    "generateHint": "Random PRM- + 8 characters (no 0 O 1 I L). Each can be added once.",
+    "count": "How many",
+    "countHint": "1–5000 per batch",
+    "countInvalid": "1–{{max}}",
+    "generated": "{{generated}} codes generated — {{total}} in total",
+    "generate": "Generate",
+    "export": "Export codes (CSV)"
+  },
+
+  "assign": {
+    "done": "Given to {{assigned}} users ({{skipped}} skipped). They get a notification.",
+    "inactive": "Only an active, running campaign can be given to users.",
+    "title": "Give to users",
+    "hint": "Adds the promo to \"My codes\" with a push. Users who already hold it, reached the per-user limit or aren't new (new users only) are skipped.",
+    "target": {
+      "Users": "Specific users",
+      "City": "By city",
+      "All": "Everyone"
+    },
+    "cities": "Cities (user's city)",
+    "recipients": "User ids or phone numbers",
+    "recipientsHint": "One per line or separated by commas · {{users}} ids · {{phones}} phones",
+    "allWarning": "Every user gets this promo and a notification.",
+    "send": "Give",
+    "confirmTitle": "Give the promo?",
+    "confirmAll": "Every user will get this promo and a push notification.",
+    "confirmCity": "Users of {{count}} cities will get this promo and a push notification.",
+    "confirmUsers": "{{count}} users will get this promo and a push notification."
+  },
+
+  "report": {
+    "claims": "Added",
+    "assignedHint": "{{count}} assigned by admin",
+    "uses": "Uses",
+    "totalDiscount": "Total discount",
+    "onAmount": "on {{amount}}",
+    "bonusPoints": "Bonus points",
+    "cableShare": "Cable's share",
+    "partnersShare": "Partners' share",
+    "budget": "Budget left",
+    "noBudget": "No budget",
+    "leftOf": "Cable paid {{spent}} of {{budget}}",
+    "byPartner": "By partner",
+    "noUses": "Not used yet.",
+    "partner": "Partner",
+    "amount": "Amount",
+    "discount": "Discount",
+    "partnerShare": "Partner's share",
+    "station": "Station",
+    "provider": "Service provider"
+  },
+
+  "userPromos": {
+    "tabTitle": "Promo codes",
+    "title": "The user's promo codes",
+    "status": "Status",
+    "empty": "No promo codes.",
+    "campaign": "Campaign",
+    "code": "Code",
+    "claimedAt": "Added",
+    "expiresAt": "Expires",
+    "revoke": "Revoke",
+    "revokeTitle": "Revoke promo",
+    "revokeHint": "\"{{title}}\" is removed from the user's codes. Only available promos can be revoked.",
+    "reason": "Reason",
+    "revoked": "Promo revoked"
+  }
+}

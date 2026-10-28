@@ -47,6 +47,7 @@ import EvStationIcon from "@mui/icons-material/EvStation";
 import StoreIcon from "@mui/icons-material/Store";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import HistoryIcon from "@mui/icons-material/History";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import { useQuery } from "@tanstack/react-query";
 import AppScreenContainer from "../../app/components/AppScreenContainer";
 import { AppDataGrid, DecimalField } from "../../../components";
@@ -69,6 +70,7 @@ import type { WalletTransactionType } from "../../offers/types/api";
 import { getAllConversionRates } from "../../offers/services/offers-service";
 import { getAllChargingPoints } from "../../charge-management/services/charge-management-service";
 import { getAllServiceProviders } from "../../service-providers/services/service-provider-service";
+import AgreementBillingDialog from "../../billing/components/AgreementBillingDialog";
 
 export default function PartnersScreen() {
   const { t } = useTranslation();
@@ -86,6 +88,7 @@ export default function PartnersScreen() {
   const [editing, setEditing] = useState<PartnerAgreementDto | null>(null);
   const [deactivateId, setDeactivateId] = useState<number | null>(null);
   const [balanceTarget, setBalanceTarget] = useState<PartnerAgreementDto | null>(null);
+  const [billingTarget, setBillingTarget] = useState<PartnerAgreementDto | null>(null);
   const [walletAmount, setWalletAmount] = useState<string>("");
   const [walletNote, setWalletNote] = useState<string>("");
   const [walletType, setWalletType] = useState<WalletTransactionType>(1);
@@ -428,7 +431,7 @@ export default function PartnersScreen() {
     {
       field: "actions",
       headerName: t("actions"),
-      width: 160,
+      width: 195,
       align: "center",
       headerAlign: "center",
       sortable: false,
@@ -437,6 +440,11 @@ export default function PartnersScreen() {
           <Tooltip title={t("partners@settlementHistory")}>
             <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); navigate(`/provider-settlements?providerType=${params.row.providerType}&providerId=${params.row.providerId}&name=${encodeURIComponent(params.row.providerName ?? params.row.providerId)}`); }}>
               <HistoryIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t("billing@bundle.navAction")}>
+            <IconButton size="small" color="secondary" onClick={(e) => { e.stopPropagation(); setBillingTarget(params.row); }}>
+              <QrCodeScannerIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title={t("partners@creditBalance")}>
@@ -876,6 +884,9 @@ export default function PartnersScreen() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* ── Loyalty billing: model switch, bundles, margin (Sprint 5) ── */}
+      <AgreementBillingDialog agreement={billingTarget} onClose={() => setBillingTarget(null)} />
 
       {/* ── Credit & Balance Dialog ── */}
       <Dialog open={!!balanceTarget} onClose={() => setBalanceTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}>

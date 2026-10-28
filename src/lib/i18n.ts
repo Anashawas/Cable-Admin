@@ -70,6 +70,9 @@ i18n
       "pricing",
       "subscriptions",
       "partnerAdoption",
+      "gifts",
+      "promos",
+      "billing",
     ],
   });
 

@@ -1,0 +1,369 @@
+{
+  "category": {
+    "Subscription": "Subscription",
+    "Loyalty": "Loyalty"
+  },
+  "providerType": {
+    "ChargingPoint": "Stations",
+    "ServiceProvider": "Service providers"
+  },
+  "status": {
+    "Active": "Active",
+    "ExpiringSoon": "Expiring soon",
+    "InGrace": "In grace",
+    "Expired": "Expired",
+    "SwitchedOff": "Switched off",
+    "Scheduled": "Scheduled",
+    "Exhausted": "Used up",
+    "Cancelled": "Cancelled",
+    "Upgraded": "Upgraded",
+    "Renewed": "Renewed",
+    "Pending": "Pending",
+    "Fulfilled": "Fulfilled",
+    "Rejected": "Rejected"
+  },
+  "source": {
+    "payment": "Payment",
+    "admin": "Admin",
+    "trial": "Trial",
+    "bundle": "Bundle",
+    "upgrade": "Upgrade",
+    "migration": "Migrated"
+  },
+
+  "option": {
+    "months": "{{count}} months",
+    "scans": "{{count}} scans",
+    "unlimited": "Unlimited scans",
+    "monthsCol": "Months",
+    "priceCol": "Price",
+    "scansCol": "Scans",
+    "unlimitedCol": "Unlimited",
+    "noTimeLimit": "No limit",
+    "retire": "Retire (kept on old records)",
+    "remove": "Remove",
+    "none": "No price options",
+    "add": "Add option",
+    "loyaltyHint": "A bundle has scans (and optionally months — whichever ends first); unlimited needs months.",
+    "subscriptionHint": "Each option is a period of 1–24 months."
+  },
+
+  "rules": {
+    "required": "Required",
+    "keyFormat": "2–50 lowercase letters, digits or _",
+    "appliesTo": "Pick stations, service providers or both",
+    "nonNegative": "Can't be negative",
+    "ruleRequired": "A points rule is required for a loyalty plan",
+    "fixedPoints": "Fixed points must be more than 0",
+    "tiersEmpty": "A tiered rule needs at least one tier",
+    "firstTierNegative": "The first tier can't start below 0",
+    "tierPointsNegative": "Tier {{n}}: points can't be negative",
+    "lastTierOpen": "The last tier must be open-ended (no upper bound)",
+    "middleTierOpen": "Tier {{n}}: only the last tier can be open-ended",
+    "tierToAboveFrom": "Tier {{n}}: the upper bound must be above the lower bound",
+    "tiersOverlap": "Tiers {{a}} and {{b}} overlap",
+    "tiersGap": "Gap between tier {{a}} and tier {{b}}",
+    "priceRequired": "Enter a price (0 or more)",
+    "monthsRange": "Months are 1–24",
+    "monthsRequired": "A subscription option needs months",
+    "noScansOnSubscription": "Subscription options have no scans",
+    "unlimitedNeedsMonths": "Unlimited scanning needs a period in months",
+    "monthsOrScans": "Enter scans and/or months",
+    "scansRequired": "Enter the scans (or tick unlimited)",
+    "scansPositive": "Scans must be a whole number of at least 1"
+  },
+
+  "rule": {
+    "fixed": "Fixed",
+    "tiered": "By amount (tiers)",
+    "fixedPoints": "Points per transaction",
+    "fixedHint": "Every transaction gives the same points",
+    "from": "From (inside)",
+    "to": "To (outside)",
+    "points": "Points",
+    "andAbove": "and above",
+    "removeTier": "Remove tier",
+    "addTier": "Add tier",
+    "tiersHint": "3.000 JOD falls in the 3–5 tier. Below the first tier: 0 points. Points are fixed when the code is created.",
+    "previewAmount": "Try an amount",
+    "previewPoints": "→ {{points}} points"
+  },
+
+  "margin": {
+    "title": "Margin calculator",
+    "hint": "Points cost only (no operating cost, payment fees or promo points). Never shown to the partner.",
+    "noOptions": "Add a price option first.",
+    "option": "Price option",
+    "target": "Target margin",
+    "expectedMonthly": "Expected scans / month",
+    "mix": {
+      "equal": "Equal per tier",
+      "manual": "My mix",
+      "provider": "This partner (90 days)"
+    },
+    "tierFrom": "Tier from",
+    "share": "Share of transactions",
+    "mixTotal": "The shares add up to {{total}}% — they must total 100%",
+    "fixRule": "Fix the points rule to see the margin.",
+    "enterPrice": "Enter the option's price to see the margin.",
+    "verdict": {
+      "ok": "Within the target margin",
+      "warning": "Below the target margin — still above break-even",
+      "loss": "Loss: Cable pays more in points than the price"
+    },
+    "costLine": "Expected cost per scan {{cost}} JOD of {{price}} JOD",
+    "avgPoints": "Avg points / scan",
+    "breakEven": "Break-even scans",
+    "recommended": "Recommended scans",
+    "breakEvenMonthly": "Break-even / month",
+    "suggestedCap": "Suggested daily cap",
+    "aboveBreakEven": "Scans above break-even",
+    "lossLine": "Every scan after {{n}} is a loss",
+    "footnote": "Amount mix: {{source}} · 1 point = {{value}} JOD",
+    "source": {
+      "manual": "manual",
+      "provider": "this partner's last 90 days",
+      "equal": "equal per tier",
+      "fixed": "fixed points"
+    }
+  },
+
+  "history": {
+    "changes": "Change log",
+    "empty": "No edits yet.",
+    "noChanges": "No field changes.",
+    "note": "Note",
+    "subscribers": "Current subscribers",
+    "noSubscribers": "Nobody is on this plan right now.",
+    "provider": "Partner",
+    "status": "Status",
+    "expires": "Ends"
+  },
+
+  "plan": {
+    "newTitle": "New plan",
+    "archivedChip": "Archived",
+    "subscribers": "{{count}} subscribers",
+    "archive": "Archive",
+    "reactivate": "Reactivate",
+    "archiveTitle": "Archive plan?",
+    "reactivateTitle": "Reactivate plan?",
+    "archiveHint": "It is no longer sold. Current subscribers keep it until it ends.",
+    "reactivateHint": "It can be sold again.",
+    "archived": "Plan archived",
+    "reactivated": "Plan reactivated",
+    "tabPlan": "Plan",
+    "tabHistory": "History",
+    "identity": "Plan",
+    "keyHint": "The key is fixed after creation and used by the apps (e.g. premium, loyalty_bundle_400).",
+    "keyFixed": "Key and category can't change after creation.",
+    "key": "Key",
+    "category": "Category",
+    "appliesTo": "Offered to",
+    "nameAr": "Name (Arabic)",
+    "nameEn": "Name (English)",
+    "descriptionAr": "Description (Arabic)",
+    "descriptionEn": "Description (English)",
+    "features": "Features",
+    "featuresHint": "Feature edits apply at once to every current subscriber.",
+    "includes": "Includes plans",
+    "includesHint": "e.g. Cable Connect includes Premium",
+    "legacy": "Switches on (existing engine)",
+    "legacyHint": "Payments for these items open records of this plan.",
+    "priceOptions": "Price options",
+    "priceEditHint": "Price edits apply to new subscriptions and renewals only — records keep their snapshot.",
+    "pointsRule": "Points rule",
+    "pointsRuleHint": "How a scan turns into points for the customer. Edits apply to future transactions only.",
+    "settings": "Trial & display",
+    "trialDays": "Trial days",
+    "trialDaysHint": "0 = no trial",
+    "trialScans": "Trial scans",
+    "dailySoftCap": "Daily soft cap",
+    "dailySoftCapHint": "Alert only, scanning never stops",
+    "targetMargin": "Target margin",
+    "sortOrder": "Order",
+    "badgeColor": "Colour",
+    "isVisible": "Visible in the partner apps",
+    "note": "Note for the change log",
+    "noteHint": "Why it changed, e.g. \"Price up from 1 December\"",
+    "create": "Create plan",
+    "fixErrors": "Fix the highlighted fields first",
+    "saved": "Plan saved",
+    "savedTitle": "Plan saved — what changed",
+    "affectedSubscribers": "Feature changes apply now to {{count}} current subscribers.",
+    "pricingForNewOnly": "Price / points rule changes apply to new subscriptions and renewals only."
+  },
+
+  "plans": {
+    "navTitle": "Plans",
+    "title": "Plans",
+    "subtitle": "Partner plans as data: subscriptions (features for a period) and loyalty (scan bundles).",
+    "group": {
+      "Subscription": "Subscription plans",
+      "Loyalty": "Loyalty plans"
+    },
+    "groupHint": {
+      "Subscription": "Features for a period — premium, Cable Connect.",
+      "Loyalty": "Scans with a points rule — sold on the partner's loyalty agreement."
+    },
+    "add": "New plan",
+    "archived": "Archived plans ({{count}})",
+    "freeHint": "Applies automatically",
+    "featuresCount": "{{count}} features",
+    "trialDays": "{{days}}-day trial",
+    "trialScans": "Trial {{days}} days / {{scans}} scans",
+    "hidden": "Hidden"
+  },
+
+  "matrix": {
+    "navTitle": "Plan features",
+    "title": "Plan features",
+    "subtitle": "Feature × plan for the subscription plans.",
+    "appliesNow": "Saving applies at once to every current subscriber — the apps read the features from the server.",
+    "feature": "Feature",
+    "saved": "Saved — applies now to {{count}} subscribers"
+  },
+
+  "records": {
+    "title": {
+      "panel": "Plan & billing",
+      "new": "New subscription",
+      "trial": "Start a trial",
+      "upgrade": "Upgrade"
+    },
+    "submit": {
+      "new": "Subscribe",
+      "trial": "Start trial",
+      "upgrade": "Upgrade"
+    },
+    "done": {
+      "new": "Subscription recorded",
+      "trial": "Trial started",
+      "upgrade": "Upgraded — the unused value was credited"
+    },
+    "new": "New subscription",
+    "trialAction": "Trial",
+    "trial": "Trial",
+    "upgrade": "Upgrade",
+    "cancel": "Cancel",
+    "empty": "No subscription records yet.",
+    "plan": "Plan",
+    "option": "Price option",
+    "status": "Status",
+    "period": "Period",
+    "scans": "Scans",
+    "paidCol": "Paid",
+    "noEnd": "no end date",
+    "noPlans": "No plan available",
+    "startsAt": "Starts",
+    "startsAtHint": "Empty = now, or extends a running period of the same plan",
+    "walletDebit": "Loyalty plans are paid from the provider wallet (bundle purchase line) — no payment is recorded here.",
+    "paid": "Paid",
+    "complimentary": "Complimentary",
+    "complimentaryHint": "No payment — the period is given for free.",
+    "amount": "Amount",
+    "amountHint": "Empty = the option price ({{price}} JOD) minus any credit",
+    "paidDate": "Paid on (Jordan time)",
+    "note": "Note",
+    "trialHint": "{{days}} days free, once per station / provider. No grace when it ends.",
+    "trialScansHint": "{{days}} days / {{scans}} scans free, once per station / provider.",
+    "upgradeHint": "From {{plan}}: the unused value (time or scans, whichever is smaller) is credited on the new price.",
+    "cancelTitle": "Cancel subscription record",
+    "cancelHint": "What it switched on is switched off, unless a later paid period covers it.",
+    "reason": "Reason",
+    "cancelled": "Subscription cancelled",
+    "graceEnds": "Grace until {{date}}",
+    "scansOf": "{{used}} of {{total}} used",
+    "scansUnlimited": "{{used}} used · unlimited",
+    "scansLeft": "{{count}} scans left",
+    "carried": "{{count}} carried over",
+    "credit": "credit {{amount}}"
+  },
+
+  "breakEven": {
+    "none": "No break-even (scans cost nothing)",
+    "used": "Used {{used}} of {{breakEven}} (break-even)",
+    "usedMonth": "This month {{used}} of {{breakEven}} (break-even)",
+    "tooltip": "Cost per scan {{cost}} JOD ({{points}} points) · price {{price}} JOD"
+  },
+
+  "bundle": {
+    "title": "Loyalty billing",
+    "model": "Billing model",
+    "modelHint": "Percentage: commission on every transaction. Bundle: prepaid scans, no commission.",
+    "percentage": "Percentage",
+    "bundle": "Scan bundle",
+    "minAmount": "Minimum amount",
+    "minAmountHint": "Mandatory on bundle (default 2 JOD)",
+    "switchToBundle": "Codes created before the switch keep their commission and complete on percentage; new codes use the bundle.",
+    "switchToPercentage": "New codes will be charged commission again.",
+    "modelSaved": "Billing model saved",
+    "openCodes": "{{count}} codes created before the switch are still in flight on percentage.",
+    "current": "Current bundle",
+    "noBundle": "No bundle yet.",
+    "state": {
+      "active": "Active",
+      "low": "Running low",
+      "exhausted": "Used up",
+      "expired": "Expired"
+    },
+    "remaining": "{{left}} of {{total}} scans left",
+    "history": "Bundle history",
+    "noHistory": "No bundles sold yet.",
+    "internalNote": "Break-even figures are internal to Cable and never shown to the partner.",
+    "sell": "Sell a bundle",
+    "sellTitle": "Sell a scan bundle",
+    "plan": "Loyalty plan",
+    "walletHint": "The price is debited from the provider wallet. Renewing adds the unused scans of the previous bundle.",
+    "percentageWarning": "This agreement is on percentage. Switch it to bundle for the scans to be used.",
+    "acceptLoss": "Sell anyway — I accept the loss",
+    "sold": "Bundle sold",
+    "navAction": "Loyalty billing (model & bundles)"
+  },
+
+  "requests": {
+    "navTitle": "Upgrade requests",
+    "title": "Upgrade requests",
+    "subtitle": "Partners asking to upgrade, renew or buy a bundle. Recording the payment fulfils the request.",
+    "columns": {
+      "created": "Requested",
+      "provider": "Partner",
+      "plan": "Plan",
+      "requester": "Requested by",
+      "note": "Note",
+      "status": "Status"
+    },
+    "kind": {
+      "upgrade": "Upgrade",
+      "renew": "Renew",
+      "bundle": "Bundle"
+    },
+    "recordPayment": "Record payment",
+    "noAgreement": "No loyalty agreement for this partner",
+    "reject": "Reject",
+    "rejectTitle": "Reject request",
+    "rejected": "Request rejected",
+    "pendingAction": "Pending upgrade requests",
+    "pendingHelp": "Partners waiting for a call to upgrade, renew or buy a bundle"
+  },
+
+  "alerts": {
+    "navTitle": "Billing alerts",
+    "title": "Billing alerts",
+    "subtitle": "Unlimited plans over their daily soft cap or monthly break-even, and new upgrade requests. Scanning is never stopped.",
+    "unacknowledgedOnly": "Only alerts not reviewed yet",
+    "columns": {
+      "created": "When",
+      "kind": "Kind",
+      "message": "Alert",
+      "provider": "Partner"
+    },
+    "kind": {
+      "adminSoftCap": "Daily cap passed",
+      "adminBreakEven": "Break-even passed",
+      "upgradeRequest": "Upgrade request"
+    },
+    "acknowledge": "Mark reviewed",
+    "acknowledgedAt": "Reviewed {{date}}"
+  }
+}
