@@ -123,15 +123,19 @@ export function breakEvenColor(state: string | null | undefined): "success" | "w
   return "success";
 }
 
-/** "1 month · 20.000 JOD", "400 scans · 40.000 JOD", "1 month unlimited · 60.000 JOD". */
+/**
+ * "1 month · 20.000 JOD", "400 scans · 40.000 JOD", "1 month unlimited · 60.000 JOD".
+ * "Unlimited scans" only means something on a loyalty plan; a subscription option has no scans at all.
+ */
 export function optionLabel(
   o: { months?: number | null; scans?: number | null; priceJod: number; isUnlimited?: boolean },
-  t: (key: string, values?: Record<string, unknown>) => string
+  t: (key: string, values?: Record<string, unknown>) => string,
+  category?: string | null
 ): string {
   const parts: string[] = [];
   if (o.months != null) parts.push(t("billing@option.months", { count: o.months }));
   if (o.scans != null) parts.push(t("billing@option.scans", { count: o.scans }));
-  if (o.isUnlimited) parts.push(t("billing@option.unlimited"));
+  if (o.isUnlimited && category !== "Subscription") parts.push(t("billing@option.unlimited"));
   parts.push(`${Number(o.priceJod).toFixed(3)} JOD`);
   return parts.join(" · ");
 }

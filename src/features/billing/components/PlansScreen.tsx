@@ -51,7 +51,7 @@ function PlanCard({ plan }: { plan: PlanDto }) {
               <Typography variant="body2" color="text.secondary">{plan.key === "free" ? t("billing@plans.freeHint") : t("billing@option.none")}</Typography>
             ) : (
               options.slice(0, 4).map((o) => (
-                <Typography key={o.id} variant="body2">{optionLabel(o, t)}</Typography>
+                <Typography key={o.id} variant="body2">{optionLabel(o, t, plan.category)}</Typography>
               ))
             )}
             {options.length > 4 && <Typography variant="caption" color="text.secondary">+{options.length - 4}</Typography>}

@@ -194,7 +194,7 @@ export default function PlanSubscriptionDialog({
             <TextField select fullWidth size="small" label={t("billing@records.option")} value={optionId}
               onChange={(e) => setOptionId(Number(e.target.value))}>
               {options.map((o) => (
-                <MenuItem key={o.id} value={o.id}>{optionLabel(o, t)}</MenuItem>
+                <MenuItem key={o.id} value={o.id}>{optionLabel(o, t, plan?.category)}</MenuItem>
               ))}
             </TextField>
           )}
