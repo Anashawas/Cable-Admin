@@ -18,27 +18,30 @@ import {
   CircularProgress,
   Skeleton,
   Divider,
+  Chip,
+  Tooltip,
   useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
-import LockIcon from "@mui/icons-material/Lock";
 import BadgeIcon from "@mui/icons-material/Badge";
 import DeleteIcon from "@mui/icons-material/Delete";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import BlockIcon from "@mui/icons-material/Block";
+import AddIcon from "@mui/icons-material/Add";
+import KeyIcon from "@mui/icons-material/Key";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useSnackbarStore } from "../../../stores";
 import {
-  useWorker,
+  useWorkers,
   useCreateWorker,
   useSetWorkerActive,
   useDeleteWorker,
+  useResetWorkerTempPassword,
+  useUnlockWorker,
 } from "../hooks/use-workers";
-import type { WorkerProviderType } from "../types/api";
+import type { WorkerCredentials, WorkerDto, WorkerProviderType } from "../types/api";
 
 interface WorkerDialogProps {
   open: boolean;
@@ -48,8 +51,15 @@ interface WorkerDialogProps {
   providerName?: string | null;
 }
 
-const emptyForm = { name: "", email: "", phone: "", password: "" };
+const emptyForm = { name: "", email: "", phone: "" };
 
+const statusColor = (s: WorkerDto["status"]) => (s === "active" ? "success" : s === "suspendedByPlan" ? "warning" : "default");
+const loginColor = (s: WorkerDto["loginStatus"]) => (s === "active" ? "success" : s === "locked" ? "error" : "info");
+
+/**
+ * Admin support view of a provider's workers: the list with status and login state, suspend / resume, delete,
+ * a new temporary password (shown once with the share message), unlock, and adding a worker on the owner's behalf.
+ */
 export default function WorkerDialog({
   open,
   onClose,
@@ -63,23 +73,24 @@ export default function WorkerDialog({
   const openErrorSnackbar = useSnackbarStore((s) => s.openErrorSnackbar);
 
   const [form, setForm] = useState(emptyForm);
-  const [showPassword, setShowPassword] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [credentials, setCredentials] = useState<(WorkerCredentials & { name: string }) | null>(null);
 
-  const { data: worker, isLoading } = useWorker(
-    open ? providerType : null,
-    open ? providerId : null
-  );
+  const { data: workers = [], isLoading } = useWorkers(open ? providerType : null, open ? providerId : null);
   const createMutation = useCreateWorker(providerType, providerId);
   const setActiveMutation = useSetWorkerActive(providerType, providerId);
   const deleteMutation = useDeleteWorker(providerType, providerId);
+  const resetMutation = useResetWorkerTempPassword(providerType, providerId);
+  const unlockMutation = useUnlockWorker(providerType, providerId);
 
   // Reset transient state whenever the dialog (re)opens or the target changes.
   useEffect(() => {
     if (open) {
       setForm(emptyForm);
-      setShowPassword(false);
-      setConfirmDelete(false);
+      setAdding(false);
+      setConfirmDelete(null);
+      setCredentials(null);
     }
   }, [open, providerType, providerId]);
 
@@ -89,52 +100,57 @@ export default function WorkerDialog({
     err?.message ||
     t("loadingFailed");
 
+  const copy = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); openSuccessSnackbar({ message: t("workers@copied") }); }
+    catch { openErrorSnackbar({ message: t("loadingFailed") }); }
+  };
+
   const handleCreate = () => {
     if (!form.name.trim()) return openErrorSnackbar({ message: t("workers@nameRequired") });
-    if (!form.email.trim()) return openErrorSnackbar({ message: t("workers@emailRequired") });
     if (!form.phone.trim()) return openErrorSnackbar({ message: t("workers@phoneRequired") });
-    if (form.password.length < 6) return openErrorSnackbar({ message: t("workers@passwordTooShort") });
 
     createMutation.mutate(
+      { providerType, providerId, name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() || null, privileges: [] },
       {
-        providerType,
-        providerId,
-        name: form.name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        password: form.password,
-      },
-      {
-        onSuccess: () => openSuccessSnackbar({ message: t("workers@created") }),
+        onSuccess: (res) => {
+          openSuccessSnackbar({ message: t("workers@created") });
+          setCredentials({ ...res, name: form.name.trim() });
+          setForm(emptyForm);
+          setAdding(false);
+        },
         onError: (err) => openErrorSnackbar({ message: errorDetail(err) }),
       }
     );
   };
 
-  const handleToggleActive = (next: boolean) => {
-    if (!worker) return;
+  const handleToggleActive = (w: WorkerDto, next: boolean) =>
     setActiveMutation.mutate(
-      { providerManagerId: worker.providerManagerId, isActive: next },
+      { providerManagerId: w.providerManagerId, isActive: next },
       {
-        onSuccess: () =>
-          openSuccessSnackbar({ message: next ? t("workers@activated") : t("workers@deactivated") }),
+        onSuccess: () => openSuccessSnackbar({ message: next ? t("workers@activated") : t("workers@deactivated") }),
         onError: (err) => openErrorSnackbar({ message: errorDetail(err) }),
       }
     );
-  };
 
-  const handleDelete = () => {
-    if (!worker) return;
-    deleteMutation.mutate(worker.providerManagerId, {
-      onSuccess: () => {
-        openSuccessSnackbar({ message: t("workers@deleted") });
-        setConfirmDelete(false);
-      },
+  const handleDelete = (w: WorkerDto) =>
+    deleteMutation.mutate(w.providerManagerId, {
+      onSuccess: () => { openSuccessSnackbar({ message: t("workers@deleted") }); setConfirmDelete(null); },
       onError: (err) => openErrorSnackbar({ message: errorDetail(err) }),
     });
-  };
 
-  const busy = createMutation.isPending || setActiveMutation.isPending || deleteMutation.isPending;
+  const handleReset = (w: WorkerDto) =>
+    resetMutation.mutate(w.providerManagerId, {
+      onSuccess: (res) => setCredentials({ ...res, name: w.name }),
+      onError: (err) => openErrorSnackbar({ message: errorDetail(err) }),
+    });
+
+  const handleUnlock = (w: WorkerDto) =>
+    unlockMutation.mutate(w.providerManagerId, {
+      onSuccess: () => openSuccessSnackbar({ message: t("workers@unlocked") }),
+      onError: (err) => openErrorSnackbar({ message: errorDetail(err) }),
+    });
+
+  const busy = createMutation.isPending || setActiveMutation.isPending || deleteMutation.isPending || resetMutation.isPending;
 
   return (
     <Dialog
@@ -164,119 +180,101 @@ export default function WorkerDialog({
       </DialogTitle>
 
       <DialogContent sx={{ pt: 3 }}>
+        {credentials && (
+          /* ── Temporary password, shown once ── */
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mb: 2, borderColor: "success.light" }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>{t("workers@shareTitle", { name: credentials.name })}</Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h5" fontWeight={800} dir="ltr" sx={{ fontFamily: "monospace", letterSpacing: 2 }}>{credentials.tempPassword}</Typography>
+              <Tooltip title={t("workers@copy")}><IconButton size="small" onClick={() => copy(credentials.tempPassword)}><ContentCopyIcon fontSize="small" /></IconButton></Tooltip>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>{t("workers@validUntil", { date: new Date(credentials.tempPasswordExpiresAt).toLocaleString() })}</Typography>
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: "action.hover" }}>
+              <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{credentials.shareMessage}</Typography>
+            </Paper>
+            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+              <Button size="small" variant="outlined" startIcon={<ContentCopyIcon />} onClick={() => copy(credentials.shareMessage)}>{t("workers@copyMessage")}</Button>
+              <Button size="small" color="inherit" onClick={() => setCredentials(null)}>{t("close")}</Button>
+            </Stack>
+          </Paper>
+        )}
+
         {isLoading ? (
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <Skeleton variant="rounded" height={48} />
-            <Skeleton variant="rounded" height={48} />
-            <Skeleton variant="rounded" height={48} />
+            <Skeleton variant="rounded" height={64} />
+            <Skeleton variant="rounded" height={64} />
           </Stack>
-        ) : worker ? (
-          /* ── Existing worker card ── */
-          <Stack spacing={2}>
-            <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar sx={{ width: 48, height: 48, bgcolor: "primary.main", fontWeight: 700 }}>
-                  {worker.name.slice(0, 2).toUpperCase()}
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle1" fontWeight={700} noWrap>{worker.name}</Typography>
-                  <Stack direction="row" spacing={1.5} flexWrap="wrap">
-                    <Typography variant="caption" color="text.secondary"><EmailIcon sx={{ fontSize: 12, mr: 0.3, verticalAlign: "middle" }} />{worker.email}</Typography>
-                    <Typography variant="caption" color="text.secondary"><PhoneIcon sx={{ fontSize: 12, mr: 0.3, verticalAlign: "middle" }} />{worker.phone}</Typography>
+        ) : (
+          <Stack spacing={1.5}>
+            {workers.length === 0 && !adding && (
+              <Typography variant="body2" color="text.secondary">{t("workers@none")}</Typography>
+            )}
+
+            {workers.map((w) => (
+              <Paper key={w.providerManagerId} variant="outlined" sx={{ p: 2, borderRadius: 2, borderColor: w.isActive ? "divider" : "warning.light" }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Avatar sx={{ width: 44, height: 44, bgcolor: "primary.main", fontWeight: 700 }}>{w.name.slice(0, 2).toUpperCase()}</Avatar>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={700} noWrap>{w.name}</Typography>
+                    <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                      {w.phone && <Typography variant="caption" color="text.secondary" dir="ltr"><PhoneIcon sx={{ fontSize: 12, mr: 0.3, verticalAlign: "middle" }} />{w.phone}</Typography>}
+                      {w.email && <Typography variant="caption" color="text.secondary"><EmailIcon sx={{ fontSize: 12, mr: 0.3, verticalAlign: "middle" }} />{w.email}</Typography>}
+                    </Stack>
+                    <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }} flexWrap="wrap">
+                      <Chip size="small" label={t(`workers@status.${w.status}`)} color={statusColor(w.status)} />
+                      <Chip size="small" variant="outlined" label={t(`workers@login.${w.loginStatus}`)} color={loginColor(w.loginStatus)} />
+                      {w.privileges.length > 0 && <Chip size="small" variant="outlined" label={t("workers@privilegeCount", { count: w.privileges.length })} />}
+                    </Stack>
+                  </Box>
+                  <Switch checked={w.isActive} onChange={(e) => handleToggleActive(w, e.target.checked)} color="success" disabled={setActiveMutation.isPending} />
+                </Stack>
+
+                <Stack direction="row" spacing={0.5} sx={{ mt: 1 }} flexWrap="wrap">
+                  <Tooltip title={t("workers@resetTempHint")}>
+                    <Button size="small" startIcon={<KeyIcon />} onClick={() => handleReset(w)} disabled={resetMutation.isPending}>{t("workers@resetTemp")}</Button>
+                  </Tooltip>
+                  {w.loginStatus === "locked" && (
+                    <Button size="small" startIcon={<LockOpenIcon />} onClick={() => handleUnlock(w)} disabled={unlockMutation.isPending}>{t("workers@unlock")}</Button>
+                  )}
+                  <Box sx={{ flex: 1 }} />
+                  {confirmDelete === w.providerManagerId ? (
+                    <>
+                      <Button size="small" color="inherit" onClick={() => setConfirmDelete(null)} disabled={deleteMutation.isPending}>{t("cancel")}</Button>
+                      <Button size="small" color="error" variant="contained" onClick={() => handleDelete(w)} disabled={deleteMutation.isPending}
+                        startIcon={deleteMutation.isPending ? <CircularProgress size={14} color="inherit" /> : <DeleteIcon />}>
+                        {t("workers@delete")}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(w.providerManagerId)}>{t("workers@delete")}</Button>
+                  )}
+                </Stack>
+              </Paper>
+            ))}
+
+            {adding ? (
+              /* ── Create worker form ── */
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Stack spacing={2}>
+                  <Typography variant="body2" color="text.secondary">{t("workers@createHint")}</Typography>
+                  <TextField label={t("workers@name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} fullWidth size="small"
+                    InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon fontSize="small" color="action" /></InputAdornment> }} />
+                  <TextField label={t("workers@phone")} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} fullWidth size="small" placeholder="0790000000"
+                    InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" color="action" /></InputAdornment> }} />
+                  <TextField label={t("workers@emailOptional")} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} fullWidth size="small"
+                    InputProps={{ startAdornment: <InputAdornment position="start"><EmailIcon fontSize="small" color="action" /></InputAdornment> }} />
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button color="inherit" onClick={() => setAdding(false)} disabled={createMutation.isPending}>{t("cancel")}</Button>
+                    <Button variant="contained" onClick={handleCreate} disabled={createMutation.isPending}
+                      startIcon={createMutation.isPending ? <CircularProgress size={16} color="inherit" /> : undefined} sx={{ fontWeight: 600, minWidth: 120 }}>
+                      {t("workers@create")}
+                    </Button>
                   </Stack>
-                </Box>
-              </Stack>
-            </Paper>
-
-            <Paper
-              variant="outlined"
-              sx={{ px: 2, py: 1, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "space-between", borderColor: worker.isActive ? "success.light" : "divider" }}
-            >
-              <Stack direction="row" spacing={1} alignItems="center">
-                {worker.isActive ? <CheckCircleOutlineIcon color="success" sx={{ fontSize: 20 }} /> : <BlockIcon color="disabled" sx={{ fontSize: 20 }} />}
-                <Box>
-                  <Typography variant="body2" fontWeight={600} color={worker.isActive ? "success.dark" : "text.secondary"}>
-                    {worker.isActive ? t("active") : t("inactive")}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">{t("workers@activeHint")}</Typography>
-                </Box>
-              </Stack>
-              <Switch
-                checked={worker.isActive}
-                onChange={(e) => handleToggleActive(e.target.checked)}
-                color="success"
-                disabled={setActiveMutation.isPending}
-              />
-            </Paper>
-
-            {confirmDelete ? (
-              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, borderColor: "error.light", bgcolor: "#fff5f5" }}>
-                <Typography variant="body2" color="error.dark" sx={{ mb: 1.5 }}>{t("workers@deleteConfirm")}</Typography>
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button size="small" color="inherit" onClick={() => setConfirmDelete(false)} disabled={deleteMutation.isPending}>{t("cancel")}</Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    variant="contained"
-                    onClick={handleDelete}
-                    disabled={deleteMutation.isPending}
-                    startIcon={deleteMutation.isPending ? <CircularProgress size={14} color="inherit" /> : <DeleteIcon />}
-                  >
-                    {t("workers@delete")}
-                  </Button>
                 </Stack>
               </Paper>
             ) : (
-              <Button color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(true)} sx={{ alignSelf: "flex-start" }}>
-                {t("workers@delete")}
-              </Button>
+              <Button startIcon={<AddIcon />} onClick={() => setAdding(true)} sx={{ alignSelf: "flex-start" }}>{t("workers@add")}</Button>
             )}
-          </Stack>
-        ) : (
-          /* ── Create worker form ── */
-          <Stack spacing={2}>
-            <Typography variant="body2" color="text.secondary">{t("workers@createHint")}</Typography>
-            <TextField
-              label={t("workers@name")}
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              fullWidth size="small"
-              InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon fontSize="small" color="action" /></InputAdornment> }}
-            />
-            <TextField
-              label={t("workers@email")}
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              fullWidth size="small"
-              InputProps={{ startAdornment: <InputAdornment position="start"><EmailIcon fontSize="small" color="action" /></InputAdornment> }}
-            />
-            <TextField
-              label={t("workers@phone")}
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              fullWidth size="small"
-              placeholder="0790000000"
-              InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" color="action" /></InputAdornment> }}
-            />
-            <TextField
-              label={t("workers@password")}
-              type={showPassword ? "text" : "password"}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              fullWidth size="small"
-              helperText={t("workers@passwordHint")}
-              InputProps={{
-                startAdornment: <InputAdornment position="start"><LockIcon fontSize="small" color="action" /></InputAdornment>,
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setShowPassword((s) => !s)} edge="end">
-                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
           </Stack>
         )}
       </DialogContent>
@@ -284,17 +282,6 @@ export default function WorkerDialog({
       <Divider />
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} color="inherit" disabled={busy}>{t("close")}</Button>
-        {!isLoading && !worker && (
-          <Button
-            variant="contained"
-            onClick={handleCreate}
-            disabled={createMutation.isPending}
-            startIcon={createMutation.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
-            sx={{ fontWeight: 600, minWidth: 120 }}
-          >
-            {t("workers@create")}
-          </Button>
-        )}
       </DialogActions>
     </Dialog>
   );

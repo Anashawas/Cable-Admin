@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getWorker,
+  getWorkers,
   createWorker,
   setWorkerActive,
   deleteWorker,
+  resetWorkerTempPassword,
+  unlockWorker,
 } from "../services/workers-service";
 import type { WorkerProviderType, CreateWorkerRequest } from "../types/api";
 
@@ -12,55 +14,49 @@ export const WORKER_QUERY_KEY = (
   providerId: number | null
 ) => ["workers", providerType, providerId];
 
-/** The single worker for a provider (or null). Disabled until both keys are set. */
-export function useWorker(
+/** The provider's workers (a list). Disabled until both keys are set. */
+export function useWorkers(
   providerType: WorkerProviderType | null,
   providerId: number | null
 ) {
   return useQuery({
     queryKey: WORKER_QUERY_KEY(providerType, providerId),
-    queryFn: ({ signal }) => getWorker(providerType!, providerId!, signal),
+    queryFn: ({ signal }) => getWorkers(providerType!, providerId!, signal),
     enabled: !!providerType && !!providerId,
     staleTime: 60 * 1000,
   });
 }
 
-export function useCreateWorker(
-  providerType: WorkerProviderType | null,
-  providerId: number | null
-) {
+function useInvalidate(providerType: WorkerProviderType | null, providerId: number | null) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (body: CreateWorkerRequest) => createWorker(body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: WORKER_QUERY_KEY(providerType, providerId) });
-    },
-  });
+  return () => queryClient.invalidateQueries({ queryKey: WORKER_QUERY_KEY(providerType, providerId) });
 }
 
-export function useSetWorkerActive(
-  providerType: WorkerProviderType | null,
-  providerId: number | null
-) {
-  const queryClient = useQueryClient();
+export function useCreateWorker(providerType: WorkerProviderType | null, providerId: number | null) {
+  const invalidate = useInvalidate(providerType, providerId);
+  return useMutation({ mutationFn: (body: CreateWorkerRequest) => createWorker(body), onSuccess: invalidate });
+}
+
+export function useResetWorkerTempPassword(providerType: WorkerProviderType | null, providerId: number | null) {
+  const invalidate = useInvalidate(providerType, providerId);
+  return useMutation({ mutationFn: (providerManagerId: number) => resetWorkerTempPassword(providerManagerId), onSuccess: invalidate });
+}
+
+export function useUnlockWorker(providerType: WorkerProviderType | null, providerId: number | null) {
+  const invalidate = useInvalidate(providerType, providerId);
+  return useMutation({ mutationFn: (providerManagerId: number) => unlockWorker(providerManagerId), onSuccess: invalidate });
+}
+
+export function useSetWorkerActive(providerType: WorkerProviderType | null, providerId: number | null) {
+  const invalidate = useInvalidate(providerType, providerId);
   return useMutation({
     mutationFn: ({ providerManagerId, isActive }: { providerManagerId: number; isActive: boolean }) =>
       setWorkerActive(providerManagerId, isActive),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: WORKER_QUERY_KEY(providerType, providerId) });
-    },
+    onSuccess: invalidate,
   });
 }
 
-export function useDeleteWorker(
-  providerType: WorkerProviderType | null,
-  providerId: number | null
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (providerManagerId: number) => deleteWorker(providerManagerId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: WORKER_QUERY_KEY(providerType, providerId) });
-    },
-  });
+export function useDeleteWorker(providerType: WorkerProviderType | null, providerId: number | null) {
+  const invalidate = useInvalidate(providerType, providerId);
+  return useMutation({ mutationFn: (providerManagerId: number) => deleteWorker(providerManagerId), onSuccess: invalidate });
 }
